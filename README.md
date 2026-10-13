@@ -11,6 +11,12 @@
     <a href="https://github.com/GregTechCEu/GregTech/releases"><img src="https://img.shields.io/github/downloads/GregTechCEu/GregTech/total?sort=semver&logo=github&label=&style=for-the-badge&color=2d2d2d&labelColor=545454&logoColor=FFFFFF" alt="GitHub"></a>
 </h1>
 
+## Continuing GregTech with Orthrus Research
+
+Orthrus Research is continuing development of GregTech CE: Unofficial, building on the work of its maintainers and community. Our goal is to keep the project moving forward through ongoing maintenance, improvements, and new features.
+
+This fork will use AI models such as GPT Astra, Claude Opus, and other frontier models as they become available to assist with research, implementation, review, and testing. This statement serves as our project-wide disclosure of AI-assisted development. Maintainers remain responsible for understanding changes and validating their behavior.
+
 ## Welcome to GregTech CE: Unofficial
 ### What is this?
 GregTech CE Unofficial, or **GTCEu**, is a Minecraft mod. The repository contains all the code and assets required to build and run that mod.
@@ -44,7 +50,7 @@ We work with our addon-partners to attempt to preserve backwards-compatibility.
 
 ## Contribution
 ### Current state of project
-GTCEu is under active development with regular updates. The GTCEu community is very active and regularly contributes code, testing and ideas.
+Our fork continues development using the approach described above. Community contributions of code, testing, and ideas are welcome.
 We are always looking for contributors!
 
 ### How to contribute
