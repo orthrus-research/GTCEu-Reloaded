@@ -69,6 +69,11 @@ public class MetaTileEntityLargeChemicalReactor extends RecipeMapMultiblockContr
     }
 
     @Override
+    public boolean supportsPreviewEditing() {
+        return getClass() == MetaTileEntityLargeChemicalReactor.class;
+    }
+
+    @Override
     public List<MultiblockShapeInfo> getMatchingShapes() {
         ArrayList<MultiblockShapeInfo> shapeInfo = new ArrayList<>();
         MultiblockShapeInfo.Builder baseBuilder = MultiblockShapeInfo.builder(RIGHT, DOWN, FRONT)

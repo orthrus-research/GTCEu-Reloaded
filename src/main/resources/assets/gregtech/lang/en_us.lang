@@ -2509,7 +2509,7 @@ behavior.tricorder.position=----- X: %s Y: %s Z: %s D: %s -----
 behavior.tricorder.block_hardness=Hardness: %s Blast Resistance: %s
 behavior.tricorder.block_name=Name: %s MetaData: %s
 behavior.tricorder.state=%s: %s
-behavior.tricorder.divider==========================
+behavior.tricorder.divider===================
 behavior.tricorder.tank=Tank %s: %s L / %s L %s
 behavior.tricorder.tanks_empty=All Tanks Empty
 behavior.tricorder.muffled=Muffled.
@@ -6636,3 +6636,23 @@ cover.composite_filter.read_only=Remove and right-click to edit.
 cover.composite_filter.invalid=Invalid contents: matches nothing, even in blacklist mode. Remove invalid children when possible.
 cover.composite_filter.invalid_short=Invalid contents: rejects all. Remove invalid children.
 cover.composite_filter.amount_short=Global amount; child amounts ignored.
+
+# Editable multiblock previews
+gregtech.multiblock.editor.examples=Examples
+gregtech.multiblock.editor.generated=Generated
+gregtech.multiblock.editor.reset_label=Reset
+gregtech.multiblock.editor.example=Previous/next original example; each example keeps its own edits
+gregtech.multiblock.editor.layer=Show one layer or all layers; part counts always cover the whole structure
+gregtech.multiblock.editor.mode=Switch between original examples and a separately generated repeatable pattern
+gregtech.multiblock.editor.reset=Restore this example, or the current generated repetition layout, exactly
+gregtech.multiblock.editor.parts=Previous/next page of total structure parts
+gregtech.multiblock.editor.candidates=Previous/next page of allowed replacement candidates
+gregtech.multiblock.editor.repeat=Choose a repeatable slice, then -/+ to resize. Resizing clears generated-mode substitutions.
+gregtech.multiblock.editor.help=Right-click a block to select; drag left to rotate, drag right or scroll to zoom
+gregtech.multiblock.editor.apply=Click to replace this position; Shift-click replaces matching parts sharing this predicate
+gregtech.multiblock.editor.pattern_only=Checks the complete block pattern. Does not simulate operation, resources or formation callbacks.
+gregtech.multiblock.editor.unsupported=Editing unavailable: this example cannot be independently validated
+gregtech.multiblock.editor.read_only=This controller uses the read-only example viewer
+gregtech.multiblock.editor.invalid=The proposed layout does not match the complete structure pattern
+gregtech.multiblock.editor.failed=Could not prepare this edit; the accepted preview is unchanged
+gregtech.multiblock.editor.limit=Preview size, candidate count or repetition bounds exceeded

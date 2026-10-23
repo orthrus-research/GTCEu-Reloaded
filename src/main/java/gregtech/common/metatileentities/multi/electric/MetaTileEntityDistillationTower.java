@@ -53,6 +53,11 @@ public class MetaTileEntityDistillationTower extends RecipeMapMultiblockControll
     }
 
     @Override
+    public boolean supportsPreviewEditing() {
+        return getClass() == MetaTileEntityDistillationTower.class;
+    }
+
+    @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityDistillationTower(metaTileEntityId, this.handler != null);
     }

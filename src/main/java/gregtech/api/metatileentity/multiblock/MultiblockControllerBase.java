@@ -568,6 +568,15 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
         return true;
     }
 
+    /**
+     * Opt in to the client preview editor. Implementations must support independent factory clones,
+     * NBT snapshots and standalone pattern matching without formation callbacks or a real world.
+     * Subclasses with additional constraints should explicitly reconsider this contract.
+     */
+    public boolean supportsPreviewEditing() {
+        return false;
+    }
+
     public List<MultiblockShapeInfo> getMatchingShapes() {
         if (this.structurePattern == null) {
             this.reinitializeStructurePattern();

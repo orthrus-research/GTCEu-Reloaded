@@ -72,6 +72,11 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
     }
 
     @Override
+    public boolean supportsPreviewEditing() {
+        return getClass() == MetaTileEntityAssemblyLine.class;
+    }
+
+    @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityAssemblyLine(metaTileEntityId);
     }

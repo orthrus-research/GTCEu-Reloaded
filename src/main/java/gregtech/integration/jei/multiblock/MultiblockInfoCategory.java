@@ -3,6 +3,7 @@ package gregtech.integration.jei.multiblock;
 import gregtech.api.GTValues;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.util.GTLog;
 
 import net.minecraft.client.resources.I18n;
 
@@ -30,7 +31,8 @@ public class MultiblockInfoCategory implements IRecipeCategory<MultiblockInfoRec
 
     public MultiblockInfoCategory(IJeiHelpers helpers) {
         this.guiHelper = helpers.getGuiHelper();
-        this.background = this.guiHelper.createBlankDrawable(176, 166);
+        this.background = this.guiHelper.createBlankDrawable(176, 186);
+        PreviewLifecycle.register();
         this.icon = guiHelper.drawableBuilder(GuiTextures.MULTIBLOCK_CATEGORY.imageLocation, 0, 0, 16, 16)
                 .setTextureSize(16, 16).build();
     }
@@ -42,7 +44,20 @@ public class MultiblockInfoCategory implements IRecipeCategory<MultiblockInfoRec
     }
 
     public static void registerRecipes(IModRegistry registry) {
-        registry.addRecipes(REGISTER.stream().map(MultiblockInfoRecipeWrapper::new).collect(Collectors.toList()), UID);
+        registry.addRecipes(REGISTER.stream().map(MultiblockInfoCategory::createWrapper).collect(Collectors.toList()),
+                UID);
+    }
+
+    private static MultiblockInfoRecipeWrapper createWrapper(MultiblockControllerBase controller) {
+        if (controller.supportsPreviewEditing()) {
+            try {
+                return new EditableMultiblockInfoRecipeWrapper(controller);
+            } catch (RuntimeException exception) {
+                GTLog.logger.warn("Using the read-only multiblock preview for {}", controller.metaTileEntityId,
+                        exception);
+            }
+        }
+        return new MultiblockInfoRecipeWrapper(controller);
     }
 
     @NotNull
