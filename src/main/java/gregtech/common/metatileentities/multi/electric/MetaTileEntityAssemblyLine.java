@@ -328,8 +328,11 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
     }
 
     @Override
-    public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
-        if (consumeIfSuccess) return true; // don't check twice
+    public boolean isRecipeEligible(@NotNull Recipe recipe) {
+        return getClass() != MetaTileEntityAssemblyLine.class || checkOrderedInputs(recipe);
+    }
+
+    private boolean checkOrderedInputs(@NotNull Recipe recipe) {
         // check ordered items
         if (ConfigHolder.machines.orderedAssembly) {
             List<GTRecipeInput> inputs = recipe.getInputs();
@@ -360,6 +363,14 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
             }
         }
 
+        return super.isRecipeEligible(recipe);
+    }
+
+    @Override
+    public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
+        if (consumeIfSuccess) return true; // don't check twice
+        if (!checkOrderedInputs(recipe)) return false;
+        // Research queries can activate optical pipes, so they run only for the selected recipe.
         if (!ConfigHolder.machines.enableResearch || !recipe.hasProperty(ResearchProperty.getInstance())) {
             return super.checkRecipe(recipe, consumeIfSuccess);
         }

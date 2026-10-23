@@ -73,6 +73,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -464,6 +465,48 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     @Nullable
     public Recipe findRecipe(long voltage, IItemHandlerModifiable inputs, IMultipleTankHandler fluidInputs) {
         return this.findRecipe(voltage, GTUtility.itemHandlerToList(inputs), GTUtility.fluidHandlerToList(fluidInputs));
+    }
+
+    /**
+     * Keeps the legacy lookup's first choice, then searches registered alternatives in trie order.
+     * Eligibility must be read-only: no consumption, startup checks, or machine state changes.
+     * External map subclasses retain their legacy single-result lookup unless they explicitly opt in.
+     */
+    public RecipeSearchResult findRecipeWithEligibility(long voltage, IItemHandlerModifiable inputs,
+                                                        IMultipleTankHandler fluidInputs,
+                                                        Predicate<Recipe> eligibility) {
+        Recipe first = findRecipe(voltage, inputs, fluidInputs);
+        if (first == null) return new RecipeSearchResult(null, null);
+        if (eligibility.test(first)) return new RecipeSearchResult(first, first);
+        if (!supportsRecipeCandidateFallback()) return new RecipeSearchResult(null, first);
+
+        List<ItemStack> items = GTUtility.itemHandlerToList(inputs);
+        List<FluidStack> fluids = GTUtility.fluidHandlerToList(fluidInputs);
+        RecipeSearchResult result = findWithEligibility(items, fluids,
+                recipe -> recipe != first && recipe.getEUt() <= voltage && recipe.matches(false, items, fluids),
+                eligibility);
+        return new RecipeSearchResult(result.getRecipe(), first);
+    }
+
+    /** Override only when registered alternatives obey the same rules as the legacy lookup. */
+    protected boolean supportsRecipeCandidateFallback() {
+        return getClass() == RecipeMap.class;
+    }
+
+    /** Uses the existing deterministic traversal, checking each matching recipe's eligibility at most once. */
+    public RecipeSearchResult findWithEligibility(Collection<ItemStack> items, Collection<FluidStack> fluids,
+                                                  Predicate<Recipe> inputMatch, Predicate<Recipe> eligibility) {
+        Recipe[] firstMatch = { null };
+        Map<Recipe, Boolean> checked = new IdentityHashMap<>();
+        List<ItemStack> nonEmptyItems = items.stream().filter(stack -> !stack.isEmpty()).collect(Collectors.toList());
+        List<FluidStack> nonEmptyFluids = fluids.stream().filter(stack -> stack != null && stack.amount != 0)
+                .collect(Collectors.toList());
+        Recipe selected = find(nonEmptyItems, nonEmptyFluids, recipe -> {
+            if (!inputMatch.test(recipe)) return false;
+            if (firstMatch[0] == null) firstMatch[0] = recipe;
+            return checked.computeIfAbsent(recipe, eligibility::test);
+        });
+        return new RecipeSearchResult(selected, firstMatch[0]);
     }
 
     /**

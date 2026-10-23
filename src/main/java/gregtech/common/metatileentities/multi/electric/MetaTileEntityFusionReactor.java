@@ -470,6 +470,19 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
         }
 
         @Override
+        public boolean isRecipeEligible(@NotNull Recipe recipe) {
+            if (!supportsRecipeCandidateEligibility()) return true;
+            long requiredHeat = recipe.getProperty(FusionEUToStartProperty.getInstance(), 0L);
+            return super.isRecipeEligible(recipe) && requiredHeat <= energyContainer.getEnergyCapacity() &&
+                    (requiredHeat <= heat || energyContainer.getEnergyStored() >= requiredHeat - heat);
+        }
+
+        @Override
+        protected boolean supportsRecipeCandidateEligibility() {
+            return usesLegacyRecipeCheck(FusionRecipeLogic.class);
+        }
+
+        @Override
         public boolean checkRecipe(@NotNull Recipe recipe) {
             if (!super.checkRecipe(recipe))
                 return false;

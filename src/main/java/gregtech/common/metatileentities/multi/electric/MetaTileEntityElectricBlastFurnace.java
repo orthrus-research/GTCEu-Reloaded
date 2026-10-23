@@ -114,6 +114,12 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
     }
 
     @Override
+    public boolean isRecipeEligible(@NotNull Recipe recipe) {
+        return getClass() != MetaTileEntityElectricBlastFurnace.class ||
+                this.blastFurnaceTemperature >= recipe.getProperty(TemperatureProperty.getInstance(), 0);
+    }
+
+    @Override
     protected BlockPattern createStructurePattern() {
         return FactoryBlockPattern.start()
                 .aisle("XXX", "CCC", "CCC", "XXX")

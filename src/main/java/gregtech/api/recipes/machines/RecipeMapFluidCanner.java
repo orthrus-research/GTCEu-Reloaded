@@ -28,6 +28,11 @@ public class RecipeMapFluidCanner extends RecipeMap<SimpleRecipeBuilder> {
     }
 
     @Override
+    protected boolean supportsRecipeCandidateFallback() {
+        return getClass() == RecipeMapFluidCanner.class;
+    }
+
+    @Override
     @Nullable
     public Recipe findRecipe(long voltage, List<ItemStack> inputs, List<FluidStack> fluidInputs, boolean exactVoltage) {
         Recipe recipe = super.findRecipe(voltage, inputs, fluidInputs, exactVoltage);

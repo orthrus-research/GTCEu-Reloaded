@@ -101,6 +101,11 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
         return true;
     }
 
+    /** Read-only candidate constraints. The legacy checkRecipe hook can mutate even with consumeIfSuccess=false. */
+    public boolean isRecipeEligible(@NotNull Recipe recipe) {
+        return true;
+    }
+
     @Override
     protected void formStructure(PatternMatchContext context) {
         super.formStructure(context);

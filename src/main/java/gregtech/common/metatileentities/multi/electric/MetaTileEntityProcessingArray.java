@@ -377,6 +377,19 @@ public class MetaTileEntityProcessingArray extends RecipeMapMultiblockController
         }
 
         @Override
+        public boolean isRecipeEligible(@NotNull Recipe recipe) {
+            if (!supportsRecipeCandidateEligibility()) return true;
+            if (mte == null) return false;
+            AbstractRecipeLogic logic = mte.getRecipeLogic();
+            return logic != null && logic.isRecipeEligible(recipe) && super.isRecipeEligible(recipe);
+        }
+
+        @Override
+        protected boolean supportsRecipeCandidateEligibility() {
+            return usesLegacyRecipeCheck(ProcessingArrayWorkable.class);
+        }
+
+        @Override
         public boolean checkRecipe(@NotNull Recipe recipe) {
             if (mte == null) return false;
 

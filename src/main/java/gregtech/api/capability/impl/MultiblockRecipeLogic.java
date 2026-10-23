@@ -214,44 +214,54 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
 
     protected void trySearchNewRecipeDistinct() {
         long maxVoltage = getMaxVoltage();
-        Recipe currentRecipe;
         List<IItemHandlerModifiable> importInventory = getInputBuses();
+        Recipe blockedRecipe = null;
+        int blockedBus = -1;
 
-        // Our caching implementation
-        // This guarantees that if we get a recipe cache hit, our efficiency is no different from other machines
-        if (checkPreviousRecipeDistinct(importInventory.get(lastRecipeIndex)) && checkRecipe(previousRecipe)) {
-            currentRecipe = previousRecipe;
+        if (lastRecipeIndex < importInventory.size() &&
+                checkPreviousRecipeDistinct(importInventory.get(lastRecipeIndex))) {
             currentDistinctInputBus = importInventory.get(lastRecipeIndex);
-            if (prepareRecipeDistinct(currentRecipe)) {
-                // No need to cache the previous recipe here, as it is not null and matched by the current recipe,
-                // so it will always be the same
+            if (isRecipeEligible(previousRecipe)) {
+                startDistinctRecipe(previousRecipe, lastRecipeIndex);
                 return;
             }
+            blockedRecipe = previousRecipe;
+            blockedBus = lastRecipeIndex;
         }
 
-        // On a cache miss, our efficiency is much worse, as it will check
-        // each bus individually instead of the combined inventory all at once.
         for (int i = 0; i < importInventory.size(); i++) {
             IItemHandlerModifiable bus = importInventory.get(i);
-            // Skip this bus if no recipe was found last time
             if (invalidatedInputList.contains(bus)) {
                 continue;
             }
-            // Look for a new recipe after a cache miss
-            currentRecipe = findRecipe(maxVoltage, bus, getInputTank(bus));
-            // Cache the current recipe, if one is found
-            if (currentRecipe != null && checkRecipe(currentRecipe)) {
-                this.previousRecipe = currentRecipe;
-                currentDistinctInputBus = bus;
-                if (prepareRecipeDistinct(currentRecipe)) {
-                    lastRecipeIndex = i;
-                    return;
-                }
-            }
+            currentDistinctInputBus = bus;
+            Recipe currentRecipe = findRecipe(maxVoltage, bus, getInputTank(bus));
             if (currentRecipe == null) {
-                // no valid recipe found, invalidate this bus
-                invalidatedInputList.add(bus);
+                if (blockedRecipe == null || i != blockedBus) invalidatedInputList.add(bus);
+            } else if (isRecipeEligible(currentRecipe)) {
+                startDistinctRecipe(currentRecipe, i);
+                return;
+            } else if (blockedRecipe == null) {
+                blockedRecipe = currentRecipe;
+                blockedBus = i;
             }
+        }
+        if (blockedRecipe != null) {
+            this.previousRecipe = blockedRecipe;
+            this.lastRecipeIndex = blockedBus;
+            this.currentDistinctInputBus = importInventory.get(blockedBus);
+            deferRecipeSearch();
+        }
+    }
+
+    private void startDistinctRecipe(Recipe recipe, int busIndex) {
+        this.previousRecipe = recipe;
+        this.lastRecipeIndex = busIndex;
+        // Only the selected candidate may invoke checks that consume resources or change controller state.
+        if (checkRecipe(recipe)) {
+            prepareRecipeDistinct(recipe);
+        } else {
+            deferRecipeSearch();
         }
     }
 
@@ -268,7 +278,8 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
     }
 
     protected boolean checkPreviousRecipeDistinct(IItemHandlerModifiable previousBus) {
-        return previousRecipe != null && previousRecipe.matches(false, previousBus, getInputTank(previousBus));
+        return previousRecipe != null && previousRecipe.getEUt() <= getMaxVoltage() &&
+                previousRecipe.matches(false, previousBus, getInputTank(previousBus));
     }
 
     protected boolean prepareRecipeDistinct(Recipe recipe) {
@@ -369,6 +380,17 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
             durationMultiplier = displayBase.getMaintenanceDurationMultiplier();
         }
         return new Tuple<>(numMaintenanceProblems, durationMultiplier);
+    }
+
+    @Override
+    public boolean isRecipeEligible(@NotNull Recipe recipe) {
+        return !supportsRecipeCandidateEligibility() || (super.isRecipeEligible(recipe) &&
+                ((RecipeMapMultiblockController) metaTileEntity).isRecipeEligible(recipe));
+    }
+
+    @Override
+    protected boolean supportsRecipeCandidateEligibility() {
+        return usesLegacyRecipeCheck(MultiblockRecipeLogic.class);
     }
 
     @Override

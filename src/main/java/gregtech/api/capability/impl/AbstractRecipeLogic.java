@@ -51,6 +51,18 @@ import static gregtech.api.recipes.logic.OverclockingLogic.*;
 
 public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable, IParallelableRecipeLogic {
 
+    private static final ClassValue<Class<?>> RECIPE_CHECK_IMPLEMENTATIONS = new ClassValue<Class<?>>() {
+
+        @Override
+        protected Class<?> computeValue(Class<?> type) {
+            try {
+                return type.getMethod("checkRecipe", Recipe.class).getDeclaringClass();
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException("Recipe logic has no public checkRecipe implementation", e);
+            }
+        }
+    };
+
     private static final String ALLOW_OVERCLOCKING = "AllowOverclocking";
     private static final String OVERCLOCK_VOLTAGE = "OverclockVoltage";
 
@@ -82,6 +94,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected boolean wasActiveAndNeedsUpdate;
     protected boolean isOutputsFull;
     protected boolean invalidInputsForRecipes;
+    private long nextRecipeSearchTick;
 
     protected boolean hasPerfectOC;
 
@@ -264,7 +277,15 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * @return true if recipes should be searched for
      */
     protected boolean shouldSearchForRecipes() {
-        return canWorkWithInputs() && canFitNewOutputs();
+        if (hasNotifiedInputs()) this.nextRecipeSearchTick = 0;
+        return metaTileEntity.getOffsetTimer() >= nextRecipeSearchTick && canWorkWithInputs() && canFitNewOutputs();
+    }
+
+    /** Environmental failures must retry even when inventories have not changed. */
+    protected void deferRecipeSearch() {
+        this.nextRecipeSearchTick = metaTileEntity.getOffsetTimer() + 20;
+        metaTileEntity.getNotifiedItemInputList().clear();
+        metaTileEntity.getNotifiedFluidInputList().clear();
     }
 
     /**
@@ -409,12 +430,11 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         IItemHandlerModifiable importInventory = getInputInventory();
         IMultipleTankHandler importFluids = getInputTank();
 
-        // see if the last recipe we used still works
-        if (checkPreviousRecipe()) {
-            currentRecipe = this.previousRecipe;
-            // If there is no active recipe, then we need to find one.
-        } else {
-            currentRecipe = findRecipe(maxVoltage, importInventory, importFluids);
+        currentRecipe = checkPreviousRecipe() ? this.previousRecipe : null;
+        if (currentRecipe == null || !isRecipeEligible(currentRecipe)) {
+            Recipe candidate = findRecipe(maxVoltage, importInventory, importFluids);
+            // A blocked cached input match must not turn into permanent input invalidation.
+            if (candidate != null || currentRecipe == null) currentRecipe = candidate;
         }
         // If a recipe was found, then inputs were valid. Cache found recipe.
         if (currentRecipe != null) {
@@ -423,8 +443,13 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         this.invalidInputsForRecipes = (currentRecipe == null);
 
         // proceed if we have a usable recipe.
-        if (currentRecipe != null && checkRecipe(currentRecipe)) {
-            prepareRecipe(currentRecipe);
+        if (currentRecipe != null) {
+            if (isRecipeEligible(currentRecipe) && checkRecipe(currentRecipe)) {
+                this.nextRecipeSearchTick = 0;
+                prepareRecipe(currentRecipe);
+            } else {
+                deferRecipeSearch();
+            }
         }
     }
 
@@ -445,6 +470,27 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     public boolean checkRecipe(@NotNull Recipe recipe) {
         return checkCleanroomRequirement(recipe) && checkDimensionRequirement(recipe);
+    }
+
+    /**
+     * Read-only candidate eligibility. Addons and recipe conditions may add pure environmental constraints here.
+     * Keep consumption, startup energy, and other mutations in {@link #checkRecipe(Recipe)} or preparation.
+     */
+    public boolean isRecipeEligible(@NotNull Recipe recipe) {
+        return !supportsRecipeCandidateEligibility() ||
+                (checkCleanroomRequirement(recipe) && checkDimensionRequirement(recipe));
+    }
+
+    /**
+     * Custom legacy checkRecipe overrides stay selected-only unless they opt into pure candidate checks here,
+     * or implement their own isRecipeEligible hook. The final legacy check still runs unchanged.
+     */
+    protected boolean supportsRecipeCandidateEligibility() {
+        return usesLegacyRecipeCheck(AbstractRecipeLogic.class);
+    }
+
+    protected final boolean usesLegacyRecipeCheck(Class<?> implementation) {
+        return RECIPE_CHECK_IMPLEMENTATIONS.get(getClass()) == implementation;
     }
 
     /**
@@ -654,7 +700,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             return null;
         }
 
-        return map.findRecipe(maxVoltage, inputs, fluidInputs);
+        return map.findRecipeWithEligibility(maxVoltage, inputs, fluidInputs, this::isRecipeEligible)
+                .getRecipeForCache();
     }
 
     /**
@@ -1138,6 +1185,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     @MustBeInvokedByOverriders
     public void invalidate() {
+        this.nextRecipeSearchTick = 0;
         previousRecipe = null;
         progressTime = 0;
         maxProgressTime = 0;
