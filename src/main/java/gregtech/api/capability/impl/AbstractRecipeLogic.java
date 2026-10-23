@@ -98,6 +98,9 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected boolean isOutputsFull;
     protected boolean invalidInputsForRecipes;
     private long nextRecipeSearchTick;
+    private boolean recipeLogicWakeup = true;
+    private RecipeMap<?> observedRecipeMap;
+    private long observedRecipeRevision;
     private RecipeFailure recipeFailure = RecipeFailure.NONE;
     private RecipeFailure progressConditionFailure = RecipeFailure.NONE;
     private RecipeFailure capturedFailure = RecipeFailure.NONE;
@@ -115,11 +118,15 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap) {
         super(tileEntity);
         this.recipeMap = recipeMap;
+        this.observedRecipeMap = recipeMap;
+        this.observedRecipeRevision = recipeMap == null ? 0 : recipeMap.getRecipeRevision();
     }
 
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, boolean hasPerfectOC) {
         super(tileEntity);
         this.recipeMap = recipeMap;
+        this.observedRecipeMap = recipeMap;
+        this.observedRecipeRevision = recipeMap == null ? 0 : recipeMap.getRecipeRevision();
         this.hasPerfectOC = hasPerfectOC;
     }
 
@@ -234,10 +241,62 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         return null;
     }
 
+    /**
+     * Addon logic must explicitly accept the idle scheduling contract. Running and preparation failures remain ticking;
+     * idle custom side effects must use the wake hook or the existing twenty-tick safety cadence.
+     */
+    protected boolean supportsIdleRecipeScheduling() {
+        return false;
+    }
+
+    private boolean isIdleRecipeSchedulingEnabled() {
+        if (!metaTileEntity.supportsIdleRecipeScheduling() || !supportsIdleRecipeScheduling()) return false;
+        RecipeMap<?> map = getRecipeMap();
+        return map != null && map.supportsRecipeRevisionTracking();
+    }
+
+    /** Read-only scheduling decision. Notification lists and lookup state belong to the real update, not this gate. */
+    public boolean shouldUpdateRecipeLogic() {
+        World world = metaTileEntity.getWorld();
+        if (world == null || world.isRemote || !isIdleRecipeSchedulingEnabled()) return true;
+        // Completed outputs awaiting insertion must retain positive progress and remain on the running path.
+        if (progressTime > 0 || wasActiveAndNeedsUpdate || recipeLogicWakeup) return true;
+        if (!workingEnabled) return false;
+        long tick = metaTileEntity.getOffsetTimer();
+        if (hasRecipeMapChanged() || tick % 20 == 0 || hasNotifiedInputs()) return true;
+        return !invalidInputsForRecipes && tick >= nextRecipeSearchTick;
+    }
+
+    /** Requests the next normal callback without searching, consuming notifications or changing a running recipe. */
+    public void requestRecipeLogicWakeup() {
+        this.recipeLogicWakeup = true;
+    }
+
+    private boolean hasRecipeMapChanged() {
+        RecipeMap<?> map = getRecipeMap();
+        return map != observedRecipeMap || map.getRecipeRevision() != observedRecipeRevision;
+    }
+
+    private void prepareScheduledRecipeUpdate() {
+        this.recipeLogicWakeup = false;
+        if (progressTime > 0 || !hasRecipeMapChanged()) return;
+        RecipeMap<?> map = getRecipeMap();
+        this.observedRecipeMap = map;
+        this.observedRecipeRevision = map.getRecipeRevision();
+        // Only invalidate the idle lookup cache. Sampled outputs and running resources are never touched here.
+        this.previousRecipe = null;
+        this.invalidInputsForRecipes = false;
+        this.isOutputsFull = false;
+        this.nextRecipeSearchTick = 0;
+        clearRecipeFailure();
+    }
+
     @Override
     public void update() {
         World world = getMetaTileEntity().getWorld();
         if (world != null && !world.isRemote) {
+            boolean scheduled = isIdleRecipeSchedulingEnabled();
+            if (scheduled) prepareScheduledRecipeUpdate();
             if (workingEnabled) {
                 if (getMetaTileEntity().getOffsetTimer() % 20 == 0) {
                     this.progressConditionFailure = captureRecipeFailure(this::canProgressRecipe,
@@ -249,7 +308,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                     updateRecipeProgress();
                 }
                 // check everything that would make a recipe never start here.
-                if (progressTime == 0 && shouldSearchForRecipes()) {
+                // A map changed during a running recipe is observed at the next idle update entry.
+                if (progressTime == 0 && (!scheduled || !hasRecipeMapChanged()) && shouldSearchForRecipes()) {
                     trySearchNewRecipe();
                 }
             }
@@ -733,6 +793,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     public void setParallelLimit(int amount) {
         parallelLimit = amount;
+        requestRecipeLogicWakeup();
     }
 
     /**
@@ -752,6 +813,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             return;
         }
         euDiscount = discount;
+        requestRecipeLogicWakeup();
     }
 
     /**
@@ -775,6 +837,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             return;
         }
         speedBonus = bonus;
+        requestRecipeLogicWakeup();
     }
 
     /**
@@ -1241,6 +1304,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     @Override
     public void setWorkingEnabled(boolean workingEnabled) {
         if (this.workingEnabled != workingEnabled) {
+            requestRecipeLogicWakeup();
             clearRecipeFailure();
             this.progressConditionFailure = RecipeFailure.NONE;
         }
@@ -1282,6 +1346,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * @param allowOverclocking If overclocking is allowed
      */
     public void setAllowOverclocking(boolean allowOverclocking) {
+        requestRecipeLogicWakeup();
         this.allowOverclocking = allowOverclocking;
         this.overclockVoltage = allowOverclocking ? getMaximumOverclockVoltage() : GTValues.V[GTValues.ULV];
         metaTileEntity.markDirty();
@@ -1302,6 +1367,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      *                         voltage tier in <B>GTValues.V</>
      */
     public void setMaximumOverclockVoltage(final long overclockVoltage) {
+        requestRecipeLogicWakeup();
         this.overclockVoltage = overclockVoltage;
         // Overclocking is not allowed if the passed voltage is <= LV
         this.allowOverclocking = (overclockVoltage > GTValues.V[GTValues.LV]);
@@ -1319,6 +1385,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     @MustBeInvokedByOverriders
     public void invalidate() {
+        requestRecipeLogicWakeup();
         resetRecipeFailures();
         this.nextRecipeSearchTick = 0;
         previousRecipe = null;
@@ -1385,6 +1452,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
 
     @Override
     public void deserializeNBT(@NotNull NBTTagCompound compound) {
+        requestRecipeLogicWakeup();
         resetRecipeFailures();
         this.workingEnabled = compound.getBoolean("WorkEnabled");
         this.canRecipeProgress = compound.getBoolean("CanRecipeProgress");

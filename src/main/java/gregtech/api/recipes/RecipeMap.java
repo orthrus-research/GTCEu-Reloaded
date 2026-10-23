@@ -126,6 +126,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private final WeakHashMap<AbstractMapIngredient, WeakReference<AbstractMapIngredient>> fluidIngredientRoot = new WeakHashMap<>();
 
     private final Map<GTRecipeCategory, List<Recipe>> recipeByCategory = new Object2ObjectOpenHashMap<>();
+    private long recipeRevision;
 
     private final Map<ResourceLocation, RecipeBuildAction<R>> recipeBuildActions = new Object2ObjectOpenHashMap<>();
     protected @Nullable SoundEvent sound;
@@ -337,6 +338,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                 v.add(recipe);
                 return v;
             });
+            onRecipesChanged();
             return true;
         }
         return false;
@@ -356,6 +358,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                 if (v != null) v.remove(recipe);
                 return v == null || v.isEmpty() ? null : v;
             });
+            onRecipesChanged();
             return true;
         }
         return false;
@@ -368,12 +371,31 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      */
     @ApiStatus.Internal
     protected void removeAllRecipes() {
+        boolean hadRecipes = !this.recipeByCategory.isEmpty();
         if (GroovyScriptModule.isCurrentlyRunning()) {
             this.lookup.getRecipes(false).forEach(this.getGroovyScriptRecipeMap()::addBackup);
         }
         this.lookup.getNodes().clear();
         this.lookup.getSpecialNodes().clear();
         this.recipeByCategory.clear();
+        if (hadRecipes) onRecipesChanged();
+    }
+
+    /**
+     * Subclasses may opt in when every successful lookup mutation calls {@link #onRecipesChanged()}.
+     * Dynamic lookups with untracked external state must keep continuous recipe callbacks.
+     */
+    public boolean supportsRecipeRevisionTracking() {
+        return getClass() == RecipeMap.class;
+    }
+
+    public final long getRecipeRevision() {
+        return recipeRevision;
+    }
+
+    /** Marks a completed lookup mutation; this transient counter is not part of recipe or world data. */
+    protected final void onRecipesChanged() {
+        this.recipeRevision++;
     }
 
     /**

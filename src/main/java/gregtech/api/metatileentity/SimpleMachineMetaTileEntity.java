@@ -286,6 +286,22 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     }
 
     @Override
+    public boolean supportsIdleRecipeScheduling() {
+        return getClass() == SimpleMachineMetaTileEntity.class;
+    }
+
+    @Override
+    protected boolean shouldUpdate(MTETrait trait) {
+        return super.shouldUpdate(trait) && (trait != workable || workable.shouldUpdateRecipeLogic());
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        workable.requestRecipeLogicWakeup();
+    }
+
+    @Override
     public void update() {
         super.update();
         if (!getWorld().isRemote) {

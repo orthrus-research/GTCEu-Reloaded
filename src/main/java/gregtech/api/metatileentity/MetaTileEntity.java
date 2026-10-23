@@ -887,6 +887,14 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
         return true;
     }
 
+    /**
+     * Opt in only when this machine's recipe logic can wake through input notifications or its explicit wake hook.
+     * Other traits and the machine itself keep their normal update schedule.
+     */
+    public boolean supportsIdleRecipeScheduling() {
+        return false;
+    }
+
     @SideOnly(Side.CLIENT)
     private void updateSound() {
         if (!ConfigHolder.machines.machineSounds || isMuffled()) {
