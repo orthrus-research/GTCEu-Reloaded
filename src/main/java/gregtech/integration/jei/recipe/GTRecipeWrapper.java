@@ -2,6 +2,7 @@ package gregtech.integration.jei.recipe;
 
 import gregtech.api.GTValues;
 import gregtech.api.gui.GuiTextures;
+import gregtech.api.gui.resources.TextTexture;
 import gregtech.api.gui.widgets.TankWidget;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IDataItem;
@@ -31,6 +32,8 @@ import gregtech.integration.jei.utils.AdvancedRecipeWrapper;
 import gregtech.integration.jei.utils.JeiButton;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextComponentString;
@@ -51,9 +54,12 @@ import java.util.stream.Collectors;
 public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
     private static final int LINE_HEIGHT = 10;
+    static final int OVERCLOCK_HEIGHT = 16;
 
     private final RecipeMap<?> recipeMap;
     private final Recipe recipe;
+    final RecipeOverclockPreview overclockPreview;
+    private JeiButton overclockButton;
 
     private final List<GTRecipeInput> sortedInputs;
     private final List<GTRecipeInput> sortedFluidInputs;
@@ -61,6 +67,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     public GTRecipeWrapper(RecipeMap<?> recipeMap, Recipe recipe) {
         this.recipeMap = recipeMap;
         this.recipe = recipe;
+        this.overclockPreview = new RecipeOverclockPreview(recipe, recipeMap.getRecipeMapUI().isGenerator());
 
         this.sortedInputs = new ArrayList<>(recipe.getInputs());
         this.sortedInputs.sort(GTRecipeInput.RECIPE_INPUT_COMPARATOR);
@@ -70,6 +77,46 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
     public Recipe getRecipe() {
         return recipe;
+    }
+
+    void prepareOverclockPreview(int recipeWidth, int recipeHeight) {
+        this.overclockPreview.reset();
+        if (overclockButton != null) this.buttons.remove(overclockButton);
+
+        TextTexture label = new TextTexture().setColor(0x111111).setWidth(recipeWidth - 4)
+                .setType(TextTexture.TextType.HIDE).setText(getOverclockLabel());
+        this.overclockButton = new JeiButton(0, recipeHeight - 12, recipeWidth, 12)
+                .setTextures(GuiTextures.BUTTON, label)
+                .setTooltipBuilder(this::addOverclockTooltip)
+                .setClickAction((minecraft, mouseX, mouseY, mouseButton) -> {
+                    if (!overclockPreview.click(mouseButton, GuiScreen.isShiftKeyDown())) return false;
+                    label.setText(getOverclockLabel());
+                    return true;
+                });
+        this.buttons.add(overclockButton);
+    }
+
+    private String getOverclockLabel() {
+        if (overclockPreview.unavailableReason() != null) {
+            return LocalizationUtils.format("gregtech.jei.overclock.unavailable");
+        }
+        return LocalizationUtils.format(overclockPreview.isPerfect() ?
+                "gregtech.jei.overclock.perfect" : "gregtech.jei.overclock.normal",
+                GTValues.VN[overclockPreview.tier()]);
+    }
+
+    private void addOverclockTooltip(List<String> lines) {
+        lines.add(getOverclockLabel());
+        String reason = overclockPreview.unavailableReason();
+        if (reason != null) {
+            lines.add(LocalizationUtils.format(reason));
+            return;
+        }
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.tier"));
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.shift"));
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.reset"));
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.assumptions"));
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.ingredients"));
     }
 
     @Override
@@ -238,7 +285,6 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
     @Override
     public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
-        super.drawInfo(minecraft, recipeWidth, recipeHeight, mouseX, mouseY);
         var storage = recipe.propertyStorage();
         var properties = storage.values();
         boolean drawTotalEU = properties.isEmpty() || properties.stream().noneMatch(RecipeProperty::hideTotalEU);
@@ -253,11 +299,12 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         int unhiddenCount = (int) storage.entrySet().stream()
                 .filter((property) -> !property.getKey().isHidden())
                 .count();
-        int yPosition = recipeHeight - ((unhiddenCount + defaultLines) * 10 - 3);
+        int contentHeight = recipeHeight - OVERCLOCK_HEIGHT;
+        int yPosition = contentHeight - ((unhiddenCount + defaultLines) * 10 - 3);
 
         // Default entries
         if (drawTotalEU) {
-            long eu = recipe.getEUt() * recipe.getDuration();
+            long eu = overclockPreview.eut() * overclockPreview.duration();
             // sadly we still need a custom override here, since computation uses duration and EU/t very differently
             if (storage.contains(TotalComputationProperty.getInstance()) &&
                     storage.contains(ComputationProperty.getInstance())) {
@@ -273,13 +320,13 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                     I18n.format(
                             recipeMap.getRecipeMapUI().isGenerator() ? "gregtech.recipe.eu_inverted" :
                                     "gregtech.recipe.eu",
-                            recipe.getEUt(), GTValues.VN[GTUtility.getTierByVoltage(recipe.getEUt())]),
+                            overclockPreview.eut(), GTValues.VN[GTUtility.getTierByVoltage(overclockPreview.eut())]),
                     0, yPosition += LINE_HEIGHT, 0x111111);
         }
         if (drawDuration) {
             minecraft.fontRenderer.drawString(
                     I18n.format("gregtech.recipe.duration",
-                            TextFormattingUtil.formatNumbers(recipe.getDuration() / 20.0)),
+                            TextFormattingUtil.formatNumbers(overclockPreview.duration() / 20.0)),
                     0, yPosition += LINE_HEIGHT, 0x111111);
         }
 
@@ -292,6 +339,8 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                         mouseY);
             }
         }
+        GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+        super.drawInfo(minecraft, recipeWidth, recipeHeight, mouseX, mouseY);
     }
 
     @NotNull
