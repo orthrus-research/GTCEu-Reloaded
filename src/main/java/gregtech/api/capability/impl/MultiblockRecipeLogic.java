@@ -111,11 +111,7 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
      * @return a new FluidTankList with extra fluid tanks on top of the existing fluid tanks
      */
     protected IMultipleTankHandler getInputTank(IItemHandler items) {
-        var tanks = new ArrayList<>(getInputTank().getFluidTanks());
-        if (items instanceof IMultipleTankHandler tankHandler) {
-            tanks.addAll(tankHandler.getFluidTanks());
-        }
-        return new FluidTankList(getInputTank().allowSameFluidFill(), tanks);
+        return MultiblockFluidInputs.extend(getInputTank(), java.util.Collections.singletonList(items));
     }
 
     @Override

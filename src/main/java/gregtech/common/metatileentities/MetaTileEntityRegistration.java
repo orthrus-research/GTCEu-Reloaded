@@ -68,6 +68,7 @@ import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityAutoM
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityCleaningMaintenanceHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityComputationHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityDataAccessHatch;
+import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityDualHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityEnergyHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityFluidHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityItemBus;
@@ -884,6 +885,15 @@ final class MetaTileEntityRegistration {
             MetaTileEntities.registerMetaTileEntity(11015 + i, MetaTileEntities.ITEM_EXPORT_BUS[i]);
             MetaTileEntities.registerMetaTileEntity(11030 + i, MetaTileEntities.FLUID_IMPORT_HATCH[i]);
             MetaTileEntities.registerMetaTileEntity(11045 + i, MetaTileEntities.FLUID_EXPORT_HATCH[i]);
+        }
+
+        // Combined item/fluid hatches: reserve 11540-11554 input and 11555-11569 output.
+        for (int tier = GTValues.LuV; tier < endPos; tier++) {
+            String tierName = GTValues.VN[tier].toLowerCase(java.util.Locale.ROOT);
+            MetaTileEntities.DUAL_IMPORT_HATCH[tier] = MetaTileEntities.registerMetaTileEntity(11540 + tier,
+                    new MetaTileEntityDualHatch(gregtechId("dual_hatch.import." + tierName), tier, false));
+            MetaTileEntities.DUAL_EXPORT_HATCH[tier] = MetaTileEntities.registerMetaTileEntity(11555 + tier,
+                    new MetaTileEntityDualHatch(gregtechId("dual_hatch.export." + tierName), tier, true));
         }
 
         // quad and nonuple hatches, Ids 11060-11219

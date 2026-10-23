@@ -4,6 +4,7 @@ import gregtech.api.GregTechAPI;
 import gregtech.api.block.IHeatingCoilBlockStats;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
 import gregtech.api.util.BlockInfo;
 
@@ -215,6 +216,11 @@ public class TraceabilityPredicate {
     }
 
     public boolean test(BlockWorldState blockWorldState) {
+        if (!limited.isEmpty() && blockWorldState.getTileEntity() instanceof IGregTechTileEntity holder &&
+                holder.getMetaTileEntity() instanceof IMultiblockAbilityPart<?>part &&
+                part.requiresAllAbilityLimits()) {
+            return testAllAbilityLimits(blockWorldState);
+        }
         boolean flag = false;
         for (SimplePredicate predicate : limited) {
             if (predicate.testLimited(blockWorldState)) {
@@ -222,6 +228,37 @@ public class TraceabilityPredicate {
             }
         }
         return flag || common.stream().anyMatch(predicate -> predicate.test(blockWorldState));
+    }
+
+    private boolean testAllAbilityLimits(BlockWorldState state) {
+        Map<SimplePredicate, Integer> globalBefore = new HashMap<>(state.globalCount);
+        Map<SimplePredicate, Integer> layerBefore = new HashMap<>(state.layerCount);
+        SinglePredicateError firstMaximum = null;
+        boolean matches = false;
+        for (SimplePredicate predicate : limited) {
+            int previousGlobal = state.globalCount.getOrDefault(predicate, 0);
+            int previousLayer = state.layerCount.getOrDefault(predicate, 0);
+            if (predicate.testLimited(state)) matches = true;
+            // An increased count witnesses a match without replaying a potentially stateful predicate.
+            int global = state.globalCount.getOrDefault(predicate, 0);
+            int layer = state.layerCount.getOrDefault(predicate, 0);
+            if (firstMaximum == null) {
+                if (predicate.maxGlobalCount >= 0 && global > previousGlobal && global > predicate.maxGlobalCount) {
+                    firstMaximum = new SinglePredicateError(predicate, 0);
+                } else if (predicate.maxLayerCount >= 0 && layer > previousLayer && layer > predicate.maxLayerCount) {
+                    firstMaximum = new SinglePredicateError(predicate, 2);
+                }
+            }
+        }
+        if (firstMaximum == null && (matches || common.stream().anyMatch(predicate -> predicate.test(state))))
+            return true;
+        // A rejected combined position must not leave its count increments behind for an aisle retry.
+        state.globalCount.clear();
+        state.globalCount.putAll(globalBefore);
+        state.layerCount.clear();
+        state.layerCount.putAll(layerBefore);
+        if (firstMaximum != null) state.setError(firstMaximum);
+        return false;
     }
 
     public TraceabilityPredicate or(TraceabilityPredicate other) {

@@ -218,6 +218,11 @@ public abstract class BaseFilterContainer extends ItemStackHandler {
 
     /** Uses Cleanroom MUI */
     public IWidget initUI(GuiData data, PanelSyncManager manager) {
+        return initUI(data, manager, "update_filter_panel");
+    }
+
+    /** Allows independent item/fluid filter rows to share a machine panel. */
+    public IWidget initUI(GuiData data, PanelSyncManager manager, String updateAction) {
         // i bet brachy is gonna really hate this, but it *does* work
         // todo Find a better way to handle the filter popup panel than making
         // a new panel handler every time it changes
@@ -226,7 +231,7 @@ public abstract class BaseFilterContainer extends ItemStackHandler {
         AtomicReference<ItemStack> oldStack = new AtomicReference<>(getFilterStack());
         AtomicInteger counter = new AtomicInteger();
         if (hasFilter()) filterPanel.set(getFilter().createPanelHandler(manager, counter.getAndIncrement()));
-        manager.registerSyncedAction("update_filter_panel", packet -> {
+        manager.registerSyncedAction(updateAction, packet -> {
             if (hasFilter()) {
                 // make new panel handler only when we have a filter
                 filterPanel.set(getFilter().createPanelHandler(manager, counter.getAndIncrement()));
@@ -249,7 +254,7 @@ public abstract class BaseFilterContainer extends ItemStackHandler {
                                         panel.closePanel();
                                     }
                                     if (client) {
-                                        manager.callSyncedAction("update_filter_panel", packetBuffer -> {});
+                                        manager.callSyncedAction(updateAction, packetBuffer -> {});
                                     }
                                 }))
                         .size(18).marginRight(2)

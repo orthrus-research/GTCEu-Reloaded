@@ -8,6 +8,7 @@ import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.capability.impl.EnergyContainerList;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
+import gregtech.api.capability.impl.MultiblockFluidInputs;
 import gregtech.api.capability.impl.MultiblockRecipeLogic;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.IDataInfoProvider;
@@ -28,7 +29,6 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import codechicken.lib.render.CCRenderState;
@@ -137,7 +137,8 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     protected void initializeAbilities() {
         this.inputInventory = new ItemHandlerList(getAbilities(MultiblockAbility.IMPORT_ITEMS));
         this.inputFluidInventory = new FluidTankList(allowSameFluidFillForOutputs(),
-                getAbilities(MultiblockAbility.IMPORT_FLUIDS));
+                MultiblockFluidInputs.shared(getAbilities(MultiblockAbility.IMPORT_FLUIDS),
+                        getAbilities(MultiblockAbility.IMPORT_ITEMS)));
         this.extendedFluidInputs = extendedImportFluidList(this.inputFluidInventory);
         this.outputInventory = new ItemHandlerList(getAbilities(MultiblockAbility.EXPORT_ITEMS));
         this.outputFluidInventory = new FluidTankList(allowSameFluidFillForOutputs(),
@@ -159,21 +160,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     }
 
     protected IMultipleTankHandler extendedImportFluidList(IMultipleTankHandler fluids) {
-        List<IFluidTank> tanks = new ArrayList<>(fluids.getFluidTanks());
-        // iterate import items to look for and tanks that we might have missed
-        // honestly this might not be worth checking because
-        // it might already be handled in ARL/MRL
-        for (var handler : getAbilities(MultiblockAbility.IMPORT_ITEMS)) {
-            if (handler instanceof IFluidTank tank) {
-                if (!tanks.contains(tank)) tanks.add(tank);
-            } else if (handler instanceof IMultipleTankHandler multipleTankHandler) {
-                for (var tank : multipleTankHandler.getFluidTanks()) {
-                    if (!tanks.contains(tank)) tanks.add(tank);
-                }
-            }
-        }
-
-        return new FluidTankList(allowSameFluidFillForOutputs(), tanks);
+        return MultiblockFluidInputs.extend(fluids, getAbilities(MultiblockAbility.IMPORT_ITEMS));
     }
 
     protected boolean allowSameFluidFillForOutputs() {

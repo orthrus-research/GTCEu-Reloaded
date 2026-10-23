@@ -51,7 +51,7 @@ public class DualHandler implements IItemHandlerModifiable, IMultipleTankHandler
     }
 
     private DualEntry wrap(ITankEntry entry) {
-        return entry instanceof DualEntry ? (DualEntry) entry : new DualEntry(this, entry);
+        return entry instanceof DualEntry dual && dual.tank == this ? dual : new DualEntry(this, entry);
     }
 
     public boolean isExport() {
@@ -87,6 +87,11 @@ public class DualHandler implements IItemHandlerModifiable, IMultipleTankHandler
     @Override
     public int getSlotLimit(int slot) {
         return itemDelegate.getSlotLimit(slot);
+    }
+
+    @Override
+    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+        return itemDelegate.isItemValid(slot, stack);
     }
 
     @Override
@@ -205,7 +210,7 @@ public class DualHandler implements IItemHandlerModifiable, IMultipleTankHandler
         public int fill(FluidStack resource, boolean doFill) {
             int filled = getDelegate().fill(resource, doFill);
             if (doFill && filled > 0)
-                tank.onContentsChanged(this);
+                tank.onContentsChanged();
             return filled;
         }
 
@@ -213,7 +218,7 @@ public class DualHandler implements IItemHandlerModifiable, IMultipleTankHandler
         public FluidStack drain(FluidStack resource, boolean doDrain) {
             var drained = getDelegate().drain(resource, doDrain);
             if (doDrain && drained != null)
-                tank.onContentsChanged(this);
+                tank.onContentsChanged();
             return drained;
         }
 
@@ -221,7 +226,7 @@ public class DualHandler implements IItemHandlerModifiable, IMultipleTankHandler
         public FluidStack drain(int maxDrain, boolean doDrain) {
             var drained = getDelegate().drain(maxDrain, doDrain);
             if (doDrain && drained != null)
-                tank.onContentsChanged(this);
+                tank.onContentsChanged();
             return drained;
         }
 
