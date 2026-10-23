@@ -16,7 +16,8 @@ import static gregtech.api.util.GTUtility.gregtechId;
 final class StockingTestHatch extends MetaTileEntityMEStockingHatch {
 
     final StockingTestStorage<IAEFluidStack> storage = new StockingTestStorage<>(
-            (a, b) -> a.getFluidStack().isFluidEqual(b.getFluidStack()));
+            (a, b) -> a.copy().setStackSize(1).getFluidStack()
+                    .isFluidEqual(b.copy().setStackSize(1).getFluidStack()));
     boolean connected = true;
     boolean monitorAvailable = true;
     long tick;

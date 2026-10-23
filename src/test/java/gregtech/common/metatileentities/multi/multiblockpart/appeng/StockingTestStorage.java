@@ -11,7 +11,9 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.function.ToLongFunction;
 
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 /** Deterministic monitor boundary; the stocking part's production polling and extraction code runs unchanged. */
@@ -21,6 +23,8 @@ final class StockingTestStorage<T extends IAEStack<T>> {
     final IMEMonitor<T> monitor;
     final IActionSource actionSource = new BaseActionSource();
     long extractionLimit = Long.MAX_VALUE;
+    ToLongFunction<T> extractionRule = stack -> Long.MAX_VALUE;
+    boolean mutateRequests;
     int simulations;
     int modulations;
     int listScans;
@@ -45,11 +49,13 @@ final class StockingTestStorage<T extends IAEStack<T>> {
                         if (simulate) simulations++;
                         else modulations++;
                         for (T stored : contents) {
+                            assertNotSame(stored, request, "the monitor must receive a copied request");
                             if (!sameType.test(stored, request)) continue;
-                            long amount = Math.min(extractionLimit,
+                            long amount = Math.min(Math.min(extractionLimit, extractionRule.applyAsLong(stored)),
                                     Math.min(stored.getStackSize(), request.getStackSize()));
                             if (amount <= 0) return null;
                             T result = stored.copy().setStackSize(amount);
+                            if (mutateRequests) request.setStackSize(0);
                             if (!simulate) stored.decStackSize(amount);
                             return result;
                         }

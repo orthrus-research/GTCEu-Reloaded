@@ -4,6 +4,7 @@ import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
 import gregtech.api.util.world.DummyWorld;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAEItemSlot;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -16,7 +17,11 @@ import static gregtech.api.util.GTUtility.gregtechId;
 final class StockingTestBus extends MetaTileEntityMEStockingBus {
 
     final StockingTestStorage<IAEItemStack> storage = new StockingTestStorage<>(
-            (a, b) -> a.createItemStack().isItemEqual(b.createItemStack()));
+            (a, b) -> {
+                ItemStack left = a.copy().setStackSize(1).createItemStack();
+                ItemStack right = b.copy().setStackSize(1).createItemStack();
+                return left.isItemEqual(right) && ItemStack.areItemStackTagsEqual(left, right);
+            });
     boolean connected = true;
     boolean monitorAvailable = true;
     long tick;

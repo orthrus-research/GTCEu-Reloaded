@@ -32,6 +32,7 @@ import codechicken.lib.raytracer.CuboidRayTraceResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -221,11 +222,16 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
             return;
         }
 
+        if (stockingConfig.isPreferAbundant()) {
+            refreshAbundant(monitor, storageList);
+            return;
+        }
+
         int index = 0;
         for (IAEFluidStack stack : storageList) {
             if (index >= CONFIG_SIZE) break;
             if (stack.getStackSize() < stockingConfig.getMinimumStock()) continue;
-            stack = monitor.extractItems(stack, Actionable.SIMULATE, getActionSource());
+            stack = monitor.extractItems(stack.copy(), Actionable.SIMULATE, getActionSource());
             if (stack == null || stack.getStackSize() < stockingConfig.getMinimumStock()) continue;
 
             FluidStack fluidStack = stack.getFluidStack();
@@ -239,6 +245,33 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
             index++;
         }
 
+        clearInventory(index);
+    }
+
+    private void refreshAbundant(IMEMonitor<IAEFluidStack> monitor, IItemList<IAEFluidStack> storageList) {
+        MEStockingSelection<MEStockingSelection.Candidate<IAEFluidStack>> selected = new MEStockingSelection<>(
+                CONFIG_SIZE,
+                Comparator.<MEStockingSelection.Candidate<IAEFluidStack>>naturalOrder());
+        for (IAEFluidStack stored : storageList) {
+            if (stored.getStackSize() < stockingConfig.getMinimumStock()) continue;
+            IAEFluidStack extracted = monitor.extractItems(stored.copy(), Actionable.SIMULATE, getActionSource());
+            if (extracted == null || extracted.getStackSize() < stockingConfig.getMinimumStock()) continue;
+            FluidStack identity = extracted.copy().setStackSize(1).getFluidStack();
+            if (identity == null) continue;
+            if (autoPullTest != null && !autoPullTest.test(identity)) continue;
+            selected.offer(new MEStockingSelection.Candidate<>(extracted.copy(), extracted.getStackSize(),
+                    MEStockingIdentity::fluid));
+        }
+
+        int index = 0;
+        for (var candidate : selected.sorted()) {
+            IAEFluidStack stack = candidate.getStack();
+            var slot = getAEFluidHandler().getInventory()[index++];
+            // The config widget decodes the legacy wrapper packet format, not AE2's native format.
+            slot.setConfig(WrappedFluidStack.fromFluidStack(stack.copy().setStackSize(1).getFluidStack()));
+            // Rank using the full AE quantity; only legacy visible stacks need an integer cap.
+            slot.setStack(stack.copy().setStackSize(Math.min(Integer.MAX_VALUE, stack.getStackSize())));
+        }
         clearInventory(index);
     }
 

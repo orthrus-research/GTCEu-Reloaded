@@ -5533,13 +5533,13 @@ gregtech.machine.me_import_item_bus.name=ME Input Bus
 gregtech.machine.me.item_import.tooltip=Extracts specified items from the ME network
 gregtech.machine.me_stocking_item_bus.name=ME Stocking Input Bus
 gregtech.machine.me.stocking_item.tooltip=Retrieves items directly from the ME network
-gregtech.machine.me.stocking_item.tooltip.2=Auto-Pull from ME mode will automatically stock the first 16 items in the ME system, updated every 5 seconds.
+gregtech.machine.me.stocking_item.tooltip.2=Auto-Pull stocks up to 16 eligible item types. Configure the minimum, refresh timing and selection policy in the GUI.
 gregtech.machine.me_import_item_hatch.configs.tooltip=Keeps 16 item types in stock
 gregtech.machine.me_import_fluid_hatch.name=ME Input Hatch
 gregtech.machine.me.fluid_import.tooltip=Extracts specified fluids from ME network
 gregtech.machine.me_stocking_fluid_hatch.name=ME Stocking Input Hatch
 gregtech.machine.me.stocking_fluid.tooltip=Retrieves fluids directly from the ME network
-gregtech.machine.me.stocking_fluid.tooltip.2=Auto-Pull from ME mode will automatically stock the first 16 fluids in the ME system, updated every 5 seconds.
+gregtech.machine.me.stocking_fluid.tooltip.2=Auto-Pull stocks up to 16 eligible fluid types. Configure the minimum, refresh timing and selection policy in the GUI.
 gregtech.machine.me_import_fluid_hatch.configs.tooltip=Keeps 16 fluid types in stock
 gregtech.machine.me_export_item_bus.name=ME Output Bus
 gregtech.machine.me.item_export.tooltip=Stores items directly into the ME network
@@ -6568,6 +6568,10 @@ record.sus=Leonz - Among Us Drip
 # ME stocking settings
 gregtech.gui.me_stocking.minimum_items=Minimum items
 gregtech.gui.me_stocking.minimum_fluids=Minimum mB
-gregtech.gui.me_stocking.refresh=Refresh ticks
+gregtech.gui.me_stocking.refresh=Ticks
 gregtech.gui.me_stocking.minimum.tooltip=Only expose stocks at or above this amount./nThis is not a reserve; recipes can consume below it.
 gregtech.gui.me_stocking.refresh.tooltip=1-200 ticks between stock updates and auto-pull scans./n0 preserves legacy timing: global ME stock updates and 100-tick auto-pull scans.
+
+gregtech.gui.me_stocking.first=First 16
+gregtech.gui.me_stocking.abundant=Most stock
+gregtech.gui.me_stocking.selection.tooltip=Auto-Pull selection policy./nFirst 16 preserves ME network order./nMost stock selects the 16 largest extractable amounts, with stable ordering for ties./nThis setting has no effect on manual configurations.
