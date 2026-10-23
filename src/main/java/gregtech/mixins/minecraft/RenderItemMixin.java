@@ -4,6 +4,7 @@ import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.toolitem.IGTTool;
 import gregtech.api.util.Mods;
 import gregtech.client.renderer.handler.LampItemOverlayRenderer;
+import gregtech.client.renderer.handler.TankItemFluidPreviewRenderer;
 import gregtech.client.utils.ToolChargeBarRenderer;
 
 import net.minecraft.client.gui.FontRenderer;
@@ -26,6 +27,7 @@ public class RenderItemMixin {
                                                 String text, CallbackInfo ci) {
         if (!stack.isEmpty()) {
             gregTechCEu$renderLampOverlay(stack, xPosition, yPosition);
+            TankItemFluidPreviewRenderer.render(stack, xPosition, yPosition);
         }
     }
 

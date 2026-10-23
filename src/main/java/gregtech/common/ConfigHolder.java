@@ -373,6 +373,12 @@ public class ConfigHolder {
 
     public static class ClientOptions {
 
+        @Config.Comment({ "Show a small stored-fluid badge on drum inventory icons.", "Default: false" })
+        public boolean drumFluidBadges = false;
+
+        @Config.Comment({ "Show a small stored-fluid badge on quantum tank inventory icons.", "Default: false" })
+        public boolean quantumTankFluidBadges = false;
+
         @Config.Name("Gui Config")
         public GuiConfig guiConfig = new GuiConfig();
 
