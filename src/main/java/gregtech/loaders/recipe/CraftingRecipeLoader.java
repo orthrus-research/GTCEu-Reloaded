@@ -58,6 +58,16 @@ public class CraftingRecipeLoader {
                 new UnificationEntry(OrePrefix.foil, Materials.Zinc), 'Y',
                 new UnificationEntry(OrePrefix.plate, Materials.Sodalite));
 
+        ModHandler.addShapedRecipe("composite_item_filter", COMPOSITE_ITEM_FILTER.getStackForm(), "XCX", "SFS", "XCX",
+                'X', new UnificationEntry(OrePrefix.foil, Zinc), 'C', new UnificationEntry(OrePrefix.circuit, Tier.LV),
+                'S', new UnificationEntry(OrePrefix.plate, Steel), 'F', ITEM_FILTER);
+        for (Material material : new Material[] { Lapis, Lazurite, Sodalite }) {
+            ModHandler.addShapedRecipe("composite_fluid_filter_" + material, COMPOSITE_FLUID_FILTER.getStackForm(),
+                    "XCX", "SFS", "XCX", 'X', new UnificationEntry(OrePrefix.foil, Zinc),
+                    'C', new UnificationEntry(OrePrefix.circuit, Tier.LV),
+                    'S', new UnificationEntry(OrePrefix.plate, material), 'F', FLUID_FILTER);
+        }
+
         ModHandler.addShapedRecipe("ore_dictionary_filter_olivine", ORE_DICTIONARY_FILTER.getStackForm(), "XXX", "XYX",
                 "XXX", 'X', new UnificationEntry(OrePrefix.foil, Materials.Zinc), 'Y',
                 new UnificationEntry(OrePrefix.plate, Materials.Olivine));

@@ -6,6 +6,8 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ItemStackTexture implements IGuiTexture {
 
@@ -35,6 +37,7 @@ public class ItemStackTexture implements IGuiTexture {
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void draw(double x, double y, int width, int height) {
         RenderHelper.disableStandardItemLighting();
         GlStateManager.disableDepth();

@@ -1,5 +1,6 @@
 package gregtech.api.pipenet.tile;
 
+import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.metatileentity.interfaces.INeighborCache;
 import gregtech.api.pipenet.block.BlockPipe;
 import gregtech.api.pipenet.block.IPipeType;
@@ -19,6 +20,10 @@ public interface IPipeTile<PipeType extends Enum<PipeType> & IPipeType<NodeDataT
                           extends INeighborCache {
 
     World getPipeWorld();
+
+    default @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return null;
+    }
 
     BlockPos getPipePos();
 

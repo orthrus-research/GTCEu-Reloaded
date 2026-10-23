@@ -431,6 +431,21 @@ public class BlockPattern {
         });
     }
 
+    /** Read-only size check for bounded preview generation; -1 denotes an invalid repetition vector. */
+    public long getPreviewVolume(int[] repetition) {
+        if (repetition == null || repetition.length != aisleRepetitions.length) return -1;
+        long slices = 0;
+        for (int i = 0; i < repetition.length; i++) {
+            if (repetition[i] < aisleRepetitions[i][0] || repetition[i] > aisleRepetitions[i][1]) return -1;
+            slices += repetition[i];
+        }
+        try {
+            return Math.multiplyExact(Math.multiplyExact(slices, thumbLength), palmLength);
+        } catch (ArithmeticException exception) {
+            return -1;
+        }
+    }
+
     public BlockInfo[][][] getPreview(int[] repetition) {
         Map<TraceabilityPredicate.SimplePredicate, BlockInfo[]> cacheInfos = new HashMap<>();
         Map<TraceabilityPredicate.SimplePredicate, Integer> cacheGlobal = new HashMap<>();

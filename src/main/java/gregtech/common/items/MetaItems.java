@@ -432,6 +432,8 @@ public final class MetaItems {
     public static MetaItem<?>.MetaValueItem ITEM_FILTER;
     public static MetaItem<?>.MetaValueItem ORE_DICTIONARY_FILTER;
     public static MetaItem<?>.MetaValueItem SMART_FILTER;
+    public static MetaItem<?>.MetaValueItem COMPOSITE_ITEM_FILTER;
+    public static MetaItem<?>.MetaValueItem COMPOSITE_FLUID_FILTER;
 
     public static MetaItem<?>.MetaValueItem COVER_SHUTTER;
     public static MetaItem<?>.MetaValueItem COVER_MACHINE_CONTROLLER;
@@ -572,6 +574,7 @@ public final class MetaItems {
     public static MetaItem<?>.MetaValueItem LOGO;
 
     public static MetaItem<?>.MetaValueItem MULTIBLOCK_BUILDER;
+    public static MetaItem<?>.MetaValueItem CONFIGURATION_CARD;
 
     private static final List<OrePrefix> orePrefixes = new ArrayList<>();
 

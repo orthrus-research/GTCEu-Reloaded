@@ -26,6 +26,7 @@ import gregtech.api.util.GTUtility;
 import gregtech.api.util.RandomPotionEffect;
 import gregtech.common.ConfigHolder;
 import gregtech.common.blocks.MetaBlocks;
+import gregtech.common.covers.filter.CompositeFilter;
 import gregtech.common.covers.filter.IFilter;
 import gregtech.common.covers.filter.OreDictionaryItemFilter;
 import gregtech.common.covers.filter.SimpleFluidFilter;
@@ -35,6 +36,7 @@ import gregtech.common.creativetab.GTCreativeTabs;
 import gregtech.common.entities.GTBoatEntity.GTBoatType;
 import gregtech.common.items.behaviors.ClipboardBehavior;
 import gregtech.common.items.behaviors.ColorSprayBehaviour;
+import gregtech.common.items.behaviors.ConfigurationCardBehavior;
 import gregtech.common.items.behaviors.DataItemBehavior;
 import gregtech.common.items.behaviors.DoorBehavior;
 import gregtech.common.items.behaviors.DynamiteBehaviour;
@@ -51,6 +53,7 @@ import gregtech.common.items.behaviors.ProspectorScannerBehavior;
 import gregtech.common.items.behaviors.TooltipBehavior;
 import gregtech.common.items.behaviors.TricorderBehavior;
 import gregtech.common.items.behaviors.TurbineRotorBehavior;
+import gregtech.common.items.behaviors.filter.CompositeFilterUIManager;
 import gregtech.common.items.behaviors.filter.OreDictFilterUIManager;
 import gregtech.common.items.behaviors.filter.SimpleFilterUIManager;
 import gregtech.common.items.behaviors.filter.SimpleFluidFilterUIManager;
@@ -101,6 +104,15 @@ public class MetaItem1 extends StandardMetaItem {
                 }
             }
         }
+    }
+
+    private void registerCompositeFilters() {
+        COMPOSITE_ITEM_FILTER = addItem(294, "composite_item_filter").setMaxStackSize(1)
+                .addComponents(new CompositeFilterUIManager(IFilter.FilterType.ITEM),
+                        IFilter.factory(stack -> new CompositeFilter(stack, IFilter.FilterType.ITEM)));
+        COMPOSITE_FLUID_FILTER = addItem(295, "composite_fluid_filter").setMaxStackSize(1)
+                .addComponents(new CompositeFilterUIManager(IFilter.FilterType.FLUID),
+                        IFilter.factory(stack -> new CompositeFilter(stack, IFilter.FilterType.FLUID)));
     }
 
     @Override
@@ -640,6 +652,7 @@ public class MetaItem1 extends StandardMetaItem {
         SMART_FILTER = addItem(293, "smart_item_filter")
                 .setRecyclingData(new RecyclingData(new MaterialStack(Materials.Zinc, M * 3 / 2)))
                 .addComponents(new SmartFilterUIManager(), IFilter.factory(SmartItemFilter::new));
+        registerCompositeFilters();
 
         // Functional Covers: ID 301-330
         COVER_MACHINE_CONTROLLER = addItem(301, "cover.controller");
@@ -1197,5 +1210,7 @@ public class MetaItem1 extends StandardMetaItem {
                 .setRecyclingData(new RecyclingData(new MaterialStack(Materials.Steel, M * 4)));
         SHAPE_MOLDS[22] = SHAPE_MOLD_PIPE_HUGE = addItem(1010, "shape.mold.pipe.huge")
                 .setRecyclingData(new RecyclingData(new MaterialStack(Materials.Steel, M * 4)));
+        CONFIGURATION_CARD = addItem(1011, "tool.configuration_card")
+                .addComponents(new ConfigurationCardBehavior()).setMaxStackSize(1);
     }
 }

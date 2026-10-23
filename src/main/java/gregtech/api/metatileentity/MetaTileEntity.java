@@ -12,6 +12,7 @@ import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.capability.impl.FluidHandlerProxy;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerProxy;
+import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.cover.Cover;
 import gregtech.api.cover.CoverHolder;
 import gregtech.api.cover.CoverRayTracer;
@@ -19,6 +20,7 @@ import gregtech.api.cover.CoverSaveHandler;
 import gregtech.api.cover.CoverUtil;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
+import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.items.toolitem.ToolHelper;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -885,6 +887,14 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
         return true;
     }
 
+    /**
+     * Opt in only when this machine's recipe logic can wake through input notifications or its explicit wake hook.
+     * Other traits and the machine itself keep their normal update schedule.
+     */
+    public boolean supportsIdleRecipeScheduling() {
+        return false;
+    }
+
     @SideOnly(Side.CLIENT)
     private void updateSound() {
         if (!ConfigHolder.machines.machineSounds || isMuffled()) {
@@ -1221,6 +1231,17 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
     }
 
     private <T> void transferToNearby(Capability<T> capability, BiConsumer<T, T> transfer, EnumFacing... allowedFaces) {
+        transferToNearbyAndCheckAvailability(capability, transfer, allowedFaces);
+    }
+
+    /**
+     * Performs the normal transfer and reports whether any usable capability pair was found. A full destination is
+     * available even when no resources move. Capabilities are resolved for this call only and must not be retained.
+     */
+    protected final <T> boolean transferToNearbyAndCheckAvailability(Capability<T> capability,
+                                                                     BiConsumer<T, T> transfer,
+                                                                     EnumFacing... allowedFaces) {
+        boolean available = false;
         for (EnumFacing nearbyFacing : allowedFaces) {
             TileEntity tileEntity = getNeighbor(nearbyFacing);
             if (tileEntity == null) {
@@ -1232,8 +1253,10 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
             if (otherCap == null || thisCap == null) {
                 continue;
             }
+            available = true;
             transfer.accept(thisCap, otherCap);
         }
+        return available;
     }
 
     public final int getOutputRedstoneSignal(@Nullable EnumFacing side) {
@@ -1651,6 +1674,19 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
 
     public boolean doTickProfileMessage() {
         return true;
+    }
+
+    /**
+     * Optional, side-effect-free hints for main-hand tool use. These describe actions, not server permission.
+     * Unknown machines return no hint; implementations must account for their own tool and cover handlers.
+     */
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
+        return null;
+    }
+
+    /** Unknown implementations must explicitly opt in to settings copying. */
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return null;
     }
 
     public boolean canRenderMachineGrid(@NotNull ItemStack mainHandStack, @NotNull ItemStack offHandStack) {

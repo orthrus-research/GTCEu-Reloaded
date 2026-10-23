@@ -2,6 +2,7 @@ package gregtech.integration.jei.recipe;
 
 import gregtech.api.GTValues;
 import gregtech.api.gui.GuiTextures;
+import gregtech.api.gui.resources.TextTexture;
 import gregtech.api.gui.widgets.TankWidget;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IDataItem;
@@ -18,6 +19,7 @@ import gregtech.api.recipes.machines.IResearchRecipeMap;
 import gregtech.api.recipes.machines.IScannerRecipeMap;
 import gregtech.api.recipes.properties.RecipeProperty;
 import gregtech.api.recipes.properties.impl.ComputationProperty;
+import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.recipes.properties.impl.ScanProperty;
 import gregtech.api.recipes.properties.impl.TotalComputationProperty;
 import gregtech.api.util.AssemblyLineManager;
@@ -31,6 +33,8 @@ import gregtech.integration.jei.utils.AdvancedRecipeWrapper;
 import gregtech.integration.jei.utils.JeiButton;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.TextComponentString;
@@ -51,9 +55,14 @@ import java.util.stream.Collectors;
 public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
     private static final int LINE_HEIGHT = 10;
+    static final int OVERCLOCK_HEIGHT = 16;
 
     private final RecipeMap<?> recipeMap;
     private final Recipe recipe;
+    final RecipeOverclockPreview overclockPreview;
+    private JeiButton overclockButton;
+    private int conditionInfoY = -1;
+    private int conditionInfoWidth;
 
     private final List<GTRecipeInput> sortedInputs;
     private final List<GTRecipeInput> sortedFluidInputs;
@@ -61,6 +70,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     public GTRecipeWrapper(RecipeMap<?> recipeMap, Recipe recipe) {
         this.recipeMap = recipeMap;
         this.recipe = recipe;
+        this.overclockPreview = new RecipeOverclockPreview(recipe, recipeMap.getRecipeMapUI().isGenerator());
 
         this.sortedInputs = new ArrayList<>(recipe.getInputs());
         this.sortedInputs.sort(GTRecipeInput.RECIPE_INPUT_COMPARATOR);
@@ -70,6 +80,46 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
     public Recipe getRecipe() {
         return recipe;
+    }
+
+    void prepareOverclockPreview(int recipeWidth, int recipeHeight) {
+        this.overclockPreview.reset();
+        if (overclockButton != null) this.buttons.remove(overclockButton);
+
+        TextTexture label = new TextTexture().setColor(0x111111).setWidth(recipeWidth - 4)
+                .setType(TextTexture.TextType.HIDE).setText(getOverclockLabel());
+        this.overclockButton = new JeiButton(0, recipeHeight - 12, recipeWidth, 12)
+                .setTextures(GuiTextures.BUTTON, label)
+                .setTooltipBuilder(this::addOverclockTooltip)
+                .setClickAction((minecraft, mouseX, mouseY, mouseButton) -> {
+                    if (!overclockPreview.click(mouseButton, GuiScreen.isShiftKeyDown())) return false;
+                    label.setText(getOverclockLabel());
+                    return true;
+                });
+        this.buttons.add(overclockButton);
+    }
+
+    private String getOverclockLabel() {
+        if (overclockPreview.unavailableReason() != null) {
+            return LocalizationUtils.format("gregtech.jei.overclock.unavailable");
+        }
+        return LocalizationUtils.format(overclockPreview.isPerfect() ?
+                "gregtech.jei.overclock.perfect" : "gregtech.jei.overclock.normal",
+                GTValues.VN[overclockPreview.tier()]);
+    }
+
+    private void addOverclockTooltip(List<String> lines) {
+        lines.add(getOverclockLabel());
+        String reason = overclockPreview.unavailableReason();
+        if (reason != null) {
+            lines.add(LocalizationUtils.format(reason));
+            return;
+        }
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.tier"));
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.shift"));
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.reset"));
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.assumptions"));
+        lines.add(LocalizationUtils.format("gregtech.jei.overclock.ingredients"));
     }
 
     @Override
@@ -238,7 +288,8 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
     @Override
     public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
-        super.drawInfo(minecraft, recipeWidth, recipeHeight, mouseX, mouseY);
+        this.conditionInfoY = -1;
+        this.conditionInfoWidth = recipeWidth;
         var storage = recipe.propertyStorage();
         var properties = storage.values();
         boolean drawTotalEU = properties.isEmpty() || properties.stream().noneMatch(RecipeProperty::hideTotalEU);
@@ -253,11 +304,12 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         int unhiddenCount = (int) storage.entrySet().stream()
                 .filter((property) -> !property.getKey().isHidden())
                 .count();
-        int yPosition = recipeHeight - ((unhiddenCount + defaultLines) * 10 - 3);
+        int contentHeight = recipeHeight - OVERCLOCK_HEIGHT;
+        int yPosition = contentHeight - ((unhiddenCount + defaultLines) * 10 - 3);
 
         // Default entries
         if (drawTotalEU) {
-            long eu = recipe.getEUt() * recipe.getDuration();
+            long eu = overclockPreview.eut() * overclockPreview.duration();
             // sadly we still need a custom override here, since computation uses duration and EU/t very differently
             if (storage.contains(TotalComputationProperty.getInstance()) &&
                     storage.contains(ComputationProperty.getInstance())) {
@@ -273,13 +325,13 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                     I18n.format(
                             recipeMap.getRecipeMapUI().isGenerator() ? "gregtech.recipe.eu_inverted" :
                                     "gregtech.recipe.eu",
-                            recipe.getEUt(), GTValues.VN[GTUtility.getTierByVoltage(recipe.getEUt())]),
+                            overclockPreview.eut(), GTValues.VN[GTUtility.getTierByVoltage(overclockPreview.eut())]),
                     0, yPosition += LINE_HEIGHT, 0x111111);
         }
         if (drawDuration) {
             minecraft.fontRenderer.drawString(
                     I18n.format("gregtech.recipe.duration",
-                            TextFormattingUtil.formatNumbers(recipe.getDuration() / 20.0)),
+                            TextFormattingUtil.formatNumbers(overclockPreview.duration() / 20.0)),
                     0, yPosition += LINE_HEIGHT, 0x111111);
         }
 
@@ -290,14 +342,26 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                 var value = propertyEntry.getValue();
                 property.drawInfo(minecraft, 0, yPosition += property.getInfoHeight(value), 0x111111, value, mouseX,
                         mouseY);
+                if (property instanceof ConditionProperty) this.conditionInfoY = yPosition;
             }
         }
+        GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+        super.drawInfo(minecraft, recipeWidth, recipeHeight, mouseX, mouseY);
     }
 
     @NotNull
     @Override
     public List<String> getTooltipStrings(int mouseX, int mouseY) {
         List<String> tooltips = new ArrayList<>();
+        if (conditionInfoY >= 0 && mouseX >= 0 && mouseX < conditionInfoWidth &&
+                mouseY >= conditionInfoY && mouseY < conditionInfoY + LINE_HEIGHT) {
+            var conditions = recipe.getProperty(ConditionProperty.getInstance(), null);
+            if (conditions != null) {
+                for (String line : ConditionProperty.describe(conditions, I18n::format)) {
+                    tooltips.addAll(Minecraft.getMinecraft().fontRenderer.listFormattedStringToWidth(line, 250));
+                }
+            }
+        }
         for (var entry : recipe.propertyStorage().entrySet()) {
             if (!entry.getKey().isHidden()) {
                 RecipeProperty<?> property = entry.getKey();

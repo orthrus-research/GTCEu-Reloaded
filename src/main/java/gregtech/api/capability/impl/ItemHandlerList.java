@@ -80,6 +80,13 @@ public class ItemHandlerList implements IItemHandlerModifiable {
         return itemHandler.insertItem(slot - baseIndexOffset.get(itemHandler), stack, simulate);
     }
 
+    @Override
+    public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+        if (slot < 0 || slot >= getSlots()) return false;
+        IItemHandler itemHandler = handlerBySlotIndex.get(slot);
+        return itemHandler.isItemValid(slot - baseIndexOffset.get(itemHandler), stack);
+    }
+
     @NotNull
     @Override
     public ItemStack extractItem(int slot, int amount, boolean simulate) {

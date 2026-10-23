@@ -68,6 +68,7 @@ import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityAutoM
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityCleaningMaintenanceHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityComputationHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityDataAccessHatch;
+import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityDualHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityEnergyHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityFluidHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityItemBus;
@@ -87,8 +88,11 @@ import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEnti
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEInputHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEOutputBus;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEOutputHatch;
+import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEPatternBuffer;
+import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEPatternBufferProxy;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEStockingBus;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEStockingHatch;
+import gregtech.common.metatileentities.multi.multiblockpart.appeng.pattern.PatternBufferRecoveryEvents;
 import gregtech.common.metatileentities.multi.multiblockpart.hpca.MetaTileEntityHPCABridge;
 import gregtech.common.metatileentities.multi.multiblockpart.hpca.MetaTileEntityHPCAComputation;
 import gregtech.common.metatileentities.multi.multiblockpart.hpca.MetaTileEntityHPCACooler;
@@ -886,6 +890,15 @@ final class MetaTileEntityRegistration {
             MetaTileEntities.registerMetaTileEntity(11045 + i, MetaTileEntities.FLUID_EXPORT_HATCH[i]);
         }
 
+        // Combined item/fluid hatches: reserve 11540-11554 input and 11555-11569 output.
+        for (int tier = GTValues.LuV; tier < endPos; tier++) {
+            String tierName = GTValues.VN[tier].toLowerCase(java.util.Locale.ROOT);
+            MetaTileEntities.DUAL_IMPORT_HATCH[tier] = MetaTileEntities.registerMetaTileEntity(11540 + tier,
+                    new MetaTileEntityDualHatch(gregtechId("dual_hatch.import." + tierName), tier, false));
+            MetaTileEntities.DUAL_EXPORT_HATCH[tier] = MetaTileEntities.registerMetaTileEntity(11555 + tier,
+                    new MetaTileEntityDualHatch(gregtechId("dual_hatch.export." + tierName), tier, true));
+        }
+
         // quad and nonuple hatches, Ids 11060-11219
         // 4x Import hatch 11060-11074
         // 9x Import hatch 11075-11089
@@ -1063,7 +1076,11 @@ final class MetaTileEntityRegistration {
                     new MetaTileEntityMEStockingBus(gregtechId("me_stocking_item_bus")));
             MetaTileEntities.STOCKING_HATCH_ME = MetaTileEntities.registerMetaTileEntity(11528,
                     new MetaTileEntityMEStockingHatch(gregtechId("me_stocking_fluid_hatch")));
-            // slots left for CRIB and CRIBuffer in the future for nicer sorting order
+            MetaTileEntities.PATTERN_BUFFER_ME = MetaTileEntities.registerMetaTileEntity(11529,
+                    new MetaTileEntityMEPatternBuffer(gregtechId("me_pattern_buffer")));
+            MetaTileEntities.PATTERN_BUFFER_PROXY_ME = MetaTileEntities.registerMetaTileEntity(11530,
+                    new MetaTileEntityMEPatternBufferProxy(gregtechId("me_pattern_buffer_proxy")));
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(PatternBufferRecoveryEvents.class);
             MetaTileEntities.ITEM_EXPORT_BUS_ME = MetaTileEntities.registerMetaTileEntity(11532,
                     new MetaTileEntityMEOutputBus(gregtechId("me_export_item_bus")));
             MetaTileEntities.FLUID_EXPORT_HATCH_ME = MetaTileEntities.registerMetaTileEntity(11533,

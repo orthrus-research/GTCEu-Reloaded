@@ -20,6 +20,7 @@ import gregtech.api.mui.GTGuiTheme;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.recipes.ModHandler;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.recipes.properties.impl.TemperatureProperty;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Materials;
@@ -135,6 +136,7 @@ public class CoreModule implements IGregTechModule {
     @Override
     public void preInit(FMLPreInitializationEvent event) {
         GregTechAPIInternal.preInit();
+        ConditionProperty.getInstance();
         GregTechAPI.advancementManager = AdvancementManager.getInstance();
         AdvancementTriggers.register();
 

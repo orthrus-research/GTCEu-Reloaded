@@ -79,7 +79,8 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
                 .build(new BlankUIHolder(), Minecraft.getMinecraft().player);
         this.modularUI.initWidgets();
         this.backgroundDrawable = guiHelper.createBlankDrawable(modularUI.getWidth(),
-                modularUI.getHeight() * 2 / 3 + recipeMap.getRecipeMapUI().getPropertyHeightShift());
+                modularUI.getHeight() * 2 / 3 + recipeMap.getRecipeMapUI().getPropertyHeightShift() +
+                        GTRecipeWrapper.OVERCLOCK_HEIGHT);
         gtCategories.put(category, this);
         recipeMapCategories.compute(recipeMap, (k, v) -> {
             if (v == null) v = new ArrayList<>();
@@ -136,6 +137,7 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, @NotNull GTRecipeWrapper recipeWrapper,
                           @NotNull IIngredients ingredients) {
+        recipeWrapper.prepareOverclockPreview(backgroundDrawable.getWidth(), backgroundDrawable.getHeight());
         IGuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
         IGuiFluidStackGroup fluidStackGroup = recipeLayout.getFluidStacks();
         for (Widget uiWidget : modularUI.guiWidgets.values()) {

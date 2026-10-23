@@ -102,9 +102,13 @@ public class MetaTileEntityMEInputBus extends MetaTileEntityAEHostablePart<IAEIt
     @Override
     public void update() {
         super.update();
-        if (!getWorld().isRemote && this.workingEnabled && updateMEStatus() && shouldSyncME()) {
+        if (!getWorld().isRemote && shouldUpdateME()) {
             syncME();
         }
+    }
+
+    protected boolean shouldUpdateME() {
+        return this.workingEnabled && updateMEStatus() && shouldSyncME();
     }
 
     protected void syncME() {
@@ -188,9 +192,13 @@ public class MetaTileEntityMEInputBus extends MetaTileEntityAEHostablePart<IAEIt
         return builder.build(this.getHolder(), player);
     }
 
+    protected int getUIExtraHeight() {
+        return 0;
+    }
+
     protected ModularUI.Builder createUITemplate(EntityPlayer player) {
         ModularUI.Builder builder = ModularUI
-                .builder(GuiTextures.BACKGROUND, 176, 18 + 18 * 4 + 94)
+                .builder(GuiTextures.BACKGROUND, 176, 18 + 18 * 4 + 94 + getUIExtraHeight())
                 .label(10, 5, getMetaFullName());
         // ME Network status
         builder.dynamicLabel(10, 15, () -> this.isOnline ?
@@ -225,7 +233,7 @@ public class MetaTileEntityMEInputBus extends MetaTileEntityAEHostablePart<IAEIt
         // Arrow image
         builder.image(7 + 18 * 4, 25 + 18, 18, 18, GuiTextures.ARROW_DOUBLE);
 
-        builder.bindPlayerInventory(player.inventory, GuiTextures.SLOT, 7, 18 + 18 * 4 + 12);
+        builder.bindPlayerInventory(player.inventory, GuiTextures.SLOT, 7, 18 + 18 * 4 + 12 + getUIExtraHeight());
         return builder;
     }
 
@@ -385,9 +393,13 @@ public class MetaTileEntityMEInputBus extends MetaTileEntityAEHostablePart<IAEIt
             return false;
         }
         readConfigFromTag(tag.getCompoundTag("MEInputBus"));
-        syncME();
+        onConfigPasted();
         player.sendStatusMessage(new TextComponentTranslation("gregtech.machine.me.import_paste_settings"), true);
         return true;
+    }
+
+    protected void onConfigPasted() {
+        syncME();
     }
 
     protected void readConfigFromTag(NBTTagCompound tag) {

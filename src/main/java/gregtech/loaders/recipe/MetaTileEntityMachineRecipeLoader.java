@@ -7,6 +7,8 @@ import gregtech.api.recipes.ModHandler;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
 import gregtech.api.recipes.ingredients.GTRecipeItemInput;
 import gregtech.api.recipes.ingredients.GTRecipeOreInput;
+import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.material.Material;
 import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.Mods;
@@ -28,6 +30,7 @@ import static gregtech.common.metatileentities.MetaTileEntities.*;
 public class MetaTileEntityMachineRecipeLoader {
 
     public static void init() {
+        registerDualHatches();
         // Fluid Hatches
         registerHatchBusRecipe(ULV, FLUID_IMPORT_HATCH[ULV], FLUID_EXPORT_HATCH[ULV], new ItemStack(Blocks.GLASS));
         registerHatchBusRecipe(LV, FLUID_IMPORT_HATCH[LV], FLUID_EXPORT_HATCH[LV], new ItemStack(Blocks.GLASS));
@@ -1214,6 +1217,15 @@ public class MetaTileEntityMachineRecipeLoader {
             ItemStack accelerationCard = Mods.AppliedEnergistics2.getItem("material", 30, 2);
 
             ASSEMBLER_RECIPES.recipeBuilder()
+                    .input(ITEM_IMPORT_BUS[IV]).input(FLUID_IMPORT_HATCH[IV])
+                    .inputs(normalInterface.copy()).inputs(fluidInterface.copy()).input(SENSOR_IV)
+                    .output(PATTERN_BUFFER_ME).duration(400).EUt(VA[IV]).buildAndRegister();
+
+            ASSEMBLER_RECIPES.recipeBuilder()
+                    .input(ITEM_IMPORT_BUS[IV]).input(SENSOR_IV).input(EMITTER_IV)
+                    .output(PATTERN_BUFFER_PROXY_ME).duration(300).EUt(VA[IV]).buildAndRegister();
+
+            ASSEMBLER_RECIPES.recipeBuilder()
                     .input(FLUID_EXPORT_HATCH[EV])
                     .inputs(fluidInterface.copy())
                     .inputs(accelerationCard.copy())
@@ -1258,6 +1270,28 @@ public class MetaTileEntityMachineRecipeLoader {
                     .inputs(GTUtility.copy(4, accelerationCard))
                     .output(STOCKING_HATCH_ME)
                     .duration(300).EUt(VA[IV]).buildAndRegister();
+        }
+    }
+
+    private static void registerDualHatches() {
+        Material[] pipes = { NiobiumTitanium, Iridium, Naquadah, Neutronium };
+        Material[] frames = { Ruridit, Iridium, NaquadahAlloy, NaquadahAlloy };
+        for (int tier = LuV; tier <= UHV; tier++) {
+            ItemStack pipe = OreDictUnifier.get(pipeNonupleFluid, pipes[tier - LuV]);
+            ItemStack frame = OreDictUnifier.get(frameGt, frames[tier - LuV], 3);
+            if (pipe.isEmpty() || frame.isEmpty()) {
+                throw new IllegalStateException("Missing combined hatch ingredients for tier " + tier);
+            }
+            for (boolean output : new boolean[] { false, true }) {
+                ASSEMBLER_RECIPES.recipeBuilder()
+                        .input(output ? ITEM_EXPORT_BUS[tier] : ITEM_IMPORT_BUS[tier])
+                        .input(output ? FLUID_EXPORT_HATCH[tier] : FLUID_IMPORT_HATCH[tier])
+                        .inputs(pipe.copy(), frame.copy())
+                        .fluidInputs(Polybenzimidazole.getFluid(L * (tier + 1)))
+                        .circuitMeta(output ? 2 : 1)
+                        .output(output ? DUAL_EXPORT_HATCH[tier] : DUAL_IMPORT_HATCH[tier])
+                        .duration(300).EUt(VA[Math.min(tier, UV)]).buildAndRegister();
+            }
         }
     }
 

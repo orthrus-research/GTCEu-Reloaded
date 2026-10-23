@@ -397,7 +397,7 @@ public class MetaTileEntityLargeCombustionEngine extends FuelMultiblockControlle
 
                 // as recipe starts with progress on 1 this has to be > only not => to compensate for it
                 if (++progressTime > maxProgressTime) {
-                    completeRecipe();
+                    tryCompleteRecipe();
                 }
             }
         }

@@ -50,6 +50,11 @@ public class RecipeMapScanner extends RecipeMap<SimpleRecipeBuilder> implements 
     }
 
     @Override
+    protected boolean supportsRecipeCandidateFallback() {
+        return getClass() == RecipeMapScanner.class;
+    }
+
+    @Override
     @Nullable
     public Recipe findRecipe(long voltage, List<ItemStack> inputs, List<FluidStack> fluidInputs, boolean exactVoltage) {
         Recipe recipe = super.findRecipe(voltage, inputs, fluidInputs, exactVoltage);

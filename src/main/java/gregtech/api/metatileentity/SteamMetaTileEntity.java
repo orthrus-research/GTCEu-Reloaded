@@ -7,7 +7,7 @@ import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.RecipeLogicSteam;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ImageWidget;
+import gregtech.api.gui.widgets.RecipeFailureWidget;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
 import gregtech.client.particle.VanillaParticleEffects;
@@ -130,8 +130,8 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity {
     public ModularUI.Builder createUITemplate(EntityPlayer player) {
         return ModularUI.builder(GuiTextures.BACKGROUND_STEAM.get(isHighPressure), 176, 166)
                 .label(6, 6, getMetaFullName()).shouldColor(false)
-                .widget(new ImageWidget(79, 42, 18, 18, GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure))
-                        .setPredicate(() -> workableHandler.isHasNotEnoughEnergy()))
+                .widget(new RecipeFailureWidget(79, 42, GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure),
+                        workableHandler::getRecipeFailure))
                 .bindPlayerInventory(player.inventory, GuiTextures.SLOT_STEAM.get(isHighPressure), 0);
     }
 

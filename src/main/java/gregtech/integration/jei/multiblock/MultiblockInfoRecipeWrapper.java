@@ -123,11 +123,15 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
 
     @SuppressWarnings("NewExpressionSideOnly")
     public MultiblockInfoRecipeWrapper(@NotNull MultiblockControllerBase controller) {
+        this(controller, true);
+    }
+
+    protected MultiblockInfoRecipeWrapper(@NotNull MultiblockControllerBase controller, boolean initializeLegacy) {
         this.controller = controller;
         Set<ItemStack> drops = new ObjectOpenCustomHashSet<>(ItemStackHashStrategy.comparingAllButCount());
-        this.patterns = controller.getMatchingShapes().stream()
+        this.patterns = initializeLegacy ? controller.getMatchingShapes().stream()
                 .map(it -> initializePattern(it, drops))
-                .toArray(MBPattern[]::new);
+                .toArray(MBPattern[]::new) : new MBPattern[0];
         allItemStackInputs.addAll(drops);
         this.nextLayerButton = new GuiButton(0, 176 - (ICON_SIZE + RIGHT_PADDING), 70, ICON_SIZE, ICON_SIZE, "");
         this.buttonPreviousPattern = new GuiButton(0, 176 - ((2 * ICON_SIZE) + RIGHT_PADDING + 1), 90, ICON_SIZE,
@@ -458,7 +462,8 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
         if (drawInfoIcon) {
             return Arrays.asList(I18n.format("gregtech.multiblock.preview.zoom"),
                     I18n.format("gregtech.multiblock.preview.rotate"),
-                    I18n.format("gregtech.multiblock.preview.select"));
+                    I18n.format("gregtech.multiblock.preview.select"),
+                    I18n.format("gregtech.multiblock.editor.read_only"));
         } else if (tooltipBlockStack != null && !tooltipBlockStack.isEmpty() && !Mouse.isButtonDown(0)) {
             Minecraft minecraft = Minecraft.getMinecraft();
             ITooltipFlag flag = minecraft.gameSettings.advancedItemTooltips ? TooltipFlags.ADVANCED :
@@ -634,7 +639,7 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
     }
 
     @SideOnly(Side.CLIENT)
-    private static void renderBlockOverLay(BlockPos pos, int r, int g, int b) {
+    protected static void renderBlockOverLay(BlockPos pos, int r, int g, int b) {
         if (pos == null) return;
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE);
@@ -668,5 +673,10 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
             return tooltipBlockStack;
         }
         return null;
+    }
+
+    protected static void setHoveredItemStack(ItemStack stack) {
+        tooltipBlockStack = stack;
+        lastRender = System.currentTimeMillis();
     }
 }

@@ -10,6 +10,8 @@ import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeBuilder;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.logic.RecipeFailureReason;
+import gregtech.api.recipes.modifiers.RecipeModifierCopies;
 import gregtech.api.util.GTUtility;
 
 import net.minecraft.item.ItemStack;
@@ -43,7 +45,7 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
             drawEnergy(recipeEUt, false);
             // as recipe starts with progress on 1 this has to be > only not => to compensate for it
             if (++progressTime > maxProgressTime) {
-                completeRecipe();
+                tryCompleteRecipe();
             }
         }
     }
@@ -85,6 +87,15 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
     }
 
     private int getParallel(@NotNull Recipe recipe, double totalHolderEfficiencyCoefficient, long turbineMaxVoltage) {
+        if (hasRecipeModifierAttempt()) {
+            double required = ((double) turbineMaxVoltage - this.excessVoltage) /
+                    (recipe.getEUt() * totalHolderEfficiencyCoefficient);
+            if (!Double.isFinite(required) || required > Integer.MAX_VALUE || totalHolderEfficiencyCoefficient <= 0) {
+                recordRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
+                return -1;
+            }
+            return Math.max(0, MathHelper.ceil(required));
+        }
         return MathHelper.ceil((turbineMaxVoltage - this.excessVoltage) /
                 (recipe.getEUt() * totalHolderEfficiencyCoefficient));
     }
@@ -96,6 +107,7 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
         double totalHolderEfficiencyCoefficient = rotorHolder.getTotalEfficiency() / 100.0;
         long turbineMaxVoltage = getMaxVoltage();
         int parallel = getParallel(recipe, totalHolderEfficiencyCoefficient, turbineMaxVoltage);
+        if (parallel < 0) return false;
 
         FluidStack recipeFluidStack = recipe.getFluidInputs().get(0).getInputFluidStack();
 
@@ -103,7 +115,18 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
         FluidStack inputFluid = getInputTank().drain(
                 new FluidStack(recipeFluidStack.getFluid(), Integer.MAX_VALUE),
                 false);
-        return inputFluid != null && inputFluid.amount >= recipeFluidStack.amount * parallel;
+        return inputFluid != null && inputFluid.amount >= (hasRecipeModifierAttempt() ?
+                (long) recipeFluidStack.amount * parallel : recipeFluidStack.amount * parallel);
+    }
+
+    @Override
+    protected boolean checkModifiedRecipeInputs(Recipe recipe, IItemHandlerModifiable inputs,
+                                                IMultipleTankHandler fluids) {
+        if (!hasRecipeModifierAttempt()) return true;
+        if (recipe.getEUt() <= 0 || !recipe.getInputs().isEmpty() || recipe.getFluidInputs().size() != 1 ||
+                recipe.getFluidInputs().get(0).isNonConsumable())
+            return recordRecipeFailure(RecipeFailureReason.MODIFIER_UNSUPPORTED);
+        return super.checkModifiedRecipeInputs(recipe, inputs, fluids) && canDoRecipeWithParallel(recipe);
     }
 
     @Override
@@ -125,14 +148,33 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
                 .filter(f -> f != null && f.amount != 0)
                 .collect(Collectors.toList());
 
-        return map.find(items, fluids, recipe -> {
+        return map.findWithEligibility(items, fluids, recipe -> {
             if (recipe.getEUt() > maxVoltage) return false;
             return recipe.matches(false, inputs, fluidInputs) && this.canDoRecipeWithParallel(recipe);
-        });
+        }, this::isRecipeDiscoveryCandidateEligible).getRecipeForCache();
     }
 
     @Override
     public boolean prepareRecipe(Recipe recipe) {
+        return withRecipeModifiers(getInputInventory(), getInputTank(), () -> {
+            long previousExcess = this.excessVoltage;
+            boolean started = false;
+            try {
+                started = prepareTurbineRecipe(recipe);
+                return started;
+            } finally {
+                if (hasRecipeModifierAttempt() && !started) this.excessVoltage = previousExcess;
+            }
+        });
+    }
+
+    private boolean prepareTurbineRecipe(Recipe recipe) {
+        if (hasRecipeModifierAttempt()) {
+            recipe = adjustRecipeForModifiers(recipe);
+            if (recipe == null ||
+                    !checkModifiedRecipeInputs(recipe, getModifierInputInventory(), getModifierInputTank()))
+                return false;
+        }
         IRotorHolder rotorHolder = ((MetaTileEntityLargeTurbine) metaTileEntity).getRotorHolder();
         if (rotorHolder == null || !rotorHolder.hasRotor())
             return false;
@@ -147,10 +189,15 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
             double holderEfficiency = rotorHolder.getTotalEfficiency() / 100.0;
             // get the amount of parallel required to match the desired output voltage
             parallel = getParallel(recipe, holderEfficiency, turbineMaxVoltage);
+            if (parallel < 0 || (hasRecipeModifierAttempt() &&
+                    RecipeModifierCopies.safeParallelLimit(recipe, parallel, false) != parallel))
+                return recordRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
 
             // Null check fluid here, since it can return null on first join into world or first form
-            FluidStack inputFluid = getInputFluidStack();
-            if (inputFluid == null || getInputFluidStack().amount < recipeFluidStack.amount * parallel) {
+            FluidStack inputFluid = hasRecipeModifierAttempt() ? getModifierInputTank().drain(
+                    new FluidStack(recipeFluidStack.getFluid(), Integer.MAX_VALUE), false) : getInputFluidStack();
+            if (inputFluid == null || inputFluid.amount < (hasRecipeModifierAttempt() ?
+                    (long) recipeFluidStack.amount * parallel : recipeFluidStack.amount * parallel)) {
                 return false;
             }
 
@@ -163,7 +210,7 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
         recipeBuilder.append(recipe, parallel, false)
                 .EUt(turbineMaxVoltage);
         applyParallelBonus(recipeBuilder);
-        recipe = recipeBuilder.build().getResult();
+        recipe = retainRecipeModifierMetadata(recipeBuilder.build().getResult(), recipe);
 
         if (recipe != null) {
             recipe = setupAndConsumeRecipeInputs(recipe, getInputInventory());

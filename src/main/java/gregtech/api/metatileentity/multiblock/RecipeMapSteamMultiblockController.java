@@ -120,12 +120,7 @@ public abstract class RecipeMapSteamMultiblockController extends MultiblockWithD
 
     @Override
     protected void configureWarningText(MultiblockUIBuilder builder) {
-        builder.addCustom((list, syncer) -> {
-            boolean noEnergy = syncer.syncBoolean(recipeMapWorkable.isHasNotEnoughEnergy());
-            if (isStructureFormed() && noEnergy) {
-                list.add(KeyUtil.lang(TextFormatting.YELLOW, "gregtech.multiblock.steam.low_steam"));
-            }
-        });
+        builder.addRecipeFailureLine(recipeMapWorkable);
         super.configureWarningText(builder);
     }
 

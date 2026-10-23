@@ -30,6 +30,11 @@ public class RecipeMapFurnace extends RecipeMap<SimpleRecipeBuilder> {
     }
 
     @Override
+    protected boolean supportsRecipeCandidateFallback() {
+        return getClass() == RecipeMapFurnace.class;
+    }
+
+    @Override
     @Nullable
     public Recipe findRecipe(long voltage, List<ItemStack> inputs, List<FluidStack> fluidInputs, boolean exactVoltage) {
         Recipe normalRecipe = super.findRecipe(voltage, inputs, fluidInputs, exactVoltage);

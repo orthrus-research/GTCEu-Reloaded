@@ -4,10 +4,15 @@ import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.impl.FluidHandlerDelegate;
+import gregtech.api.configuration.ConfigurationAdapter;
+import gregtech.api.configuration.ConfigurationData;
+import gregtech.api.configuration.ScalarConfigurationAdapter;
 import gregtech.api.cover.CoverBase;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverWithUI;
 import gregtech.api.cover.CoverableView;
+import gregtech.api.items.toolitem.ToolAction;
+import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
@@ -57,6 +62,8 @@ import com.cleanroommc.modularui.widgets.layout.Flow;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Set;
+
 public class CoverPump extends CoverBase implements CoverWithUI, ITickable, IControllable {
 
     public final int tier;
@@ -100,8 +107,56 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
         markDirty();
     }
 
+    @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        if (getClass() != CoverPump.class) return null;
+        return new ScalarConfigurationAdapter("gregtech:pump/1") {
+
+            @Override
+            public NBTTagCompound capture() {
+                NBTTagCompound data = new NBTTagCompound();
+                data.setInteger("Rate", transferRate);
+                data.setInteger("Mode", pumpMode.ordinal());
+                data.setInteger("Manual", manualImportExportMode.ordinal());
+                data.setInteger("Distribution", distributionMode.ordinal());
+                data.setBoolean("Working", isWorkingEnabled());
+                data.setInteger("Bucket", bucketMode.ordinal());
+                return data;
+            }
+
+            @Override
+            protected void validate(NBTTagCompound data) {
+                ConfigurationData.keys(data, "Rate", "Mode", "Manual", "Distribution", "Working", "Bucket");
+                ConfigurationData.integer(data, "Rate", 1, maxFluidTransferRate);
+                ConfigurationData.integer(data, "Mode", 0, PumpMode.VALUES.length - 1);
+                ConfigurationData.integer(data, "Manual", 0, ManualImportExportMode.VALUES.length - 1);
+                ConfigurationData.integer(data, "Distribution", 0, DistributionMode.VALUES.length - 1);
+                ConfigurationData.bool(data, "Working");
+                ConfigurationData.integer(data, "Bucket", 0, BucketMode.VALUES.length - 1);
+            }
+
+            @Override
+            protected void apply(NBTTagCompound data) {
+                ConfigurationData.require(getWorld() != null && !getWorld().isRemote);
+                // The UI setters convert units and round; the card stores the actual mB rate independently.
+                setConfigurationTransferRate(data.getInteger("Rate"), BucketMode.VALUES[data.getInteger("Bucket")]);
+                setPumpMode(PumpMode.VALUES[data.getInteger("Mode")]);
+                setManualImportExportMode(ManualImportExportMode.VALUES[data.getInteger("Manual")]);
+                CoverPump.this.distributionMode = DistributionMode.VALUES[data.getInteger("Distribution")];
+                setWorkingEnabled(data.getBoolean("Working"));
+                markDirty();
+            }
+        };
+    }
+
     public int getTransferRate() {
         return bucketMode == BucketMode.BUCKET ? transferRate / 1000 : transferRate;
+    }
+
+    private void setConfigurationTransferRate(int rate, BucketMode bucket) {
+        this.transferRate = rate;
+        this.bucketMode = bucket;
+        markDirty();
     }
 
     protected void adjustTransferRate(int amount) {
@@ -279,6 +334,12 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
 
     protected int getMaxTransferRate() {
         return 1;
+    }
+
+    @Override
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking) {
+        return getClass() == CoverPump.class && toolClasses.contains(ToolClasses.SCREWDRIVER) ?
+                ToolAction.COVER_SETTINGS : null;
     }
 
     @Override

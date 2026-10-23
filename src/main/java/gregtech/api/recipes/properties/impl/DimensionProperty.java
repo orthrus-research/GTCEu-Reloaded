@@ -54,7 +54,7 @@ public final class DimensionProperty extends RecipeProperty<DimensionProperty.Di
         for (int i : tag.getIntArray("blackListDimensions")) {
             list.add(i, true);
         }
-        return tag;
+        return list;
     }
 
     @Override

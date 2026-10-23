@@ -2,6 +2,7 @@ package gregtech.api.util;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -49,53 +50,36 @@ public class OverlayedItemHandler {
     }
 
     public int insertStackedItemStack(@NotNull ItemStack stack, int amountToInsert) {
-        int lastKnownPopulatedSlot = 0;
-        // loop through all slots, looking for ones matching the key
+        if (stack.isEmpty() || amountToInsert <= 0) return 0;
+        // Match GTTransferUtils.insertItem: top up matching stacks before using any empty slot.
         for (int i = 0; i < this.slots.length; i++) {
-            // populate the slot if it's not already populated
             initSlot(i);
-            // if it's the same item or there is no item in the slot
-            ItemStack slotKey = this.slots[i].getItemStack();
-            if (slotKey.isEmpty() || ItemStackHashStrategy.comparingAllButCount().equals(slotKey, stack)) {
-                // if the slot is not full
-                int canInsertUpTo = Math.min(this.slots[i].getSlotLimit() - this.slots[i].getCount(),
-                        stack.getMaxStackSize());
+            OverlayedItemHandlerSlot slot = this.slots[i];
+            if (!slot.getItemStack().isEmpty() &&
+                    ItemHandlerHelper.canItemStacksStack(stack, slot.getItemStack()) &&
+                    overlayedHandler.isItemValid(i, stack)) {
+                int canInsertUpTo = slot.getSlotLimit() - slot.getCount();
                 if (canInsertUpTo > 0) {
                     int insertedAmount = Math.min(canInsertUpTo, amountToInsert);
-                    this.slots[i].setItemStack(stack.copy()); // this copy may not be need, needs further tests
-                    this.slots[i].setCount(this.slots[i].getCount() + insertedAmount);
+                    slot.setCount(slot.getCount() + insertedAmount);
                     amountToInsert -= insertedAmount;
                 }
             }
-            lastKnownPopulatedSlot = i;
-
-            // early exit if finished inserting everything
-            if (amountToInsert == 0) {
-                return 0;
-            }
+            if (amountToInsert == 0) return 0;
         }
-
-        // if the amountToInsert is still greater than 0, we need to insert it into a new slot
-        if (amountToInsert > 0) {
-            // loop through all slots, starting from after the last seen slot with items in it, looking for empty ones.
-            for (int i = lastKnownPopulatedSlot + 1; i < this.slots.length; i++) {
-                OverlayedItemHandlerSlot slot = this.slots[i];
-                // if the slot is empty
-                if (slot.getItemStack().isEmpty()) {
-                    int canInsertUpTo = Math.min(stack.getMaxStackSize(), slot.getSlotLimit());
-                    if (canInsertUpTo > 0) {
-                        int insertedAmount = Math.min(canInsertUpTo, amountToInsert);
-                        slot.setItemStack(stack.copy()); // this copy may not be need, needs further tests
-                        slot.setCount(insertedAmount);
-                        amountToInsert -= insertedAmount;
-                    }
-                    if (amountToInsert == 0) {
-                        return 0;
-                    }
+        for (int i = 0; i < this.slots.length; i++) {
+            OverlayedItemHandlerSlot slot = this.slots[i];
+            if (slot.getItemStack().isEmpty() && overlayedHandler.isItemValid(i, stack)) {
+                int canInsertUpTo = Math.min(stack.getMaxStackSize(), slot.getSlotLimit());
+                if (canInsertUpTo > 0) {
+                    int insertedAmount = Math.min(canInsertUpTo, amountToInsert);
+                    slot.setItemStack(stack.copy());
+                    slot.setCount(insertedAmount);
+                    amountToInsert -= insertedAmount;
                 }
+                if (amountToInsert == 0) return 0;
             }
         }
-        // return the amount that wasn't inserted
         return amountToInsert;
     }
 

@@ -2,6 +2,7 @@ package gregtech.common.metatileentities.multi.multiblockpart;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.*;
+import gregtech.api.capability.impl.FilteredNotifiableItemStackHandler;
 import gregtech.api.capability.impl.GhostCircuitItemStackHandler;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
@@ -18,6 +19,7 @@ import gregtech.api.mui.widget.GhostCircuitSlotWidget;
 import gregtech.api.util.GTHashMaps;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
+import gregtech.common.covers.filter.ItemFilterContainer;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -68,6 +70,8 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
 
     private boolean workingEnabled;
     private boolean autoCollapse;
+    @Nullable
+    private ItemFilterContainer outputFilter;
 
     public MetaTileEntityItemBus(ResourceLocation metaTileEntityId, int tier, boolean isExportHatch) {
         super(metaTileEntityId, tier, isExportHatch);
@@ -82,6 +86,9 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
 
     @Override
     protected void initializeInventory() {
+        if (isExportHatch && supportsOutputFilter() && outputFilter == null) {
+            outputFilter = new ItemFilterContainer(this::onOutputFilterChanged);
+        }
         super.initializeInventory();
         if (this.hasGhostCircuitInventory()) {
             this.circuitInventory = new GhostCircuitItemStackHandler(this);
@@ -90,6 +97,23 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
         } else {
             this.actualImportItems = null;
         }
+    }
+
+    /**
+     * Subclasses with their own handlers or screens must explicitly integrate the filter lifecycle before opting in.
+     */
+    protected boolean supportsOutputFilter() {
+        return getClass() == MetaTileEntityItemBus.class;
+    }
+
+    @Nullable
+    public ItemFilterContainer getOutputFilter() {
+        return outputFilter;
+    }
+
+    private void onOutputFilterChanged() {
+        markDirty();
+        if (exportItems instanceof FilteredNotifiableItemStackHandler handler) handler.onContentsChanged(0);
     }
 
     @Override
@@ -187,6 +211,10 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
 
     @Override
     protected IItemHandlerModifiable createExportItemHandler() {
+        if (outputFilter != null) {
+            return new FilteredNotifiableItemStackHandler(this, getInventorySize(), getController(),
+                    outputFilter::test);
+        }
         return isExportHatch ? new NotifiableItemStackHandler(this, getInventorySize(), getController(), true) :
                 new GTItemStackHandler(this, 0);
     }
@@ -207,6 +235,7 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
         super.writeInitialSyncData(buf);
         buf.writeBoolean(workingEnabled);
         buf.writeBoolean(autoCollapse);
+        if (outputFilter != null) outputFilter.writeInitialSyncData(buf);
     }
 
     @Override
@@ -214,6 +243,7 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
         super.receiveInitialSyncData(buf);
         this.workingEnabled = buf.readBoolean();
         this.autoCollapse = buf.readBoolean();
+        if (outputFilter != null) outputFilter.readInitialSyncData(buf);
     }
 
     @Override
@@ -221,6 +251,7 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
         super.writeToNBT(data);
         data.setBoolean("workingEnabled", workingEnabled);
         data.setBoolean("autoCollapse", autoCollapse);
+        if (outputFilter != null) data.setTag("OutputFilter", outputFilter.serializeNBT());
         if (this.circuitInventory != null && !this.isExportHatch) {
             this.circuitInventory.write(data);
         }
@@ -230,6 +261,9 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
+        if (outputFilter != null && data.hasKey("OutputFilter")) {
+            outputFilter.deserializeNBT(data.getCompoundTag("OutputFilter"));
+        }
         if (data.hasKey("workingEnabled")) {
             this.workingEnabled = data.getBoolean("workingEnabled");
         }
@@ -266,6 +300,12 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
     }
 
     @Override
+    public void clearMachineInventory(@NotNull List<@NotNull ItemStack> itemBuffer) {
+        super.clearMachineInventory(itemBuffer);
+        if (outputFilter != null) clearInventory(itemBuffer, outputFilter);
+    }
+
+    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
         int rowSize = (int) Math.sqrt(getInventorySize());
         panelSyncManager.registerSlotGroup("item_inv", rowSize);
@@ -273,7 +313,7 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
         int backgroundWidth = Math.max(
                 9 * 18 + 18 + 14 + 5,   // Player Inv width
                 rowSize * 18 + 14); // Bus Inv width
-        int backgroundHeight = 18 + 18 * rowSize + 94;
+        int backgroundHeight = 18 + 18 * rowSize + 94 + (outputFilter == null ? 0 : 20);
 
         BooleanSyncValue workingStateValue = new BooleanSyncValue(() -> workingEnabled, val -> workingEnabled = val);
         BooleanSyncValue collapseStateValue = new BooleanSyncValue(() -> autoCollapse, val -> autoCollapse = val);
@@ -281,7 +321,7 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
         IItemHandlerModifiable handler = isExportHatch ? exportItems : importItems;
         boolean hasGhostCircuit = hasGhostCircuitInventory() && this.circuitInventory != null;
 
-        return GTGuis.createPanel(this, backgroundWidth, backgroundHeight)
+        ModularPanel panel = GTGuis.createPanel(this, backgroundWidth, backgroundHeight)
                 .child(IKey.lang(getMetaFullName()).asWidget().pos(5, 5))
                 .child(SlotGroupWidget.playerInventory(false).left(7).bottom(7))
                 .child(new Grid()
@@ -330,6 +370,11 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
                                 .background(GTGuiTextures.SLOT, GTGuiTextures.BUTTON_X)
                                 .tooltip(t -> t.addLine(
                                         IKey.lang("gregtech.gui.configurator_slot.unavailable.tooltip")))));
+        if (outputFilter != null) {
+            panel.child(Flow.column().pos(7, 20 + rowSize * 18).width(backgroundWidth - 14).coverChildrenHeight()
+                    .child(outputFilter.initUI(guiData, panelSyncManager)));
+        }
+        return panel;
     }
 
     @Override
@@ -430,6 +475,7 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
         else
             tooltip.add(I18n.format("gregtech.machine.item_bus.import.tooltip"));
         tooltip.add(I18n.format("gregtech.universal.tooltip.item_storage_capacity", getInventorySize()));
+        if (outputFilter != null) tooltip.add(I18n.format("gregtech.machine.output_filter.tooltip"));
         tooltip.add(I18n.format("gregtech.universal.enabled"));
     }
 

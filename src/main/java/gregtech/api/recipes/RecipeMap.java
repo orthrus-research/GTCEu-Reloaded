@@ -73,6 +73,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -125,6 +126,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private final WeakHashMap<AbstractMapIngredient, WeakReference<AbstractMapIngredient>> fluidIngredientRoot = new WeakHashMap<>();
 
     private final Map<GTRecipeCategory, List<Recipe>> recipeByCategory = new Object2ObjectOpenHashMap<>();
+    private long recipeRevision;
 
     private final Map<ResourceLocation, RecipeBuildAction<R>> recipeBuildActions = new Object2ObjectOpenHashMap<>();
     protected @Nullable SoundEvent sound;
@@ -336,6 +338,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                 v.add(recipe);
                 return v;
             });
+            onRecipesChanged();
             return true;
         }
         return false;
@@ -355,6 +358,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                 if (v != null) v.remove(recipe);
                 return v == null || v.isEmpty() ? null : v;
             });
+            onRecipesChanged();
             return true;
         }
         return false;
@@ -367,12 +371,31 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      */
     @ApiStatus.Internal
     protected void removeAllRecipes() {
+        boolean hadRecipes = !this.recipeByCategory.isEmpty();
         if (GroovyScriptModule.isCurrentlyRunning()) {
             this.lookup.getRecipes(false).forEach(this.getGroovyScriptRecipeMap()::addBackup);
         }
         this.lookup.getNodes().clear();
         this.lookup.getSpecialNodes().clear();
         this.recipeByCategory.clear();
+        if (hadRecipes) onRecipesChanged();
+    }
+
+    /**
+     * Subclasses may opt in when every successful lookup mutation calls {@link #onRecipesChanged()}.
+     * Dynamic lookups with untracked external state must keep continuous recipe callbacks.
+     */
+    public boolean supportsRecipeRevisionTracking() {
+        return getClass() == RecipeMap.class;
+    }
+
+    public final long getRecipeRevision() {
+        return recipeRevision;
+    }
+
+    /** Marks a completed lookup mutation; this transient counter is not part of recipe or world data. */
+    protected final void onRecipesChanged() {
+        this.recipeRevision++;
     }
 
     /**
@@ -464,6 +487,63 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     @Nullable
     public Recipe findRecipe(long voltage, IItemHandlerModifiable inputs, IMultipleTankHandler fluidInputs) {
         return this.findRecipe(voltage, GTUtility.itemHandlerToList(inputs), GTUtility.fluidHandlerToList(fluidInputs));
+    }
+
+    /**
+     * Keeps the legacy lookup's first choice, then searches registered alternatives in trie order.
+     * Eligibility must be read-only: no consumption, startup checks, or machine state changes.
+     * External map subclasses retain their legacy single-result lookup unless they explicitly opt in.
+     */
+    public RecipeSearchResult findRecipeWithEligibility(long voltage, IItemHandlerModifiable inputs,
+                                                        IMultipleTankHandler fluidInputs,
+                                                        Predicate<Recipe> eligibility) {
+        Recipe first = findRecipe(voltage, inputs, fluidInputs);
+        if (first == null) return new RecipeSearchResult(null, null);
+        if (eligibility.test(first)) return new RecipeSearchResult(first, first);
+        if (!supportsRecipeCandidateFallback()) return new RecipeSearchResult(null, first);
+
+        List<ItemStack> items = GTUtility.itemHandlerToList(inputs);
+        List<FluidStack> fluids = GTUtility.fluidHandlerToList(fluidInputs);
+        return findEligibleAlternative(voltage, items, fluids, eligibility, first);
+    }
+
+    /** List-input variant for append logic, retaining the virtual legacy first choice and explicit fallback opt-in. */
+    public RecipeSearchResult findRecipeWithEligibility(long voltage, List<ItemStack> items, List<FluidStack> fluids,
+                                                        Predicate<Recipe> eligibility) {
+        Recipe first = findRecipe(voltage, items, fluids);
+        if (first == null) return new RecipeSearchResult(null, null);
+        if (eligibility.test(first)) return new RecipeSearchResult(first, first);
+        if (!supportsRecipeCandidateFallback()) return new RecipeSearchResult(null, first);
+        return findEligibleAlternative(voltage, items, fluids, eligibility, first);
+    }
+
+    private RecipeSearchResult findEligibleAlternative(long voltage, List<ItemStack> items, List<FluidStack> fluids,
+                                                       Predicate<Recipe> eligibility, Recipe first) {
+        RecipeSearchResult result = findWithEligibility(items, fluids,
+                recipe -> recipe != first && recipe.getEUt() <= voltage && recipe.matches(false, items, fluids),
+                eligibility);
+        return new RecipeSearchResult(result.getRecipe(), first);
+    }
+
+    /** Override only when registered alternatives obey the same rules as the legacy lookup. */
+    protected boolean supportsRecipeCandidateFallback() {
+        return getClass() == RecipeMap.class;
+    }
+
+    /** Uses the existing deterministic traversal, checking each matching recipe's eligibility at most once. */
+    public RecipeSearchResult findWithEligibility(Collection<ItemStack> items, Collection<FluidStack> fluids,
+                                                  Predicate<Recipe> inputMatch, Predicate<Recipe> eligibility) {
+        Recipe[] firstMatch = { null };
+        Map<Recipe, Boolean> checked = new IdentityHashMap<>();
+        List<ItemStack> nonEmptyItems = items.stream().filter(stack -> !stack.isEmpty()).collect(Collectors.toList());
+        List<FluidStack> nonEmptyFluids = fluids.stream().filter(stack -> stack != null && stack.amount != 0)
+                .collect(Collectors.toList());
+        Recipe selected = find(nonEmptyItems, nonEmptyFluids, recipe -> {
+            if (!inputMatch.test(recipe)) return false;
+            if (firstMatch[0] == null) firstMatch[0] = recipe;
+            return checked.computeIfAbsent(recipe, eligibility::test);
+        });
+        return new RecipeSearchResult(selected, firstMatch[0]);
     }
 
     /**

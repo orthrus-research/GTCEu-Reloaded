@@ -23,6 +23,7 @@ import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.recipes.logic.OCParams;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.impl.FusionEUToStartProperty;
 import gregtech.api.util.KeyUtil;
@@ -470,13 +471,35 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
         }
 
         @Override
+        public boolean isRecipeEligible(@NotNull Recipe recipe) {
+            if (!supportsRecipeCandidateEligibility()) return true;
+            long requiredHeat = recipe.getProperty(FusionEUToStartProperty.getInstance(), 0L);
+            if (!super.isRecipeEligible(recipe)) return false;
+            long capacity = energyContainer.getEnergyCapacity();
+            if (requiredHeat > capacity) {
+                return recordRecipeFailure(RecipeFailureReason.FUSION_CAPACITY, requiredHeat, capacity);
+            }
+            if (requiredHeat <= heat) return true;
+            long stored = energyContainer.getEnergyStored();
+            return stored >= requiredHeat - heat ||
+                    recordRecipeFailure(RecipeFailureReason.FUSION_START, requiredHeat - heat, stored);
+        }
+
+        @Override
+        protected boolean supportsRecipeCandidateEligibility() {
+            return usesLegacyRecipeCheck(FusionRecipeLogic.class);
+        }
+
+        @Override
         public boolean checkRecipe(@NotNull Recipe recipe) {
             if (!super.checkRecipe(recipe))
                 return false;
 
             // if the reactor is not able to hold enough energy for it, do not run the recipe
-            if (recipe.getProperty(FusionEUToStartProperty.getInstance(), 0L) > energyContainer.getEnergyCapacity())
-                return false;
+            long requiredHeat = recipe.getProperty(FusionEUToStartProperty.getInstance(), 0L);
+            long capacity = energyContainer.getEnergyCapacity();
+            if (requiredHeat > capacity)
+                return recordRecipeFailure(RecipeFailureReason.FUSION_CAPACITY, requiredHeat, capacity);
 
             long heatDiff = recipe.getProperty(FusionEUToStartProperty.getInstance(), 0L) - heat;
             // if the stored heat is >= required energy, recipe is okay to run
@@ -484,8 +507,9 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
                 return true;
 
             // if the remaining energy needed is more than stored, do not run
-            if (energyContainer.getEnergyStored() < heatDiff)
-                return false;
+            long stored = energyContainer.getEnergyStored();
+            if (stored < heatDiff)
+                return recordRecipeFailure(RecipeFailureReason.FUSION_START, heatDiff, stored);
 
             // remove the energy needed
             energyContainer.removeEnergy(heatDiff);

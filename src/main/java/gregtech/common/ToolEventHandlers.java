@@ -8,6 +8,7 @@ import gregtech.api.capability.impl.ElectricItem;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverHolder;
 import gregtech.api.items.toolitem.IGTTool;
+import gregtech.api.items.toolitem.ToolActionHints;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.items.toolitem.ToolHelper;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -19,6 +20,7 @@ import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.pipenet.tile.TileEntityPipeBase;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TaskScheduler;
+import gregtech.client.renderer.ToolActionHintRenderer;
 import gregtech.common.items.tool.rotation.CustomBlockRotations;
 import gregtech.common.items.tool.rotation.ICustomRotationBehavior;
 
@@ -341,6 +343,7 @@ public class ToolEventHandlers {
             if (mte != null) {
                 if (mainHand.isEmpty() && isSneaking && mte.hasAnyCover()) return true;
                 if (mte.canRenderMachineGrid(mainHand, offHand)) return true;
+                if (ToolActionHints.hasAnyAction(mte, mainHand, isSneaking)) return true;
             }
         }
 
@@ -392,6 +395,7 @@ public class ToolEventHandlers {
             } else if (tile instanceof MetaTileEntityHolder) {
                 MetaTileEntity mte = ((MetaTileEntityHolder) tile).getMetaTileEntity();
                 drawGridOverlays(facing, box, mte::isSideUsed);
+                ToolActionHintRenderer.draw(mte, player, pos, facing, d3, d4, d5);
                 if (mte instanceof MultiblockControllerBase multi && multi.allowsExtendedFacing() &&
                         ToolHelper.isTool(player.getHeldItemMainhand(), ToolClasses.WRENCH)) {
                     // set up some render state first

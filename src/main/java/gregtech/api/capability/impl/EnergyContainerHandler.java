@@ -113,6 +113,7 @@ public class EnergyContainerHandler extends MTETrait implements IEnergyContainer
     }
 
     public void setEnergyStored(long energyStored) {
+        if (this.energyStored == energyStored) return;
         if (energyStored > this.energyStored) {
             energyInputPerSec += energyStored - this.energyStored;
         } else {

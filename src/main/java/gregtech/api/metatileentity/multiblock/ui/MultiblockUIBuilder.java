@@ -5,12 +5,15 @@ import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.capability.impl.ComputationRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
 import gregtech.api.mui.GTByteBufAdapters;
 import gregtech.api.mui.drawable.GTObjectDrawable;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.chance.output.impl.ChancedFluidOutput;
 import gregtech.api.recipes.chance.output.impl.ChancedItemOutput;
+import gregtech.api.recipes.logic.RecipeFailure;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTHashMaps;
 import gregtech.api.util.GTUtility;
@@ -115,6 +118,22 @@ public class MultiblockUIBuilder {
     public MultiblockUIBuilder setWorkingStatus(boolean isWorkingEnabled, boolean isActive) {
         this.isWorkingEnabled = this.getSyncer().syncBoolean(isWorkingEnabled);
         this.isActive = this.getSyncer().syncBoolean(isActive);
+        return this;
+    }
+
+    public MultiblockUIBuilder addPaintGroupLine(RecipeMapMultiblockController controller) {
+        boolean enabled = getSyncer().syncBoolean(controller::isPaintGroupingEnabled);
+        addKey(KeyUtil.lang(TextFormatting.GRAY, enabled ? "gregtech.multiblock.paint_groups.enabled" :
+                "gregtech.multiblock.paint_groups.disabled"));
+        boolean running = getSyncer().syncBoolean(() -> controller.getRecipeMapWorkable().getProgress() > 0);
+        if (running) {
+            int color = getSyncer().syncInt(() -> controller.getRecipeMapWorkable().getActiveOutputColor());
+            IKey route = color == -3 ? IKey.lang("gregtech.multiblock.paint_groups.legacy") :
+                    color == -2 ? IKey.lang("gregtech.multiblock.paint_groups.unavailable") :
+                            color == -1 ? IKey.lang("gregtech.multiblock.paint_groups.unpainted") :
+                                    IKey.str(String.format("#%06X", color));
+            addKey(KeyUtil.lang(TextFormatting.GRAY, "gregtech.multiblock.paint_groups.active_route", route));
+        }
         return this;
     }
 
@@ -426,6 +445,23 @@ public class MultiblockUIBuilder {
      */
     public MultiblockUIBuilder addLowPowerLine(boolean isLowPower) {
         return addLowPowerLine(() -> isLowPower);
+    }
+
+    /** Adds the last observed recipe failure without executing any recipe or environment checks. */
+    public MultiblockUIBuilder addRecipeFailureLine(AbstractRecipeLogic logic) {
+        if (!isStructureFormed) return this;
+        RecipeFailure serverFailure = isServer() ? logic.getRecipeFailure() : RecipeFailure.NONE;
+        RecipeFailureReason reason = RecipeFailureReason.fromId(getSyncer().syncInt(serverFailure.getReason().getId()));
+        long required = getSyncer().syncLong(serverFailure.getRequired());
+        long available = getSyncer().syncLong(serverFailure.getAvailable());
+        // The standard status/error/maintenance lines already cover these machine-wide gates.
+        if (reason != RecipeFailureReason.NONE && reason != RecipeFailureReason.DISABLED &&
+                reason != RecipeFailureReason.UNFORMED && reason != RecipeFailureReason.MUFFLER_OBSTRUCTED &&
+                reason != RecipeFailureReason.MAINTENANCE) {
+            RecipeFailure failure = RecipeFailure.of(reason, required, available);
+            addKey(KeyUtil.lang(TextFormatting.YELLOW, reason.getTranslationKey(), failure.getTranslationArguments()));
+        }
+        return this;
     }
 
     /**

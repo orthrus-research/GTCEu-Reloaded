@@ -1330,6 +1330,12 @@ public class MachineRecipeLoader {
                 MetaItems.FLUID_CELL_GLASS_VIAL.getStackForm());
 
         // Data Items
+        ModHandler.addShapedRecipe("configuration_card", CONFIGURATION_CARD.getStackForm(),
+                "FCF", "PPP", 'F', new UnificationEntry(foil, Gold),
+                'C', new UnificationEntry(circuit, MarkerMaterials.Tier.LV),
+                'P', new UnificationEntry(plate, Polyethylene));
+        ModHandler.addShapelessNBTClearingRecipe("configuration_card_nbt", CONFIGURATION_CARD.getStackForm(),
+                CONFIGURATION_CARD.getStackForm());
         ModHandler.addShapelessNBTClearingRecipe("data_stick_nbt", TOOL_DATA_STICK.getStackForm(),
                 TOOL_DATA_STICK.getStackForm());
         ModHandler.addShapelessNBTClearingRecipe("data_orb_nbt", TOOL_DATA_ORB.getStackForm(),

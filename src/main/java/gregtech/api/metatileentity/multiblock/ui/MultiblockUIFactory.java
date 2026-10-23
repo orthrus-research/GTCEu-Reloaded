@@ -4,6 +4,7 @@ import gregtech.api.capability.IControllable;
 import gregtech.api.capability.IDistinctBusController;
 import gregtech.api.metatileentity.multiblock.MultiblockWithDisplayBase;
 import gregtech.api.metatileentity.multiblock.ProgressBarMultiblock;
+import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTLambdaUtils;
@@ -353,7 +354,12 @@ public class MultiblockUIFactory {
 
         if (displayText != NO_OP) {
             MultiblockUIBuilder display = builder();
-            display.setAction(this.displayText);
+            display.setAction(builder -> {
+                this.displayText.accept(builder);
+                if (mte instanceof RecipeMapMultiblockController controller && controller.canUseRecipeInputViews()) {
+                    builder.addPaintGroupLine(controller);
+                }
+            });
             display.sync("display", syncManager);
 
             parent.child(new ScrollableTextWidget()
@@ -399,9 +405,22 @@ public class MultiblockUIFactory {
                 .right(4)
                 .coverChildren()
                 .child(createDistinctButton(mainPanel, panelSyncManager))
+                .childIf(mte instanceof RecipeMapMultiblockController controller && controller.canUseRecipeInputViews(),
+                        () -> createPaintGroupButton())
                 .child(createVoidingButton(mainPanel, panelSyncManager))
                 .child(flexButton)
                 .childIf(powerButton != null, powerButton);
+    }
+
+    protected IWidget createPaintGroupButton() {
+        RecipeMapMultiblockController controller = (RecipeMapMultiblockController) mte;
+        return new ToggleButton().debugName("paint_groups_button").size(18)
+                .value(new BooleanSyncValue(controller::isPaintGroupingEnabled, controller::setPaintGroupingEnabled))
+                .overlay(true, GTGuiTextures.OVERLAY_DISTINCT_BUSES[1])
+                .overlay(false, GTGuiTextures.OVERLAY_DISTINCT_BUSES[0])
+                .addTooltip(true, IKey.lang("gregtech.multiblock.paint_groups.enabled"))
+                .addTooltip(false, IKey.lang("gregtech.multiblock.paint_groups.disabled"))
+                .addTooltipLine(IKey.lang("gregtech.multiblock.paint_groups.tooltip"));
     }
 
     protected IWidget createDistinctButton(@NotNull ModularPanel mainPanel,

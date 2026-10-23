@@ -5,7 +5,10 @@ import gregtech.api.metatileentity.IVoidable;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeBuilder;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.conditions.RecipeConditionSet;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
+import gregtech.api.recipes.modifiers.RecipeAppendModifier;
+import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.util.FluidStackHashStrategy;
 import gregtech.api.util.GTHashMaps;
 import gregtech.api.util.GTUtility;
@@ -23,11 +26,13 @@ import it.unimi.dsi.fastutil.objects.Object2IntLinkedOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public abstract class ParallelLogic {
 
@@ -531,6 +536,29 @@ public abstract class ParallelLogic {
                                                      @NotNull IItemHandlerModifiable importInventory,
                                                      @NotNull IItemHandlerModifiable exportInventory,
                                                      int parallelAmount, long maxVoltage, IVoidable voidable) {
+        return appendItemRecipes(recipeMap, importInventory, exportInventory, parallelAmount, maxVoltage, voidable,
+                recipe -> true);
+    }
+
+    /** Eligibility is read-only and is checked before any output overlay or accumulated recipe is changed. */
+    public static RecipeBuilder<?> appendItemRecipes(@NotNull RecipeMap<?> recipeMap,
+                                                     @NotNull IItemHandlerModifiable importInventory,
+                                                     @NotNull IItemHandlerModifiable exportInventory,
+                                                     int parallelAmount, long maxVoltage, IVoidable voidable,
+                                                     @NotNull Predicate<Recipe> eligibility) {
+        return appendItemRecipes(recipeMap, importInventory, exportInventory, parallelAmount, maxVoltage, voidable,
+                eligibility, null);
+    }
+
+    /**
+     * Opted-in machines transform individual sources before capacity/ratio calculation and preserve earlier admission.
+     */
+    public static RecipeBuilder<?> appendItemRecipes(@NotNull RecipeMap<?> recipeMap,
+                                                     @NotNull IItemHandlerModifiable importInventory,
+                                                     @NotNull IItemHandlerModifiable exportInventory,
+                                                     int parallelAmount, long maxVoltage, IVoidable voidable,
+                                                     @NotNull Predicate<Recipe> eligibility,
+                                                     @Nullable RecipeAppendModifier modifiers) {
         RecipeBuilder<?> recipeBuilder = null;
 
         OverlayedItemHandler overlayedItemHandler = new OverlayedItemHandler(exportInventory);
@@ -546,9 +574,12 @@ public abstract class ParallelLogic {
                 continue;
 
             // Determine if there is a valid recipe for this item. If not, skip it.
-            Recipe matchingRecipe = recipeMap.findRecipe(maxVoltage,
+            Recipe matchingRecipe = recipeMap.findRecipeWithEligibility(maxVoltage,
                     Collections.singletonList(currentInputItem),
-                    Collections.emptyList());
+                    Collections.emptyList(), candidate -> eligibility.test(candidate) &&
+                            (modifiers == null || modifiers.accepts(candidate, currentInputItem)))
+                    .getRecipe();
+            if (matchingRecipe != null && modifiers != null) matchingRecipe = modifiers.adjust(matchingRecipe);
 
             GTRecipeInput inputIngredient;
             if (matchingRecipe != null) {
@@ -570,20 +601,35 @@ public abstract class ParallelLogic {
                         String.format("Got recipe with null ingredient %s", matchingRecipe));
 
             // Trim the recipe outputs here if required
-            matchingRecipe = Recipe.trimRecipeOutputs(matchingRecipe, recipeMap, voidable.getItemOutputLimit(),
-                    voidable.getFluidOutputLimit());
+            if (modifiers == null)
+                matchingRecipe = Recipe.trimRecipeOutputs(matchingRecipe, recipeMap, voidable.getItemOutputLimit(),
+                        voidable.getFluidOutputLimit());
+
+            // Composition may exceed the bounded saved-condition format. Keep earlier admitted work and output space.
+            try {
+                recipeBuilder.getRecipeConditions().and(
+                        matchingRecipe.getProperty(ConditionProperty.getInstance(), RecipeConditionSet.EMPTY));
+            } catch (IllegalArgumentException incompatible) {
+                continue;
+            }
 
             // equivalent of getting the max ratio from the inputs from Parallel logic
             int ingredientRatio = Math.min(parallelAmount - engagedItems,
                     currentInputItem.getCount() / Math.max(matchingRecipe.getInputs().get(0).getAmount(), 1));
+            if (modifiers != null) {
+                ingredientRatio = modifiers.limit(matchingRecipe, recipeBuilder, ingredientRatio);
+                if (ingredientRatio == 0) continue;
+            }
 
             // how much we can add to the output inventory
             int limitByOutput = Integer.MAX_VALUE;
             if (!voidable.canVoidRecipeItemOutputs()) {
                 // Limit by the number of recipe outputs and chanced outputs, to simulate cases where 100% chanced
                 // outputs were obtained
-                limitByOutput = limitParallelByItemsIncremental(recipeBuilder.getAllItemOutputs(),
-                        matchingRecipe.getOutputs(), overlayedItemHandler, ingredientRatio);
+                limitByOutput = modifiers == null ? limitParallelByItemsIncremental(recipeBuilder.getAllItemOutputs(),
+                        matchingRecipe.getOutputs(), overlayedItemHandler, ingredientRatio) :
+                        modifiers.limitOutputSpace(matchingRecipe, recipeBuilder, overlayedItemHandler,
+                                ingredientRatio);
             }
 
             // amount to actually multiply the recipe by
@@ -591,6 +637,7 @@ public abstract class ParallelLogic {
 
             if (multiplierRecipeAmount > 0) {
                 recipeBuilder.append(matchingRecipe, multiplierRecipeAmount, true);
+                if (modifiers != null) modifiers.admitted(matchingRecipe);
                 engagedItems += multiplierRecipeAmount;
             }
 

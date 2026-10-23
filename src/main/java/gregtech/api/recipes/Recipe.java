@@ -115,8 +115,18 @@ public class Recipe {
                   boolean isCTRecipe,
                   @NotNull RecipePropertyStorage recipePropertyStorage,
                   @NotNull GTRecipeCategory recipeCategory) {
+        this(inputs, outputs, chancedOutputs, fluidInputs, fluidOutputs, chancedFluidOutputs, duration, EUt, hidden,
+                isCTRecipe, recipePropertyStorage, recipeCategory, GroovyScriptModule.isCurrentlyRunning(), true);
+    }
+
+    private Recipe(List<GTRecipeInput> inputs, List<ItemStack> outputs,
+                   ChancedOutputList<ItemStack, ChancedItemOutput> chancedOutputs, List<GTRecipeInput> fluidInputs,
+                   List<FluidStack> fluidOutputs, ChancedOutputList<FluidStack, ChancedFluidOutput> chancedFluidOutputs,
+                   int duration, long EUt, boolean hidden, boolean isCTRecipe,
+                   RecipePropertyStorage recipePropertyStorage,
+                   GTRecipeCategory recipeCategory, boolean groovyRecipe, boolean internInputs) {
         this.recipePropertyStorage = recipePropertyStorage;
-        this.inputs = GTRecipeInputCache.deduplicateInputs(inputs);
+        this.inputs = internInputs ? GTRecipeInputCache.deduplicateInputs(inputs) : new ArrayList<>(inputs);
         if (outputs.isEmpty()) {
             this.outputs = Collections.emptyList();
         } else {
@@ -124,7 +134,8 @@ public class Recipe {
         }
         this.chancedOutputs = chancedOutputs;
         this.chancedFluidOutputs = chancedFluidOutputs;
-        this.fluidInputs = GTRecipeInputCache.deduplicateInputs(fluidInputs);
+        this.fluidInputs = internInputs ? GTRecipeInputCache.deduplicateInputs(fluidInputs) :
+                new ArrayList<>(fluidInputs);
         this.fluidOutputs = fluidOutputs.isEmpty() ? Collections.emptyList() : ImmutableList.copyOf(fluidOutputs);
         this.duration = duration;
         this.EUt = EUt;
@@ -132,7 +143,22 @@ public class Recipe {
         this.recipeCategory = recipeCategory;
         this.isCTRecipe = isCTRecipe;
         this.hashCode = makeHashCode();
-        this.groovyRecipe = GroovyScriptModule.isCurrentlyRunning();
+        this.groovyRecipe = groovyRecipe;
+    }
+
+    /**
+     * Constructs an owned modifier/startup value while retaining this source's provenance and display metadata.
+     * Callers own the supplied contents and property values; unlike {@link #copy()}, this does not imply shallow
+     * sharing.
+     */
+    public final Recipe copyWithPreservedMetadata(List<GTRecipeInput> inputs, List<ItemStack> outputs,
+                                                  ChancedOutputList<ItemStack, ChancedItemOutput> chancedOutputs,
+                                                  List<GTRecipeInput> fluidInputs, List<FluidStack> fluidOutputs,
+                                                  ChancedOutputList<FluidStack, ChancedFluidOutput> chancedFluidOutputs,
+                                                  int duration, long eut, RecipePropertyStorage properties) {
+        return new Recipe(inputs, outputs, chancedOutputs, fluidInputs, fluidOutputs, chancedFluidOutputs, duration,
+                eut,
+                hidden, isCTRecipe, properties, recipeCategory, groovyRecipe, false);
     }
 
     @NotNull

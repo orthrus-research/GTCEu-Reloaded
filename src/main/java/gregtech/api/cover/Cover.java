@@ -1,5 +1,7 @@
 package gregtech.api.cover;
 
+import gregtech.api.configuration.ConfigurationAdapter;
+import gregtech.api.items.toolitem.ToolAction;
 import gregtech.client.utils.BloomEffectUtil;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -26,9 +28,15 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public interface Cover {
+
+    /** Settings only; unknown covers and subclasses must opt in without copying their inventories. */
+    default @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return null;
+    }
 
     /**
      * @return the CoverableView containing this cover
@@ -192,6 +200,11 @@ public interface Cover {
     default @NotNull EnumActionResult onSoftMalletClick(@NotNull EntityPlayer player, @NotNull EnumHand hand,
                                                         @NotNull CuboidRayTraceResult hitResult) {
         return EnumActionResult.PASS;
+    }
+
+    /** Optional description of this cover's tool action; must not mutate the cover or probe click handlers. */
+    default @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking) {
+        return null;
     }
 
     /**

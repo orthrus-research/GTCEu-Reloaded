@@ -11,6 +11,9 @@ import gregtech.api.recipes.chance.output.ChancedOutputList;
 import gregtech.api.recipes.chance.output.ChancedOutputLogic;
 import gregtech.api.recipes.chance.output.impl.ChancedFluidOutput;
 import gregtech.api.recipes.chance.output.impl.ChancedItemOutput;
+import gregtech.api.recipes.conditions.RecipeCondition;
+import gregtech.api.recipes.conditions.RecipeConditionSet;
+import gregtech.api.recipes.conditions.RecipeConditions;
 import gregtech.api.recipes.ingredients.GTRecipeFluidInput;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
 import gregtech.api.recipes.ingredients.GTRecipeItemInput;
@@ -22,6 +25,7 @@ import gregtech.api.recipes.properties.RecipeProperty;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.RecipePropertyStorageImpl;
 import gregtech.api.recipes.properties.impl.CleanroomProperty;
+import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.recipes.properties.impl.DimensionProperty;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
@@ -61,6 +65,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * @see Recipe
@@ -181,7 +186,16 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     @MustBeInvokedByOverriders
     public boolean applyPropertyCT(@NotNull String key, @NotNull Object value) {
-        if (key.equals(DimensionProperty.KEY)) {
+        if (key.equals(ConditionProperty.KEY)) {
+            if (!(value instanceof RecipeConditionSet conditions)) return false;
+            try {
+                replaceConditions(getRecipeConditions().and(conditions));
+            } catch (IllegalArgumentException invalid) {
+                this.recipePropertyStorageErrored = true;
+                throw invalid;
+            }
+            return true;
+        } else if (key.equals(DimensionProperty.KEY)) {
             if (value instanceof DimensionProperty.DimensionPropertyList list) {
                 DimensionProperty.DimensionPropertyList dimensionIDs = getCompleteDimensionIDs();
                 if (dimensionIDs == null) {
@@ -215,6 +229,96 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
             this.recipePropertyStorageErrored = true;
         }
         return stored;
+    }
+
+    public RecipeConditionSet getRecipeConditions() {
+        return recipePropertyStorage.get(ConditionProperty.getInstance(), RecipeConditionSet.EMPTY);
+    }
+
+    /** Adds a requirement to this source recipe; same-type alternatives never absorb appended source requirements. */
+    public R condition(RecipeCondition<?> condition) {
+        try {
+            replaceConditions(getRecipeConditions().add(condition));
+        } catch (IllegalArgumentException invalid) {
+            this.recipePropertyStorageErrored = true;
+            throw invalid;
+        }
+        return (R) this;
+    }
+
+    private R createCondition(Supplier<RecipeCondition<?>> factory) {
+        try {
+            return condition(factory.get());
+        } catch (IllegalArgumentException invalid) {
+            this.recipePropertyStorageErrored = true;
+            throw invalid;
+        }
+    }
+
+    private void replaceConditions(RecipeConditionSet conditions) {
+        RecipePropertyStorage replacement = new RecipePropertyStorageImpl();
+        for (var entry : recipePropertyStorage.entrySet()) {
+            if (!entry.getKey().equals(ConditionProperty.getInstance()))
+                replacement.store(entry.getKey(), entry.getValue());
+        }
+        if (!conditions.isEmpty()) replacement.store(ConditionProperty.getInstance(), conditions);
+        this.recipePropertyStorage = replacement;
+    }
+
+    public R conditionBiome(String biome) {
+        return conditionBiome(biome, false);
+    }
+
+    public R conditionBiome(String biome, boolean inverted) {
+        return createCondition(() -> RecipeConditions.biome(biome, inverted));
+    }
+
+    public R conditionHeight(int minimum, int maximum) {
+        return conditionHeight(minimum, maximum, false);
+    }
+
+    public R conditionHeight(int minimum, int maximum, boolean inverted) {
+        return createCondition(() -> RecipeConditions.height(minimum, maximum, inverted));
+    }
+
+    public R conditionDaytime() {
+        return conditionDaytime(false);
+    }
+
+    public R conditionDaytime(boolean inverted) {
+        return createCondition(() -> RecipeConditions.daytime(inverted));
+    }
+
+    public R conditionTime(int start, int end) {
+        return conditionTime(start, end, false);
+    }
+
+    public R conditionTime(int start, int end, boolean inverted) {
+        return createCondition(() -> RecipeConditions.time(start, end, inverted));
+    }
+
+    public R conditionRain(float strength) {
+        return conditionRain(strength, false);
+    }
+
+    public R conditionRain(float strength, boolean inverted) {
+        return createCondition(() -> RecipeConditions.rain(strength, inverted));
+    }
+
+    public R conditionThunder(float strength) {
+        return conditionThunder(strength, false);
+    }
+
+    public R conditionThunder(float strength, boolean inverted) {
+        return createCondition(() -> RecipeConditions.thunder(strength, inverted));
+    }
+
+    public R conditionAdjacentBlocks(String[][] groups) {
+        return conditionAdjacentBlocks(groups, false);
+    }
+
+    public R conditionAdjacentBlocks(String[][] groups, boolean inverted) {
+        return createCondition(() -> RecipeConditions.adjacent(groups, inverted));
     }
 
     public R input(GTRecipeInput input) {

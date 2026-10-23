@@ -3,6 +3,8 @@ package gregtech.common.metatileentities.multi.multiblockpart;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
+import gregtech.api.capability.IFilter;
+import gregtech.api.capability.impl.FilteredNotifiableFluidTank;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.NotifiableFluidTank;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -13,6 +15,7 @@ import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.mui.GTGuis;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
+import gregtech.common.covers.filter.FluidFilterContainer;
 import gregtech.common.mui.widget.GTFluidSlot;
 
 import net.minecraft.client.resources.I18n;
@@ -23,6 +26,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.IFluidTank;
 
@@ -35,6 +39,7 @@ import com.cleanroommc.modularui.network.NetworkUtils;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cleanroommc.modularui.widgets.layout.Grid;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,6 +58,21 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
     // only holding this for convenience
     private final FluidTankList fluidTankList;
     private boolean workingEnabled;
+    @Nullable
+    private FluidFilterContainer outputFilter;
+    private final IFilter<FluidStack> outputPredicate = new IFilter<>() {
+
+        @Override
+        public boolean test(@NotNull FluidStack stack) {
+            return outputFilter == null || outputFilter.test(stack);
+        }
+
+        @Override
+        public int getPriority() {
+            return outputFilter != null && outputFilter.isBlacklistFilter() ?
+                    IFilter.blacklistLikePriority() : IFilter.whitelistLikePriority();
+        }
+    };
 
     public MetaTileEntityMultiFluidHatch(ResourceLocation metaTileEntityId, int tier, int numSlots,
                                          boolean isExportHatch) {
@@ -62,12 +82,36 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
         // Quadruple: 1/4th the capacity of a fluid hatch of this tier
         // Nonuple: 1/8th the capacity of a fluid hatch of this tier
         this.tankSize = BASE_TANK_SIZE * (1 << tier) / (numSlots == 4 ? 4 : 8);
+        if (isExportHatch && supportsOutputFilter()) {
+            this.outputFilter = new FluidFilterContainer(this::onOutputFilterChanged);
+        }
         FluidTank[] fluidsHandlers = new FluidTank[numSlots];
         for (int i = 0; i < fluidsHandlers.length; i++) {
-            fluidsHandlers[i] = new NotifiableFluidTank(tankSize, this, isExportHatch);
+            fluidsHandlers[i] = outputFilter == null ? new NotifiableFluidTank(tankSize, this, isExportHatch) :
+                    new FilteredNotifiableFluidTank(tankSize, this,
+                            () -> outputFilter.hasFilter() ? outputPredicate : null);
         }
         this.fluidTankList = new FluidTankList(false, fluidsHandlers);
         initializeInventory();
+    }
+
+    /** Subclasses with custom handlers or screens keep their existing behavior unless explicitly integrated. */
+    protected boolean supportsOutputFilter() {
+        return getClass() == MetaTileEntityMultiFluidHatch.class;
+    }
+
+    @Nullable
+    public FluidFilterContainer getOutputFilter() {
+        return outputFilter;
+    }
+
+    private void onOutputFilterChanged() {
+        markDirty();
+        if (fluidTankList != null) {
+            for (var entry : fluidTankList) {
+                if (entry.getDelegate() instanceof FilteredNotifiableFluidTank tank) tank.notifyFilterChanged();
+            }
+        }
     }
 
     @Override
@@ -124,6 +168,7 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
         for (var tank : fluidTankList.getFluidTanks()) {
             NetworkUtils.writeFluidStack(buf, tank.getFluid());
         }
+        if (outputFilter != null) outputFilter.writeInitialSyncData(buf);
     }
 
     @Override
@@ -132,8 +177,10 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
         this.workingEnabled = buf.readBoolean();
         for (var tank : fluidTankList.getFluidTanks()) {
             var fluid = NetworkUtils.readFluidStack(buf);
-            tank.fill(fluid, true);
+            if (outputFilter != null && tank.getDelegate() instanceof FluidTank realTank) realTank.setFluid(fluid);
+            else tank.fill(fluid, true);
         }
+        if (outputFilter != null) outputFilter.readInitialSyncData(buf);
     }
 
     @Override
@@ -148,12 +195,16 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
         data.setBoolean("workingEnabled", workingEnabled);
+        if (outputFilter != null) data.setTag("OutputFilter", outputFilter.serializeNBT());
         return data;
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
+        if (outputFilter != null && data.hasKey("OutputFilter")) {
+            outputFilter.deserializeNBT(data.getCompoundTag("OutputFilter"));
+        }
         if (data.hasKey("workingEnabled")) {
             this.workingEnabled = data.getBoolean("workingEnabled");
         }
@@ -173,6 +224,7 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
         tooltip.add(I18n.format(isExportHatch ? "gregtech.machine.fluid_hatch.export.tooltip" :
                 "gregtech.machine.fluid_hatch.import.tooltip"));
         tooltip.add(I18n.format("gregtech.universal.tooltip.fluid_storage_capacity_mult", numSlots, tankSize));
+        if (outputFilter != null) tooltip.add(I18n.format("gregtech.machine.output_filter.tooltip"));
         tooltip.add(I18n.format("gregtech.universal.enabled"));
     }
 
@@ -209,6 +261,12 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
     }
 
     @Override
+    public void clearMachineInventory(@NotNull List<@NotNull ItemStack> itemBuffer) {
+        super.clearMachineInventory(itemBuffer);
+        if (outputFilter != null) clearInventory(itemBuffer, outputFilter);
+    }
+
+    @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
         int rowSize = (int) Math.sqrt(numSlots);
 
@@ -217,7 +275,7 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
             fluidSlots.add(new GTFluidSlot());
         }
 
-        return GTGuis.createPanel(this, 176, 18 + 18 * rowSize + 94)
+        ModularPanel panel = GTGuis.createPanel(this, 176, 18 + 18 * rowSize + 94 + (outputFilter == null ? 0 : 20))
                 .child(IKey.lang(getMetaFullName()).asWidget().pos(5, 5))
                 .child(new Grid()
                         .margin(0)
@@ -228,5 +286,10 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
                                         .accessibility(true, !isExportHatch)))
                         .coverChildren())
                 .bindPlayerInventory();
+        if (outputFilter != null) {
+            panel.child(Flow.column().pos(7, 20 + rowSize * 18).width(162).coverChildrenHeight()
+                    .child(outputFilter.initUI(guiData, guiSyncManager)));
+        }
+        return panel;
     }
 }

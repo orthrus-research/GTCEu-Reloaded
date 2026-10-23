@@ -27,6 +27,11 @@ public interface IMultiblockAbilityPart<T> extends IMultiblockPart {
         return getAbility() == null ? Collections.emptyList() : Collections.singletonList(getAbility());
     }
 
+    /** A combined part may require every matching ability maximum, even across alternative predicates. */
+    default boolean requiresAllAbilityLimits() {
+        return false;
+    }
+
     /**
      * Register abilities to the multiblock here
      * <br />

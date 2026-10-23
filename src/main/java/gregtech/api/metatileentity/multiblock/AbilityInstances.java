@@ -7,7 +7,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Stores a list of {@link MultiblockAbility} instances.
@@ -38,9 +41,32 @@ public class AbilityInstances extends AbstractObjectList<Object> {
 
     private final MultiblockAbility<?> key;
     private final List<Object> instances = new ArrayList<>();
+    private final Map<Object, IMultiblockPart> owners = new IdentityHashMap<>();
+    private final Set<Object> ambiguousOwners = Collections.newSetFromMap(new IdentityHashMap<>());
+    private IMultiblockPart registeringPart;
 
     public AbilityInstances(MultiblockAbility<?> key) {
         this.key = key;
+    }
+
+    /** Capture provenance while making the same single registration call used by structure formation. */
+    void registerFrom(IMultiblockAbilityPart<?> part) {
+        this.registeringPart = part;
+        try {
+            part.registerAbilities(this);
+        } finally {
+            this.registeringPart = null;
+        }
+    }
+
+    IMultiblockPart getOwner(Object instance) {
+        return ambiguousOwners.contains(instance) ? null : owners.get(instance);
+    }
+
+    private void recordOwner(Object instance) {
+        if (registeringPart == null) return;
+        IMultiblockPart previous = owners.putIfAbsent(instance, registeringPart);
+        if (previous != null && previous != registeringPart) ambiguousOwners.add(instance);
     }
 
     @Override
@@ -85,8 +111,11 @@ public class AbilityInstances extends AbstractObjectList<Object> {
 
     @Override
     public void add(int index, Object element) {
-        if (canAdd(element) && !instances.contains(element))
-            instances.add(index, element);
+        if (canAdd(element)) {
+            int existing = instances.indexOf(element);
+            recordOwner(existing < 0 ? element : instances.get(existing));
+            if (existing < 0) instances.add(index, element);
+        }
     }
 
     /**
@@ -102,11 +131,12 @@ public class AbilityInstances extends AbstractObjectList<Object> {
 
         int existing = instances.indexOf(element);
         if (existing != -1) {
+            recordOwner(instances.get(existing));
             GTLog.logger.warn("attempted to set \"{}\" at index {} when we already have it at {}",
                     element.getClass().getSimpleName(), index, existing);
             return null;
         }
-
+        recordOwner(element);
         return instances.set(index, element);
     }
 

@@ -53,6 +53,11 @@ public class MetaTileEntityDistillationTower extends RecipeMapMultiblockControll
     }
 
     @Override
+    public boolean supportsPreviewEditing() {
+        return getClass() == MetaTileEntityDistillationTower.class;
+    }
+
+    @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity tileEntity) {
         return new MetaTileEntityDistillationTower(metaTileEntityId, this.handler != null);
     }
@@ -155,6 +160,11 @@ public class MetaTileEntityDistillationTower extends RecipeMapMultiblockControll
         protected void outputRecipeOutputs() {
             GTTransferUtils.addItemsToItemHandler(getOutputInventory(), false, itemOutputs);
             handler.applyFluidToOutputs(fluidOutputs, true);
+        }
+
+        @Override
+        protected boolean canFitRecipeFluidOutputs() {
+            return handler.applyFluidToOutputs(fluidOutputs, false);
         }
 
         @Override

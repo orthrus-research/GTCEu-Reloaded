@@ -51,6 +51,21 @@ public class FluidTankList implements IMultipleTankHandler, INBTSerializable<NBT
         return tank instanceof MultiFluidTankEntry entry ? entry : new MultiFluidTankEntry(this, tank);
     }
 
+    /** Assembles recipe views without replacing a combined handler's tank ownership or fill policy. */
+    public static FluidTankList preservingTankOwners(boolean allowSameFluidFill,
+                                                     List<? extends IFluidTank> tanks) {
+        return new FluidTankList(tanks, allowSameFluidFill);
+    }
+
+    private FluidTankList(List<? extends IFluidTank> tanks, boolean allowSameFluidFill) {
+        this.allowSameFluidFill = allowSameFluidFill;
+        this.fluidTanks = new ITankEntry[tanks.size()];
+        for (int i = 0; i < tanks.size(); i++) {
+            IFluidTank tank = tanks.get(i);
+            this.fluidTanks[i] = tank instanceof ITankEntry entry ? entry : wrapIntoEntry(tank);
+        }
+    }
+
     @NotNull
     @Override
     public List<ITankEntry> getFluidTanks() {

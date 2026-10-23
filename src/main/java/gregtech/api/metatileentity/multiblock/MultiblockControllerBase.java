@@ -366,7 +366,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
 
                         AbilityInstances instances = abilities.computeIfAbsent(ability,
                                 AbilityInstances::new);
-                        abilityPart.registerAbilities(instances);
+                        instances.registerFrom(abilityPart);
                     }
                 }
             }
@@ -416,6 +416,12 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
 
     public <T> List<T> getAbilities(MultiblockAbility<T> ability) {
         return Collections.unmodifiableList(multiblockAbilities.getOrDefault(ability, AbilityInstances.EMPTY).cast());
+    }
+
+    /** Null means unclaimed or ambiguously claimed; callers must not treat it as shared ownership. */
+    @Nullable
+    public <T> IMultiblockPart getAbilityOwner(MultiblockAbility<T> ability, T instance) {
+        return multiblockAbilities.getOrDefault(ability, AbilityInstances.EMPTY).getOwner(instance);
     }
 
     public List<IMultiblockPart> getMultiblockParts() {
@@ -566,6 +572,15 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
     /** Set this to false only if your multiblock is set up such that it could have a wall-shared controller. */
     public boolean allowsFlip() {
         return true;
+    }
+
+    /**
+     * Opt in to the client preview editor. Implementations must support independent factory clones,
+     * NBT snapshots and standalone pattern matching without formation callbacks or a real world.
+     * Subclasses with additional constraints should explicitly reconsider this contract.
+     */
+    public boolean supportsPreviewEditing() {
+        return false;
     }
 
     public List<MultiblockShapeInfo> getMatchingShapes() {

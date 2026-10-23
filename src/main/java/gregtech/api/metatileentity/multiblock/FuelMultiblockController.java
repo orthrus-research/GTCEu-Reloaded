@@ -59,6 +59,7 @@ public abstract class FuelMultiblockController extends RecipeMapMultiblockContro
 
     @Override
     protected void configureWarningText(MultiblockUIBuilder builder) {
+        builder.addRecipeFailureLine(recipeMapWorkable);
         builder.addLowDynamoTierLine(isDynamoTierTooLow());
         if (hasMaintenanceMechanics())
             builder.addMaintenanceProblemLines(getMaintenanceProblems(), true);

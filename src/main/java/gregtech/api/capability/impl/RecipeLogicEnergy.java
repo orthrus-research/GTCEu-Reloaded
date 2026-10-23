@@ -25,6 +25,11 @@ public class RecipeLogicEnergy extends AbstractRecipeLogic {
     }
 
     @Override
+    protected boolean supportsIdleRecipeScheduling() {
+        return getClass() == RecipeLogicEnergy.class;
+    }
+
+    @Override
     protected IEnergyContainer getEnergyContainer() {
         return energyContainer.get();
     }

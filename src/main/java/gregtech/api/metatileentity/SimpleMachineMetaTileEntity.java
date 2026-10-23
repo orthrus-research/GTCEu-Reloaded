@@ -10,6 +10,9 @@ import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.GhostCircuitItemStackHandler;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.ItemHandlerProxy;
+import gregtech.api.configuration.ConfigurationAdapter;
+import gregtech.api.configuration.ConfigurationData;
+import gregtech.api.configuration.ScalarConfigurationAdapter;
 import gregtech.api.cover.Cover;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
@@ -17,9 +20,12 @@ import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.GhostCircuitSlotWidget;
 import gregtech.api.gui.widgets.ImageWidget;
 import gregtech.api.gui.widgets.LabelWidget;
+import gregtech.api.gui.widgets.RecipeFailureWidget;
 import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.gui.widgets.ToggleButtonWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
+import gregtech.api.items.toolitem.ToolAction;
+import gregtech.api.items.toolitem.ToolActionHints;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTTransferUtils;
@@ -59,6 +65,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import static gregtech.api.capability.GregtechDataCodes.*;
@@ -78,6 +85,9 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     private boolean autoOutputFluids;
     private boolean allowInputFromOutputSideItems = false;
     private boolean allowInputFromOutputSideFluids = false;
+
+    private final AutoOutputCache itemAutoOutputCache = new AutoOutputCache();
+    private final AutoOutputCache fluidAutoOutputCache = new AutoOutputCache();
 
     protected IItemHandler outputItemInventory;
     protected IFluidHandler outputFluidInventory;
@@ -149,6 +159,85 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     }
 
     @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return getClass() == SimpleMachineMetaTileEntity.class ? createSimpleConfigurationAdapter() : null;
+    }
+
+    /** Called only by an implementation explicitly admitting its unchanged simple-machine settings semantics. */
+    protected final ConfigurationAdapter createSimpleConfigurationAdapter() {
+        return new ScalarConfigurationAdapter("gregtech:simple_machine/1") {
+
+            @Override
+            public NBTTagCompound capture() {
+                NBTTagCompound data = new NBTTagCompound();
+                data.setBoolean("HasFront", hasFrontFacing());
+                data.setInteger("Front", getFrontFacing().getIndex());
+                data.setInteger("ItemOutput", getOutputFacingItems().getIndex());
+                data.setInteger("FluidOutput", getOutputFacingFluids().getIndex());
+                data.setBoolean("AutoItems", isAutoOutputItems());
+                data.setBoolean("AutoFluids", isAutoOutputFluids());
+                data.setBoolean("InputItems", isAllowInputFromOutputSideItems());
+                data.setBoolean("InputFluids", isAllowInputFromOutputSideFluids());
+                data.setBoolean("Muffled", isMuffled());
+                data.setInteger("Circuit", circuitInventory.getCircuitValue());
+                return data;
+            }
+
+            @Override
+            protected void validate(NBTTagCompound data) {
+                ConfigurationData.keys(data, "HasFront", "Front", "ItemOutput", "FluidOutput", "AutoItems",
+                        "AutoFluids", "InputItems", "InputFluids", "Muffled", "Circuit");
+                ConfigurationData.require(ConfigurationData.bool(data, "HasFront") == hasFrontFacing());
+                EnumFacing front = ConfigurationData.facing(data, "Front");
+                EnumFacing items = ConfigurationData.facing(data, "ItemOutput");
+                EnumFacing fluids = ConfigurationData.facing(data, "FluidOutput");
+                ConfigurationData.require(front.getAxis().isHorizontal());
+                ConfigurationData.require(!hasFrontFacing() || (front != items && front != fluids));
+                for (String key : new String[] { "AutoItems", "AutoFluids", "InputItems", "InputFluids", "Muffled" }) {
+                    ConfigurationData.bool(data, key);
+                }
+                ConfigurationData.require(circuitInventory != null);
+                ConfigurationData.integer(data, "Circuit", GhostCircuitItemStackHandler.NO_CONFIG, 32);
+            }
+
+            @Override
+            protected void apply(NBTTagCompound data) {
+                ConfigurationData.require(getWorld() != null && !getWorld().isRemote);
+                setConfigurationOutputFacings(ConfigurationData.facing(data, "ItemOutput"),
+                        ConfigurationData.facing(data, "FluidOutput"));
+                EnumFacing front = ConfigurationData.facing(data, "Front");
+                if (front != getFrontFacing()) setFrontFacing(front);
+                setAutoOutputItems(data.getBoolean("AutoItems"));
+                setAutoOutputFluids(data.getBoolean("AutoFluids"));
+                setAllowInputFromOutputSideItems(data.getBoolean("InputItems"));
+                setAllowInputFromOutputSideFluids(data.getBoolean("InputFluids"));
+                setGhostCircuitConfig(data.getInteger("Circuit"));
+                if (data.getBoolean("Muffled") != isMuffled()) toggleMuffled();
+                markDirty();
+            }
+        };
+    }
+
+    // Assign both fields before notifications or serialization, including on a newly attached machine.
+    private void setConfigurationOutputFacings(EnumFacing items, EnumFacing fluids) {
+        this.outputFacingItems = items;
+        this.outputFacingFluids = fluids;
+        notifyBlockUpdate();
+        writeCustomData(UPDATE_OUTPUT_FACING, buf -> {
+            buf.writeByte(items.getIndex());
+            buf.writeByte(fluids.getIndex());
+        });
+        markDirty();
+    }
+
+    @Override
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
+        // Addon subclasses can change click handling, so they must opt in explicitly.
+        return getClass() == SimpleMachineMetaTileEntity.class ?
+                ToolActionHints.forSimpleMachine(this, toolClasses, sneaking, side) : null;
+    }
+
+    @Override
     public boolean onWrenchClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing,
                                  CuboidRayTraceResult hitResult) {
         if (!playerIn.isSneaking()) {
@@ -200,6 +289,104 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     }
 
     @Override
+    public boolean supportsIdleRecipeScheduling() {
+        return getClass() == SimpleMachineMetaTileEntity.class;
+    }
+
+    @Override
+    protected boolean shouldUpdate(MTETrait trait) {
+        return super.shouldUpdate(trait) && (trait != workable || workable.shouldUpdateRecipeLogic());
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        workable.requestRecipeLogicWakeup();
+        requestAutoOutputWakeup();
+    }
+
+    /**
+     * Opt-in requires notifiable export handlers and the ordinary uncovered output capability/transfer semantics.
+     * Subclasses with custom public push methods remain on those methods unless explicitly opting in here.
+     */
+    protected boolean supportsAutoOutputScheduling() {
+        return getClass() == SimpleMachineMetaTileEntity.class;
+    }
+
+    /** Coalesces wakes for the next ordinary five-tick output slot, without resolving capabilities or transferring. */
+    protected final void requestAutoOutputWakeup() {
+        // Inventory construction can notify through a virtual method before these fields are initialized.
+        if (itemAutoOutputCache != null) itemAutoOutputCache.requestWakeup();
+        if (fluidAutoOutputCache != null) fluidAutoOutputCache.requestWakeup();
+    }
+
+    @Override
+    public void addNotifiedOutput(Object output) {
+        super.addNotifiedOutput(output);
+        if (output instanceof IItemHandlerModifiable && itemAutoOutputCache != null)
+            itemAutoOutputCache.requestWakeup();
+        if (output instanceof IFluidHandler && fluidAutoOutputCache != null) fluidAutoOutputCache.requestWakeup();
+    }
+
+    @Override
+    public void onNeighborChanged() {
+        super.onNeighborChanged();
+        requestAutoOutputWakeup();
+    }
+
+    @Override
+    protected void onCoverPlacementUpdate() {
+        super.onCoverPlacementUpdate();
+        requestAutoOutputWakeup();
+    }
+
+    private void autoOutputItems() {
+        EnumFacing side = getOutputFacingItems();
+        if (!supportsAutoOutputScheduling() || getCoverAtSide(side) != null) {
+            pushItemsIntoNearbyHandlers(side);
+            return;
+        }
+        if (itemAutoOutputCache.consumeWakeup()) {
+            boolean empty = true;
+            for (int slot = 0; slot < getExportItems().getSlots(); slot++) {
+                if (!getExportItems().getStackInSlot(slot).isEmpty()) {
+                    empty = false;
+                    break;
+                }
+            }
+            itemAutoOutputCache.refreshContents(empty);
+        }
+        long tick = getOffsetTimer();
+        if (itemAutoOutputCache.shouldAttempt(tick)) {
+            itemAutoOutputCache.recordAttempt(transferToNearbyAndCheckAvailability(
+                    CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, GTTransferUtils::moveInventoryItems, side), tick);
+        }
+    }
+
+    private void autoOutputFluids() {
+        EnumFacing side = getOutputFacingFluids();
+        if (!supportsAutoOutputScheduling() || getCoverAtSide(side) != null) {
+            pushFluidsIntoNearbyHandlers(side);
+            return;
+        }
+        if (fluidAutoOutputCache.consumeWakeup()) {
+            boolean empty = true;
+            for (int tank = 0; tank < getExportFluids().getTanks(); tank++) {
+                if (getExportFluids().getTankAt(tank).getFluidAmount() > 0) {
+                    empty = false;
+                    break;
+                }
+            }
+            fluidAutoOutputCache.refreshContents(empty);
+        }
+        long tick = getOffsetTimer();
+        if (fluidAutoOutputCache.shouldAttempt(tick)) {
+            fluidAutoOutputCache.recordAttempt(transferToNearbyAndCheckAvailability(
+                    CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, GTTransferUtils::transferFluids, side), tick);
+        }
+    }
+
+    @Override
     public void update() {
         super.update();
         if (!getWorld().isRemote) {
@@ -207,10 +394,10 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
             if (getOffsetTimer() % 5 == 0) {
                 if (isAutoOutputFluids()) {
-                    pushFluidsIntoNearbyHandlers(getOutputFacingFluids());
+                    autoOutputFluids();
                 }
                 if (isAutoOutputItems()) {
-                    pushItemsIntoNearbyHandlers(getOutputFacingItems());
+                    autoOutputItems();
                 }
             }
         } else if (this.tickingParticle != null && isActive()) {
@@ -255,7 +442,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
             }
             return null;
         } else if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
-            IItemHandler itemHandler = (side == getOutputFacingItems() && !isAllowInputFromOutputSideFluids()) ?
+            IItemHandler itemHandler = (side == getOutputFacingItems() && !isAllowInputFromOutputSideItems()) ?
                     outputItemInventory : itemInventory;
             if (itemHandler.getSlots() > 0) {
                 return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(itemHandler);
@@ -289,6 +476,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
+        requestAutoOutputWakeup();
         this.chargerInventory.deserializeNBT(data.getCompoundTag("ChargerInventory"));
         if (this.circuitInventory != null) {
             if (data.hasKey("CircuitInventory", Constants.NBT.TAG_COMPOUND)) {
@@ -359,6 +547,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     public void setOutputFacing(EnumFacing outputFacing) {
         this.outputFacingItems = outputFacing;
         this.outputFacingFluids = outputFacing;
+        requestAutoOutputWakeup();
         if (!getWorld().isRemote) {
             notifyBlockUpdate();
             writeCustomData(UPDATE_OUTPUT_FACING, buf -> {
@@ -371,6 +560,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setOutputFacingItems(EnumFacing outputFacing) {
         this.outputFacingItems = outputFacing;
+        itemAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             notifyBlockUpdate();
             writeCustomData(UPDATE_OUTPUT_FACING, buf -> {
@@ -383,6 +573,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setOutputFacingFluids(EnumFacing outputFacing) {
         this.outputFacingFluids = outputFacing;
+        fluidAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             notifyBlockUpdate();
             writeCustomData(UPDATE_OUTPUT_FACING, buf -> {
@@ -395,6 +586,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setAutoOutputItems(boolean autoOutputItems) {
         this.autoOutputItems = autoOutputItems;
+        itemAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             writeCustomData(UPDATE_AUTO_OUTPUT_ITEMS, buf -> buf.writeBoolean(autoOutputItems));
             markDirty();
@@ -403,6 +595,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setAutoOutputFluids(boolean autoOutputFluids) {
         this.autoOutputFluids = autoOutputFluids;
+        fluidAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             writeCustomData(UPDATE_AUTO_OUTPUT_FLUIDS, buf -> buf.writeBoolean(autoOutputFluids));
             markDirty();
@@ -411,6 +604,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setAllowInputFromOutputSideItems(boolean allowInputFromOutputSide) {
         this.allowInputFromOutputSideItems = allowInputFromOutputSide;
+        itemAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             markDirty();
         }
@@ -418,6 +612,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setAllowInputFromOutputSideFluids(boolean allowInputFromOutputSide) {
         this.allowInputFromOutputSideFluids = allowInputFromOutputSide;
+        fluidAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             markDirty();
         }
@@ -437,6 +632,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     @Override
     public void setFrontFacing(EnumFacing frontFacing) {
         super.setFrontFacing(frontFacing);
+        requestAutoOutputWakeup();
         if (this.outputFacingItems == null || this.outputFacingFluids == null) {
             // set initial output facing as opposite to front
             setOutputFacing(frontFacing.getOpposite());
@@ -494,8 +690,8 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
                         .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.CHARGER_OVERLAY)
                         .setTooltipText("gregtech.gui.charger_slot.tooltip", GTValues.VNF[getTier()],
                                 GTValues.VNF[getTier()]))
-                .widget(new ImageWidget(79, 42 + yOffset, 18, 18, GuiTextures.INDICATOR_NO_ENERGY).setIgnoreColor(true)
-                        .setPredicate(workable::isHasNotEnoughEnergy))
+                .widget(new RecipeFailureWidget(79, 42 + yOffset, GuiTextures.INDICATOR_NO_ENERGY,
+                        workable::getRecipeFailure))
                 .bindPlayerInventory(player.inventory, GuiTextures.SLOT, yOffset);
 
         int leftButtonStartX = 7;

@@ -24,6 +24,9 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.OCParams;
 import gregtech.api.recipes.logic.OCResult;
+import gregtech.api.recipes.logic.RecipeFailure;
+import gregtech.api.recipes.logic.RecipeFailureReason;
+import gregtech.api.recipes.modifiers.IRecipeModifierProvider;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.KeyUtil;
@@ -348,6 +351,7 @@ public class MetaTileEntityProcessingArray extends RecipeMapMultiblockController
                 MetaTileEntityHolder holder = new MetaTileEntityHolder();
                 mte = holder.setMetaTileEntity(mte);
                 holder.setWorld(this.metaTileEntity.getWorld());
+                holder.setPos(this.metaTileEntity.getPos());
 
                 updateCleanroom();
             }
@@ -377,13 +381,35 @@ public class MetaTileEntityProcessingArray extends RecipeMapMultiblockController
         }
 
         @Override
+        public boolean isRecipeEligible(@NotNull Recipe recipe) {
+            // The delegate does not prepare the PA's recipe. Running only its modifier eligibility would discard
+            // numeric changes; reject this explicit opt-in without invoking its provider or callback from GUI lookup.
+            if (mte instanceof IRecipeModifierProvider)
+                return recordRecipeFailure(RecipeFailureReason.MODIFIER_UNSUPPORTED);
+            if (!supportsRecipeCandidateEligibility()) return true;
+            if (mte == null) return false;
+            AbstractRecipeLogic logic = mte.getRecipeLogic();
+            if (logic == null) return false;
+            RecipeFailure failure = logic.evaluateRecipeEligibility(recipe);
+            return (failure.isEmpty() || recordRecipeFailure(failure)) && super.isRecipeEligible(recipe);
+        }
+
+        @Override
+        protected boolean supportsRecipeCandidateEligibility() {
+            return usesLegacyRecipeCheck(ProcessingArrayWorkable.class);
+        }
+
+        @Override
         public boolean checkRecipe(@NotNull Recipe recipe) {
             if (mte == null) return false;
+            if (mte instanceof IRecipeModifierProvider)
+                return recordRecipeFailure(RecipeFailureReason.MODIFIER_UNSUPPORTED);
 
             AbstractRecipeLogic arl = mte.getRecipeLogic();
             if (arl == null) return false;
 
-            return arl.checkRecipe(recipe) && super.checkRecipe(recipe);
+            RecipeFailure failure = arl.evaluateRecipeCheck(recipe);
+            return (failure.isEmpty() || recordRecipeFailure(failure)) && super.checkRecipe(recipe);
         }
 
         @Override
