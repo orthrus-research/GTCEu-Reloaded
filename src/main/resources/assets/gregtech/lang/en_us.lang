@@ -6564,3 +6564,10 @@ gregtech.scanner.forestry.pollen=§oScanned Pollen
 gregtech.mutation.block_of=Block of %s
 
 record.sus=Leonz - Among Us Drip
+
+# ME stocking settings
+gregtech.gui.me_stocking.minimum_items=Minimum items
+gregtech.gui.me_stocking.minimum_fluids=Minimum mB
+gregtech.gui.me_stocking.refresh=Refresh ticks
+gregtech.gui.me_stocking.minimum.tooltip=Only expose stocks at or above this amount./nThis is not a reserve; recipes can consume below it.
+gregtech.gui.me_stocking.refresh.tooltip=1-200 ticks between stock updates and auto-pull scans./n0 preserves legacy timing: global ME stock updates and 100-tick auto-pull scans.

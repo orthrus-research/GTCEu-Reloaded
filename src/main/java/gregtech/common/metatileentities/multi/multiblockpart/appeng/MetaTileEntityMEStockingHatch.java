@@ -40,6 +40,7 @@ import static gregtech.api.capability.GregtechDataCodes.UPDATE_AUTO_PULL;
 public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
 
     private static final int CONFIG_SIZE = 16;
+    private final MEStockingConfig stockingConfig = new MEStockingConfig();
     private boolean autoPull;
     private Predicate<FluidStack> autoPullTest;
 
@@ -62,31 +63,63 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
     }
 
     @Override
+    protected boolean shouldUpdateME() {
+        // Check connectivity even while disabled, without tying it to an expensive storage scan.
+        if (!updateMEStatus() || !isWorkingEnabled()) {
+            clearUnavailableStock();
+            return false;
+        }
+        int interval = stockingConfig.getRefreshTicks();
+        if (interval == 0) return shouldSyncME();
+        if (getOffsetTimer() % interval != 0) return false;
+        if (autoPull) refreshList();
+        return true;
+    }
+
+    @Override
     public void update() {
         super.update();
-        if (!getWorld().isRemote) {
-            if (isWorkingEnabled() && autoPull && getOffsetTimer() % 100 == 0) {
-                refreshList();
-                syncME();
-            }
+        if (!getWorld().isRemote && isOnline && isWorkingEnabled() && autoPull &&
+                stockingConfig.getRefreshTicks() == 0 && getOffsetTimer() % 100 == 0) {
+            refreshList();
+            syncME();
+        }
+    }
 
-            // Immediately clear cached fluids if the status changed, to prevent running recipes while offline
-            if (this.meStatusChanged && !this.isOnline) {
-                if (autoPull) {
-                    this.getAEFluidHandler().clearConfig();
-                } else {
-                    for (int i = 0; i < CONFIG_SIZE; i++) {
-                        getAEFluidHandler().getInventory()[i].setStack(null);
-                    }
-                }
+    private void clearUnavailableStock() {
+        if (autoPull) {
+            clearInventory(0);
+        } else {
+            for (var slot : getAEFluidHandler().getInventory()) {
+                slot.setStack(null);
             }
         }
     }
 
+    private void onStockingConfigChanged() {
+        if (getWorld() != null && !getWorld().isRemote) {
+            markDirty();
+            onConfigPasted();
+        }
+    }
+
+    @Override
+    protected void onConfigPasted() {
+        if (!updateMEStatus() || !isWorkingEnabled()) {
+            clearUnavailableStock();
+            return;
+        }
+        if (autoPull) refreshList();
+        syncME();
+    }
+
     @Override
     protected void syncME() {
-        IMEMonitor<IAEFluidStack> monitor = super.getMonitor();
-        if (monitor == null) return;
+        IMEMonitor<IAEFluidStack> monitor = getMonitor();
+        if (monitor == null) {
+            clearUnavailableStock();
+            return;
+        }
 
         for (ExportOnlyAEStockingFluidSlot slot : this.getAEFluidHandler().getInventory()) {
             if (slot.getConfig() == null) {
@@ -101,7 +134,8 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
                 }
                 request.setStackSize(Integer.MAX_VALUE);
                 IAEFluidStack result = monitor.extractItems(request, Actionable.SIMULATE, getActionSource());
-                slot.setStack(result);
+                slot.setStack(result != null && result.getStackSize() >= stockingConfig.getMinimumStock() ?
+                        result : null);
             }
         }
     }
@@ -158,14 +192,17 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
     }
 
     private void setAutoPull(boolean autoPull) {
+        setAutoPull(autoPull, true);
+    }
+
+    private void setAutoPull(boolean autoPull, boolean refresh) {
         this.autoPull = autoPull;
         markDirty();
         if (!getWorld().isRemote) {
             if (!this.autoPull) {
                 this.getAEFluidHandler().clearConfig();
-            } else if (updateMEStatus()) {
-                this.refreshList();
-                syncME();
+            } else if (refresh) {
+                onConfigPasted();
             }
             writeCustomData(UPDATE_AUTO_PULL, buf -> buf.writeBoolean(this.autoPull));
         }
@@ -187,9 +224,9 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
         int index = 0;
         for (IAEFluidStack stack : storageList) {
             if (index >= CONFIG_SIZE) break;
-            if (stack.getStackSize() == 0) continue;
+            if (stack.getStackSize() < stockingConfig.getMinimumStock()) continue;
             stack = monitor.extractItems(stack, Actionable.SIMULATE, getActionSource());
-            if (stack == null || stack.getStackSize() == 0) continue;
+            if (stack == null || stack.getStackSize() < stockingConfig.getMinimumStock()) continue;
 
             FluidStack fluidStack = stack.getFluidStack();
             if (fluidStack == null) continue;
@@ -222,10 +259,16 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
     }
 
     @Override
+    protected int getUIExtraHeight() {
+        return MEStockingConfig.UI_EXTRA_HEIGHT;
+    }
+
+    @Override
     protected ModularUI.Builder createUITemplate(EntityPlayer player) {
         ModularUI.Builder builder = super.createUITemplate(player);
         builder.widget(new ImageCycleButtonWidget(7 + 18 * 4 + 1, 26, 16, 16, GuiTextures.BUTTON_AUTO_PULL,
                 () -> autoPull, this::setAutoPull).setTooltipHoverString("gregtech.gui.me_bus.auto_pull_button"));
+        stockingConfig.addWidgets(builder, true, this::onStockingConfigChanged);
         return builder;
     }
 
@@ -249,6 +292,7 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
         data.setBoolean("AutoPull", autoPull);
+        stockingConfig.writeToNBT(data);
         return data;
     }
 
@@ -256,6 +300,7 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
         this.autoPull = data.getBoolean("AutoPull");
+        stockingConfig.readFromNBT(data, false);
     }
 
     @Override
@@ -287,23 +332,26 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
         if (!autoPull) {
             NBTTagCompound tag = super.writeConfigToTag();
             tag.setBoolean("AutoPull", false);
+            stockingConfig.writeToNBT(tag);
             return tag;
         }
         // if in auto-pull, no need to write actual configured slots, but still need to write the ghost circuit
         NBTTagCompound tag = new NBTTagCompound();
         tag.setBoolean("AutoPull", true);
+        stockingConfig.writeToNBT(tag);
         return tag;
     }
 
     @Override
     protected void readConfigFromTag(NBTTagCompound tag) {
+        stockingConfig.readFromNBT(tag, true);
         if (tag.getBoolean("AutoPull")) {
             // if being set to auto-pull, no need to read the configured slots
-            this.setAutoPull(true);
+            this.setAutoPull(true, false);
             return;
         }
         // set auto pull first to avoid issues with clearing the config after reading from the data stick
-        this.setAutoPull(false);
+        this.setAutoPull(false, false);
         super.readConfigFromTag(tag);
     }
 
