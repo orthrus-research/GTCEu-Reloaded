@@ -366,7 +366,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
 
                         AbilityInstances instances = abilities.computeIfAbsent(ability,
                                 AbilityInstances::new);
-                        abilityPart.registerAbilities(instances);
+                        instances.registerFrom(abilityPart);
                     }
                 }
             }
@@ -416,6 +416,12 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
 
     public <T> List<T> getAbilities(MultiblockAbility<T> ability) {
         return Collections.unmodifiableList(multiblockAbilities.getOrDefault(ability, AbilityInstances.EMPTY).cast());
+    }
+
+    /** Null means unclaimed or ambiguously claimed; callers must not treat it as shared ownership. */
+    @Nullable
+    public <T> IMultiblockPart getAbilityOwner(MultiblockAbility<T> ability, T instance) {
+        return multiblockAbilities.getOrDefault(ability, AbilityInstances.EMPTY).getOwner(instance);
     }
 
     public List<IMultiblockPart> getMultiblockParts() {

@@ -1042,6 +1042,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
 
         if (checkOutputSpaceItems(recipe, getOutputInventory()) && checkOutputSpaceFluids(recipe, getOutputTank())) {
             this.isOutputsFull = false;
+            if (!isRecipeInputViewStillValid(importInventory, importFluids)) {
+                recordRecipeFailure(RecipeFailureReason.INPUT_CHANGED);
+                return null;
+            }
             if (recipe.matches(true, importInventory, importFluids)) {
                 this.metaTileEntity.addNotifiedInput(importInventory);
                 return recipe;
@@ -1050,6 +1054,13 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         }
 
         return null;
+    }
+
+    /**
+     * Ordinary inventories have no selected-provider lifecycle; multiblocks may validate one immediately before use.
+     */
+    protected boolean isRecipeInputViewStillValid(IItemHandlerModifiable items, IMultipleTankHandler fluids) {
+        return true;
     }
 
     /**

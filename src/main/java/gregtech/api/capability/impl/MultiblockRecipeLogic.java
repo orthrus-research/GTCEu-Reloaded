@@ -6,6 +6,7 @@ import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.IMultiblockController;
 import gregtech.api.capability.IMultipleRecipeMaps;
 import gregtech.api.capability.IMultipleTankHandler;
+import gregtech.api.capability.RecipeInputView;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.MultiblockWithDisplayBase;
 import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
@@ -19,6 +20,7 @@ import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Tuple;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -27,8 +29,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import static gregtech.api.recipes.logic.OverclockingLogic.subTickParallelOC;
 
@@ -38,6 +42,12 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
     protected int lastRecipeIndex = 0;
     protected IItemHandlerModifiable currentDistinctInputBus;
     protected List<IItemHandlerModifiable> invalidatedInputList = new ArrayList<>();
+    private RecipeInputView selectedInputView;
+    private long selectedViewRevision;
+    private long selectedProviderRevision;
+    private RecipeOutputRoute selectedOutputRoute;
+    private RecipeOutputRoute activeOutputRoute = RecipeOutputRoute.LEGACY;
+    private Object previousInputViewKey;
 
     public MultiblockRecipeLogic(RecipeMapMultiblockController tileEntity) {
         super(tileEntity, tileEntity.recipeMap);
@@ -68,10 +78,40 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
         super.invalidate();
         lastRecipeIndex = 0;
         invalidatedInputList.clear();
+        this.selectedInputView = null;
+        this.selectedOutputRoute = null;
+        this.activeOutputRoute = RecipeOutputRoute.LEGACY;
+        this.previousInputViewKey = null;
     }
 
     public void onDistinctChanged() {
         this.lastRecipeIndex = 0;
+    }
+
+    public void onInputViewsChanged() {
+        this.previousInputViewKey = null;
+        this.previousRecipe = null;
+        this.invalidInputsForRecipes = false;
+        this.isOutputsFull = false;
+        invalidatedInputList.clear();
+        requestRecipeLogicWakeup();
+        metaTileEntity.addNotifiedInput(((RecipeMapMultiblockController) metaTileEntity).getInputInventory());
+    }
+
+    private MultiblockRecipeInputs inputViews() {
+        return ((RecipeMapMultiblockController) metaTileEntity).getRecipeInputViews();
+    }
+
+    private boolean usesInputViews() {
+        RecipeMapMultiblockController controller = (RecipeMapMultiblockController) metaTileEntity;
+        return controller.canUseRecipeInputViews() &&
+                (controller.isPaintGroupingEnabled() || inputViews().hasProviders());
+    }
+
+    @Override
+    protected boolean shouldSearchForRecipes() {
+        if (usesInputViews() && inputViews().observeProviderChanges()) onInputViewsChanged();
+        return super.shouldSearchForRecipes();
     }
 
     public IEnergyContainer getEnergyContainer() {
@@ -81,6 +121,7 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
 
     @Override
     protected IItemHandlerModifiable getInputInventory() {
+        if (selectedInputView != null) return selectedInputView.getItems();
         RecipeMapMultiblockController controller = (RecipeMapMultiblockController) metaTileEntity;
         return controller.getInputInventory();
     }
@@ -93,12 +134,16 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
 
     @Override
     protected IItemHandlerModifiable getOutputInventory() {
+        RecipeOutputRoute route = outputRoute();
+        if (!route.valid) return new ItemHandlerList(Collections.emptyList());
+        if (route.painted) return inputViews().outputItems(route.color);
         RecipeMapMultiblockController controller = (RecipeMapMultiblockController) metaTileEntity;
         return controller.getOutputInventory();
     }
 
     @Override
     protected IMultipleTankHandler getInputTank() {
+        if (selectedInputView != null) return selectedInputView.getFluids();
         RecipeMapMultiblockController controller = (RecipeMapMultiblockController) metaTileEntity;
         return controller.getInputFluidInventory();
     }
@@ -111,17 +156,22 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
      * @return a new FluidTankList with extra fluid tanks on top of the existing fluid tanks
      */
     protected IMultipleTankHandler getInputTank(IItemHandler items) {
+        if (selectedInputView != null && selectedInputView.getItems() == items) return selectedInputView.getFluids();
         return MultiblockFluidInputs.extend(getInputTank(), java.util.Collections.singletonList(items));
     }
 
     @Override
     protected IMultipleTankHandler getOutputTank() {
+        RecipeOutputRoute route = outputRoute();
+        if (!route.valid) return new FluidTankList(true);
+        if (route.painted) return inputViews().outputFluids(route.color);
         RecipeMapMultiblockController controller = (RecipeMapMultiblockController) metaTileEntity;
         return controller.getOutputFluidInventory();
     }
 
     @Override
     protected boolean canWorkWithInputs() {
+        if (usesInputViews()) return super.canWorkWithInputs();
         MultiblockWithDisplayBase controller = (MultiblockWithDisplayBase) metaTileEntity;
         if (controller instanceof RecipeMapMultiblockController) {
             RecipeMapMultiblockController distinctController = (RecipeMapMultiblockController) controller;
@@ -189,6 +239,11 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
             return;
         }
 
+        if (usesInputViews()) {
+            trySearchInputViews();
+            return;
+        }
+
         // Distinct buses only apply to some multiblocks, so check the controller against a lower class
         if (controller instanceof RecipeMapMultiblockController) {
             RecipeMapMultiblockController distinctController = (RecipeMapMultiblockController) controller;
@@ -210,6 +265,135 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
      */
     protected void trySearchNewRecipeCombined() {
         super.trySearchNewRecipe();
+    }
+
+    private void trySearchInputViews() {
+        clearRecipeFailure();
+        if (!inputViews().isAvailable()) {
+            setRecipeFailure(RecipeFailureReason.INPUT_GROUP_UNAVAILABLE);
+            deferRecipeSearch();
+            return;
+        }
+        RecipeFailure blockedFailure = RecipeFailure.NONE;
+        List<RecipeInputView> candidates = new ArrayList<>(inputViews().getRecipeInputViews());
+        // Keep the previous selection's locality while preserving the order of every other candidate.
+        for (int i = 0; i < candidates.size(); i++) {
+            if (Objects.equals(previousInputViewKey, candidates.get(i).getSelectionKey())) {
+                candidates.add(0, candidates.remove(i));
+                break;
+            }
+        }
+        try {
+            for (RecipeInputView view : candidates) {
+                if (!inputViews().isRecipeInputViewValid(view)) continue;
+                this.selectedInputView = view;
+                this.selectedViewRevision = inputViews().getRecipeInputRevision();
+                this.selectedProviderRevision = view.getProvider().getRecipeInputRevision();
+                this.selectedOutputRoute = ((RecipeMapMultiblockController) metaTileEntity).isPaintGroupingEnabled() ?
+                        RecipeOutputRoute.painted(inputViews().getPaintColor(view)) : RecipeOutputRoute.LEGACY;
+                if (!selectedOutputRoute.valid) continue;
+                Recipe recipe = Objects.equals(previousInputViewKey, view.getSelectionKey()) && checkPreviousRecipe() ?
+                        previousRecipe : null;
+                if (recipe == null || !isRecipeCandidateEligible(recipe)) {
+                    Recipe candidate = findRecipe(getMaxVoltage(), view.getItems(), view.getFluids());
+                    // Preserve a blocked cached match for diagnostics if no alternative is available.
+                    if (candidate != null || recipe == null) recipe = candidate;
+                }
+                if (recipe == null) continue;
+                RecipeFailure failure = evaluateRecipeEligibility(recipe);
+                if (!failure.isEmpty()) {
+                    if (blockedFailure.isEmpty()) blockedFailure = failure;
+                    continue;
+                }
+                this.previousRecipe = recipe;
+                this.previousInputViewKey = view.getSelectionKey();
+                this.invalidInputsForRecipes = false;
+                Recipe selected = recipe;
+                if (checkRecipeForStart(selected)) prepareRecipeForStart(() -> prepareRecipe(selected));
+                else deferRecipeSearch();
+                return;
+            }
+        } finally {
+            this.selectedInputView = null;
+            this.selectedOutputRoute = null;
+        }
+        if (blockedFailure.isEmpty()) {
+            this.invalidInputsForRecipes = true;
+            setRecipeFailure(RecipeFailureReason.NO_RECIPE);
+        } else {
+            setRecipeFailure(blockedFailure);
+            deferRecipeSearch();
+        }
+    }
+
+    @Override
+    public boolean prepareRecipe(Recipe recipe, IItemHandlerModifiable items, IMultipleTankHandler fluids) {
+        if (!isRecipeInputViewStillValid(items, fluids)) {
+            recordRecipeFailure(RecipeFailureReason.INPUT_CHANGED);
+            return false;
+        }
+        return super.prepareRecipe(recipe, items, fluids);
+    }
+
+    @Override
+    protected boolean isRecipeInputViewStillValid(IItemHandlerModifiable items, IMultipleTankHandler fluids) {
+        if (selectedInputView == null) return !usesInputViews();
+        return selectedInputView.getItems() == items && selectedInputView.getFluids() == fluids &&
+                selectedViewRevision == inputViews().getRecipeInputRevision() &&
+                selectedProviderRevision == selectedInputView.getProvider().getRecipeInputRevision() &&
+                inputViews().isRecipeInputViewValid(selectedInputView);
+    }
+
+    @Override
+    protected void setupRecipe(@NotNull Recipe recipe) {
+        super.setupRecipe(recipe);
+        this.activeOutputRoute = selectedOutputRoute == null ? RecipeOutputRoute.LEGACY : selectedOutputRoute;
+        if (selectedInputView != null) selectedInputView.getProvider().onRecipeInputViewStarted(selectedInputView);
+    }
+
+    private RecipeOutputRoute outputRoute() {
+        return selectedOutputRoute != null ? selectedOutputRoute :
+                progressTime > 0 ? activeOutputRoute : RecipeOutputRoute.LEGACY;
+    }
+
+    public int getActiveOutputColor() {
+        return !activeOutputRoute.valid ? -2 : activeOutputRoute.painted ? activeOutputRoute.color : -3;
+    }
+
+    public boolean hasPaintedOutputRoute() {
+        return progressTime > 0 && activeOutputRoute.painted;
+    }
+
+    @Override
+    protected boolean canFitRecipeOutputs() {
+        if (!activeOutputRoute.valid || (activeOutputRoute.painted && !inputViews().isAvailable())) {
+            setRecipeFailure(RecipeFailureReason.OUTPUT_GROUP_UNAVAILABLE);
+            return false;
+        }
+        return super.canFitRecipeOutputs();
+    }
+
+    @Override
+    protected void completeRecipe() {
+        super.completeRecipe();
+        this.activeOutputRoute = RecipeOutputRoute.LEGACY;
+    }
+
+    @Override
+    public @NotNull NBTTagCompound serializeNBT() {
+        NBTTagCompound tag = super.serializeNBT();
+        if (progressTime > 0) tag.setTag("OutputRoute", activeOutputRoute.serialize());
+        return tag;
+    }
+
+    @Override
+    public void deserializeNBT(@NotNull NBTTagCompound tag) {
+        super.deserializeNBT(tag);
+        this.selectedInputView = null;
+        this.selectedOutputRoute = null;
+        this.previousInputViewKey = null;
+        this.activeOutputRoute = progressTime > 0 && tag.hasKey("OutputRoute") ?
+                RecipeOutputRoute.deserialize(tag.getTag("OutputRoute")) : RecipeOutputRoute.LEGACY;
     }
 
     protected void trySearchNewRecipeDistinct() {
@@ -278,6 +462,10 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
 
     @Override
     public void invalidateInputs() {
+        if (usesInputViews()) {
+            super.invalidateInputs();
+            return;
+        }
         MultiblockWithDisplayBase controller = (MultiblockWithDisplayBase) metaTileEntity;
         RecipeMapMultiblockController distinctController = (RecipeMapMultiblockController) controller;
         if (distinctController.canBeDistinct() && distinctController.isDistinct() &&

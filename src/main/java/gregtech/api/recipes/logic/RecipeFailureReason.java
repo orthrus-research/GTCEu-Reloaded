@@ -29,7 +29,9 @@ public enum RecipeFailureReason {
     SETUP(23, "setup"),
     PROGRESS_REQUIREMENTS(24, "progress_requirements"),
     CONDITION(25, "condition"),
-    CONDITION_UNAVAILABLE(26, "condition_unavailable");
+    CONDITION_UNAVAILABLE(26, "condition_unavailable"),
+    INPUT_GROUP_UNAVAILABLE(27, "input_group_unavailable"),
+    OUTPUT_GROUP_UNAVAILABLE(28, "output_group_unavailable");
 
     private final int id;
     private final String translationKey;

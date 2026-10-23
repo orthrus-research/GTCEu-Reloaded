@@ -81,6 +81,18 @@ public abstract class MetaTileEntityMultiblockPart extends MetaTileEntity
         return controllerTile;
     }
 
+    @Override
+    public void setPaintingColor(int color) {
+        int oldColor = getPaintingColor();
+        super.setPaintingColor(color);
+        if (oldColor != color && getWorld() != null && !getWorld().isRemote &&
+                getController() instanceof gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController controller &&
+                controller.canUseRecipeInputViews() && (controller.isPaintGroupingEnabled() ||
+                        controller.getRecipeMapWorkable().hasPaintedOutputRoute() ||
+                        controller.getRecipeInputViews().hasProviders()))
+            controller.onRecipeInputViewsChanged();
+    }
+
     public ICubeRenderer getBaseTexture() {
         MultiblockControllerBase controller = getController();
         if (controller != null) {

@@ -9,7 +9,9 @@ import gregtech.api.capability.impl.EnergyContainerList;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.MultiblockFluidInputs;
+import gregtech.api.capability.impl.MultiblockRecipeInputs;
 import gregtech.api.capability.impl.MultiblockRecipeLogic;
+import gregtech.api.capability.impl.PaintGroupSupport;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
@@ -55,6 +57,8 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     protected IEnergyContainer energyContainer;
 
     private boolean isDistinct = false;
+    private boolean paintGroupingEnabled;
+    private final MultiblockRecipeInputs recipeInputViews = new MultiblockRecipeInputs(this);
 
     @Nullable
     private ICleanroomProvider cleanroom;
@@ -91,6 +95,31 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
 
     public MultiblockRecipeLogic getRecipeMapWorkable() {
         return recipeMapWorkable;
+    }
+
+    /** Addons with audited selection and output routing may explicitly opt in. */
+    public boolean canUseRecipeInputViews() {
+        return PaintGroupSupport.supports(getClass());
+    }
+
+    public boolean isPaintGroupingEnabled() {
+        return canUseRecipeInputViews() && paintGroupingEnabled;
+    }
+
+    public void setPaintGroupingEnabled(boolean enabled) {
+        if (!canUseRecipeInputViews() || paintGroupingEnabled == enabled) return;
+        this.paintGroupingEnabled = enabled;
+        onRecipeInputViewsChanged();
+        markDirty();
+    }
+
+    public MultiblockRecipeInputs getRecipeInputViews() {
+        return recipeInputViews;
+    }
+
+    public void onRecipeInputViewsChanged() {
+        recipeInputViews.invalidate();
+        recipeMapWorkable.onInputViewsChanged();
     }
 
     /**
@@ -135,6 +164,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     }
 
     protected void initializeAbilities() {
+        recipeInputViews.invalidate();
         this.inputInventory = new ItemHandlerList(getAbilities(MultiblockAbility.IMPORT_ITEMS));
         this.inputFluidInventory = new FluidTankList(allowSameFluidFillForOutputs(),
                 MultiblockFluidInputs.shared(getAbilities(MultiblockAbility.IMPORT_FLUIDS),
@@ -151,6 +181,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     }
 
     private void resetTileAbilities() {
+        recipeInputViews.invalidate();
         this.inputInventory = new GTItemStackHandler(this, 0);
         this.inputFluidInventory = new FluidTankList(true);
         this.extendedFluidInputs = new FluidTankList(true);
@@ -236,6 +267,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
         data.setBoolean("isDistinct", isDistinct);
+        data.setBoolean("PaintGroups", paintGroupingEnabled);
         return data;
     }
 
@@ -243,18 +275,22 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
         isDistinct = data.getBoolean("isDistinct");
+        paintGroupingEnabled = data.hasKey("PaintGroups", 1) && data.getByte("PaintGroups") == 1;
+        recipeInputViews.invalidate();
     }
 
     @Override
     public void writeInitialSyncData(PacketBuffer buf) {
         super.writeInitialSyncData(buf);
         buf.writeBoolean(isDistinct);
+        buf.writeBoolean(paintGroupingEnabled);
     }
 
     @Override
     public void receiveInitialSyncData(PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
         isDistinct = buf.readBoolean();
+        paintGroupingEnabled = buf.readBoolean();
     }
 
     @Override
@@ -271,6 +307,9 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     public void setDistinct(boolean isDistinct) {
         this.isDistinct = isDistinct;
         recipeMapWorkable.onDistinctChanged();
+        recipeInputViews.invalidate();
+        if (canUseRecipeInputViews() && (isPaintGroupingEnabled() || recipeInputViews.hasProviders()))
+            recipeMapWorkable.onInputViewsChanged();
         getMultiblockParts().forEach(part -> part.onDistinctChange(isDistinct));
         // mark buses as changed on distinct toggle
         if (this.isDistinct) {

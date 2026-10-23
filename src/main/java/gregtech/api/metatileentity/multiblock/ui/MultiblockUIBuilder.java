@@ -5,6 +5,7 @@ import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.capability.impl.ComputationRecipeLogic;
 import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
 import gregtech.api.mui.GTByteBufAdapters;
 import gregtech.api.mui.drawable.GTObjectDrawable;
 import gregtech.api.recipes.Recipe;
@@ -117,6 +118,22 @@ public class MultiblockUIBuilder {
     public MultiblockUIBuilder setWorkingStatus(boolean isWorkingEnabled, boolean isActive) {
         this.isWorkingEnabled = this.getSyncer().syncBoolean(isWorkingEnabled);
         this.isActive = this.getSyncer().syncBoolean(isActive);
+        return this;
+    }
+
+    public MultiblockUIBuilder addPaintGroupLine(RecipeMapMultiblockController controller) {
+        boolean enabled = getSyncer().syncBoolean(controller::isPaintGroupingEnabled);
+        addKey(KeyUtil.lang(TextFormatting.GRAY, enabled ? "gregtech.multiblock.paint_groups.enabled" :
+                "gregtech.multiblock.paint_groups.disabled"));
+        boolean running = getSyncer().syncBoolean(() -> controller.getRecipeMapWorkable().getProgress() > 0);
+        if (running) {
+            int color = getSyncer().syncInt(() -> controller.getRecipeMapWorkable().getActiveOutputColor());
+            IKey route = color == -3 ? IKey.lang("gregtech.multiblock.paint_groups.legacy") :
+                    color == -2 ? IKey.lang("gregtech.multiblock.paint_groups.unavailable") :
+                            color == -1 ? IKey.lang("gregtech.multiblock.paint_groups.unpainted") :
+                                    IKey.str(String.format("#%06X", color));
+            addKey(KeyUtil.lang(TextFormatting.GRAY, "gregtech.multiblock.paint_groups.active_route", route));
+        }
         return this;
     }
 
