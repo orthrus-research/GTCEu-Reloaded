@@ -81,13 +81,17 @@ public abstract class BaseFilterContainer extends ItemStackHandler {
     }
 
     @Override
+    protected void onContentsChanged(int slot) {
+        dirtyNotifiable.markAsDirty();
+    }
+
+    @Override
     public void setStackInSlot(int slot, @NotNull ItemStack stack) {
         if (ItemStack.areItemStacksEqual(stack, getFilterStack()))
             return;
 
-        setFilter(BaseFilter.getFilterFromStack(stack));
-
         super.setStackInSlot(slot, stack);
+        setFilter(BaseFilter.getFilterFromStack(getFilterStack()));
     }
 
     @Override
@@ -103,15 +107,17 @@ public abstract class BaseFilterContainer extends ItemStackHandler {
     public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
         if (!isItemValid(stack)) return stack;
         var remainder = super.insertItem(slot, stack, simulate);
-        if (!simulate) setFilter(BaseFilter.getFilterFromStack(stack));
+        if (!simulate && remainder.getCount() != stack.getCount()) {
+            setFilter(BaseFilter.getFilterFromStack(getFilterStack()));
+        }
         return remainder;
     }
 
     @Override
     public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
         var extracted = super.extractItem(slot, amount, simulate);
-        if (!extracted.isEmpty()) {
-            setFilter(null);
+        if (!simulate && !extracted.isEmpty()) {
+            setFilter(BaseFilter.getFilterFromStack(getFilterStack()));
         }
         return extracted;
     }

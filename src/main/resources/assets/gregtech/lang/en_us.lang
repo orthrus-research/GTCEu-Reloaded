@@ -6622,3 +6622,17 @@ gregtech.recipe.failure.setup=Recipe could not be started
 gregtech.recipe.failure.progress_requirements=Running recipe requirements not met
 gregtech.recipe.failure.required=required
 gregtech.recipe.failure.available=available
+
+# Composite filters
+metaitem.composite_item_filter.name=Composite Item Filter
+metaitem.composite_fluid_filter.name=Composite Fluid Filter
+cover.composite_item_filter.title=Composite Item Filter
+cover.composite_fluid_filter.title=Composite Fluid Filter
+cover.composite_filter.tooltip=Accepts anything matched by any of up to nine leaf filters. Composite filters cannot be nested.
+cover.composite_filter.or=Matches any child; blacklist reverses the result.
+cover.composite_filter.amount=Uses the cover's global amount. Child amounts are ignored; Keep Exact items share one target.
+cover.composite_filter.edit=Right-click to edit real filter items. Sneaking does not clear contents.
+cover.composite_filter.read_only=Remove and right-click to edit.
+cover.composite_filter.invalid=Invalid contents: matches nothing, even in blacklist mode. Remove invalid children when possible.
+cover.composite_filter.invalid_short=Invalid contents: rejects all. Remove invalid children.
+cover.composite_filter.amount_short=Global amount; child amounts ignored.

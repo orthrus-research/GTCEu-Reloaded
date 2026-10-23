@@ -4,6 +4,8 @@ import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverableView;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.common.covers.filter.CompositeFilter;
+import gregtech.common.covers.filter.CompositeFilterOverflow;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -57,6 +59,10 @@ public class CoverItemVoidingAdvanced extends CoverItemVoiding {
     }
 
     protected void voidOverflow(IItemHandler myItemHandler) {
+        if (itemFilterContainer.getFilter() instanceof CompositeFilter filter) {
+            CompositeFilterOverflow.voidItems(myItemHandler, filter, itemFilterContainer.getTransferSize());
+            return;
+        }
         Map<ItemStack, TypeItemInfo> itemTypeCount = countInventoryItemsByType(myItemHandler);
         for (TypeItemInfo typeItemInfo : itemTypeCount.values()) {
 

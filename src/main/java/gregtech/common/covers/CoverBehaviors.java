@@ -70,6 +70,12 @@ public final class CoverBehaviors {
         registerBehavior(gregtechId("fluid_filter"), MetaItems.FLUID_FILTER,
                 (def, tile, side) -> new CoverFluidFilter(def, tile, side, "cover.fluid_filter.title",
                         Textures.FLUID_FILTER_OVERLAY));
+        registerBehavior(gregtechId("composite_item_filter"), MetaItems.COMPOSITE_ITEM_FILTER,
+                (def, tile, side) -> new CoverItemFilter(def, tile, side, "cover.composite_item_filter.title",
+                        Textures.ITEM_FILTER_FILTER_OVERLAY));
+        registerBehavior(gregtechId("composite_fluid_filter"), MetaItems.COMPOSITE_FLUID_FILTER,
+                (def, tile, side) -> new CoverFluidFilter(def, tile, side, "cover.composite_fluid_filter.title",
+                        Textures.FLUID_FILTER_OVERLAY));
         registerBehavior(gregtechId("shutter"), MetaItems.COVER_SHUTTER, CoverShutter::new);
 
         registerBehavior(gregtechId("solar_panel.basic"), MetaItems.COVER_SOLAR_PANEL,

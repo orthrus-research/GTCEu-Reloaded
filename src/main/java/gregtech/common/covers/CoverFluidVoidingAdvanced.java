@@ -5,6 +5,8 @@ import gregtech.api.cover.CoverableView;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.common.covers.filter.CompositeFilter;
+import gregtech.common.covers.filter.CompositeFilterOverflow;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -71,6 +73,11 @@ public class CoverFluidVoidingAdvanced extends CoverFluidVoiding {
                                 int keepAmount) {
         if (sourceHandler == null || fluidFilter == null)
             return;
+
+        if (fluidFilterContainer.getFilter() instanceof CompositeFilter filter) {
+            CompositeFilterOverflow.voidFluids(sourceHandler, filter, fluidFilterContainer.getTransferSize());
+            return;
+        }
 
         for (IFluidTankProperties tankProperties : sourceHandler.getTankProperties()) {
             FluidStack sourceFluid = tankProperties.getContents();
