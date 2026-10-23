@@ -19,6 +19,7 @@ import gregtech.api.cover.CoverSaveHandler;
 import gregtech.api.cover.CoverUtil;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
+import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.items.toolitem.ToolHelper;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -1651,6 +1652,14 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
 
     public boolean doTickProfileMessage() {
         return true;
+    }
+
+    /**
+     * Optional, side-effect-free hints for main-hand tool use. These describe actions, not server permission.
+     * Unknown machines return no hint; implementations must account for their own tool and cover handlers.
+     */
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
+        return null;
     }
 
     public boolean canRenderMachineGrid(@NotNull ItemStack mainHandStack, @NotNull ItemStack offHandStack) {

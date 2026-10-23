@@ -8,6 +8,8 @@ import gregtech.api.cover.CoverBase;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverWithUI;
 import gregtech.api.cover.CoverableView;
+import gregtech.api.items.toolitem.ToolAction;
+import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
@@ -62,6 +64,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
@@ -467,6 +470,12 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
             Textures.CONVEYOR_OVERLAY_INVERTED.renderSided(getAttachedSide(), plateBox, renderState, pipeline,
                     translation);
         }
+    }
+
+    @Override
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking) {
+        return getClass() == CoverConveyor.class && toolClasses.contains(ToolClasses.SCREWDRIVER) ?
+                ToolAction.COVER_SETTINGS : null;
     }
 
     @Override

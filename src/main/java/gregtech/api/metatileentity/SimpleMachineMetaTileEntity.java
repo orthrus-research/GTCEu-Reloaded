@@ -20,6 +20,8 @@ import gregtech.api.gui.widgets.LabelWidget;
 import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.gui.widgets.ToggleButtonWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
+import gregtech.api.items.toolitem.ToolAction;
+import gregtech.api.items.toolitem.ToolActionHints;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTTransferUtils;
@@ -59,6 +61,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import static gregtech.api.capability.GregtechDataCodes.*;
@@ -146,6 +149,13 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     @Override
     public boolean hasFrontFacing() {
         return hasFrontFacing;
+    }
+
+    @Override
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
+        // Addon subclasses can change click handling, so they must opt in explicitly.
+        return getClass() == SimpleMachineMetaTileEntity.class ?
+                ToolActionHints.forSimpleMachine(this, toolClasses, sneaking, side) : null;
     }
 
     @Override

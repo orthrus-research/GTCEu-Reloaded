@@ -8,6 +8,8 @@ import gregtech.api.cover.CoverBase;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverWithUI;
 import gregtech.api.cover.CoverableView;
+import gregtech.api.items.toolitem.ToolAction;
+import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
@@ -56,6 +58,8 @@ import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 
 public class CoverPump extends CoverBase implements CoverWithUI, ITickable, IControllable {
 
@@ -279,6 +283,12 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
 
     protected int getMaxTransferRate() {
         return 1;
+    }
+
+    @Override
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking) {
+        return getClass() == CoverPump.class && toolClasses.contains(ToolClasses.SCREWDRIVER) ?
+                ToolAction.COVER_SETTINGS : null;
     }
 
     @Override
