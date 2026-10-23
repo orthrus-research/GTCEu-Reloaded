@@ -12,6 +12,7 @@ import gregtech.api.recipes.logic.RecipeFailure;
 import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
+import gregtech.api.util.LocalizationUtils;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.common.metatileentities.multi.MetaTileEntityLargeBoiler;
 
@@ -54,6 +55,7 @@ public class RecipeLogicInfoProvider extends CapabilityInfoProvider<AbstractReci
                         ", {*gregtech.recipe.failure.available*}: " +
                         TextFormattingUtil.formatNumbers(failure.getAvailable()) + ")";
             }
+            if (reason.hasConditions()) text = failure.format(LocalizationUtils::format);
             probeInfo.text(TextStyleClass.WARNING + text);
         }
         // do not show energy usage on machines that do not use energy

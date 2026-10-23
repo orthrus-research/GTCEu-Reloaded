@@ -349,6 +349,7 @@ public class MetaTileEntityProcessingArray extends RecipeMapMultiblockController
                 MetaTileEntityHolder holder = new MetaTileEntityHolder();
                 mte = holder.setMetaTileEntity(mte);
                 holder.setWorld(this.metaTileEntity.getWorld());
+                holder.setPos(this.metaTileEntity.getPos());
 
                 updateCleanroom();
             }

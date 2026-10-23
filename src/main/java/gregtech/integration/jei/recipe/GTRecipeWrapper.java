@@ -19,6 +19,7 @@ import gregtech.api.recipes.machines.IResearchRecipeMap;
 import gregtech.api.recipes.machines.IScannerRecipeMap;
 import gregtech.api.recipes.properties.RecipeProperty;
 import gregtech.api.recipes.properties.impl.ComputationProperty;
+import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.recipes.properties.impl.ScanProperty;
 import gregtech.api.recipes.properties.impl.TotalComputationProperty;
 import gregtech.api.util.AssemblyLineManager;
@@ -60,6 +61,8 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     private final Recipe recipe;
     final RecipeOverclockPreview overclockPreview;
     private JeiButton overclockButton;
+    private int conditionInfoY = -1;
+    private int conditionInfoWidth;
 
     private final List<GTRecipeInput> sortedInputs;
     private final List<GTRecipeInput> sortedFluidInputs;
@@ -285,6 +288,8 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
     @Override
     public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
+        this.conditionInfoY = -1;
+        this.conditionInfoWidth = recipeWidth;
         var storage = recipe.propertyStorage();
         var properties = storage.values();
         boolean drawTotalEU = properties.isEmpty() || properties.stream().noneMatch(RecipeProperty::hideTotalEU);
@@ -337,6 +342,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                 var value = propertyEntry.getValue();
                 property.drawInfo(minecraft, 0, yPosition += property.getInfoHeight(value), 0x111111, value, mouseX,
                         mouseY);
+                if (property instanceof ConditionProperty) this.conditionInfoY = yPosition;
             }
         }
         GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -347,6 +353,15 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     @Override
     public List<String> getTooltipStrings(int mouseX, int mouseY) {
         List<String> tooltips = new ArrayList<>();
+        if (conditionInfoY >= 0 && mouseX >= 0 && mouseX < conditionInfoWidth &&
+                mouseY >= conditionInfoY && mouseY < conditionInfoY + LINE_HEIGHT) {
+            var conditions = recipe.getProperty(ConditionProperty.getInstance(), null);
+            if (conditions != null) {
+                for (String line : ConditionProperty.describe(conditions, I18n::format)) {
+                    tooltips.addAll(Minecraft.getMinecraft().fontRenderer.listFormattedStringToWidth(line, 250));
+                }
+            }
+        }
         for (var entry : recipe.propertyStorage().entrySet()) {
             if (!entry.getKey().isHidden()) {
                 RecipeProperty<?> property = entry.getKey();

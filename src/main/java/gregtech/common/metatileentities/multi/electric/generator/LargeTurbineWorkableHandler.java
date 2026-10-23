@@ -128,7 +128,7 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
         return map.findWithEligibility(items, fluids, recipe -> {
             if (recipe.getEUt() > maxVoltage) return false;
             return recipe.matches(false, inputs, fluidInputs) && this.canDoRecipeWithParallel(recipe);
-        }, this::isRecipeEligible).getRecipeForCache();
+        }, this::isRecipeCandidateEligible).getRecipeForCache();
     }
 
     @Override

@@ -27,7 +27,9 @@ public enum RecipeFailureReason {
     ENERGY_OUTPUT_FULL(21, "energy_output_full"),
     COMPUTATION(22, "computation"),
     SETUP(23, "setup"),
-    PROGRESS_REQUIREMENTS(24, "progress_requirements");
+    PROGRESS_REQUIREMENTS(24, "progress_requirements"),
+    CONDITION(25, "condition"),
+    CONDITION_UNAVAILABLE(26, "condition_unavailable");
 
     private final int id;
     private final String translationKey;
@@ -47,6 +49,10 @@ public enum RecipeFailureReason {
 
     public boolean hasAmounts() {
         return this == TEMPERATURE || this == FUSION_CAPACITY || this == FUSION_START;
+    }
+
+    public boolean hasConditions() {
+        return this == CONDITION || this == CONDITION_UNAVAILABLE;
     }
 
     public static RecipeFailureReason fromId(int id) {

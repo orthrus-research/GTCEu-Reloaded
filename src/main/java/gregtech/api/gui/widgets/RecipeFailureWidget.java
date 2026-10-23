@@ -59,8 +59,8 @@ public class RecipeFailureWidget extends ImageWidget {
     @SideOnly(Side.CLIENT)
     public void drawInForeground(int mouseX, int mouseY) {
         if (!failure.isEmpty() && isMouseOverElement(mouseX, mouseY)) {
-            drawHoveringText(ItemStack.EMPTY, Collections.singletonList(LocalizationUtils.format(
-                    failure.getReason().getTranslationKey(), failure.getTranslationArguments())), 300, mouseX, mouseY);
+            drawHoveringText(ItemStack.EMPTY, Collections.singletonList(failure.format(LocalizationUtils::format)),
+                    300, mouseX, mouseY);
         }
     }
 }

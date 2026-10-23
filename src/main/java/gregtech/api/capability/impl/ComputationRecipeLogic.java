@@ -132,7 +132,7 @@ public class ComputationRecipeLogic extends MultiblockRecipeLogic {
     }
 
     public int getCurrentDrawnCWUt() {
-        return isDurationTotalCWU ? currentDrawnCWUt : recipeCWUt;
+        return isRecipeConditionPaused() ? 0 : isDurationTotalCWU ? currentDrawnCWUt : recipeCWUt;
     }
 
     public boolean isHasNotEnoughComputation() {

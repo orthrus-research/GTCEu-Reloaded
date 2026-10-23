@@ -504,6 +504,21 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
 
         List<ItemStack> items = GTUtility.itemHandlerToList(inputs);
         List<FluidStack> fluids = GTUtility.fluidHandlerToList(fluidInputs);
+        return findEligibleAlternative(voltage, items, fluids, eligibility, first);
+    }
+
+    /** List-input variant for append logic, retaining the virtual legacy first choice and explicit fallback opt-in. */
+    public RecipeSearchResult findRecipeWithEligibility(long voltage, List<ItemStack> items, List<FluidStack> fluids,
+                                                        Predicate<Recipe> eligibility) {
+        Recipe first = findRecipe(voltage, items, fluids);
+        if (first == null) return new RecipeSearchResult(null, null);
+        if (eligibility.test(first)) return new RecipeSearchResult(first, first);
+        if (!supportsRecipeCandidateFallback()) return new RecipeSearchResult(null, first);
+        return findEligibleAlternative(voltage, items, fluids, eligibility, first);
+    }
+
+    private RecipeSearchResult findEligibleAlternative(long voltage, List<ItemStack> items, List<FluidStack> fluids,
+                                                       Predicate<Recipe> eligibility, Recipe first) {
         RecipeSearchResult result = findWithEligibility(items, fluids,
                 recipe -> recipe != first && recipe.getEUt() <= voltage && recipe.matches(false, items, fluids),
                 eligibility);

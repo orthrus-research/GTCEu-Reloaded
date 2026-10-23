@@ -5,7 +5,9 @@ import gregtech.api.metatileentity.IVoidable;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeBuilder;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.conditions.RecipeConditionSet;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
+import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.util.FluidStackHashStrategy;
 import gregtech.api.util.GTHashMaps;
 import gregtech.api.util.GTUtility;
@@ -28,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public abstract class ParallelLogic {
 
@@ -531,6 +534,16 @@ public abstract class ParallelLogic {
                                                      @NotNull IItemHandlerModifiable importInventory,
                                                      @NotNull IItemHandlerModifiable exportInventory,
                                                      int parallelAmount, long maxVoltage, IVoidable voidable) {
+        return appendItemRecipes(recipeMap, importInventory, exportInventory, parallelAmount, maxVoltage, voidable,
+                recipe -> true);
+    }
+
+    /** Eligibility is read-only and is checked before any output overlay or accumulated recipe is changed. */
+    public static RecipeBuilder<?> appendItemRecipes(@NotNull RecipeMap<?> recipeMap,
+                                                     @NotNull IItemHandlerModifiable importInventory,
+                                                     @NotNull IItemHandlerModifiable exportInventory,
+                                                     int parallelAmount, long maxVoltage, IVoidable voidable,
+                                                     @NotNull Predicate<Recipe> eligibility) {
         RecipeBuilder<?> recipeBuilder = null;
 
         OverlayedItemHandler overlayedItemHandler = new OverlayedItemHandler(exportInventory);
@@ -546,9 +559,9 @@ public abstract class ParallelLogic {
                 continue;
 
             // Determine if there is a valid recipe for this item. If not, skip it.
-            Recipe matchingRecipe = recipeMap.findRecipe(maxVoltage,
+            Recipe matchingRecipe = recipeMap.findRecipeWithEligibility(maxVoltage,
                     Collections.singletonList(currentInputItem),
-                    Collections.emptyList());
+                    Collections.emptyList(), eligibility).getRecipe();
 
             GTRecipeInput inputIngredient;
             if (matchingRecipe != null) {
@@ -572,6 +585,14 @@ public abstract class ParallelLogic {
             // Trim the recipe outputs here if required
             matchingRecipe = Recipe.trimRecipeOutputs(matchingRecipe, recipeMap, voidable.getItemOutputLimit(),
                     voidable.getFluidOutputLimit());
+
+            // Composition may exceed the bounded saved-condition format. Keep earlier admitted work and output space.
+            try {
+                recipeBuilder.getRecipeConditions().and(
+                        matchingRecipe.getProperty(ConditionProperty.getInstance(), RecipeConditionSet.EMPTY));
+            } catch (IllegalArgumentException incompatible) {
+                continue;
+            }
 
             // equivalent of getting the max ratio from the inputs from Parallel logic
             int ingredientRatio = Math.min(parallelAmount - engagedItems,

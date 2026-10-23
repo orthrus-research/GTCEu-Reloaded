@@ -14,6 +14,7 @@ import gregtech.api.recipes.ui.RecipeMapUIFunction;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.oredict.OreDictionary;
@@ -24,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -135,6 +137,31 @@ class RecipeCandidateSearchTest {
         assertEquals(2, input.getStackInSlot(0).getCount());
     }
 
+    @Test
+    void listInputEligibilityPreservesExternalLegacyLookupAndDynamicFurnaceGeneration() {
+        LegacyMap map = new LegacyMap();
+        Recipe first = add(map, Items.IRON_INGOT);
+        Recipe alternative = add(map, Items.GOLD_INGOT);
+        map.returned = first;
+        List<ItemStack> inputs = Arrays.asList(new ItemStack(Items.IRON_INGOT), new ItemStack(Items.GOLD_INGOT));
+        RecipeSearchResult blocked = map.findRecipeWithEligibility(32, inputs, Collections.emptyList(),
+                recipe -> recipe == alternative);
+        assertNull(blocked.getRecipe());
+        assertSame(first, blocked.getRecipeForCache());
+        assertEquals(1, map.legacyCalls);
+        map.fallback = true;
+        assertSame(alternative, map.findRecipeWithEligibility(32, inputs, Collections.emptyList(),
+                recipe -> recipe == alternative).getRecipe());
+        assertEquals(2, map.legacyCalls);
+        RecipeMapFurnace furnace = new RecipeMapFurnace(name(), new SimpleRecipeBuilder(), UI);
+        Recipe generated = furnace
+                .findRecipeWithEligibility(32, Collections.singletonList(new ItemStack(Items.PORKCHOP)),
+                        Collections.emptyList(), recipe -> true)
+                .getRecipe();
+        assertNotNull(generated);
+        assertEquals(Items.COOKED_PORKCHOP, generated.getOutputs().get(0).getItem());
+    }
+
     private static RecipeMap<SimpleRecipeBuilder> map() {
         return new RecipeMapBuilder<>(name(), new SimpleRecipeBuilder()).itemInputs(2).itemOutputs(1).build();
     }
@@ -172,6 +199,12 @@ class RecipeCandidateSearchTest {
 
         @Override
         public Recipe findRecipe(long voltage, IItemHandlerModifiable inputs, IMultipleTankHandler fluids) {
+            legacyCalls++;
+            return returned;
+        }
+
+        @Override
+        public Recipe findRecipe(long voltage, List<ItemStack> inputs, List<FluidStack> fluids) {
             legacyCalls++;
             return returned;
         }

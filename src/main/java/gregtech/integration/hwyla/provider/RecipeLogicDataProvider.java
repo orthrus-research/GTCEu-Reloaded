@@ -49,9 +49,7 @@ public class RecipeLogicDataProvider extends CapabilityDataProvider<AbstractReci
     protected NBTTagCompound getNBTData(AbstractRecipeLogic capability, NBTTagCompound tag) {
         NBTTagCompound subTag = new NBTTagCompound();
         RecipeFailure failure = capability.getRecipeFailure();
-        subTag.setInteger("Failure", failure.getReason().getId());
-        subTag.setLong("Required", failure.getRequired());
-        subTag.setLong("Available", failure.getAvailable());
+        failure.writeToNBT(subTag);
         subTag.setBoolean("Working", capability.isWorking());
         if (capability.isWorking() && !(capability instanceof PrimitiveRecipeLogic)) {
             subTag.setLong("RecipeEUt", capability.getInfoProviderEUt());
@@ -74,9 +72,8 @@ public class RecipeLogicDataProvider extends CapabilityDataProvider<AbstractReci
             // The controllable and multiblock providers already display these states.
             if (reason != RecipeFailureReason.NONE && reason != RecipeFailureReason.DISABLED &&
                     reason != RecipeFailureReason.UNFORMED && reason != RecipeFailureReason.MUFFLER_OBSTRUCTED) {
-                RecipeFailure failure = RecipeFailure.of(reason, tag.getLong("Required"), tag.getLong("Available"));
-                tooltip.add(TextFormatting.YELLOW + I18n.format(reason.getTranslationKey(),
-                        failure.getTranslationArguments()));
+                RecipeFailure failure = RecipeFailure.readFromNBT(tag);
+                tooltip.add(TextFormatting.YELLOW + failure.format(I18n::format));
             }
             if (tag.getBoolean("Working")) {
                 long eut = tag.getLong("RecipeEUt");

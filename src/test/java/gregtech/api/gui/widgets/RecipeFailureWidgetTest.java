@@ -34,7 +34,7 @@ class RecipeFailureWidgetTest {
             PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
             try {
                 original.write(buffer);
-                assertEquals(17, buffer.readableBytes());
+                assertEquals(reason.hasConditions() ? 19 : 17, buffer.readableBytes());
                 assertEquals(original, RecipeFailure.read(buffer));
                 assertEquals(0, buffer.readableBytes());
             } finally {

@@ -45,6 +45,90 @@ public class CTRecipeBuilder {
     }
 
     @ZenMethod
+    public CTRecipeBuilder conditionBiome(String biome) {
+        this.backingBuilder.conditionBiome(biome);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionBiome(String biome, boolean inverted) {
+        this.backingBuilder.conditionBiome(biome, inverted);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionHeight(int minimum, int maximum) {
+        this.backingBuilder.conditionHeight(minimum, maximum);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionHeight(int minimum, int maximum, boolean inverted) {
+        this.backingBuilder.conditionHeight(minimum, maximum, inverted);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionDaytime() {
+        this.backingBuilder.conditionDaytime();
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionDaytime(boolean inverted) {
+        this.backingBuilder.conditionDaytime(inverted);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionTime(int start, int end) {
+        this.backingBuilder.conditionTime(start, end);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionTime(int start, int end, boolean inverted) {
+        this.backingBuilder.conditionTime(start, end, inverted);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionRain(float strength) {
+        this.backingBuilder.conditionRain(strength);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionRain(float strength, boolean inverted) {
+        this.backingBuilder.conditionRain(strength, inverted);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionThunder(float strength) {
+        this.backingBuilder.conditionThunder(strength);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionThunder(float strength, boolean inverted) {
+        this.backingBuilder.conditionThunder(strength, inverted);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionAdjacentBlocks(String[][] groups) {
+        this.backingBuilder.conditionAdjacentBlocks(groups);
+        return this;
+    }
+
+    @ZenMethod
+    public CTRecipeBuilder conditionAdjacentBlocks(String[][] groups, boolean inverted) {
+        this.backingBuilder.conditionAdjacentBlocks(groups, inverted);
+        return this;
+    }
+
+    @ZenMethod
     public CTRecipeBuilder duration(int duration) {
         this.backingBuilder.duration(duration);
         return this;
