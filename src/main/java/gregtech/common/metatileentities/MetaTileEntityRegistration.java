@@ -88,8 +88,11 @@ import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEnti
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEInputHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEOutputBus;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEOutputHatch;
+import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEPatternBuffer;
+import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEPatternBufferProxy;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEStockingBus;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.MetaTileEntityMEStockingHatch;
+import gregtech.common.metatileentities.multi.multiblockpart.appeng.pattern.PatternBufferRecoveryEvents;
 import gregtech.common.metatileentities.multi.multiblockpart.hpca.MetaTileEntityHPCABridge;
 import gregtech.common.metatileentities.multi.multiblockpart.hpca.MetaTileEntityHPCAComputation;
 import gregtech.common.metatileentities.multi.multiblockpart.hpca.MetaTileEntityHPCACooler;
@@ -1073,7 +1076,11 @@ final class MetaTileEntityRegistration {
                     new MetaTileEntityMEStockingBus(gregtechId("me_stocking_item_bus")));
             MetaTileEntities.STOCKING_HATCH_ME = MetaTileEntities.registerMetaTileEntity(11528,
                     new MetaTileEntityMEStockingHatch(gregtechId("me_stocking_fluid_hatch")));
-            // slots left for CRIB and CRIBuffer in the future for nicer sorting order
+            MetaTileEntities.PATTERN_BUFFER_ME = MetaTileEntities.registerMetaTileEntity(11529,
+                    new MetaTileEntityMEPatternBuffer(gregtechId("me_pattern_buffer")));
+            MetaTileEntities.PATTERN_BUFFER_PROXY_ME = MetaTileEntities.registerMetaTileEntity(11530,
+                    new MetaTileEntityMEPatternBufferProxy(gregtechId("me_pattern_buffer_proxy")));
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(PatternBufferRecoveryEvents.class);
             MetaTileEntities.ITEM_EXPORT_BUS_ME = MetaTileEntities.registerMetaTileEntity(11532,
                     new MetaTileEntityMEOutputBus(gregtechId("me_export_item_bus")));
             MetaTileEntities.FLUID_EXPORT_HATCH_ME = MetaTileEntities.registerMetaTileEntity(11533,

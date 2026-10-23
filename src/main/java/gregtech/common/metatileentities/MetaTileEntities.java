@@ -359,6 +359,8 @@ public final class MetaTileEntities {
     public static MetaTileEntity ITEM_IMPORT_BUS_ME;
     public static MetaTileEntity STOCKING_BUS_ME;
     public static MetaTileEntity STOCKING_HATCH_ME;
+    public static MetaTileEntity PATTERN_BUFFER_ME;
+    public static MetaTileEntity PATTERN_BUFFER_PROXY_ME;
     public static MetaTileEntityLDItemEndpoint LONG_DIST_ITEM_ENDPOINT;
     public static MetaTileEntityLDFluidEndpoint LONG_DIST_FLUID_ENDPOINT;
     public static MetaTileEntityAlarm ALARM;

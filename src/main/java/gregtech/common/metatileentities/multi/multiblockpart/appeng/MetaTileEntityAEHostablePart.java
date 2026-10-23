@@ -180,7 +180,8 @@ public abstract class MetaTileEntityAEHostablePart<T extends IAEStack<T>> extend
 
     @Nullable
     private AENetworkProxy createProxy() {
-        if (this.getHolder() instanceof IGridProxyable holder) {
+        IGridProxyable holder = getGridProxyOwner();
+        if (holder != null) {
             AENetworkProxy proxy = new AENetworkProxy(holder, "mte_proxy", this.getStackForm(), true);
             proxy.setFlags(GridFlags.REQUIRE_CHANNEL);
             proxy.setIdlePowerUsage(ConfigHolder.compat.ae2.meHatchEnergyUsage);
@@ -188,6 +189,12 @@ public abstract class MetaTileEntityAEHostablePart<T extends IAEStack<T>> extend
             return proxy;
         }
         return null;
+    }
+
+    /** Existing parts retain their holder host; provider parts may supply a host exposing crafting callbacks. */
+    @Nullable
+    protected IGridProxyable getGridProxyOwner() {
+        return this.getHolder() instanceof IGridProxyable holder ? holder : null;
     }
 
     @NotNull

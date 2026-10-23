@@ -1217,6 +1217,15 @@ public class MetaTileEntityMachineRecipeLoader {
             ItemStack accelerationCard = Mods.AppliedEnergistics2.getItem("material", 30, 2);
 
             ASSEMBLER_RECIPES.recipeBuilder()
+                    .input(ITEM_IMPORT_BUS[IV]).input(FLUID_IMPORT_HATCH[IV])
+                    .inputs(normalInterface.copy()).inputs(fluidInterface.copy()).input(SENSOR_IV)
+                    .output(PATTERN_BUFFER_ME).duration(400).EUt(VA[IV]).buildAndRegister();
+
+            ASSEMBLER_RECIPES.recipeBuilder()
+                    .input(ITEM_IMPORT_BUS[IV]).input(SENSOR_IV).input(EMITTER_IV)
+                    .output(PATTERN_BUFFER_PROXY_ME).duration(300).EUt(VA[IV]).buildAndRegister();
+
+            ASSEMBLER_RECIPES.recipeBuilder()
                     .input(FLUID_EXPORT_HATCH[EV])
                     .inputs(fluidInterface.copy())
                     .inputs(accelerationCard.copy())
