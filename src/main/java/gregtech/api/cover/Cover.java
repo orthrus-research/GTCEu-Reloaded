@@ -1,5 +1,6 @@
 package gregtech.api.cover;
 
+import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.items.toolitem.ToolAction;
 import gregtech.client.utils.BloomEffectUtil;
 
@@ -31,6 +32,11 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public interface Cover {
+
+    /** Settings only; unknown covers and subclasses must opt in without copying their inventories. */
+    default @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return null;
+    }
 
     /**
      * @return the CoverableView containing this cover

@@ -1,6 +1,7 @@
 package gregtech.common.metatileentities.electric;
 
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
+import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.items.toolitem.ToolActionHints;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -114,5 +115,10 @@ public class SimpleMachineMetaTileEntityResizable extends SimpleMachineMetaTileE
     public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
         return getClass() == SimpleMachineMetaTileEntityResizable.class ?
                 ToolActionHints.forSimpleMachine(this, toolClasses, sneaking, side) : null;
+    }
+
+    @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return getClass() == SimpleMachineMetaTileEntityResizable.class ? createSimpleConfigurationAdapter() : null;
     }
 }

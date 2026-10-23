@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "gregtech:gui/terminal/icon/system/memory_card_normal"
+  }
+}

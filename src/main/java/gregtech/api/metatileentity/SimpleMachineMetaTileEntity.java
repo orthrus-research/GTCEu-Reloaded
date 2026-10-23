@@ -10,6 +10,9 @@ import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.GhostCircuitItemStackHandler;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.ItemHandlerProxy;
+import gregtech.api.configuration.ConfigurationAdapter;
+import gregtech.api.configuration.ConfigurationData;
+import gregtech.api.configuration.ScalarConfigurationAdapter;
 import gregtech.api.cover.Cover;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
@@ -150,6 +153,78 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     @Override
     public boolean hasFrontFacing() {
         return hasFrontFacing;
+    }
+
+    @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return getClass() == SimpleMachineMetaTileEntity.class ? createSimpleConfigurationAdapter() : null;
+    }
+
+    /** Called only by an implementation explicitly admitting its unchanged simple-machine settings semantics. */
+    protected final ConfigurationAdapter createSimpleConfigurationAdapter() {
+        return new ScalarConfigurationAdapter("gregtech:simple_machine/1") {
+
+            @Override
+            public NBTTagCompound capture() {
+                NBTTagCompound data = new NBTTagCompound();
+                data.setBoolean("HasFront", hasFrontFacing());
+                data.setInteger("Front", getFrontFacing().getIndex());
+                data.setInteger("ItemOutput", getOutputFacingItems().getIndex());
+                data.setInteger("FluidOutput", getOutputFacingFluids().getIndex());
+                data.setBoolean("AutoItems", isAutoOutputItems());
+                data.setBoolean("AutoFluids", isAutoOutputFluids());
+                data.setBoolean("InputItems", isAllowInputFromOutputSideItems());
+                data.setBoolean("InputFluids", isAllowInputFromOutputSideFluids());
+                data.setBoolean("Muffled", isMuffled());
+                data.setInteger("Circuit", circuitInventory.getCircuitValue());
+                return data;
+            }
+
+            @Override
+            protected void validate(NBTTagCompound data) {
+                ConfigurationData.keys(data, "HasFront", "Front", "ItemOutput", "FluidOutput", "AutoItems",
+                        "AutoFluids", "InputItems", "InputFluids", "Muffled", "Circuit");
+                ConfigurationData.require(ConfigurationData.bool(data, "HasFront") == hasFrontFacing());
+                EnumFacing front = ConfigurationData.facing(data, "Front");
+                EnumFacing items = ConfigurationData.facing(data, "ItemOutput");
+                EnumFacing fluids = ConfigurationData.facing(data, "FluidOutput");
+                ConfigurationData.require(front.getAxis().isHorizontal());
+                ConfigurationData.require(!hasFrontFacing() || (front != items && front != fluids));
+                for (String key : new String[] { "AutoItems", "AutoFluids", "InputItems", "InputFluids", "Muffled" }) {
+                    ConfigurationData.bool(data, key);
+                }
+                ConfigurationData.require(circuitInventory != null);
+                ConfigurationData.integer(data, "Circuit", GhostCircuitItemStackHandler.NO_CONFIG, 32);
+            }
+
+            @Override
+            protected void apply(NBTTagCompound data) {
+                ConfigurationData.require(getWorld() != null && !getWorld().isRemote);
+                setConfigurationOutputFacings(ConfigurationData.facing(data, "ItemOutput"),
+                        ConfigurationData.facing(data, "FluidOutput"));
+                EnumFacing front = ConfigurationData.facing(data, "Front");
+                if (front != getFrontFacing()) setFrontFacing(front);
+                setAutoOutputItems(data.getBoolean("AutoItems"));
+                setAutoOutputFluids(data.getBoolean("AutoFluids"));
+                setAllowInputFromOutputSideItems(data.getBoolean("InputItems"));
+                setAllowInputFromOutputSideFluids(data.getBoolean("InputFluids"));
+                setGhostCircuitConfig(data.getInteger("Circuit"));
+                if (data.getBoolean("Muffled") != isMuffled()) toggleMuffled();
+                markDirty();
+            }
+        };
+    }
+
+    // Assign both fields before notifications or serialization, including on a newly attached machine.
+    private void setConfigurationOutputFacings(EnumFacing items, EnumFacing fluids) {
+        this.outputFacingItems = items;
+        this.outputFacingFluids = fluids;
+        notifyBlockUpdate();
+        writeCustomData(UPDATE_OUTPUT_FACING, buf -> {
+            buf.writeByte(items.getIndex());
+            buf.writeByte(fluids.getIndex());
+        });
+        markDirty();
     }
 
     @Override

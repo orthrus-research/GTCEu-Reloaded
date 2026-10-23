@@ -6565,6 +6565,21 @@ gregtech.mutation.block_of=Block of %s
 
 record.sus=Leonz - Among Us Drip
 
+# Configuration card
+metaitem.tool.configuration_card.name=Configuration Memory Card
+gregtech.configuration_card.use=Shift-right-click to copy; right-click to paste. Craft alone to clear.
+gregtech.configuration_card.settings=Copies simple-machine facing, output/input settings, muffling and circuit; or item/fluid pipe connections and blocked faces.
+gregtech.configuration_card.covers=Copies scalar settings of existing pumps and conveyors. Both cover layouts must match exactly.
+gregtech.configuration_card.filters=Filter items and filter settings stay unchanged. Does not copy inventories, energy, progress or overclock limits.
+gregtech.configuration_card.stored=Configuration stored.
+gregtech.configuration_card.copied=Configuration copied. Filters were not copied.
+gregtech.configuration_card.pasted=Configuration applied. Existing filters preserved.
+gregtech.configuration_card.empty=No configuration stored.
+gregtech.configuration_card.unsupported=This machine or pipe does not support the configuration card.
+gregtech.configuration_card.incompatible=Cannot apply: unsupported settings, mismatched covers or an unavailable/denied neighbor.
+gregtech.configuration_card.denied=You cannot configure this block.
+gregtech.configuration_card.failed=Configuration changed or failed. Paste was not completed.
+
 # ME stocking settings
 gregtech.gui.me_stocking.minimum_items=Minimum items
 gregtech.gui.me_stocking.minimum_fluids=Minimum mB

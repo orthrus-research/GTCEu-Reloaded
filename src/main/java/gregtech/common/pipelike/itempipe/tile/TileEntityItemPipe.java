@@ -1,5 +1,7 @@
 package gregtech.common.pipelike.itempipe.tile;
 
+import gregtech.api.configuration.ConfigurationAdapter;
+import gregtech.api.configuration.PipeConfigurationAdapter;
 import gregtech.api.pipenet.block.material.TileEntityMaterialPipeBase;
 import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.unification.material.properties.ItemPipeProperties;
@@ -36,6 +38,12 @@ public class TileEntityItemPipe extends TileEntityMaterialPipeBase<ItemPipeType,
 
     public long getWorldTime() {
         return hasWorld() ? getWorld().getTotalWorldTime() : 0L;
+    }
+
+    @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return getClass() == TileEntityItemPipe.class || getClass() == TileEntityItemPipeTickable.class ?
+                new PipeConfigurationAdapter(this, "gregtech:item_pipe/1") : null;
     }
 
     @Override

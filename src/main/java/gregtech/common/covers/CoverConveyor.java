@@ -4,6 +4,9 @@ import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.impl.ItemHandlerDelegate;
+import gregtech.api.configuration.ConfigurationAdapter;
+import gregtech.api.configuration.ConfigurationData;
+import gregtech.api.configuration.ScalarConfigurationAdapter;
 import gregtech.api.cover.CoverBase;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverWithUI;
@@ -112,6 +115,45 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
                 ((TileEntityItemPipe) te).resetTransferred();
             }
         }
+    }
+
+    @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        if (getClass() != CoverConveyor.class) return null;
+        return new ScalarConfigurationAdapter("gregtech:conveyor/1") {
+
+            @Override
+            public NBTTagCompound capture() {
+                NBTTagCompound data = new NBTTagCompound();
+                data.setInteger("Rate", getTransferRate());
+                data.setInteger("Mode", conveyorMode.ordinal());
+                data.setInteger("Manual", manualImportExportMode.ordinal());
+                data.setInteger("Distribution", distributionMode.ordinal());
+                data.setBoolean("Working", isWorkingEnabled());
+                return data;
+            }
+
+            @Override
+            protected void validate(NBTTagCompound data) {
+                ConfigurationData.keys(data, "Rate", "Mode", "Manual", "Distribution", "Working");
+                ConfigurationData.integer(data, "Rate", 1, maxItemTransferRate);
+                ConfigurationData.integer(data, "Mode", 0, ConveyorMode.VALUES.length - 1);
+                ConfigurationData.integer(data, "Manual", 0, ManualImportExportMode.VALUES.length - 1);
+                ConfigurationData.integer(data, "Distribution", 0, DistributionMode.VALUES.length - 1);
+                ConfigurationData.bool(data, "Working");
+            }
+
+            @Override
+            protected void apply(NBTTagCompound data) {
+                ConfigurationData.require(getWorld() != null && !getWorld().isRemote);
+                setTransferRate(data.getInteger("Rate"));
+                setConveyorMode(ConveyorMode.VALUES[data.getInteger("Mode")]);
+                setManualImportExportMode(ManualImportExportMode.VALUES[data.getInteger("Manual")]);
+                setDistributionMode(DistributionMode.VALUES[data.getInteger("Distribution")]);
+                setWorkingEnabled(data.getBoolean("Working"));
+                markDirty();
+            }
+        };
     }
 
     public int getTransferRate() {

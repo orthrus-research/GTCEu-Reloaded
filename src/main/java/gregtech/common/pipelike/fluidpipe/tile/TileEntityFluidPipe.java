@@ -1,6 +1,8 @@
 package gregtech.common.pipelike.fluidpipe.tile;
 
 import gregtech.api.GTValues;
+import gregtech.api.configuration.ConfigurationAdapter;
+import gregtech.api.configuration.PipeConfigurationAdapter;
 import gregtech.api.pipenet.block.material.TileEntityMaterialPipeBase;
 import gregtech.api.unification.material.properties.FluidPipeProperties;
 import gregtech.common.pipelike.fluidpipe.FluidPipeType;
@@ -21,6 +23,12 @@ public class TileEntityFluidPipe extends TileEntityMaterialPipeBase<FluidPipeTyp
 
     public static final int FREQUENCY = 5;
     private WeakReference<FluidPipeNet> currentPipeNet = new WeakReference<>(null);
+
+    @Override
+    public ConfigurationAdapter getConfigurationAdapter() {
+        return getClass() == TileEntityFluidPipe.class || getClass() == TileEntityFluidPipeTickable.class ?
+                new PipeConfigurationAdapter(this, "gregtech:fluid_pipe/1") : null;
+    }
 
     @Override
     public Class<FluidPipeType> getPipeTypeClass() {

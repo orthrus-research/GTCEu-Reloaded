@@ -12,6 +12,7 @@ import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.capability.impl.FluidHandlerProxy;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerProxy;
+import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.cover.Cover;
 import gregtech.api.cover.CoverHolder;
 import gregtech.api.cover.CoverRayTracer;
@@ -1659,6 +1660,11 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
      * Unknown machines return no hint; implementations must account for their own tool and cover handlers.
      */
     public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
+        return null;
+    }
+
+    /** Unknown implementations must explicitly opt in to settings copying. */
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
         return null;
     }
 
