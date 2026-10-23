@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="1024" height="1024" viewBox="0 0 1024 1024" version="1.1" role="img" aria-labelledby="title description">
+  <title id="title">Stepped G — Monochrome Remaster</title>
+  <desc id="description">A geometric remaster of the supplied pixel emblem. One editable closed vector path, solid black fill, white outline, and a transparent background. The stepped silhouette and open counter are preserved; the original offset shadow is omitted.</desc>
+  <g id="emblem-layer" inkscape:groupmode="layer" inkscape:label="Emblem">
+    <path id="stepped-g" d="M 400,64 H 624 V 176 H 848 V 288 H 288 V 736 H 736 V 512 H 624 V 624 H 400 V 400 H 960 V 624 H 848 V 848 H 624 V 960 H 400 V 848 H 176 V 624 H 64 V 400 H 176 V 176 H 400 Z" fill="#000000" stroke="#ffffff" stroke-width="12" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="4"/>
+  </g>
+</svg>
