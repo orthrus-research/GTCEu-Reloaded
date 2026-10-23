@@ -86,6 +86,9 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     private boolean allowInputFromOutputSideItems = false;
     private boolean allowInputFromOutputSideFluids = false;
 
+    private final AutoOutputCache itemAutoOutputCache = new AutoOutputCache();
+    private final AutoOutputCache fluidAutoOutputCache = new AutoOutputCache();
+
     protected IItemHandler outputItemInventory;
     protected IFluidHandler outputFluidInventory;
 
@@ -299,6 +302,88 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     public void onLoad() {
         super.onLoad();
         workable.requestRecipeLogicWakeup();
+        requestAutoOutputWakeup();
+    }
+
+    /**
+     * Opt-in requires notifiable export handlers and the ordinary uncovered output capability/transfer semantics.
+     * Subclasses with custom public push methods remain on those methods unless explicitly opting in here.
+     */
+    protected boolean supportsAutoOutputScheduling() {
+        return getClass() == SimpleMachineMetaTileEntity.class;
+    }
+
+    /** Coalesces wakes for the next ordinary five-tick output slot, without resolving capabilities or transferring. */
+    protected final void requestAutoOutputWakeup() {
+        // Inventory construction can notify through a virtual method before these fields are initialized.
+        if (itemAutoOutputCache != null) itemAutoOutputCache.requestWakeup();
+        if (fluidAutoOutputCache != null) fluidAutoOutputCache.requestWakeup();
+    }
+
+    @Override
+    public void addNotifiedOutput(Object output) {
+        super.addNotifiedOutput(output);
+        if (output instanceof IItemHandlerModifiable && itemAutoOutputCache != null)
+            itemAutoOutputCache.requestWakeup();
+        if (output instanceof IFluidHandler && fluidAutoOutputCache != null) fluidAutoOutputCache.requestWakeup();
+    }
+
+    @Override
+    public void onNeighborChanged() {
+        super.onNeighborChanged();
+        requestAutoOutputWakeup();
+    }
+
+    @Override
+    protected void onCoverPlacementUpdate() {
+        super.onCoverPlacementUpdate();
+        requestAutoOutputWakeup();
+    }
+
+    private void autoOutputItems() {
+        EnumFacing side = getOutputFacingItems();
+        if (!supportsAutoOutputScheduling() || getCoverAtSide(side) != null) {
+            pushItemsIntoNearbyHandlers(side);
+            return;
+        }
+        if (itemAutoOutputCache.consumeWakeup()) {
+            boolean empty = true;
+            for (int slot = 0; slot < getExportItems().getSlots(); slot++) {
+                if (!getExportItems().getStackInSlot(slot).isEmpty()) {
+                    empty = false;
+                    break;
+                }
+            }
+            itemAutoOutputCache.refreshContents(empty);
+        }
+        long tick = getOffsetTimer();
+        if (itemAutoOutputCache.shouldAttempt(tick)) {
+            itemAutoOutputCache.recordAttempt(transferToNearbyAndCheckAvailability(
+                    CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, GTTransferUtils::moveInventoryItems, side), tick);
+        }
+    }
+
+    private void autoOutputFluids() {
+        EnumFacing side = getOutputFacingFluids();
+        if (!supportsAutoOutputScheduling() || getCoverAtSide(side) != null) {
+            pushFluidsIntoNearbyHandlers(side);
+            return;
+        }
+        if (fluidAutoOutputCache.consumeWakeup()) {
+            boolean empty = true;
+            for (int tank = 0; tank < getExportFluids().getTanks(); tank++) {
+                if (getExportFluids().getTankAt(tank).getFluidAmount() > 0) {
+                    empty = false;
+                    break;
+                }
+            }
+            fluidAutoOutputCache.refreshContents(empty);
+        }
+        long tick = getOffsetTimer();
+        if (fluidAutoOutputCache.shouldAttempt(tick)) {
+            fluidAutoOutputCache.recordAttempt(transferToNearbyAndCheckAvailability(
+                    CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, GTTransferUtils::transferFluids, side), tick);
+        }
     }
 
     @Override
@@ -309,10 +394,10 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
             if (getOffsetTimer() % 5 == 0) {
                 if (isAutoOutputFluids()) {
-                    pushFluidsIntoNearbyHandlers(getOutputFacingFluids());
+                    autoOutputFluids();
                 }
                 if (isAutoOutputItems()) {
-                    pushItemsIntoNearbyHandlers(getOutputFacingItems());
+                    autoOutputItems();
                 }
             }
         } else if (this.tickingParticle != null && isActive()) {
@@ -391,6 +476,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
+        requestAutoOutputWakeup();
         this.chargerInventory.deserializeNBT(data.getCompoundTag("ChargerInventory"));
         if (this.circuitInventory != null) {
             if (data.hasKey("CircuitInventory", Constants.NBT.TAG_COMPOUND)) {
@@ -461,6 +547,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     public void setOutputFacing(EnumFacing outputFacing) {
         this.outputFacingItems = outputFacing;
         this.outputFacingFluids = outputFacing;
+        requestAutoOutputWakeup();
         if (!getWorld().isRemote) {
             notifyBlockUpdate();
             writeCustomData(UPDATE_OUTPUT_FACING, buf -> {
@@ -473,6 +560,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setOutputFacingItems(EnumFacing outputFacing) {
         this.outputFacingItems = outputFacing;
+        itemAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             notifyBlockUpdate();
             writeCustomData(UPDATE_OUTPUT_FACING, buf -> {
@@ -485,6 +573,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setOutputFacingFluids(EnumFacing outputFacing) {
         this.outputFacingFluids = outputFacing;
+        fluidAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             notifyBlockUpdate();
             writeCustomData(UPDATE_OUTPUT_FACING, buf -> {
@@ -497,6 +586,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setAutoOutputItems(boolean autoOutputItems) {
         this.autoOutputItems = autoOutputItems;
+        itemAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             writeCustomData(UPDATE_AUTO_OUTPUT_ITEMS, buf -> buf.writeBoolean(autoOutputItems));
             markDirty();
@@ -505,6 +595,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setAutoOutputFluids(boolean autoOutputFluids) {
         this.autoOutputFluids = autoOutputFluids;
+        fluidAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             writeCustomData(UPDATE_AUTO_OUTPUT_FLUIDS, buf -> buf.writeBoolean(autoOutputFluids));
             markDirty();
@@ -513,6 +604,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setAllowInputFromOutputSideItems(boolean allowInputFromOutputSide) {
         this.allowInputFromOutputSideItems = allowInputFromOutputSide;
+        itemAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             markDirty();
         }
@@ -520,6 +612,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
 
     public void setAllowInputFromOutputSideFluids(boolean allowInputFromOutputSide) {
         this.allowInputFromOutputSideFluids = allowInputFromOutputSide;
+        fluidAutoOutputCache.requestWakeup();
         if (!getWorld().isRemote) {
             markDirty();
         }
@@ -539,6 +632,7 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     @Override
     public void setFrontFacing(EnumFacing frontFacing) {
         super.setFrontFacing(frontFacing);
+        requestAutoOutputWakeup();
         if (this.outputFacingItems == null || this.outputFacingFluids == null) {
             // set initial output facing as opposite to front
             setOutputFacing(frontFacing.getOpposite());

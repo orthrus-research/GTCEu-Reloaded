@@ -1231,6 +1231,17 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
     }
 
     private <T> void transferToNearby(Capability<T> capability, BiConsumer<T, T> transfer, EnumFacing... allowedFaces) {
+        transferToNearbyAndCheckAvailability(capability, transfer, allowedFaces);
+    }
+
+    /**
+     * Performs the normal transfer and reports whether any usable capability pair was found. A full destination is
+     * available even when no resources move. Capabilities are resolved for this call only and must not be retained.
+     */
+    protected final <T> boolean transferToNearbyAndCheckAvailability(Capability<T> capability,
+                                                                     BiConsumer<T, T> transfer,
+                                                                     EnumFacing... allowedFaces) {
+        boolean available = false;
         for (EnumFacing nearbyFacing : allowedFaces) {
             TileEntity tileEntity = getNeighbor(nearbyFacing);
             if (tileEntity == null) {
@@ -1242,8 +1253,10 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
             if (otherCap == null || thisCap == null) {
                 continue;
             }
+            available = true;
             transfer.accept(thisCap, otherCap);
         }
+        return available;
     }
 
     public final int getOutputRedstoneSignal(@Nullable EnumFacing side) {
