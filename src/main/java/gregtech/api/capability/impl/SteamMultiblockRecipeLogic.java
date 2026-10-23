@@ -5,6 +5,7 @@ import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.metatileentity.multiblock.RecipeMapSteamMultiblockController;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 
@@ -121,6 +122,11 @@ public class SteamMultiblockRecipeLogic extends AbstractRecipeLogic {
     @Override
     public boolean isAllowOverclocking() {
         return false;
+    }
+
+    @Override
+    protected RecipeFailureReason getPowerFailureReason(long eut) {
+        return RecipeFailureReason.NOT_ENOUGH_STEAM;
     }
 
     @Override

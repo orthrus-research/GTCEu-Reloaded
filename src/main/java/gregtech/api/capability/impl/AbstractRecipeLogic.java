@@ -19,6 +19,8 @@ import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.IParallelableRecipeLogic;
 import gregtech.api.recipes.logic.OCParams;
 import gregtech.api.recipes.logic.OCResult;
+import gregtech.api.recipes.logic.RecipeFailure;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.impl.CleanroomProperty;
 import gregtech.api.recipes.properties.impl.DimensionProperty;
@@ -45,6 +47,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 import static gregtech.api.GTValues.ULV;
 import static gregtech.api.recipes.logic.OverclockingLogic.*;
@@ -95,6 +98,11 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected boolean isOutputsFull;
     protected boolean invalidInputsForRecipes;
     private long nextRecipeSearchTick;
+    private RecipeFailure recipeFailure = RecipeFailure.NONE;
+    private RecipeFailure progressConditionFailure = RecipeFailure.NONE;
+    private RecipeFailure capturedFailure = RecipeFailure.NONE;
+    private boolean capturingFailure;
+    private boolean mufflerBlocked;
 
     protected boolean hasPerfectOC;
 
@@ -231,8 +239,11 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         World world = getMetaTileEntity().getWorld();
         if (world != null && !world.isRemote) {
             if (workingEnabled) {
-                if (getMetaTileEntity().getOffsetTimer() % 20 == 0)
-                    this.canRecipeProgress = canProgressRecipe();
+                if (getMetaTileEntity().getOffsetTimer() % 20 == 0) {
+                    this.progressConditionFailure = captureRecipeFailure(this::canProgressRecipe,
+                            RecipeFailureReason.PROGRESS_REQUIREMENTS);
+                    this.canRecipeProgress = progressConditionFailure.isEmpty();
+                }
 
                 if (progressTime > 0) {
                     updateRecipeProgress();
@@ -271,6 +282,104 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     @Nullable
     public Recipe getPreviousRecipe() {
         return previousRecipe;
+    }
+
+    /** Server snapshot only. UI transports copy it; this getter never searches or probes a recipe. */
+    public RecipeFailure getRecipeFailure() {
+        if (metaTileEntity instanceof IMultiblockController &&
+                !((IMultiblockController) metaTileEntity).isStructureFormed()) {
+            return RecipeFailure.of(RecipeFailureReason.UNFORMED);
+        }
+        if (!workingEnabled) return RecipeFailure.of(RecipeFailureReason.DISABLED);
+        if (mufflerBlocked) return RecipeFailure.of(RecipeFailureReason.MUFFLER_OBSTRUCTED);
+        return recipeFailure;
+    }
+
+    protected void setRecipeFailure(RecipeFailureReason reason) {
+        setRecipeFailure(RecipeFailure.of(reason));
+    }
+
+    protected void setRecipeFailure(RecipeFailure failure) {
+        this.recipeFailure = failure;
+    }
+
+    protected void clearRecipeFailure() {
+        this.recipeFailure = RecipeFailure.NONE;
+    }
+
+    private void resetRecipeFailures() {
+        clearRecipeFailure();
+        this.progressConditionFailure = RecipeFailure.NONE;
+        this.capturedFailure = RecipeFailure.NONE;
+        this.capturingFailure = false;
+        this.mufflerBlocked = false;
+    }
+
+    /** Called only with the result of the controller's existing muffler gate. */
+    public void setRecipeBlockedByMuffler(boolean blocked) {
+        if (this.mufflerBlocked != blocked) clearRecipeFailure();
+        this.mufflerBlocked = blocked;
+    }
+
+    /**
+     * Records a failure only inside an observed check. Returns false so callers can retain short-circuit order.
+     * This never publishes a candidate's diagnostic or changes machine/recipe state.
+     */
+    public boolean recordRecipeFailure(RecipeFailureReason reason) {
+        return recordRecipeFailure(RecipeFailure.of(reason));
+    }
+
+    public boolean recordRecipeFailure(RecipeFailureReason reason, long required, long available) {
+        return recordRecipeFailure(RecipeFailure.of(reason, required, available));
+    }
+
+    public boolean recordRecipeFailure(RecipeFailure failure) {
+        if (capturingFailure && capturedFailure.isEmpty()) this.capturedFailure = failure;
+        return false;
+    }
+
+    /** Executes the supplied existing check exactly once, discarding a recorded failure if an override succeeds. */
+    protected RecipeFailure captureRecipeFailure(BooleanSupplier check, RecipeFailureReason unknownFailure) {
+        boolean previousCapturing = this.capturingFailure;
+        RecipeFailure previousFailure = this.capturedFailure;
+        this.capturingFailure = true;
+        this.capturedFailure = RecipeFailure.NONE;
+        try {
+            if (check.getAsBoolean()) return RecipeFailure.NONE;
+            return capturedFailure.isEmpty() ? RecipeFailure.of(unknownFailure) : capturedFailure;
+        } finally {
+            this.capturingFailure = previousCapturing;
+            this.capturedFailure = previousFailure;
+        }
+    }
+
+    /** Evaluates the pure hook once. This is a selection operation, never a UI getter. */
+    public RecipeFailure evaluateRecipeEligibility(Recipe recipe) {
+        return captureRecipeFailure(() -> isRecipeEligible(recipe), RecipeFailureReason.REQUIREMENTS);
+    }
+
+    /** Evaluates the selected recipe's legacy hook once, including any existing startup side effects. */
+    public RecipeFailure evaluateRecipeCheck(Recipe recipe) {
+        return captureRecipeFailure(() -> checkRecipe(recipe), RecipeFailureReason.REQUIREMENTS);
+    }
+
+    protected boolean checkRecipeForStart(Recipe recipe) {
+        RecipeFailure failure = evaluateRecipeCheck(recipe);
+        setRecipeFailure(failure);
+        return failure.isEmpty();
+    }
+
+    protected void prepareRecipeForStart(BooleanSupplier preparation) {
+        setRecipeFailure(captureRecipeFailure(preparation, RecipeFailureReason.SETUP));
+    }
+
+    protected RecipeFailure getProgressConditionFailure() {
+        return progressConditionFailure.isEmpty() ? RecipeFailure.of(RecipeFailureReason.PROGRESS_REQUIREMENTS) :
+                progressConditionFailure;
+    }
+
+    protected RecipeFailureReason getPowerFailureReason(long eut) {
+        return eut < 0 ? RecipeFailureReason.ENERGY_OUTPUT_FULL : RecipeFailureReason.NOT_ENOUGH_ENERGY;
     }
 
     /**
@@ -350,6 +459,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     @Override
     public void invalidateOutputs() {
         this.isOutputsFull = true;
+        recordRecipeFailure(RecipeFailureReason.OUTPUT_FULL);
     }
 
     /**
@@ -373,7 +483,9 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * </p>
      */
     protected void updateRecipeProgress() {
-        if (canRecipeProgress && drawEnergy(recipeEUt, true)) {
+        boolean canDraw = canRecipeProgress && drawEnergy(recipeEUt, true);
+        if (canDraw) {
+            clearRecipeFailure();
             drawEnergy(recipeEUt, false);
             // as recipe starts with progress on 1 this has to be > only not => to compensate for it
             if (++progressTime > maxProgressTime) {
@@ -382,11 +494,14 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             if (this.hasNotEnoughEnergy && getEnergyInputPerSecond() > 19L * recipeEUt) {
                 this.hasNotEnoughEnergy = false;
             }
-        } else if (recipeEUt > 0) {
-            // only set hasNotEnoughEnergy if this recipe is consuming recipe
-            // generators always have enough energy
-            this.hasNotEnoughEnergy = true;
-            decreaseProgress();
+        } else {
+            setRecipeFailure(canRecipeProgress ? RecipeFailure.of(getPowerFailureReason(recipeEUt)) :
+                    getProgressConditionFailure());
+            if (recipeEUt > 0) {
+                // Keep the legacy flag and progress behavior, including its environment-failure semantics.
+                this.hasNotEnoughEnergy = true;
+                decreaseProgress();
+            }
         }
     }
 
@@ -425,6 +540,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * Try to search for a new recipe
      */
     protected void trySearchNewRecipe() {
+        clearRecipeFailure();
         long maxVoltage = getMaxVoltage();
         Recipe currentRecipe;
         IItemHandlerModifiable importInventory = getInputInventory();
@@ -444,12 +560,17 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
 
         // proceed if we have a usable recipe.
         if (currentRecipe != null) {
-            if (isRecipeEligible(currentRecipe) && checkRecipe(currentRecipe)) {
+            RecipeFailure eligibilityFailure = evaluateRecipeEligibility(currentRecipe);
+            if (eligibilityFailure.isEmpty() && checkRecipeForStart(currentRecipe)) {
                 this.nextRecipeSearchTick = 0;
-                prepareRecipe(currentRecipe);
+                Recipe selected = currentRecipe;
+                prepareRecipeForStart(() -> prepareRecipe(selected));
             } else {
+                if (!eligibilityFailure.isEmpty()) setRecipeFailure(eligibilityFailure);
                 deferRecipeSearch();
             }
+        } else {
+            setRecipeFailure(RecipeFailureReason.NO_RECIPE);
         }
     }
 
@@ -506,12 +627,13 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             if (ConfigHolder.machines.cleanMultiblocks && mte instanceof IMultiblockController) return true;
 
             ICleanroomProvider cleanroomProvider = receiver.getCleanroom();
-            if (cleanroomProvider == null) return false;
-
-            return cleanroomProvider.isClean() && cleanroomProvider.checkCleanroomType(requiredType);
+            if (cleanroomProvider == null) return recordRecipeFailure(RecipeFailureReason.CLEANROOM_MISSING);
+            if (!cleanroomProvider.isClean()) return recordRecipeFailure(RecipeFailureReason.CLEANROOM_DIRTY);
+            return cleanroomProvider.checkCleanroomType(requiredType) ||
+                    recordRecipeFailure(RecipeFailureReason.CLEANROOM_TYPE);
         }
 
-        return false;
+        return recordRecipeFailure(RecipeFailureReason.CLEANROOM_MISSING);
     }
 
     protected boolean checkDimensionRequirement(@NotNull Recipe recipe) {
@@ -519,7 +641,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         if (list == null) {
             return true;
         }
-        return list.checkDimension(this.getMetaTileEntity().getWorld().provider.getDimension());
+        return list.checkDimension(this.getMetaTileEntity().getWorld().provider.getDimension()) ||
+                recordRecipeFailure(RecipeFailureReason.DIMENSION);
     }
 
     /**
@@ -770,6 +893,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         }
 
         if (!hasEnoughPower(ocResult.eut(), ocResult.duration())) {
+            recordRecipeFailure(getPowerFailureReason(ocResult.eut()));
             ocResult.reset();
             return null;
         }
@@ -780,6 +904,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                 this.metaTileEntity.addNotifiedInput(importInventory);
                 return recipe;
             }
+            recordRecipeFailure(RecipeFailureReason.INPUT_CHANGED);
         }
 
         return null;
@@ -796,6 +921,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         if (!metaTileEntity.canVoidRecipeItemOutputs() &&
                 !GTTransferUtils.addItemsToItemHandler(exportInventory, true, recipe.getAllItemOutputs())) {
             this.isOutputsFull = true;
+            recordRecipeFailure(RecipeFailureReason.ITEM_OUTPUT_FULL);
             return false;
         }
         return true;
@@ -811,6 +937,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         if (!metaTileEntity.canVoidRecipeFluidOutputs() &&
                 !GTTransferUtils.addFluidsToFluidHandler(exportFluids, true, recipe.getAllFluidOutputs())) {
             this.isOutputsFull = true;
+            recordRecipeFailure(RecipeFailureReason.FLUID_OUTPUT_FULL);
             return false;
         }
         return true;
@@ -998,6 +1125,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     @MustBeInvokedByOverriders
     protected void setupRecipe(@NotNull Recipe recipe) {
+        clearRecipeFailure();
+        this.progressConditionFailure = RecipeFailure.NONE;
         this.progressTime = 1;
         setMaxProgress(ocResult.duration());
         this.recipeEUt = ocResult.eut();
@@ -1024,6 +1153,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * completes the recipe which was being run, and performs actions done upon recipe completion
      */
     protected void completeRecipe() {
+        clearRecipeFailure();
         outputRecipeOutputs();
         this.progressTime = 0;
         setMaxProgress(0);
@@ -1110,6 +1240,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
 
     @Override
     public void setWorkingEnabled(boolean workingEnabled) {
+        if (this.workingEnabled != workingEnabled) {
+            clearRecipeFailure();
+            this.progressConditionFailure = RecipeFailure.NONE;
+        }
         this.workingEnabled = workingEnabled;
         metaTileEntity.markDirty();
         World world = metaTileEntity.getWorld();
@@ -1185,6 +1319,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     @MustBeInvokedByOverriders
     public void invalidate() {
+        resetRecipeFailures();
         this.nextRecipeSearchTick = 0;
         previousRecipe = null;
         progressTime = 0;
@@ -1250,6 +1385,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
 
     @Override
     public void deserializeNBT(@NotNull NBTTagCompound compound) {
+        resetRecipeFailures();
         this.workingEnabled = compound.getBoolean("WorkEnabled");
         this.canRecipeProgress = compound.getBoolean("CanRecipeProgress");
         this.progressTime = compound.getInteger("Progress");

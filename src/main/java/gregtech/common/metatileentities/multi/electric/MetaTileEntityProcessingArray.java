@@ -24,6 +24,7 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.OCParams;
 import gregtech.api.recipes.logic.OCResult;
+import gregtech.api.recipes.logic.RecipeFailure;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.KeyUtil;
@@ -381,7 +382,9 @@ public class MetaTileEntityProcessingArray extends RecipeMapMultiblockController
             if (!supportsRecipeCandidateEligibility()) return true;
             if (mte == null) return false;
             AbstractRecipeLogic logic = mte.getRecipeLogic();
-            return logic != null && logic.isRecipeEligible(recipe) && super.isRecipeEligible(recipe);
+            if (logic == null) return false;
+            RecipeFailure failure = logic.evaluateRecipeEligibility(recipe);
+            return (failure.isEmpty() || recordRecipeFailure(failure)) && super.isRecipeEligible(recipe);
         }
 
         @Override
@@ -396,7 +399,8 @@ public class MetaTileEntityProcessingArray extends RecipeMapMultiblockController
             AbstractRecipeLogic arl = mte.getRecipeLogic();
             if (arl == null) return false;
 
-            return arl.checkRecipe(recipe) && super.checkRecipe(recipe);
+            RecipeFailure failure = arl.evaluateRecipeCheck(recipe);
+            return (failure.isEmpty() || recordRecipeFailure(failure)) && super.checkRecipe(recipe);
         }
 
         @Override

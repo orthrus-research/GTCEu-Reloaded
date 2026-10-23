@@ -8,6 +8,8 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.RecipeMapSteamMultiblockController;
+import gregtech.api.recipes.logic.RecipeFailure;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
@@ -40,6 +42,20 @@ public class RecipeLogicInfoProvider extends CapabilityInfoProvider<AbstractReci
     protected void addProbeInfo(@NotNull AbstractRecipeLogic capability, @NotNull IProbeInfo probeInfo,
                                 @NotNull EntityPlayer player, @NotNull TileEntity tileEntity,
                                 @NotNull IProbeHitData data) {
+        RecipeFailure failure = capability.getRecipeFailure();
+        RecipeFailureReason reason = failure.getReason();
+        if (reason != RecipeFailureReason.NONE && reason != RecipeFailureReason.DISABLED &&
+                reason != RecipeFailureReason.UNFORMED && reason != RecipeFailureReason.MUFFLER_OBSTRUCTED) {
+            String key = reason.getTranslationKey() + (reason.hasAmounts() ? ".short" : "");
+            String text = "{*" + key + "*}";
+            if (reason.hasAmounts()) {
+                text += " ({*gregtech.recipe.failure.required*}: " +
+                        TextFormattingUtil.formatNumbers(failure.getRequired()) +
+                        ", {*gregtech.recipe.failure.available*}: " +
+                        TextFormattingUtil.formatNumbers(failure.getAvailable()) + ")";
+            }
+            probeInfo.text(TextStyleClass.WARNING + text);
+        }
         // do not show energy usage on machines that do not use energy
         if (capability.isWorking()) {
             if (capability instanceof PrimitiveRecipeLogic) {

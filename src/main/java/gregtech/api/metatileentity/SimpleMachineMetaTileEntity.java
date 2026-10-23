@@ -17,6 +17,7 @@ import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.gui.widgets.GhostCircuitSlotWidget;
 import gregtech.api.gui.widgets.ImageWidget;
 import gregtech.api.gui.widgets.LabelWidget;
+import gregtech.api.gui.widgets.RecipeFailureWidget;
 import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.gui.widgets.ToggleButtonWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
@@ -504,8 +505,8 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
                         .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.CHARGER_OVERLAY)
                         .setTooltipText("gregtech.gui.charger_slot.tooltip", GTValues.VNF[getTier()],
                                 GTValues.VNF[getTier()]))
-                .widget(new ImageWidget(79, 42 + yOffset, 18, 18, GuiTextures.INDICATOR_NO_ENERGY).setIgnoreColor(true)
-                        .setPredicate(workable::isHasNotEnoughEnergy))
+                .widget(new RecipeFailureWidget(79, 42 + yOffset, GuiTextures.INDICATOR_NO_ENERGY,
+                        workable::getRecipeFailure))
                 .bindPlayerInventory(player.inventory, GuiTextures.SLOT, yOffset);
 
         int leftButtonStartX = 7;

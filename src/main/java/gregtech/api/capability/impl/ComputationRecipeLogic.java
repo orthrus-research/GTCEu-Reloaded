@@ -4,6 +4,8 @@ import gregtech.api.capability.IOpticalComputationProvider;
 import gregtech.api.capability.IOpticalComputationReceiver;
 import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
 import gregtech.api.recipes.Recipe;
+import gregtech.api.recipes.logic.RecipeFailure;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.recipes.properties.impl.ComputationProperty;
 import gregtech.api.recipes.properties.impl.TotalComputationProperty;
 
@@ -55,7 +57,8 @@ public class ComputationRecipeLogic extends MultiblockRecipeLogic {
         }
 
         IOpticalComputationProvider provider = getComputationProvider();
-        return provider.requestCWUt(recipeCWUt, true) >= recipeCWUt;
+        return provider.requestCWUt(recipeCWUt, true) >= recipeCWUt ||
+                recordRecipeFailure(RecipeFailureReason.COMPUTATION);
     }
 
     @Override
@@ -78,6 +81,7 @@ public class ComputationRecipeLogic extends MultiblockRecipeLogic {
             IOpticalComputationProvider provider = getComputationProvider();
             int availableCWUt = provider.requestCWUt(Integer.MAX_VALUE, true);
             if (availableCWUt >= recipeCWUt) {
+                clearRecipeFailure();
                 // carry on as normal
                 this.hasNotEnoughComputation = false;
                 if (isDurationTotalCWU) {
@@ -93,6 +97,7 @@ public class ComputationRecipeLogic extends MultiblockRecipeLogic {
                     completeRecipe();
                 }
             } else {
+                setRecipeFailure(RecipeFailureReason.COMPUTATION);
                 currentDrawnCWUt = 0;
                 this.hasNotEnoughComputation = true;
                 // only decrement progress for low CWU/t if we need a steady supply
@@ -103,9 +108,13 @@ public class ComputationRecipeLogic extends MultiblockRecipeLogic {
             if (this.hasNotEnoughEnergy && getEnergyInputPerSecond() > 19L * recipeEUt) {
                 this.hasNotEnoughEnergy = false;
             }
-        } else if (recipeEUt > 0) {
-            this.hasNotEnoughEnergy = true;
-            decreaseProgress();
+        } else {
+            setRecipeFailure(canRecipeProgress ? RecipeFailure.of(getPowerFailureReason(recipeEUt)) :
+                    getProgressConditionFailure());
+            if (recipeEUt > 0) {
+                this.hasNotEnoughEnergy = true;
+                decreaseProgress();
+            }
         }
     }
 

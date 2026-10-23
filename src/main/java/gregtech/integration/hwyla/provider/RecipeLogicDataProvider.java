@@ -8,6 +8,8 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.RecipeMapSteamMultiblockController;
+import gregtech.api.recipes.logic.RecipeFailure;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
@@ -46,6 +48,10 @@ public class RecipeLogicDataProvider extends CapabilityDataProvider<AbstractReci
     @Override
     protected NBTTagCompound getNBTData(AbstractRecipeLogic capability, NBTTagCompound tag) {
         NBTTagCompound subTag = new NBTTagCompound();
+        RecipeFailure failure = capability.getRecipeFailure();
+        subTag.setInteger("Failure", failure.getReason().getId());
+        subTag.setLong("Required", failure.getRequired());
+        subTag.setLong("Available", failure.getAvailable());
         subTag.setBoolean("Working", capability.isWorking());
         if (capability.isWorking() && !(capability instanceof PrimitiveRecipeLogic)) {
             subTag.setLong("RecipeEUt", capability.getInfoProviderEUt());
@@ -64,6 +70,14 @@ public class RecipeLogicDataProvider extends CapabilityDataProvider<AbstractReci
 
         if (accessor.getNBTData().hasKey("gregtech.AbstractRecipeLogic")) {
             NBTTagCompound tag = accessor.getNBTData().getCompoundTag("gregtech.AbstractRecipeLogic");
+            RecipeFailureReason reason = RecipeFailureReason.fromId(tag.getInteger("Failure"));
+            // The controllable and multiblock providers already display these states.
+            if (reason != RecipeFailureReason.NONE && reason != RecipeFailureReason.DISABLED &&
+                    reason != RecipeFailureReason.UNFORMED && reason != RecipeFailureReason.MUFFLER_OBSTRUCTED) {
+                RecipeFailure failure = RecipeFailure.of(reason, tag.getLong("Required"), tag.getLong("Available"));
+                tooltip.add(TextFormatting.YELLOW + I18n.format(reason.getTranslationKey(),
+                        failure.getTranslationArguments()));
+            }
             if (tag.getBoolean("Working")) {
                 long eut = tag.getLong("RecipeEUt");
                 boolean consumer = false;

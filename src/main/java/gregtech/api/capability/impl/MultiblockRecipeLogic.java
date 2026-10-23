@@ -13,6 +13,8 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.OCParams;
 import gregtech.api.recipes.logic.OCResult;
+import gregtech.api.recipes.logic.RecipeFailure;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
@@ -54,7 +56,8 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
 
     @Override
     protected boolean canProgressRecipe() {
-        return super.canProgressRecipe() && !((IMultiblockController) metaTileEntity).isStructureObstructed();
+        return super.canProgressRecipe() && (!((IMultiblockController) metaTileEntity).isStructureObstructed() ||
+                recordRecipeFailure(RecipeFailureReason.MUFFLER_OBSTRUCTED));
     }
 
     /**
@@ -186,6 +189,7 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
         MultiblockWithDisplayBase controller = (MultiblockWithDisplayBase) metaTileEntity;
         if (ConfigHolder.machines.enableMaintenance && controller.hasMaintenanceMechanics() &&
                 controller.getNumMaintenanceProblems() > 5) {
+            setRecipeFailure(RecipeFailureReason.MAINTENANCE);
             return;
         }
 
@@ -213,20 +217,24 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
     }
 
     protected void trySearchNewRecipeDistinct() {
+        clearRecipeFailure();
         long maxVoltage = getMaxVoltage();
         List<IItemHandlerModifiable> importInventory = getInputBuses();
         Recipe blockedRecipe = null;
         int blockedBus = -1;
+        RecipeFailure blockedFailure = RecipeFailure.NONE;
 
         if (lastRecipeIndex < importInventory.size() &&
                 checkPreviousRecipeDistinct(importInventory.get(lastRecipeIndex))) {
             currentDistinctInputBus = importInventory.get(lastRecipeIndex);
-            if (isRecipeEligible(previousRecipe)) {
+            RecipeFailure failure = evaluateRecipeEligibility(previousRecipe);
+            if (failure.isEmpty()) {
                 startDistinctRecipe(previousRecipe, lastRecipeIndex);
                 return;
             }
             blockedRecipe = previousRecipe;
             blockedBus = lastRecipeIndex;
+            blockedFailure = failure;
         }
 
         for (int i = 0; i < importInventory.size(); i++) {
@@ -238,19 +246,26 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
             Recipe currentRecipe = findRecipe(maxVoltage, bus, getInputTank(bus));
             if (currentRecipe == null) {
                 if (blockedRecipe == null || i != blockedBus) invalidatedInputList.add(bus);
-            } else if (isRecipeEligible(currentRecipe)) {
-                startDistinctRecipe(currentRecipe, i);
-                return;
-            } else if (blockedRecipe == null) {
-                blockedRecipe = currentRecipe;
-                blockedBus = i;
+            } else {
+                RecipeFailure failure = evaluateRecipeEligibility(currentRecipe);
+                if (failure.isEmpty()) {
+                    startDistinctRecipe(currentRecipe, i);
+                    return;
+                } else if (blockedRecipe == null) {
+                    blockedRecipe = currentRecipe;
+                    blockedBus = i;
+                    blockedFailure = failure;
+                }
             }
         }
         if (blockedRecipe != null) {
             this.previousRecipe = blockedRecipe;
             this.lastRecipeIndex = blockedBus;
             this.currentDistinctInputBus = importInventory.get(blockedBus);
+            setRecipeFailure(blockedFailure);
             deferRecipeSearch();
+        } else {
+            setRecipeFailure(RecipeFailureReason.NO_RECIPE);
         }
     }
 
@@ -258,8 +273,8 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
         this.previousRecipe = recipe;
         this.lastRecipeIndex = busIndex;
         // Only the selected candidate may invoke checks that consume resources or change controller state.
-        if (checkRecipe(recipe)) {
-            prepareRecipeDistinct(recipe);
+        if (checkRecipeForStart(recipe)) {
+            prepareRecipeForStart(() -> prepareRecipeDistinct(recipe));
         } else {
             deferRecipeSearch();
         }

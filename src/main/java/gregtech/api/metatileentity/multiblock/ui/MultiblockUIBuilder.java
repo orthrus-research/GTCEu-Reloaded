@@ -11,6 +11,8 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.chance.output.impl.ChancedFluidOutput;
 import gregtech.api.recipes.chance.output.impl.ChancedItemOutput;
+import gregtech.api.recipes.logic.RecipeFailure;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTHashMaps;
 import gregtech.api.util.GTUtility;
@@ -426,6 +428,23 @@ public class MultiblockUIBuilder {
      */
     public MultiblockUIBuilder addLowPowerLine(boolean isLowPower) {
         return addLowPowerLine(() -> isLowPower);
+    }
+
+    /** Adds the last observed recipe failure without executing any recipe or environment checks. */
+    public MultiblockUIBuilder addRecipeFailureLine(AbstractRecipeLogic logic) {
+        if (!isStructureFormed) return this;
+        RecipeFailure serverFailure = isServer() ? logic.getRecipeFailure() : RecipeFailure.NONE;
+        RecipeFailureReason reason = RecipeFailureReason.fromId(getSyncer().syncInt(serverFailure.getReason().getId()));
+        long required = getSyncer().syncLong(serverFailure.getRequired());
+        long available = getSyncer().syncLong(serverFailure.getAvailable());
+        // The standard status/error/maintenance lines already cover these machine-wide gates.
+        if (reason != RecipeFailureReason.NONE && reason != RecipeFailureReason.DISABLED &&
+                reason != RecipeFailureReason.UNFORMED && reason != RecipeFailureReason.MUFFLER_OBSTRUCTED &&
+                reason != RecipeFailureReason.MAINTENANCE) {
+            RecipeFailure failure = RecipeFailure.of(reason, required, available);
+            addKey(KeyUtil.lang(TextFormatting.YELLOW, reason.getTranslationKey(), failure.getTranslationArguments()));
+        }
+        return this;
     }
 
     /**

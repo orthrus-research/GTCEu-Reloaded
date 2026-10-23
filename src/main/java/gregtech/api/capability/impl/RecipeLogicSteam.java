@@ -9,6 +9,7 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.OCParams;
 import gregtech.api.recipes.logic.OCResult;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 import gregtech.core.advancement.AdvancementTriggers;
@@ -180,12 +181,18 @@ public class RecipeLogicSteam extends AbstractRecipeLogic implements IVentable {
 
     @Override
     public boolean checkRecipe(@NotNull Recipe recipe) {
-        return super.checkRecipe(recipe) && !this.needsVenting;
+        return super.checkRecipe(recipe) && (!this.needsVenting || recordRecipeFailure(RecipeFailureReason.VENTING));
     }
 
     @Override
     public boolean isRecipeEligible(@NotNull Recipe recipe) {
-        return !supportsRecipeCandidateEligibility() || (super.isRecipeEligible(recipe) && !this.needsVenting);
+        return !supportsRecipeCandidateEligibility() || (super.isRecipeEligible(recipe) &&
+                (!this.needsVenting || recordRecipeFailure(RecipeFailureReason.VENTING)));
+    }
+
+    @Override
+    protected RecipeFailureReason getPowerFailureReason(long eut) {
+        return RecipeFailureReason.NOT_ENOUGH_STEAM;
     }
 
     @Override

@@ -19,6 +19,7 @@ import gregtech.api.pattern.MultiblockShapeInfo;
 import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
+import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.recipes.properties.impl.TemperatureProperty;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.KeyUtil;
@@ -110,13 +111,19 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
 
     @Override
     public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
-        return this.blastFurnaceTemperature >= recipe.getProperty(TemperatureProperty.getInstance(), 0);
+        return checkRecipeTemperature(recipe);
     }
 
     @Override
     public boolean isRecipeEligible(@NotNull Recipe recipe) {
         return getClass() != MetaTileEntityElectricBlastFurnace.class ||
-                this.blastFurnaceTemperature >= recipe.getProperty(TemperatureProperty.getInstance(), 0);
+                checkRecipeTemperature(recipe);
+    }
+
+    private boolean checkRecipeTemperature(Recipe recipe) {
+        int required = recipe.getProperty(TemperatureProperty.getInstance(), 0);
+        return blastFurnaceTemperature >= required || recipeMapWorkable.recordRecipeFailure(
+                RecipeFailureReason.TEMPERATURE, required, blastFurnaceTemperature);
     }
 
     @Override

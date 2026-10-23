@@ -122,7 +122,10 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     @Override
     protected void updateFormedValid() {
         if (!hasMufflerMechanics() || isMufflerFaceFree()) {
+            this.recipeMapWorkable.setRecipeBlockedByMuffler(false);
             this.recipeMapWorkable.updateWorkable();
+        } else {
+            this.recipeMapWorkable.setRecipeBlockedByMuffler(true);
         }
     }
 
@@ -188,7 +191,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
     }
 
     protected void configureWarningText(MultiblockUIBuilder builder) {
-        builder.addLowPowerLine(recipeMapWorkable.isHasNotEnoughEnergy());
+        builder.addRecipeFailureLine(recipeMapWorkable);
         super.configureWarningText(builder);
     }
 
