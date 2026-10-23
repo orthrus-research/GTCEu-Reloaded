@@ -94,7 +94,7 @@ public class ComputationRecipeLogic extends MultiblockRecipeLogic {
                     progressTime++;
                 }
                 if (progressTime > maxProgressTime) {
-                    completeRecipe();
+                    tryCompleteRecipe();
                 }
             } else {
                 setRecipeFailure(RecipeFailureReason.COMPUTATION);

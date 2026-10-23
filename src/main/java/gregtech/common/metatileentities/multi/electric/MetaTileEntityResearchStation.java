@@ -322,6 +322,12 @@ public class MetaTileEntityResearchStation extends RecipeMapMultiblockController
         // "replace" the items in the slots rather than outputting elsewhere
         // unlock the object holder
         @Override
+        protected boolean canFitRecipeOutputs() {
+            // The locked object holder replaces its data item; it does not insert into ordinary output slots.
+            return true;
+        }
+
+        @Override
         protected void outputRecipeOutputs() {
             IObjectHolder holder = getMetaTileEntity().getObjectHolder();
             holder.setHeldItem(ItemStack.EMPTY);

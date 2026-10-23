@@ -14,7 +14,6 @@ import net.minecraftforge.items.ItemHandlerHelper;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -117,11 +116,9 @@ public class GTTransferUtils {
         // determine if there is sufficient room to insert all items into the target inventory
         if (simulate) {
             OverlayedItemHandler overlayedItemHandler = new OverlayedItemHandler(handler);
-            Object2IntMap<ItemStack> stackKeyMap = GTHashMaps.fromItemStackCollection(items);
-
-            for (Object2IntMap.Entry<ItemStack> entry : stackKeyMap.object2IntEntrySet()) {
-                int amountToInsert = entry.getIntValue();
-                int amount = overlayedItemHandler.insertStackedItemStack(entry.getKey(), amountToInsert);
+            // Filtered destinations can overlap, so admission must preserve actual insertion order.
+            for (ItemStack stack : items) {
+                int amount = overlayedItemHandler.insertStackedItemStack(stack, stack.getCount());
                 if (amount > 0) {
                     return false;
                 }

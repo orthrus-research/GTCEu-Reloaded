@@ -163,6 +163,11 @@ public class MetaTileEntityDistillationTower extends RecipeMapMultiblockControll
         }
 
         @Override
+        protected boolean canFitRecipeFluidOutputs() {
+            return handler.applyFluidToOutputs(fluidOutputs, false);
+        }
+
+        @Override
         protected boolean checkOutputSpaceFluids(@NotNull Recipe recipe, @NotNull IMultipleTankHandler exportFluids) {
             // We have already trimmed fluid outputs at this time
             if (!metaTileEntity.canVoidRecipeFluidOutputs() &&

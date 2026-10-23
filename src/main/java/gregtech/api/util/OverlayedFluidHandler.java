@@ -152,6 +152,7 @@ public class OverlayedFluidHandler {
          * @return Amount of fluid inserted into this tank
          */
         public int tryInsert(@NotNull FluidStack fluid, int amount) {
+            if (!property.canFill() || !property.canFillFluidType(fluid)) return 0;
             if (this.fluid == null) {
                 this.fluid = fluid.copy();
                 return this.fluid.amount = Math.min(this.property.getCapacity(), amount);

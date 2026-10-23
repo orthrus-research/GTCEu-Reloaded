@@ -5094,6 +5094,7 @@ gregtech.machine.item_bus.import.opv.name=OpV Input Bus
 gregtech.machine.item_bus.import.max.name=MAX Input Bus
 
 gregtech.machine.item_bus.export.tooltip=Item Output for Multiblocks
+gregtech.machine.output_filter.tooltip=Accepts an optional output filter. Rejected recipe outputs wait unless the controller allows voiding.
 
 gregtech.machine.item_bus.export.ulv.name=ULV Output Bus
 gregtech.machine.item_bus.export.lv.name=LV Output Bus
