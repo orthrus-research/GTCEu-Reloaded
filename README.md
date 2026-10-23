@@ -1,37 +1,25 @@
-<p align="center"><img src="https://user-images.githubusercontent.com/37029404/233205606-a7bb352a-eb0c-4484-9fc8-820255b996a4.png" alt="Logo"></p>
-<h1 align="center">GregTech CE: Unofficial</h1>
-<p align="center"><i>A fork of GregTech Community Edition by the Gregtech CEu development team</i></p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/orthrus-research/GTCEu-Reloaded/master/.github/assets/gtceu-reloaded-monochrome.svg"
+       alt="GTCEu Reloaded logo"
+       width="25%">
+</p>
+<h1 align="center">GregTech CEu: Reloaded</h1>
+<p align="center"><i>A fork of GregTech CEu by Orthrus Research</i></p>
 <h1 align="center">
-    <a href="https://www.curseforge.com/minecraft/mc-mods/gregtech-ce-unofficial"><img src="https://img.shields.io/badge/Available%20for-MC%201.12.2%20-informational?style=for-the-badge" alt="Supported Versions"></a>
     <a href="https://github.com/GregTechCEu/GregTech/blob/master/LICENSE"><img src="https://img.shields.io/github/license/GregTechCEu/GregTech?style=for-the-badge" alt="License"></a>
-    <a href="https://discord.gg/bWSWuYvURP"><img src="https://img.shields.io/discord/701354865217110096?color=5464ec&label=Discord&style=for-the-badge" alt="Discord"></a>
-    <br>
-    <a href="https://www.curseforge.com/minecraft/mc-mods/gregtech-ce-unofficial"><img src="https://cf.way2muchnoise.eu/557242.svg?badge_style=for_the_badge" alt="CurseForge"></a>
-    <a href="https://modrinth.com/mod/gregtech-ce-unofficial"><img src="https://img.shields.io/modrinth/dt/gregtech-ce-unofficial?logo=modrinth&label=&suffix=%20&style=for-the-badge&color=2d2d2d&labelColor=5ca424&logoColor=1c1c1c" alt="Modrinth"></a>
-    <a href="https://github.com/GregTechCEu/GregTech/releases"><img src="https://img.shields.io/github/downloads/GregTechCEu/GregTech/total?sort=semver&logo=github&label=&style=for-the-badge&color=2d2d2d&labelColor=545454&logoColor=FFFFFF" alt="GitHub"></a>
 </h1>
 
 ## Continuing GregTech with Orthrus Research
 
-Orthrus Research is continuing development of GregTech CE: Unofficial, building on the work of its maintainers and community. Our goal is to keep the project moving forward through ongoing maintenance, improvements, and new features.
+Orthrus Research is continuing development of GregTech CE: Unofficial, building on the work of it's maintainers and community. 
+<br><br>
+Our goal is to keep the project moving forward through ongoing maintenance, improvements, and adding new features. The brilliant and dedicated minds that brought this open-source project to this point have entered periods of their lives where they don't have as much time to contribute to CEu, or have moved on from the project entirely. We believe that the community should have an option to choose to provide their own support from the CEu latest release, or consider subsequent releases from Reloaded. 
+<br><br>
+Our first target is to bring CEu: Reloaded up-to-date with the development that has been taking place on both GTCEu: Modern, and GTNH.
 
-This fork will use AI models such as GPT Astra, Claude Opus, and other frontier models as they become available to assist with research, implementation, review, and testing. This statement serves as our project-wide disclosure of AI-assisted development. Maintainers remain responsible for understanding changes and validating their behavior.
-
-## Welcome to GregTech CE: Unofficial
+## Welcome to GregTech CEu: Reloaded
 ### What is this?
 GregTech CE Unofficial, or **GTCEu**, is a Minecraft mod. The repository contains all the code and assets required to build and run that mod.
-
-### GregTech?
-Yes, you have probably heard this name before as it is quite known in the Minecraft modding community. GTCEu is an **indirect descendant** and **total rewrite** of _**GregTech**_.  It is **neither created nor maintained by GregoriusT** but was created with his knowledge and permission.
-
-This mod is about **technology** and **progression**.
-* From simple crude tools which will allow you to process resources more realistically...
-* Through **Steam Age** where early machines will help you save some precious resources and open new possibilities...
-* To many **Electric Ages** where increasingly complex machines and logistics will become indispensable parts of your industrial regime.
-
-A typical GregTech facility features large arrays of both single- and multi-block machines processing numerous resources, creating even more complex materials which will be used in machines of higher tiers.
-
-All of which are powered by GTCEu's own power systems, featuring generators from simple wood burning for steam to plasma-powered turbines.
 
 ### Community Edition?
 **Community Edition** is a necessary part of the **GTCEu name**:
@@ -39,26 +27,22 @@ All of which are powered by GTCEu's own power systems, featuring generators from
 * It is a reminder that the ideas and design are primarily driven by the community
 * It is a reminder that the implementation and work are solely provided by the community.
 
-Of course, this does not mean that everyone can add whatever content they want.  But it does mean that the primary maintainers want to listen to the community and take suggestions and ideas to heart when planning or working on any projects.
+## Project Goal
+To bring preferred GregTech concepts and ideas from GT (Minecraft 1.7.10 and GTCEu: Modern) to Minecraft 1.12, targetting a feature-rich, UX-friendly and comprehensive play-through while streamlining and eliminating bloat and make-work details.
 
-### Project Goal
-To bring preferred GregTech concepts and ideas from GT (Minecraft 1.7.10 versions and earlier) to Minecraft 1.12, targetting a feature-rich, UX-friendly and comprehensive play-through while streamlining and eliminating bloat and make-work details.
+We will continue to work with addon-providers to attempt to preserve backwards-compatibility.
 
-Gregtech 5 Unofficial was used as an original base, with some ideas from GT4 and GT6 also incorporated. Many community suggestions have been since applied.
+### Contributions
+Orthrus encourages quality PRs from Large Language Models (LLMs) whereby the author has both read and understood the code changes. Though we were programmers before the advent of AI, we understand this is not the case for all persons, and we at least expect that contributors perform rounds of AI assisted bug-fixing and engaging in conversation with the tools in plain language to determine if what is intended is actually what is proposed. 
+<br><br>
+*All humans are endowed with a spirit of creativity and can come up with great ideas for play. We believe they should not be excluded from attempting to see something they are passionate about (or have domain expertise that doesn't include programming) come to life, even if it means using AI.*
 
-We work with our addon-partners to attempt to preserve backwards-compatibility.
-
-## Contribution
-### Current state of project
-Our fork continues development using the approach described above. Community contributions of code, testing, and ideas are welcome.
-We are always looking for contributors!
-
-### How to contribute
-Remember: Every contribution counts.
-Found a bug? Please let us know by creating an Issue with the bug template.
-Something is missing? Thought about a cool feature idea? Of course there's a template for that.  We'll have a look!
-Know how to mod or at least code? Then don't hesitate and jump to Discord channel, contact the Maintainer to discuss possible contribution.
-Anything else? Sure come to [Discord](https://discord.gg/bWSWuYvURP).
+## AI Usage
+We unabashedly use Artificial Intelligence in this project. There is no practical way for us to find time to support this project (which we have a deep connection to through our own time playing), without the assistance of LLMs.
+<br><br>
+We are committed to only using frontier models for critical code, and perform rounds of review and bug-fixing across at least 2 LLM providers. Frequently this means Anthropic & OpenAI models for quality reasons. 
+<br>
+This is always subject to change, based on what is giving the strongest results moving into the future.
 
 ## Credited Works
 Heating Coil Textures, Wooden Forms, World Accelerators, and the Extreme Combustion Engine are from the **[GregTech: New Horizons Modpack](https://www.curseforge.com/minecraft/modpacks/gt-new-horizons)**.
