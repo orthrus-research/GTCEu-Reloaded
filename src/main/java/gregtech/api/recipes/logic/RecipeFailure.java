@@ -4,6 +4,7 @@ import gregtech.api.recipes.conditions.ConditionDescription;
 import gregtech.api.recipes.conditions.ConditionDescriptionCodec;
 import gregtech.api.recipes.conditions.ConditionEvaluation;
 import gregtech.api.recipes.conditions.ConditionState;
+import gregtech.api.recipes.modifiers.RecipeModifierResult;
 import gregtech.api.util.TextFormattingUtil;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -60,6 +61,18 @@ public final class RecipeFailure {
                 RecipeFailureReason.CONDITION_UNAVAILABLE : RecipeFailureReason.CONDITION, 0, 0, result.alternatives());
     }
 
+    public static RecipeFailure modifier(RecipeModifierResult result) {
+        if (result.isSuccess()) return NONE;
+        RecipeFailureReason reason = switch (result.status()) {
+            case CANCELLED -> RecipeFailureReason.MODIFIER_CANCELLED;
+            case UNSUPPORTED -> RecipeFailureReason.MODIFIER_UNSUPPORTED;
+            default -> RecipeFailureReason.MODIFIER_INVALID;
+        };
+        return new RecipeFailure(reason, 0, 0, Collections.singletonList(new ConditionDescription(
+                "gregtech.recipe.modifier.detail", result.modifierId(), Integer.toString(result.index() + 1),
+                result.reasonKey())));
+    }
+
     public List<ConditionDescription> getConditionDescriptions() {
         return conditions;
     }
@@ -88,6 +101,15 @@ public final class RecipeFailure {
     public String format(BiFunction<String, Object[], String> translator) {
         String text = translator.apply(reason.getTranslationKey(), getTranslationArguments());
         if (conditions.isEmpty()) return text;
+        if (reason.hasModifierDetails()) {
+            ConditionDescription detail = conditions.get(0);
+            if (!detail.key().equals("gregtech.recipe.modifier.detail") || detail.arguments().size() != 3) return text;
+            List<String> arguments = detail.arguments();
+            String description = arguments.get(0) + " [" + arguments.get(1) + "]: " +
+                    translator.apply(arguments.get(2), new Object[0]);
+            if (description.length() > 256) description = description.substring(0, 253) + "...";
+            return text + ": " + description;
+        }
         List<String> alternatives = new ArrayList<>();
         for (ConditionDescription description : conditions) alternatives.add(description.format(translator));
         String details = String.join(" " + translator.apply("gregtech.recipe.condition.or", new Object[0]) + " ",
@@ -96,7 +118,7 @@ public final class RecipeFailure {
         return text + ": " + details;
     }
 
-    /** Existing reasons retain their fixed payload; only the new condition reasons carry bounded descriptions. */
+    /** Existing reasons retain their fixed payload; condition/modifier details share a bounded display-only codec. */
     public void write(PacketBuffer buffer) {
         buffer.writeVarInt(reason.getId());
         buffer.writeLong(required);

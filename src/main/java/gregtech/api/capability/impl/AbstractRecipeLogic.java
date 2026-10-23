@@ -27,6 +27,13 @@ import gregtech.api.recipes.logic.OCResult;
 import gregtech.api.recipes.logic.ParallelLogic;
 import gregtech.api.recipes.logic.RecipeFailure;
 import gregtech.api.recipes.logic.RecipeFailureReason;
+import gregtech.api.recipes.modifiers.IRecipeModifierProvider;
+import gregtech.api.recipes.modifiers.RecipeAppendModifier;
+import gregtech.api.recipes.modifiers.RecipeModifierAttempt;
+import gregtech.api.recipes.modifiers.RecipeModifierContext;
+import gregtech.api.recipes.modifiers.RecipeModifierCopies;
+import gregtech.api.recipes.modifiers.RecipeModifierList;
+import gregtech.api.recipes.modifiers.RecipeModifierResult;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.impl.CleanroomProperty;
 import gregtech.api.recipes.properties.impl.ConditionProperty;
@@ -88,6 +95,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     private long overclockVoltage;
     private final OCParams ocParams = new OCParams();
     private final OCResult ocResult = new OCResult();
+    private RecipeModifierAttempt modifierAttempt;
+    private IItemHandlerModifiable modifierInputs;
+    private IMultipleTankHandler modifierFluids;
+    private Recipe modifierAppendMetadata;
 
     protected boolean canRecipeProgress = true;
 
@@ -445,7 +456,109 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
 
     /** Reusable conditions always compose with the existing pure hook, including unknown addon logic. */
     public final boolean isRecipeCandidateEligible(@NotNull Recipe recipe) {
+        if (modifierAttempt != null || metaTileEntity instanceof IRecipeModifierProvider) {
+            return withRecipeModifiers(getModifierInputInventory(), getModifierInputTank(), () -> {
+                Recipe adjusted = adjustRecipeForModifiers(recipe);
+                return adjusted != null && checkRecipeConditions(adjusted) && isRecipeEligible(adjusted) &&
+                        checkModifiedRecipeInputs(adjusted, getModifierInputInventory(), getModifierInputTank());
+            });
+        }
         return checkRecipeConditions(recipe) && isRecipeEligible(recipe);
+    }
+
+    /** Legacy display helpers also look up recipes. Only a real startup scope may transform their search candidates. */
+    protected final boolean isRecipeDiscoveryCandidateEligible(@NotNull Recipe recipe) {
+        return hasRecipeModifierAttempt() ? isRecipeCandidateEligible(recipe) :
+                checkRecipeConditions(recipe) && isRecipeEligible(recipe);
+    }
+
+    /** Empty providers use the legacy operation directly; nonempty providers own one attempt through selected setup. */
+    protected final boolean withRecipeModifiers(IItemHandlerModifiable inputs, IMultipleTankHandler fluids,
+                                                BooleanSupplier operation) {
+        if (modifierAttempt != null) {
+            if (modifierAttempt.isEvaluating()) return recordRecipeFailure(RecipeFailure.modifier(
+                    modifierAttempt.rejectReentry()));
+            if (modifierInputs != inputs || modifierFluids != fluids)
+                return recordRecipeFailure(RecipeFailureReason.MODIFIER_UNSUPPORTED);
+            return operation.getAsBoolean();
+        }
+        if (!(metaTileEntity instanceof IRecipeModifierProvider provider)) return operation.getAsBoolean();
+        RecipeModifierList modifiers;
+        RecipeModifierContext context;
+        try {
+            modifiers = provider.getRecipeModifiers();
+            if (modifiers == null) throw new IllegalArgumentException("Modifier provider returned null");
+            context = modifiers.isEmpty() ? null : createRecipeModifierContext();
+        } catch (RuntimeException invalidProvider) {
+            setRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
+            deferRecipeSearch();
+            return recordRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
+        }
+        if (modifiers.isEmpty()) return operation.getAsBoolean();
+        if (context == null) {
+            setRecipeFailure(RecipeFailureReason.MODIFIER_UNSUPPORTED);
+            deferRecipeSearch();
+            return recordRecipeFailure(RecipeFailureReason.MODIFIER_UNSUPPORTED);
+        }
+        this.modifierAttempt = new RecipeModifierAttempt(modifiers, context, metaTileEntity.getItemOutputLimit(),
+                metaTileEntity.getFluidOutputLimit());
+        this.modifierInputs = inputs;
+        this.modifierFluids = fluids;
+        try {
+            return operation.getAsBoolean();
+        } finally {
+            this.modifierAttempt = null;
+            this.modifierInputs = null;
+            this.modifierFluids = null;
+        }
+    }
+
+    protected @Nullable RecipeModifierContext createRecipeModifierContext() {
+        World world = metaTileEntity.getWorld();
+        BlockPos position = metaTileEntity.getPos();
+        return world == null || position == null ? null : new RecipeModifierContext(metaTileEntity.metaTileEntityId,
+                world.provider.getDimension(), position, getMaxVoltage(), getParallelLimit());
+    }
+
+    protected final boolean hasRecipeModifierAttempt() {
+        return modifierAttempt != null;
+    }
+
+    protected IItemHandlerModifiable getModifierInputInventory() {
+        return modifierAttempt == null ? getInputInventory() : modifierInputs;
+    }
+
+    protected IMultipleTankHandler getModifierInputTank() {
+        return modifierAttempt == null ? getInputTank() : modifierFluids;
+    }
+
+    protected final @Nullable Recipe adjustRecipeForModifiers(Recipe source) {
+        if (modifierAttempt == null) return source;
+        RecipeModifierResult result = modifierAttempt.adjust(source);
+        if (!result.isSuccess()) {
+            recordRecipeFailure(RecipeFailure.modifier(result));
+            return null;
+        }
+        return result.recipe();
+    }
+
+    protected final @Nullable Recipe retainRecipeModifierMetadata(@Nullable Recipe contents, Recipe source) {
+        if (contents == null || modifierAttempt == null) return contents;
+        try {
+            return RecipeModifierCopies.retainMetadata(contents, source);
+        } catch (RuntimeException invalid) {
+            recordRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
+            return null;
+        }
+    }
+
+    /** Input availability is not cached: distinct buses and append slots can expose different physical contents. */
+    protected boolean checkModifiedRecipeInputs(Recipe recipe, IItemHandlerModifiable inputs,
+                                                IMultipleTankHandler fluids) {
+        if (modifierAttempt == null) return true;
+        if (recipe.getEUt() == Long.MIN_VALUE || Math.abs(recipe.getEUt()) > getMaxVoltage())
+            return recordRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
+        return recipe.matches(false, inputs, fluids) || recordRecipeFailure(RecipeFailureReason.INPUT_CHANGED);
     }
 
     protected @Nullable RecipeConditionContext createRecipeConditionContext() {
@@ -487,6 +600,15 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     protected boolean checkRecipeForStart(Recipe recipe) {
+        if (modifierAttempt != null) {
+            RecipeFailure failure = captureRecipeFailure(() -> {
+                Recipe adjusted = adjustRecipeForModifiers(recipe);
+                return adjusted != null && checkModifiedRecipeInputs(adjusted, modifierInputs, modifierFluids) &&
+                        checkRecipeConditions(adjusted) && checkRecipe(adjusted);
+            }, RecipeFailureReason.REQUIREMENTS);
+            setRecipeFailure(failure);
+            return failure.isEmpty();
+        }
         RecipeFailure failure = evaluateRecipeCheck(recipe);
         setRecipeFailure(failure);
         return failure.isEmpty();
@@ -663,6 +785,17 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * Try to search for a new recipe
      */
     protected void trySearchNewRecipe() {
+        if (metaTileEntity instanceof IRecipeModifierProvider && modifierAttempt == null) {
+            withRecipeModifiers(getInputInventory(), getInputTank(), () -> {
+                trySearchNewRecipeInternal();
+                return true;
+            });
+            return;
+        }
+        trySearchNewRecipeInternal();
+    }
+
+    private void trySearchNewRecipeInternal() {
         clearRecipeFailure();
         long maxVoltage = getMaxVoltage();
         Recipe currentRecipe;
@@ -784,8 +917,16 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     public boolean prepareRecipe(Recipe recipe, IItemHandlerModifiable inputInventory,
                                  IMultipleTankHandler inputFluidInventory) {
-        recipe = Recipe.trimRecipeOutputs(recipe, getRecipeMap(), metaTileEntity.getItemOutputLimit(),
-                metaTileEntity.getFluidOutputLimit());
+        return withRecipeModifiers(inputInventory, inputFluidInventory,
+                () -> prepareRecipeInternal(recipe, inputInventory, inputFluidInventory));
+    }
+
+    private boolean prepareRecipeInternal(Recipe recipe, IItemHandlerModifiable inputInventory,
+                                          IMultipleTankHandler inputFluidInventory) {
+        recipe = hasRecipeModifierAttempt() ? adjustRecipeForModifiers(recipe) :
+                Recipe.trimRecipeOutputs(recipe, getRecipeMap(), metaTileEntity.getItemOutputLimit(),
+                        metaTileEntity.getFluidOutputLimit());
+        if (recipe == null || !checkModifiedRecipeInputs(recipe, inputInventory, inputFluidInventory)) return false;
 
         // apply EU/speed discount (if any) before parallel
         if (euDiscount > 0 || speedBonus > 0) { // if-statement to avoid unnecessarily creating RecipeBuilder object
@@ -801,8 +942,11 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                 if (newDuration <= 0) newDuration = 1;
                 builder.duration(newDuration);
             }
-            recipe = builder.build().getResult();
+            Recipe built = builder.build().getResult();
+            recipe = retainRecipeModifierMetadata(built, recipe);
         }
+
+        if (recipe == null) return false;
 
         // Pass in the trimmed recipe to the parallel logic
         recipe = findParallelRecipe(
@@ -949,7 +1093,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             return null;
         }
 
-        return map.findRecipeWithEligibility(maxVoltage, inputs, fluidInputs, this::isRecipeCandidateEligible)
+        return map.findRecipeWithEligibility(maxVoltage, inputs, fluidInputs, this::isRecipeDiscoveryCandidateEligible)
                 .getRecipeForCache();
     }
 
@@ -958,6 +1102,20 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                                                            @NotNull IItemHandlerModifiable inputs,
                                                            @NotNull IItemHandlerModifiable outputs, int parallelLimit,
                                                            long maxVoltage, @NotNull IVoidable voidable) {
+        if (hasRecipeModifierAttempt()) {
+            RecipeAppendModifier modifiers = new RecipeAppendModifier(this::adjustRecipeForModifiers);
+            RecipeBuilder<?> builder = ParallelLogic.appendItemRecipes(recipeMap, inputs, outputs, parallelLimit,
+                    maxVoltage, voidable, this::isRecipeCandidateEligible, modifiers);
+            this.modifierAppendMetadata = modifiers.metadata();
+            if ((builder == null || builder.getParallel() == 0) && modifiers.failure() != null)
+                recordRecipeFailure(RecipeFailure.modifier(modifiers.failure()));
+            if (builder != null && modifierAppendMetadata != null) {
+                builder.chancedOutputLogic(modifierAppendMetadata.getChancedOutputs().getChancedOutputLogic());
+                builder.chancedFluidOutputLogic(
+                        modifierAppendMetadata.getChancedFluidOutputs().getChancedOutputLogic());
+            }
+            return builder;
+        }
         return ParallelLogic.appendItemRecipes(recipeMap, inputs, outputs, parallelLimit, maxVoltage, voidable,
                 this::isRecipeCandidateEligible);
     }
@@ -968,6 +1126,44 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     public boolean isRecipeMapValid(@NotNull RecipeMap<?> recipeMap) {
         return true;
+    }
+
+    @Override
+    public RecipeBuilder<?> findMultipliedParallelRecipe(@NotNull RecipeMap<?> map, @NotNull Recipe recipe,
+                                                         @NotNull IItemHandlerModifiable inputs,
+                                                         @NotNull IMultipleTankHandler fluids,
+                                                         @NotNull IItemHandlerModifiable outputs,
+                                                         @NotNull IMultipleTankHandler fluidOutputs, int parallelLimit,
+                                                         long maxVoltage, @NotNull IVoidable voidable) {
+        int limit = hasRecipeModifierAttempt() ? RecipeModifierCopies.safeParallelLimit(recipe, parallelLimit, false) :
+                parallelLimit;
+        if (hasRecipeModifierAttempt() && parallelLimit > 0 && limit == 0) {
+            recordRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
+            return null;
+        }
+        RecipeBuilder<?> builder = IParallelableRecipeLogic.super.findMultipliedParallelRecipe(map, recipe, inputs,
+                fluids, outputs, fluidOutputs, limit, maxVoltage, voidable);
+        if (builder != null && hasRecipeModifierAttempt()) {
+            builder.chancedOutputLogic(recipe.getChancedOutputs().getChancedOutputLogic());
+            builder.chancedFluidOutputLogic(recipe.getChancedFluidOutputs().getChancedOutputLogic());
+        }
+        return builder;
+    }
+
+    @Override
+    public Recipe findParallelRecipe(@NotNull Recipe recipe, @NotNull IItemHandlerModifiable inputs,
+                                     @NotNull IMultipleTankHandler fluids, @NotNull IItemHandlerModifiable outputs,
+                                     @NotNull IMultipleTankHandler fluidOutputs, long maxVoltage, int parallelLimit) {
+        Recipe previousMetadata = modifierAppendMetadata;
+        this.modifierAppendMetadata = null;
+        try {
+            Recipe result = IParallelableRecipeLogic.super.findParallelRecipe(recipe, inputs, fluids, outputs,
+                    fluidOutputs, maxVoltage, parallelLimit);
+            return retainRecipeModifierMetadata(result,
+                    modifierAppendMetadata == null ? recipe : modifierAppendMetadata);
+        } finally {
+            this.modifierAppendMetadata = previousMetadata;
+        }
     }
 
     /**
@@ -1118,9 +1314,11 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                 .build()
                 .getResult();
 
+        r = retainRecipeModifierMetadata(r, recipe);
+
         if (r == null) {
             // should be impossible, but check anyway
-            return recipe;
+            return hasRecipeModifierAttempt() ? null : recipe;
         }
 
         RecipeBuilder<?> builder = findMultipliedParallelRecipe(map, r, importInventory, importFluids,
@@ -1141,10 +1339,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                 .getResult();
 
         if (r == null) {
-            return recipe;
+            return hasRecipeModifierAttempt() ? null : recipe;
         }
 
-        return r;
+        return retainRecipeModifierMetadata(r, recipe);
     }
 
     /**

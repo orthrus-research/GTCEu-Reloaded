@@ -31,7 +31,10 @@ public enum RecipeFailureReason {
     CONDITION(25, "condition"),
     CONDITION_UNAVAILABLE(26, "condition_unavailable"),
     INPUT_GROUP_UNAVAILABLE(27, "input_group_unavailable"),
-    OUTPUT_GROUP_UNAVAILABLE(28, "output_group_unavailable");
+    OUTPUT_GROUP_UNAVAILABLE(28, "output_group_unavailable"),
+    MODIFIER_CANCELLED(29, "modifier_cancelled"),
+    MODIFIER_INVALID(30, "modifier_invalid"),
+    MODIFIER_UNSUPPORTED(31, "modifier_unsupported");
 
     private final int id;
     private final String translationKey;
@@ -54,7 +57,11 @@ public enum RecipeFailureReason {
     }
 
     public boolean hasConditions() {
-        return this == CONDITION || this == CONDITION_UNAVAILABLE;
+        return this == CONDITION || this == CONDITION_UNAVAILABLE || hasModifierDetails();
+    }
+
+    public boolean hasModifierDetails() {
+        return this == MODIFIER_CANCELLED || this == MODIFIER_INVALID || this == MODIFIER_UNSUPPORTED;
     }
 
     public static RecipeFailureReason fromId(int id) {
