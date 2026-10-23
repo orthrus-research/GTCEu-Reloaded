@@ -5,8 +5,10 @@ import gregtech.api.capability.IMaintenanceHatch;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.Widget;
+import gregtech.api.gui.resources.ItemStackTexture;
 import gregtech.api.gui.widgets.AdvancedTextWidget;
 import gregtech.api.gui.widgets.ClickButtonWidget;
+import gregtech.api.gui.widgets.ImageWidget;
 import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.items.toolitem.ItemGTToolbelt;
@@ -15,6 +17,7 @@ import gregtech.api.items.toolitem.ToolHelper;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.*;
+import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.TooltipHelper;
@@ -22,6 +25,7 @@ import gregtech.common.ConfigHolder;
 import gregtech.common.gui.widget.among_us.FixWiringTaskWidget;
 import gregtech.common.inventory.handlers.TapeItemStackHandler;
 import gregtech.common.items.MetaItems;
+import gregtech.common.items.ToolItems;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
@@ -33,6 +37,7 @@ import net.minecraft.util.*;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -70,6 +75,10 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
     private int timeActive = -1;
 
     private BigDecimal durationMultiplier = BigDecimal.ONE;
+
+    private static final int MAINTENANCE_UNFORMED = -1;
+    private static final int MAINTENANCE_DISABLED = -2;
+    private static final int ALL_MAINTENANCE_FIXED = 0b111111;
 
     // Some stats used for the Configurable Maintenance Hatch
     private static final BigDecimal MAX_DURATION_MULTIPLIER = BigDecimal.valueOf(1.1);
@@ -405,9 +414,9 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
 
     @Override
     protected ModularUI createUI(EntityPlayer entityPlayer) {
-        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 18 * 3 + 98)
+        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 188)
                 .label(5, 5, getMetaFullName())
-                .bindPlayerInventory(entityPlayer.inventory, GuiTextures.SLOT, 7, 18 * 3 + 16);
+                .bindPlayerInventory(entityPlayer.inventory, GuiTextures.SLOT, 7, 106);
 
         if (!isConfigurable && GTValues.FOOLS.get()) {
             builder.widget(new FixWiringTaskWidget(48, 15, 80, 50)
@@ -430,7 +439,60 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
                     .widget(new ClickButtonWidget(9 + 18 * 2, 18 * 3 + 16 - 18, 12, 12, "+",
                             this::incInternalMultiplier));
         }
+        addMaintenanceStatusWidgets(builder);
         return builder.build(getHolder(), entityPlayer);
+    }
+
+    private void addMaintenanceStatusWidgets(ModularUI.Builder builder) {
+        builder.widget(new AdvancedTextWidget(5, 68, this::addMaintenanceStatusText, 0x404040)
+                .setMaxWidthLimit(166));
+
+        ItemStack[] tools = {
+                ToolItems.WRENCH.get(Materials.Neutronium),
+                ToolItems.SCREWDRIVER.get(Materials.Neutronium),
+                ToolItems.SOFT_MALLET.get(Materials.Neutronium),
+                ToolItems.HARD_HAMMER.get(Materials.Neutronium),
+                ToolItems.WIRE_CUTTER.get(Materials.Neutronium),
+                ToolItems.CROWBAR.get(Materials.Neutronium)
+        };
+        String[] toolNames = { "wrench", "screwdriver", "soft_mallet", "hard_hammer", "wire_cutter", "crowbar" };
+        for (int i = 0; i < tools.length; i++) {
+            int index = i;
+            builder.widget(new ImageWidget(34 + i * 18, 82, 16, 16, new ItemStackTexture(tools[i]))
+                    .setPredicate(() -> isMaintenanceToolRequired(index))
+                    .setTooltip("gregtech.machine.maintenance_hatch.required." + toolNames[i]));
+        }
+    }
+
+    int getMaintenanceProblemsForDisplay() {
+        MultiblockControllerBase controller = getController();
+        if (controller == null || !controller.isStructureFormed() ||
+                !(controller instanceof IMaintenance maintenance)) {
+            return MAINTENANCE_UNFORMED;
+        }
+        if (!ConfigHolder.machines.enableMaintenance || !maintenance.hasMaintenanceMechanics()) {
+            return MAINTENANCE_DISABLED;
+        }
+        // The hatch's stored mask is only a recovery backup; live faults belong to the controller.
+        return maintenance.getMaintenanceProblems() & ALL_MAINTENANCE_FIXED;
+    }
+
+    boolean isMaintenanceToolRequired(int index) {
+        int problems = getMaintenanceProblemsForDisplay();
+        return problems >= 0 && ((problems >> index) & 1) == 0;
+    }
+
+    void addMaintenanceStatusText(List<ITextComponent> text) {
+        int problems = getMaintenanceProblemsForDisplay();
+        String key = switch (problems) {
+            case MAINTENANCE_UNFORMED -> "gregtech.machine.maintenance_hatch.unformed";
+            case MAINTENANCE_DISABLED -> "gregtech.machine.maintenance_hatch.disabled";
+            case ALL_MAINTENANCE_FIXED -> "gregtech.top.maintenance_fixed";
+            default -> "gregtech.top.maintenance_broken";
+        };
+        TextFormatting color = problems < 0 ? TextFormatting.DARK_GRAY :
+                problems == ALL_MAINTENANCE_FIXED ? TextFormatting.DARK_GREEN : TextFormatting.RED;
+        text.add(new TextComponentTranslation(key).setStyle(new Style().setColor(color)));
     }
 
     private static Consumer<List<ITextComponent>> getTextWidgetText(String type, Supplier<Double> multiplier) {

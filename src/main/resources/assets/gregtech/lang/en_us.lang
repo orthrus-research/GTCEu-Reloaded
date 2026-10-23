@@ -5362,6 +5362,14 @@ gregtech.machine.maintenance_hatch_cleanroom_auto.tooltip.1=For automatically ma
 gregtech.machine.maintenance_hatch.cleanroom_auto.tooltip.2=Cleans as:
 gregtech.machine.maintenance_hatch_tool_slot.tooltip=Click slot with empty hand when required tools are in inventory to solve problems
 gregtech.machine.maintenance_hatch_tape_slot.tooltip=Insert Tape to prevent problems
+gregtech.machine.maintenance_hatch.unformed=No formed multiblock
+gregtech.machine.maintenance_hatch.disabled=Maintenance disabled
+gregtech.machine.maintenance_hatch.required.wrench=Required: Wrench/nPipe is loose
+gregtech.machine.maintenance_hatch.required.screwdriver=Required: Screwdriver/nScrews are loose
+gregtech.machine.maintenance_hatch.required.soft_mallet=Required: Soft Mallet/nSomething is stuck
+gregtech.machine.maintenance_hatch.required.hard_hammer=Required: Hard Hammer/nPlating is dented
+gregtech.machine.maintenance_hatch.required.wire_cutter=Required: Wire Cutter/nWires burned out
+gregtech.machine.maintenance_hatch.required.crowbar=Required: Crowbar/nThat doesn't belong there
 
 gregtech.maintenance.configurable_duration=Duration: %fx
 gregtech.maintenance.configurable_duration.unchanged_description=Recipes will run at normal speed. Change configuration to update.
