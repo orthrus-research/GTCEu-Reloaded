@@ -1,10 +1,11 @@
-# PipeNet implementation and comparison contract
+# PipeNet compatibility contract
 
 Baseline: `316f0df8d5b029f905b8af79ee34c09a15623c20`.
 
-Both candidates use the same behavior corrections. B retains current component and walker
-ownership. A adds internal indexing/revisions and route representation behind the same API.
-The unmodified baseline is retained separately as O for old-save and behavior fixtures.
+This implementation retains existing component and physical-walker ownership while repairing
+transport accounting, capability lifetimes, cache invalidation, graph mutation and persistence.
+The original baseline remains the reference for supported API and saved-data compatibility;
+the intentional behavior corrections and migration limits are recorded below.
 
 - Preserve registered blocks/tiles, material/type identities, enum ordering, concrete
   capabilities, cover wrappers, protected extension hooks and legacy NBT codecs.
@@ -30,6 +31,21 @@ The full gates include source/tests/build/reobfuscation, old/new save roundtrips
 Cleanroom client/server, multiplayer, exact transformed cohort, copied-pack runs, and ten or
 more matched process pairs with identical workloads. Reports distinguish each evidence scope.
 No source test or microbenchmark alone establishes native or full-pack compatibility.
+
+## Validation scope
+
+The selected implementation passed source/build checks, original-compiled API and codec probes,
+built-in native transport and save fixtures, and isolated client/server synchronization and
+reconnection in Cleanroom 0.7.12-alpha on Java 25 with ModularUI 3.1.6. The runtime-added arm
+mode was tested with an explicit RETAIN-only Sussy configuration, not every Sussy feature.
+
+The broader retained Core/addon cohort fails on existing GregTech API mismatches, including
+the `Elements.add` signature and `RecipeProperty` types. Its mixed tankless/buffered, bulk-tool
+and telemetry fixtures cannot run past initialization. Full-pack compatibility therefore
+remains unqualified. These repairs do not supply replacement addon APIs or loader shims.
+
+The repairs, regression fixtures and compatibility investigation were AI-assisted with
+OpenAI Codex. This disclosure does not expand the validation scopes stated here.
 
 ## Component identity and extension equality
 
@@ -87,9 +103,9 @@ Its literal `susy.tankless_fluid_pipe_net` record still uses shared world storag
 its route cache is position-only without periodic discovery, and a retained fluid
 handler does not revalidate current tile/net ownership on each fill. These pre-existing
 addon limits are not repaired by the built-in optical/laser storage or handler changes.
-Both candidates keep extension hooks eager and preserve physical hybrid connections.
+Extension hooks remain eager and the existing physical hybrid-connection APIs are retained.
 
-Both candidates now reject duplicate positions in a saved graph and preserve the raw
+PipeNet rejects duplicate positions in a saved graph and preserves the raw
 rejected record through quarantine. A historical shared addon record may already be
 ambiguous; neither graph validation nor loaded-tile recovery can infer its original
 dimension. Native hybrid transfer qualification does not imply tankless dimension or
