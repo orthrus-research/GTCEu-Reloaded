@@ -2,16 +2,26 @@ package gregtech.api.configuration;
 
 import gregtech.common.pipelike.fluidpipe.net.PipeTankList;
 
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fml.common.discovery.ASMDataTable;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.objectweb.asm.Type;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,6 +32,66 @@ public class PipeFamilyFluidTest {
     @BeforeAll
     static void bootstrap() {
         PipeFamilyTestSupport.bootstrap();
+        ASMDataTable capabilities = new ASMDataTable();
+        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
+                "FLUID_HANDLER_CAPABILITY", Collections.singletonMap("value", Type.getType(IFluidHandler.class)));
+        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
+                "FLUID_HANDLER_ITEM_CAPABILITY",
+                Collections.singletonMap("value", Type.getType(IFluidHandlerItem.class)));
+        CapabilityManager.INSTANCE.injectCapabilities(capabilities);
+        if (CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY == null) CapabilityFluidHandler.register();
+        assertNotNull(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
+        assertNotNull(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY);
+    }
+
+    @Test
+    void failedRealDistributionRestoresWithdrawnFluidAndPropagatesTheOriginalException() {
+        ConfigurationTestWorld world = new ConfigurationTestWorld();
+        PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
+        PipeDistributionFailureTarget target = new PipeDistributionFailureTarget(() -> {});
+        connect(world, pipe, target);
+        assertEquals(100, pipe.getFluidTanks()[0].fill(new FluidStack(FluidRegistry.WATER, 100), true));
+        pipe.dirtyNotifications = 0;
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> distribute(pipe));
+
+        assertSame(target.failure, failure);
+        assertEquals(1, target.actualFills);
+        assertEquals(0, target.getFluidAmount());
+        assertNotNull(pipe.getContainedFluid(0));
+        assertEquals(100, pipe.getContainedFluid(0).amount);
+        assertFalse(pipe.hasRetainedFluidData(1));
+        assertTrue(pipe.dirtyNotifications > 0);
+    }
+
+    @Test
+    void failedDistributionRetainsWithdrawnFluidWhenReentryOccupiesTheSourceTank() {
+        ConfigurationTestWorld world = new ConfigurationTestWorld();
+        PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
+        int capacity = pipe.getCapacityPerTank();
+        PipeDistributionFailureTarget target = new PipeDistributionFailureTarget(() -> {
+            assertEquals(capacity, pipe.getFluidTanks()[0].fill(new FluidStack(FluidRegistry.LAVA, capacity), true));
+        });
+        connect(world, pipe, target);
+        FluidStack water = new FluidStack(FluidRegistry.WATER, 100);
+        water.tag = new NBTTagCompound();
+        water.tag.setString("rollback", "still owned");
+        assertEquals(100, pipe.getFluidTanks()[0].fill(water, true));
+        pipe.dirtyNotifications = 0;
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> distribute(pipe));
+
+        assertSame(target.failure, failure);
+        assertEquals(1, target.actualFills);
+        assertEquals(0, target.getFluidAmount());
+        assertEquals(FluidRegistry.LAVA, pipe.getContainedFluid(0).getFluid());
+        assertEquals(capacity, pipe.getContainedFluid(0).amount);
+        assertTrue(pipe.hasRetainedFluidData(1));
+        NBTTagCompound saved = saved(pipe);
+        assertEquals(water.writeToNBT(new NBTTagCompound()), saved.getTagList("Fluids", 10).getCompoundTagAt(1));
+        assertTrue(pipe.dirtyNotifications > 0);
+        read(pipe, saved);
+        assertEquals(water.writeToNBT(new NBTTagCompound()), saved(pipe).getTagList("Fluids", 10).getCompoundTagAt(1));
     }
 
     @Test
@@ -147,6 +217,16 @@ public class PipeFamilyFluidTest {
 
     private static PipeTestFluidPipe pipe() {
         return PipeFamilyTestSupport.fluid(new ConfigurationTestWorld(), POS);
+    }
+
+    private static void connect(ConfigurationTestWorld world, PipeTestFluidPipe pipe, IFluidHandler target) {
+        world.put(POS.east(), new PipeTestEndpoint().provide(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, target),
+                Blocks.CHEST.getDefaultState());
+        pipe.setConnection(EnumFacing.EAST, true, false);
+    }
+
+    private static void distribute(PipeTestFluidPipe pipe) {
+        for (int tick = 0; tick < 5; tick++) pipe.update();
     }
 
     private static NBTTagCompound saved(PipeTestFluidPipe pipe) {

@@ -194,14 +194,17 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
 
             FluidStack withdrawn = transaction.pipeTank.drain(toInsert, true);
             if (withdrawn != null && withdrawn.amount > 0) {
-                int accepted = transaction.target.fill(withdrawn.copy(), true);
-                accepted = Math.max(0, Math.min(accepted, withdrawn.amount));
-                withdrawn.amount -= accepted;
-                if (withdrawn.amount > 0) {
-                    withdrawn.amount -= tank.fill(withdrawn, true);
-                    if (withdrawn.amount > 0) retainUnassignedFluid(withdrawn);
+                try {
+                    int accepted = transaction.target.fill(withdrawn.copy(), true);
+                    accepted = Math.max(0, Math.min(accepted, withdrawn.amount));
+                    withdrawn.amount -= accepted;
+                } finally {
+                    if (withdrawn.amount > 0) {
+                        withdrawn.amount -= tank.fill(withdrawn, true);
+                        if (withdrawn.amount > 0) retainUnassignedFluid(withdrawn);
+                    }
+                    markDirty();
                 }
-                markDirty();
             }
         }
     }

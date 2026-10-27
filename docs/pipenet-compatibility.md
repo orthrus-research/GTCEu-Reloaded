@@ -76,6 +76,13 @@ the source where possible; leftovers return to the owning caller or a carrying
 `ItemTransferException`, and world-aware callers drop them at their own position.
 This preserves ownership without promising atomic rollback of arbitrary addon effects.
 
+Built-in fluid distribution withdraws from its source before committing to a destination.
+If the destination rejects fluid or throws during the real fill, unaccepted fluid returns
+to the source tank; a remainder that no longer fits is retained in saved fluid records.
+The tile is marked dirty even when the original exception propagates. No other endpoint
+is retried after that exception. A foreign handler that accepts fluid and then throws
+does not report how much it accepted; its side effects cannot be rolled back atomically.
+
 ## Item priority aliases and first save
 
 Item graph writers emit both integer `Resistance` and integer `Range` with the same
