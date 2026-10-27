@@ -277,7 +277,9 @@ public abstract class WorldPipeNet<NodeDataType, T extends PipeNet<NodeDataType>
         this.pipeNets = new ArrayList<>();
         this.pipeNetsByChunk.clear();
         restoredNets.forEach(this::addPipeNetSilently);
-        invalidateRoutes();
+        if (getWorld() != null) {
+            invalidateRoutes();
+        }
     }
 
     @NotNull
