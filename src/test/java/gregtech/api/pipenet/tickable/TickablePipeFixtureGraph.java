@@ -5,6 +5,7 @@ import net.minecraft.world.World;
 final class TickablePipeFixtureGraph extends TickableWorldPipeNet<Integer, TickablePipeFixtureNetwork> {
 
     int rate = 1;
+    boolean valueEqualNetworks;
 
     TickablePipeFixtureGraph() {
         super("tickable_pipe_correctness_test");

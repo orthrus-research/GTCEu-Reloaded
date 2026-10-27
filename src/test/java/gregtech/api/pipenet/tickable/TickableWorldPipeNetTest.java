@@ -157,6 +157,88 @@ public class TickableWorldPipeNetTest {
         assertThrows(IllegalStateException.class, graph::update);
     }
 
+    @Test
+    void equalDistinctNetworksBothTickAndRemovingOnePreservesItsPeer() {
+        BlockPos secondPos = A.east(32);
+        TickablePipeFixtureWorld world = loadedWorld();
+        world.loaded.add(new ChunkPos(secondPos));
+        TickablePipeFixtureGraph graph = graph(world);
+        graph.valueEqualNetworks = true;
+        graph.addNode(A, 1, 0, 0, false);
+        graph.addNode(secondPos, 1, 0, 0, false);
+        TickablePipeFixtureNetwork first = graph.getNetFromPos(A);
+        TickablePipeFixtureNetwork second = graph.getNetFromPos(secondPos);
+        assertNotSame(first, second);
+        assertEquals(first, second, "The extension deliberately defines value equality");
+
+        graph.update();
+
+        assertEquals(1, first.updates);
+        assertEquals(1, second.updates);
+        graph.removeNode(secondPos);
+        graph.update();
+        assertSame(first, graph.getNetFromPos(A));
+        assertTrue(first.isValid());
+        assertFalse(second.isValid());
+        assertEquals(2, first.updates);
+        assertEquals(1, second.updates);
+    }
+
+    @Test
+    void equalDistinctNetworksUnloadAndReloadWithoutChangingTheirPeersTickingState() {
+        BlockPos secondPos = A.east(32);
+        ChunkPos secondChunk = new ChunkPos(secondPos);
+        TickablePipeFixtureWorld world = loadedWorld();
+        world.loaded.add(secondChunk);
+        TickablePipeFixtureGraph graph = graph(world);
+        graph.valueEqualNetworks = true;
+        graph.addNode(A, 1, 0, 0, false);
+        graph.addNode(secondPos, 1, 0, 0, false);
+        TickablePipeFixtureNetwork first = graph.getNetFromPos(A);
+        TickablePipeFixtureNetwork second = graph.getNetFromPos(secondPos);
+        graph.update();
+
+        world.loaded.remove(secondChunk);
+        graph.onChunkUnloaded(new Chunk(world, secondChunk.x, secondChunk.z));
+        graph.update();
+
+        assertEquals(2, first.updates);
+        assertEquals(1, second.updates);
+        world.loaded.add(secondChunk);
+        graph.onChunkLoaded(new Chunk(world, secondChunk.x, secondChunk.z));
+        graph.update();
+        assertEquals(3, first.updates);
+        assertEquals(2, second.updates);
+    }
+
+    @Test
+    void equalDistinctNetworksRestoreSeparateTickersOnNbtReload() {
+        BlockPos secondPos = A.east(32);
+        TickablePipeFixtureWorld world = loadedWorld();
+        world.loaded.add(new ChunkPos(secondPos));
+        TickablePipeFixtureGraph graph = graph(world);
+        graph.valueEqualNetworks = true;
+        graph.addNode(A, 1, 0, 0, false);
+        graph.addNode(secondPos, 1, 0, 0, false);
+        TickablePipeFixtureNetwork oldFirst = graph.getNetFromPos(A);
+        TickablePipeFixtureNetwork oldSecond = graph.getNetFromPos(secondPos);
+        NBTTagCompound saved = graph.writeToNBT(new NBTTagCompound());
+
+        graph.readFromNBT(saved);
+        TickablePipeFixtureNetwork first = graph.getNetFromPos(A);
+        TickablePipeFixtureNetwork second = graph.getNetFromPos(secondPos);
+        graph.update();
+
+        assertNotSame(first, second);
+        assertEquals(first, second);
+        assertFalse(oldFirst.isValid());
+        assertFalse(oldSecond.isValid());
+        assertEquals(0, oldFirst.updates);
+        assertEquals(0, oldSecond.updates);
+        assertEquals(1, first.updates);
+        assertEquals(1, second.updates);
+    }
+
     private static TickablePipeFixtureGraph graph(TickablePipeFixtureWorld world) {
         TickablePipeFixtureGraph graph = new TickablePipeFixtureGraph();
         graph.attach(world);

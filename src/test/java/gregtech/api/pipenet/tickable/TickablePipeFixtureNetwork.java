@@ -9,9 +9,22 @@ final class TickablePipeFixtureNetwork extends PipeNet<Integer> implements ITick
 
     int updates;
     Runnable action;
+    private final boolean valueEqual;
 
     TickablePipeFixtureNetwork(TickablePipeFixtureGraph graph) {
         super(graph);
+        this.valueEqual = graph.valueEqualNetworks;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return this == other || this.valueEqual && other instanceof TickablePipeFixtureNetwork network &&
+                network.valueEqual;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.valueEqual ? 1 : System.identityHashCode(this);
     }
 
     @Override
