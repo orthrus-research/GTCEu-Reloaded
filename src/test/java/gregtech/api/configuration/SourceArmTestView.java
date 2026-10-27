@@ -11,6 +11,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.function.Consumer;
@@ -19,10 +20,23 @@ final class SourceArmTestView implements CoverableView {
 
     final ItemStackHandler source = new ItemStackHandler(8);
     final ItemStackHandler destination = new ItemStackHandler(16);
-    private final ConfigurationTestWorld world = new ConfigurationTestWorld();
-    private final TileEntity endpoint = new ItemPipeTransportFixture.Inventory(destination);
+    private final World world;
+    private final IItemHandler sourceCapability;
+    private final TileEntity endpoint;
     long tick;
     Cover cover;
+
+    SourceArmTestView() {
+        this.world = new ConfigurationTestWorld();
+        this.sourceCapability = source;
+        this.endpoint = new ItemPipeTransportFixture.Inventory(destination);
+    }
+
+    SourceArmTestView(World world, IItemHandler sourceCapability, IItemHandler destinationCapability) {
+        this.world = world;
+        this.sourceCapability = sourceCapability;
+        this.endpoint = new ItemPipeTransportFixture.Inventory(destinationCapability);
+    }
 
     @Override
     public World getWorld() {
@@ -89,6 +103,6 @@ final class SourceArmTestView implements CoverableView {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getCapability(Capability<T> capability, EnumFacing side) {
-        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? (T) source : null;
+        return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY ? (T) sourceCapability : null;
     }
 }

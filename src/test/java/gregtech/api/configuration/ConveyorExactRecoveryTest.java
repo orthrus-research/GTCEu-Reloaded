@@ -1,9 +1,12 @@
 package gregtech.api.configuration;
 
+import gregtech.api.capability.impl.ItemHandlerDelegate;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverableView;
 import gregtech.api.util.GTUtility;
 import gregtech.common.covers.CoverConveyor;
+import gregtech.common.covers.CoverRoboticArm;
+import gregtech.common.covers.TransferMode;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -53,6 +56,61 @@ public class ConveyorExactRecoveryTest {
         assertFalse(new ExactConveyor(fixture.pipe.getCoverableImplementation()).transfer(fixture.source, target, 8));
         assertEquals(8, fixture.source.getStackInSlot(0).getCount());
         assertTrue(target.getStackInSlot(0).isEmpty());
+    }
+
+    @Test
+    void ordinaryRecoveryDropsRejectedItemsWhenBlockDropsAreDisabled() {
+        rejectedItemsReachWorldOwner(false);
+    }
+
+    @Test
+    void exactRecoveryDropsRejectedItemsWhenBlockDropsAreDisabled() {
+        rejectedItemsReachWorldOwner(true);
+    }
+
+    private static void rejectedItemsReachWorldOwner(boolean exact) {
+        ConveyorRecoveryTestWorld world = new ConveyorRecoveryTestWorld();
+        world.getGameRules().setOrCreateGameRule("doTileDrops", "false");
+        ItemStackHandler backing = new ItemStackHandler(1);
+        backing.setStackInSlot(0, new ItemStack(Blocks.COBBLESTONE, 8));
+        IItemHandler source = new ItemHandlerDelegate(backing) {
+
+            @Override
+            public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+                return stack;
+            }
+        };
+        ItemStackHandler target = new ItemStackHandler(1) {
+
+            @Override
+            public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+                return simulate ? ItemStack.EMPTY : stack;
+            }
+        };
+        SourceArmTestView view = new SourceArmTestView(world, source, target);
+        CoverDefinition definition = new CoverDefinition(GTUtility.gregtechId("rejected_recovery_probe"),
+                (def, holder, side) -> exact ? new CoverRoboticArm(def, holder, side, 1, 32) :
+                        new CoverConveyor(def, holder, side, 1, 32),
+                ItemStack.EMPTY);
+        CoverConveyor conveyor = (CoverConveyor) definition.createCover(view, EnumFacing.EAST);
+        if (conveyor instanceof CoverRoboticArm arm) {
+            arm.setTransferMode(TransferMode.TRANSFER_EXACT);
+            arm.getItemFilterContainer().setTransferSize(8);
+        }
+        view.cover = conveyor;
+        view.tick = 5;
+
+        conveyor.update();
+
+        assertTrue(backing.getStackInSlot(0).isEmpty());
+        assertTrue(target.getStackInSlot(0).isEmpty());
+        int dropped = 0;
+        for (ItemStack stack : world.dropped) {
+            assertTrue(ItemStack.areItemsEqual(new ItemStack(Blocks.COBBLESTONE), stack));
+            dropped += stack.getCount();
+        }
+        assertEquals(8, dropped);
+        assertEquals(8, backing.getStackInSlot(0).getCount() + target.getStackInSlot(0).getCount() + dropped);
     }
 
     @Test

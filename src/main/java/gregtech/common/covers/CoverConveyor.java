@@ -24,10 +24,10 @@ import gregtech.common.covers.filter.ItemFilterContainer;
 import gregtech.common.mui.widget.GTTextFieldWidget;
 import gregtech.common.pipelike.itempipe.tile.TileEntityItemPipe;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -214,7 +214,8 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
                     this.itemsLeftToTransferLastSecond -= totalTransferred;
                 } catch (ItemTransferException failure) {
                     for (ItemStack remainder : failure.getRemainders()) {
-                        Block.spawnAsEntity(getWorld(), getPos(), remainder);
+                        InventoryHelper.spawnItemStack(getWorld(), getPos().getX() + 0.5,
+                                getPos().getY() + 0.5, getPos().getZ() + 0.5, remainder);
                     }
                     this.itemsLeftToTransferLastSecond = 0;
                 }
@@ -441,7 +442,10 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
                         GTTransferUtils.insertItem(target, extracted, false) : extracted;
         int accepted = extracted.getCount() - remainder.getCount();
         remainder = GTTransferUtils.returnItemRemainder(source, slot, remainder);
-        if (!remainder.isEmpty()) Block.spawnAsEntity(getWorld(), getPos(), remainder);
+        if (!remainder.isEmpty()) {
+            InventoryHelper.spawnItemStack(getWorld(), getPos().getX() + 0.5,
+                    getPos().getY() + 0.5, getPos().getZ() + 0.5, remainder);
+        }
         return accepted;
     }
 
