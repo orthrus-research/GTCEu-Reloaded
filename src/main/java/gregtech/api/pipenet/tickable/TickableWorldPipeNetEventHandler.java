@@ -6,10 +6,12 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.WorldTickEvent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -19,7 +21,10 @@ public class TickableWorldPipeNetEventHandler {
     private static final List<Function<World, TickableWorldPipeNet<?, ?>>> pipeNetAccessors = new ArrayList<>();
 
     public static void registerTickablePipeNet(Function<World, TickableWorldPipeNet<?, ?>> pipeNetAccessor) {
-        pipeNetAccessors.add(pipeNetAccessor);
+        Objects.requireNonNull(pipeNetAccessor);
+        if (!pipeNetAccessors.contains(pipeNetAccessor)) {
+            pipeNetAccessors.add(pipeNetAccessor);
+        }
     }
 
     private static Stream<TickableWorldPipeNet<?, ?>> getPipeNetsForWorld(World world) {
@@ -29,7 +34,7 @@ public class TickableWorldPipeNetEventHandler {
     @SubscribeEvent
     public static void onWorldTick(WorldTickEvent event) {
         World world = event.world;
-        if (world.isRemote)
+        if (world.isRemote || event.phase != TickEvent.Phase.END)
             return;
         getPipeNetsForWorld(world).forEach(TickableWorldPipeNet::update);
     }

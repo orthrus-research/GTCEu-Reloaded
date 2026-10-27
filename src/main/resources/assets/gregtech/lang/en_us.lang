@@ -6758,3 +6758,4 @@ gregtech.pattern_buffer.status.refund_batch=Refund %s / pattern %s
 gregtech.pattern_buffer.status.no_link=No valid link
 gregtech.pattern_buffer.status.source_unavailable=Source unavailable
 gregtech.pattern_buffer.status.source_loaded=Source loaded
+gregtech.pipe.retained_fluid_records=Unassigned fluid records: %s. Contents are preserved.

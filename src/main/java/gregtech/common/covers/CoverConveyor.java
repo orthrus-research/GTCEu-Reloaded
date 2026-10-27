@@ -17,12 +17,14 @@ import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.ItemStackHashStrategy;
+import gregtech.api.util.ItemTransferException;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import gregtech.common.covers.filter.ItemFilterContainer;
 import gregtech.common.mui.widget.GTTextFieldWidget;
 import gregtech.common.pipelike.itempipe.tile.TileEntityItemPipe;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -207,13 +209,25 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
                     tileEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side.getOpposite());
             IItemHandler myItemHandler = coverable.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, side);
             if (itemHandler != null && myItemHandler != null) {
-                int totalTransferred = doTransferItems(itemHandler, myItemHandler, itemsLeftToTransferLastSecond);
-                this.itemsLeftToTransferLastSecond -= totalTransferred;
+                try {
+                    int totalTransferred = doTransferItems(itemHandler, myItemHandler, itemsLeftToTransferLastSecond);
+                    this.itemsLeftToTransferLastSecond -= totalTransferred;
+                } catch (ItemTransferException failure) {
+                    for (ItemStack remainder : failure.getRemainders()) {
+                        Block.spawnAsEntity(getWorld(), getPos(), remainder);
+                    }
+                    this.itemsLeftToTransferLastSecond = 0;
+                }
             }
         }
         if (timer % 20 == 0) {
             this.itemsLeftToTransferLastSecond = transferRate;
         }
+    }
+
+    /** Copies transient accounting when a caller deliberately recreates a compatible cover. */
+    public void copyRuntimeStateFrom(CoverConveyor original) {
+        this.itemsLeftToTransferLastSecond = original.itemsLeftToTransferLastSecond;
     }
 
     protected int doTransferItems(IItemHandler itemHandler, IItemHandler myItemHandler, int maxTransferAmount) {
@@ -306,11 +320,10 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
             return false;
         }
 
-        // otherwise, perform real insertion and then remove items from the source inventory
-        GTTransferUtils.insertItem(targetInventory, resultStack, false);
-
-        // perform real extraction of the items from the source inventory now
+        // Own the extracted batch before committing it to the destination.
         itemsLeftToExtract = itemInfo.totalCount;
+        int totalRealExtracted = 0;
+        java.util.List<ItemStack> unrestored = new java.util.ArrayList<>();
         for (int i = 0; i < itemInfo.slots.size(); i++) {
             int slotIndex = itemInfo.slots.get(i);
             ItemStack extractedStack = sourceInventory.extractItem(slotIndex, itemsLeftToExtract, false);
@@ -318,12 +331,28 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
                     ItemStack.areItemsEqual(resultStack, extractedStack) &&
                     ItemStack.areItemStackTagsEqual(resultStack, extractedStack)) {
                 itemsLeftToExtract -= extractedStack.getCount();
+                totalRealExtracted += extractedStack.getCount();
+            } else if (!extractedStack.isEmpty()) {
+                ItemStack rejected = GTTransferUtils.returnItemRemainder(sourceInventory, slotIndex, extractedStack);
+                if (!rejected.isEmpty()) unrestored.add(rejected);
+                break;
             }
             if (itemsLeftToExtract == 0) {
                 break;
             }
         }
-        return true;
+        if (totalRealExtracted == 0) {
+            if (!unrestored.isEmpty()) throw new ItemTransferException(unrestored);
+            return false;
+        }
+        resultStack.setCount(totalRealExtracted);
+        ItemStack rejected = totalRealExtracted == itemInfo.totalCount ?
+                GTTransferUtils.insertItem(targetInventory, resultStack, false) : resultStack;
+        int accepted = totalRealExtracted - rejected.getCount();
+        rejected = GTTransferUtils.returnItemRemainder(sourceInventory, itemInfo.slots.getInt(0), rejected);
+        if (!rejected.isEmpty()) unrestored.add(rejected);
+        if (!unrestored.isEmpty()) throw new ItemTransferException(unrestored);
+        return accepted > 0;
     }
 
     protected int moveInventoryItems(IItemHandler sourceInventory, IItemHandler targetInventory,
@@ -350,13 +379,14 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
             int amountToInsert = extractedStack.getCount() - remainderStack.getCount();
 
             if (amountToInsert > 0) {
+                ItemStack expected = extractedStack.copy();
                 extractedStack = sourceInventory.extractItem(i, amountToInsert, false);
 
                 if (!extractedStack.isEmpty()) {
 
-                    GTTransferUtils.insertItem(targetInventory, extractedStack, false);
-                    itemsLeftToTransfer -= extractedStack.getCount();
-                    itemInfo.totalCount -= extractedStack.getCount();
+                    int accepted = insertExtracted(sourceInventory, targetInventory, i, extractedStack, expected);
+                    itemsLeftToTransfer -= accepted;
+                    itemInfo.totalCount -= accepted;
 
                     if (itemInfo.totalCount == 0) {
                         itemInfos.remove(matchSlotIndex);
@@ -389,10 +419,11 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
             int amountToInsert = sourceStack.getCount() - remainder.getCount();
 
             if (amountToInsert > 0) {
+                ItemStack expected = sourceStack.copy();
                 sourceStack = sourceInventory.extractItem(srcIndex, amountToInsert, false);
                 if (!sourceStack.isEmpty()) {
-                    GTTransferUtils.insertItem(targetInventory, sourceStack, false);
-                    itemsLeftToTransfer -= sourceStack.getCount();
+                    itemsLeftToTransfer -= insertExtracted(sourceInventory, targetInventory, srcIndex, sourceStack,
+                            expected);
 
                     if (itemsLeftToTransfer == 0) {
                         break;
@@ -401,6 +432,17 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
             }
         }
         return maxTransferAmount - itemsLeftToTransfer;
+    }
+
+    private int insertExtracted(IItemHandler source, IItemHandler target, int slot, ItemStack extracted,
+                                ItemStack expected) {
+        ItemStack remainder = ItemStack.areItemsEqual(expected, extracted) &&
+                ItemStack.areItemStackTagsEqual(expected, extracted) ?
+                        GTTransferUtils.insertItem(target, extracted, false) : extracted;
+        int accepted = extracted.getCount() - remainder.getCount();
+        remainder = GTTransferUtils.returnItemRemainder(source, slot, remainder);
+        if (!remainder.isEmpty()) Block.spawnAsEntity(getWorld(), getPos(), remainder);
+        return accepted;
     }
 
     protected static class TypeItemInfo {

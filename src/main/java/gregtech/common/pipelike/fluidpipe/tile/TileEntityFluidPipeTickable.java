@@ -31,6 +31,7 @@ import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.Constants.NBT;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
@@ -42,7 +43,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements ITickable, IDataInfoProvider {
 
@@ -50,6 +53,7 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
     private PipeTankList pipeTankList;
     private final EnumMap<EnumFacing, PipeTankList> tankLists = new EnumMap<>(EnumFacing.class);
     private FluidTank[] fluidTanks;
+    private final Map<Integer, NBTTagCompound> retainedFluidData = new HashMap<>();
     private long timer = 0L;
     private final int offset = GTValues.RNG.nextInt(20);
 
@@ -188,9 +192,16 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
             FluidStack toInsert = fluid.copy();
             toInsert.amount = transaction.amount;
 
-            int inserted = transaction.target.fill(toInsert, true);
-            if (inserted > 0) {
-                transaction.pipeTank.drain(inserted, true);
+            FluidStack withdrawn = transaction.pipeTank.drain(toInsert, true);
+            if (withdrawn != null && withdrawn.amount > 0) {
+                int accepted = transaction.target.fill(withdrawn.copy(), true);
+                accepted = Math.max(0, Math.min(accepted, withdrawn.amount));
+                withdrawn.amount -= accepted;
+                if (withdrawn.amount > 0) {
+                    withdrawn.amount -= tank.fill(withdrawn, true);
+                    if (withdrawn.amount > 0) retainUnassignedFluid(withdrawn);
+                }
+                markDirty();
             }
         }
     }
@@ -407,6 +418,16 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
         return fluids;
     }
 
+    public boolean hasRetainedFluidData(int channel) {
+        return retainedFluidData.containsKey(channel);
+    }
+
+    private void retainUnassignedFluid(FluidStack fluid) {
+        int channel = getFluidTanks().length;
+        while (retainedFluidData.containsKey(channel)) channel++;
+        retainedFluidData.put(channel, fluid.writeToNBT(new NBTTagCompound()));
+    }
+
     @NotNull
     @Override
     public NBTTagCompound writeToNBT(@NotNull NBTTagCompound nbt) {
@@ -419,7 +440,18 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
                 fluidTag.setBoolean("isNull", true);
             else
                 stack1.writeToNBT(fluidTag);
+            if (retainedFluidData.containsKey(i)) fluidTag = retainedFluidData.get(i).copy();
             list.appendTag(fluidTag);
+        }
+        int last = getFluidTanks().length - 1;
+        for (int channel : retainedFluidData.keySet()) last = Math.max(last, channel);
+        for (int channel = getFluidTanks().length; channel <= last; channel++) {
+            NBTTagCompound retained = retainedFluidData.get(channel);
+            if (retained == null) {
+                retained = new NBTTagCompound();
+                retained.setBoolean("isNull", true);
+            }
+            list.appendTag(retained.copy());
         }
         nbt.setTag("Fluids", list);
         return nbt;
@@ -427,13 +459,28 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
 
     @Override
     public void readFromNBT(@NotNull NBTTagCompound nbt) {
+        if (nbt.hasKey("Fluids") && !nbt.hasKey("Fluids", NBT.TAG_LIST)) {
+            throw new IllegalArgumentException("Pipe Fluids must be a list");
+        }
+        NBTTagList list = nbt.getTagList("Fluids", NBT.TAG_COMPOUND);
+        if (nbt.hasKey("Fluids", NBT.TAG_LIST)) {
+            NBTTagList raw = (NBTTagList) nbt.getTag("Fluids");
+            if (raw.tagCount() != 0 && raw.getTagType() != NBT.TAG_COMPOUND) {
+                throw new IllegalArgumentException("Pipe Fluids entries must be compounds");
+            }
+        }
         super.readFromNBT(nbt);
-        NBTTagList list = (NBTTagList) nbt.getTag("Fluids");
         createTanksList();
+        retainedFluidData.clear();
         for (int i = 0; i < list.tagCount(); i++) {
             NBTTagCompound tag = list.getCompoundTagAt(i);
             if (!tag.getBoolean("isNull")) {
-                fluidTanks[i].setFluid(FluidStack.loadFluidStackFromNBT(tag));
+                FluidStack fluid = FluidStack.loadFluidStackFromNBT(tag);
+                if (i < fluidTanks.length && fluid != null && fluid.amount > 0) {
+                    fluidTanks[i].setFluid(fluid);
+                } else {
+                    retainedFluidData.put(i, tag.copy());
+                }
             }
         }
     }
@@ -442,6 +489,9 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
     @Override
     public List<ITextComponent> getDataInfo() {
         List<ITextComponent> list = new ArrayList<>();
+        if (!retainedFluidData.isEmpty()) {
+            list.add(new TextComponentTranslation("gregtech.pipe.retained_fluid_records", retainedFluidData.size()));
+        }
 
         FluidStack[] fluids = this.getContainedFluids();
         if (fluids != null) {

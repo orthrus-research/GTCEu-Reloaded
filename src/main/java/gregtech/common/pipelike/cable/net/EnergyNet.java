@@ -21,6 +21,8 @@ public class EnergyNet extends PipeNet<WireProperties> {
     private long lastEnergyFluxPerSec;
     private long energyFluxPerSec;
     private long lastTime;
+    private long lastRouteRefresh;
+    private boolean routeCacheInitialized;
 
     private final Map<BlockPos, List<EnergyRoutePath>> NET_DATA = new Object2ObjectOpenHashMap<>();
 
@@ -29,6 +31,7 @@ public class EnergyNet extends PipeNet<WireProperties> {
     }
 
     public List<EnergyRoutePath> getNetData(BlockPos pipePos) {
+        refreshRouteCache();
         List<EnergyRoutePath> data = NET_DATA.get(pipePos);
         if (data == null) {
             data = EnergyNetWalker.createNetData(getWorldData(), pipePos);
@@ -37,9 +40,24 @@ public class EnergyNet extends PipeNet<WireProperties> {
                 return Collections.emptyList();
             }
             data.sort(Comparator.comparingInt(EnergyRoutePath::getDistance));
-            NET_DATA.put(pipePos, data);
+            NET_DATA.put(pipePos.toImmutable(), data);
         }
         return data;
+    }
+
+    private void refreshRouteCache() {
+        World world = getWorldData();
+        long now = world == null ? 0 : world.getTotalWorldTime();
+        if (!routeCacheInitialized || now < lastRouteRefresh || now - lastRouteRefresh >= 200) {
+            NET_DATA.clear();
+            this.lastRouteRefresh = now;
+            this.routeCacheInitialized = true;
+        }
+    }
+
+    private void clearRoutes() {
+        NET_DATA.clear();
+        this.routeCacheInitialized = false;
     }
 
     public long getEnergyFluxPerSec() {
@@ -62,25 +80,25 @@ public class EnergyNet extends PipeNet<WireProperties> {
 
     @Override
     public void onNeighbourUpdate(BlockPos fromPos) {
-        NET_DATA.clear();
+        clearRoutes();
     }
 
     @Override
     public void onPipeConnectionsUpdate() {
-        NET_DATA.clear();
+        clearRoutes();
     }
 
     @Override
     public void onChunkUnload() {
-        NET_DATA.clear();
+        clearRoutes();
     }
 
     @Override
     protected void transferNodeData(Map<BlockPos, Node<WireProperties>> transferredNodes,
                                     PipeNet<WireProperties> parentNet) {
         super.transferNodeData(transferredNodes, parentNet);
-        NET_DATA.clear();
-        ((EnergyNet) parentNet).NET_DATA.clear();
+        clearRoutes();
+        ((EnergyNet) parentNet).clearRoutes();
     }
 
     @Override

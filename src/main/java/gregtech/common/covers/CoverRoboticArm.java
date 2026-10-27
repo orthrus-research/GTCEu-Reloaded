@@ -47,6 +47,12 @@ public class CoverRoboticArm extends CoverConveyor {
     }
 
     @Override
+    public void copyRuntimeStateFrom(CoverConveyor original) {
+        super.copyRuntimeStateFrom(original);
+        if (original instanceof CoverRoboticArm arm) this.itemsTransferBuffered = arm.itemsTransferBuffered;
+    }
+
+    @Override
     public void renderCover(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline,
                             Cuboid6 plateBox, BlockRenderLayer layer) {
         if (conveyorMode == ConveyorMode.EXPORT) {
@@ -115,6 +121,8 @@ public class CoverRoboticArm extends CoverConveyor {
         // if we didn't transfer anything because of too small transfer rate, buffer it
         if (itemsTransferred == 0 && notEnoughTransferRate) {
             itemsTransferBuffered += maxTransferAmount;
+            // Reserve this allowance once. The cover scheduler must not offer it again before its next refill.
+            return maxTransferAmount;
         } else {
             // otherwise, if transfer succeed, empty transfer buffer value
             itemsTransferBuffered = 0;
@@ -235,7 +243,7 @@ public class CoverRoboticArm extends CoverConveyor {
     @Override
     public void readInitialSyncData(@NotNull PacketBuffer packetBuffer) {
         super.readInitialSyncData(packetBuffer);
-        this.transferMode = TransferMode.VALUES[packetBuffer.readByte()];
+        this.transferMode = TransferMode.byOrdinal(packetBuffer.readByte());
         this.itemFilterContainer.setMaxTransferSize(this.transferMode.maxStackSize);
     }
 
@@ -243,7 +251,7 @@ public class CoverRoboticArm extends CoverConveyor {
     public void readCustomData(int discriminator, @NotNull PacketBuffer buf) {
         super.readCustomData(discriminator, buf);
         if (discriminator == GregtechDataCodes.UPDATE_TRANSFER_MODE) {
-            this.transferMode = TransferMode.VALUES[buf.readByte()];
+            this.transferMode = TransferMode.byOrdinal(buf.readByte());
             this.itemFilterContainer.setMaxTransferSize(this.transferMode.maxStackSize);
         }
     }
@@ -256,7 +264,7 @@ public class CoverRoboticArm extends CoverConveyor {
 
     @Override
     public void readFromNBT(NBTTagCompound tagCompound) {
-        this.transferMode = TransferMode.VALUES[tagCompound.getInteger("TransferMode")];
+        this.transferMode = TransferMode.byOrdinal(tagCompound.getInteger("TransferMode"));
         this.itemFilterContainer.setMaxTransferSize(this.transferMode.maxStackSize);
         super.readFromNBT(tagCompound);
     }

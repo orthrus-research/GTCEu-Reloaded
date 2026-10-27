@@ -1221,13 +1221,20 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
     }
 
     public void pushItemsIntoNearbyHandlers(EnumFacing... allowedFaces) {
-        transferToNearby(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, GTTransferUtils::moveInventoryItems,
+        transferToNearby(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, this::moveItemsWithRecovery,
                 allowedFaces);
     }
 
     public void pullItemsFromNearbyHandlers(EnumFacing... allowedFaces) {
         transferToNearby(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,
-                (thisCap, otherCap) -> GTTransferUtils.moveInventoryItems(otherCap, thisCap), allowedFaces);
+                (thisCap, otherCap) -> moveItemsWithRecovery(otherCap, thisCap), allowedFaces);
+    }
+
+    private void moveItemsWithRecovery(IItemHandler source, IItemHandler target) {
+        for (ItemStack remainder : GTTransferUtils.moveInventoryItemsWithRemainders(source, target)) {
+            net.minecraft.inventory.InventoryHelper.spawnItemStack(getWorld(), getPos().getX() + 0.5,
+                    getPos().getY() + 0.5, getPos().getZ() + 0.5, remainder);
+        }
     }
 
     private <T> void transferToNearby(Capability<T> capability, BiConsumer<T, T> transfer, EnumFacing... allowedFaces) {

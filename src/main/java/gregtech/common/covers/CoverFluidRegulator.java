@@ -296,7 +296,7 @@ public class CoverFluidRegulator extends CoverPump {
     @Override
     public void readInitialSyncData(@NotNull PacketBuffer packetBuffer) {
         super.readInitialSyncData(packetBuffer);
-        this.transferMode = TransferMode.VALUES[packetBuffer.readByte()];
+        this.transferMode = TransferMode.byOrdinal(packetBuffer.readByte());
     }
 
     @Override
@@ -308,7 +308,7 @@ public class CoverFluidRegulator extends CoverPump {
 
     @Override
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
-        this.transferMode = TransferMode.VALUES[tagCompound.getInteger("TransferMode")];
+        this.transferMode = TransferMode.byOrdinal(tagCompound.getInteger("TransferMode"));
         this.fluidFilterContainer.setMaxTransferSize(this.transferMode.maxStackSize);
         super.readFromNBT(tagCompound);
         // legacy NBT tag

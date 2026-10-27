@@ -35,6 +35,11 @@ final class ConfigurationTestWorld extends DummyWorld {
     }
 
     @Override
+    public void setTileEntity(BlockPos pos, TileEntity tile) {
+        put(pos, tile, getBlockState(pos));
+    }
+
+    @Override
     public boolean isBlockLoaded(BlockPos pos) {
         return unloaded == null || !unloaded.contains(pos);
     }

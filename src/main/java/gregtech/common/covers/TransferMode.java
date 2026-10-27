@@ -10,13 +10,24 @@ public enum TransferMode implements IStringSerializable {
     TRANSFER_EXACT("cover.robotic_arm.transfer_mode.transfer_exact", 1024),
     KEEP_EXACT("cover.robotic_arm.transfer_mode.keep_exact", Integer.MAX_VALUE);
 
-    public static final TransferMode[] VALUES = values();
+    /** Refreshed after owned loading phases; the array descriptor remains compatible with existing consumers. */
+    public static volatile TransferMode[] VALUES = values();
     public final String localeName;
     public final int maxStackSize;
 
     TransferMode(String localeName, int maxStackSize) {
         this.localeName = localeName;
         this.maxStackSize = maxStackSize;
+    }
+
+    public static TransferMode[] refreshValues() {
+        TransferMode[] current = values();
+        VALUES = current;
+        return current;
+    }
+
+    public static TransferMode byOrdinal(int ordinal) {
+        return refreshValues()[ordinal];
     }
 
     @NotNull

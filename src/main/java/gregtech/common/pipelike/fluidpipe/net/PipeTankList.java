@@ -45,6 +45,7 @@ public class PipeTankList implements IFluidHandler, Iterable<FluidTank> {
             return -1;
         int empty = -1;
         for (int i = tanks.length - 1; i >= 0; i--) {
+            if (pipe.hasRetainedFluidData(i)) continue;
             FluidStack f = tanks[i].getFluid();
             if (f == null)
                 empty = i;
@@ -76,12 +77,14 @@ public class PipeTankList implements IFluidHandler, Iterable<FluidTank> {
         if (currentFluid == null || currentFluid.amount <= 0) {
             FluidStack newFluid = resource.copy();
             newFluid.amount = Math.min(pipe.getCapacityPerTank(), newFluid.amount);
+            int accepted = newFluid.amount;
             if (doFill) {
                 tank.setFluid(newFluid);
                 pipe.receivedFrom(facing);
                 pipe.checkAndDestroy(newFluid);
+                pipe.markDirty();
             }
-            return newFluid.amount;
+            return accepted;
         }
         if (currentFluid.isFluidEqual(resource)) {
             int toAdd = Math.min(tank.getCapacity() - currentFluid.amount, resource.amount);
@@ -90,6 +93,7 @@ public class PipeTankList implements IFluidHandler, Iterable<FluidTank> {
                     currentFluid.amount += toAdd;
                     pipe.receivedFrom(facing);
                     pipe.checkAndDestroy(currentFluid);
+                    pipe.markDirty();
                 }
                 return toAdd;
             }
@@ -104,7 +108,10 @@ public class PipeTankList implements IFluidHandler, Iterable<FluidTank> {
         if (maxDrain <= 0) return null;
         for (FluidTank tank : tanks) {
             FluidStack drained = tank.drain(maxDrain, doDrain);
-            if (drained != null) return drained;
+            if (drained != null) {
+                if (doDrain) pipe.markDirty();
+                return drained;
+            }
         }
         return null;
     }
@@ -116,7 +123,10 @@ public class PipeTankList implements IFluidHandler, Iterable<FluidTank> {
         fluidStack = fluidStack.copy();
         for (FluidTank tank : tanks) {
             FluidStack drained = tank.drain(fluidStack, doDrain);
-            if (drained != null) return drained;
+            if (drained != null) {
+                if (doDrain) pipe.markDirty();
+                return drained;
+            }
         }
         return null;
     }

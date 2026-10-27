@@ -10,7 +10,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -28,7 +27,7 @@ public class EnergyNetWalker extends PipeNetWalker<TileEntityCable> {
     }
 
     private final List<EnergyRoutePath> routes;
-    private TileEntityCable[] pipes = {};
+    private List<TileEntityCable> pipes = new ArrayList<>();
     private int loss;
 
     protected EnergyNetWalker(World world, BlockPos sourcePipe, int walkedBlocks, List<EnergyRoutePath> routes) {
@@ -41,13 +40,13 @@ public class EnergyNetWalker extends PipeNetWalker<TileEntityCable> {
                                                              int walkedBlocks) {
         EnergyNetWalker walker = new EnergyNetWalker(world, nextPos, walkedBlocks, routes);
         walker.loss = loss;
-        walker.pipes = pipes;
+        walker.pipes = new ArrayList<>(pipes);
         return walker;
     }
 
     @Override
     protected void checkPipe(TileEntityCable pipeTile, BlockPos pos) {
-        pipes = ArrayUtils.add(pipes, pipeTile);
+        pipes.add(pipeTile);
         loss += pipeTile.getNodeData().getLossPerBlock();
     }
 
@@ -55,13 +54,14 @@ public class EnergyNetWalker extends PipeNetWalker<TileEntityCable> {
     protected void checkNeighbour(TileEntityCable pipeTile, BlockPos pipePos, EnumFacing faceToNeighbour,
                                   @Nullable TileEntity neighbourTile) {
         // assert that the last added pipe is the current pipe
-        if (pipeTile != pipes[pipes.length - 1]) throw new IllegalStateException(
+        if (pipeTile != pipes.get(pipes.size() - 1)) throw new IllegalStateException(
                 "The current pipe is not the last added pipe. Something went seriously wrong!");
         if (neighbourTile != null) {
             IEnergyContainer container = neighbourTile.getCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER,
                     faceToNeighbour.getOpposite());
             if (container != null) {
-                routes.add(new EnergyRoutePath(faceToNeighbour, pipes, getWalkedBlocks(), loss));
+                routes.add(new EnergyRoutePath(faceToNeighbour, pipes.toArray(new TileEntityCable[0]),
+                        getWalkedBlocks(), loss));
             }
         }
     }

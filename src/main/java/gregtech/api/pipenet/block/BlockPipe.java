@@ -176,7 +176,8 @@ public abstract class BlockPipe<PipeType extends Enum<PipeType> & IPipeType<Node
         if (pipeTile != null) {
             int activeConnections = pipeTile.getConnections();
             boolean isActiveNode = activeConnections != 0;
-            getWorldPipeNet(worldIn).addNode(pos, createProperties(pipeTile), 0, activeConnections, isActiveNode);
+            int mark = pipeTile.isPainted() ? pipeTile.getPaintingColor() : 0;
+            getWorldPipeNet(worldIn).addNode(pos, createProperties(pipeTile), mark, activeConnections, isActiveNode);
             onActiveModeChange(worldIn, pos, isActiveNode, true);
         }
     }
@@ -243,6 +244,7 @@ public abstract class BlockPipe<PipeType extends Enum<PipeType> & IPipeType<Node
         PipeNet<NodeDataType> net = getWorldPipeNet(world).getNetFromPos(observerPos);
         if (net != null) {
             net.onNeighbourUpdate(changedBlockPos);
+            getWorldPipeNet(world).invalidateRoutes();
         }
     }
 

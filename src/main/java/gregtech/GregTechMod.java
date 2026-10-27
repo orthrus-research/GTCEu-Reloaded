@@ -5,6 +5,7 @@ import gregtech.api.GregTechAPI;
 import gregtech.api.modules.ModuleContainerRegistryEvent;
 import gregtech.api.persistence.PersistentData;
 import gregtech.client.utils.BloomEffectUtil;
+import gregtech.common.covers.TransferMode;
 import gregtech.modules.GregTechModules;
 import gregtech.modules.ModuleManager;
 
@@ -69,17 +70,20 @@ public class GregTechMod {
     @EventHandler
     public void init(FMLInitializationEvent event) {
         moduleManager.onInit(event);
+        TransferMode.refreshValues();
     }
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent event) {
         moduleManager.onPostInit(event);
         moduleManager.processIMC(FMLInterModComms.fetchRuntimeMessages(GregTechAPI.instance));
+        TransferMode.refreshValues();
     }
 
     @EventHandler
     public void loadComplete(FMLLoadCompleteEvent event) {
         moduleManager.onLoadComplete(event);
+        TransferMode.refreshValues();
     }
 
     @EventHandler

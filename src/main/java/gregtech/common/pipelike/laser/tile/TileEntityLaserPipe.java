@@ -119,6 +119,11 @@ public class TileEntityLaserPipe extends TileEntityPipeBase<LaserPipeType, Laser
             handlers.clear();
             handlers.putAll(pipe.handlers);
             defaultHandler = pipe.defaultHandler;
+            defaultHandler.updatePipe(this);
+            for (LaserNetHandler handler : handlers.values()) {
+                handler.updatePipe(this);
+            }
+            checkNetwork();
         } else {
             // create new handlers
             initHandlers();

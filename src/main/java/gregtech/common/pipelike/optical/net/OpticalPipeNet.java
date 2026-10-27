@@ -3,6 +3,7 @@ package gregtech.common.pipelike.optical.net;
 import gregtech.api.pipenet.Node;
 import gregtech.api.pipenet.PipeNet;
 import gregtech.api.pipenet.WorldPipeNet;
+import gregtech.api.util.FacingPos;
 import gregtech.common.pipelike.optical.OpticalPipeProperties;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -16,7 +17,9 @@ import java.util.Map;
 
 public class OpticalPipeNet extends PipeNet<OpticalPipeProperties> {
 
-    private final Map<BlockPos, OpticalRoutePath> NET_DATA = new Object2ObjectOpenHashMap<>();
+    private final Map<FacingPos, OpticalRoutePath> NET_DATA = new Object2ObjectOpenHashMap<>();
+    private long lastRouteRefresh;
+    private boolean routeCacheInitialized;
 
     public OpticalPipeNet(WorldPipeNet<OpticalPipeProperties, ? extends PipeNet<OpticalPipeProperties>> world) {
         super(world);
@@ -24,8 +27,15 @@ public class OpticalPipeNet extends PipeNet<OpticalPipeProperties> {
 
     @Nullable
     public OpticalRoutePath getNetData(BlockPos pipePos, EnumFacing facing) {
-        if (NET_DATA.containsKey(pipePos)) {
-            return NET_DATA.get(pipePos);
+        long now = getWorldData() == null ? 0 : getWorldData().getTotalWorldTime();
+        if (!routeCacheInitialized || now < lastRouteRefresh || now - lastRouteRefresh >= 200) {
+            NET_DATA.clear();
+            this.lastRouteRefresh = now;
+            this.routeCacheInitialized = true;
+        }
+        FacingPos key = new FacingPos(pipePos.toImmutable(), facing);
+        if (NET_DATA.containsKey(key)) {
+            return NET_DATA.get(key);
         }
         OpticalRoutePath data = OpticalNetWalker.createNetData(getWorldData(), pipePos, facing);
         if (data == OpticalNetWalker.FAILED_MARKER) {
@@ -33,7 +43,7 @@ public class OpticalPipeNet extends PipeNet<OpticalPipeProperties> {
             return null;
         }
 
-        NET_DATA.put(pipePos, data);
+        NET_DATA.put(key, data);
         return data;
     }
 

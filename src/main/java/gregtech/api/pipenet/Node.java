@@ -12,8 +12,8 @@ public final class Node<NodeDataType> {
 
     public final NodeDataType data;
     /**
-     * Specifies bitmask of blocked connections
-     * Node will not connect in blocked direction in any case,
+     * Specifies bitmask of open physical connections.
+     * Node will not connect in a closed direction in any case,
      * even if neighbour node mark matches
      */
     public int openConnections;

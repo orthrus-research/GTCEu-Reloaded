@@ -3,6 +3,7 @@ package gregtech.common.pipelike.itempipe.net;
 import gregtech.api.pipenet.WorldPipeNet;
 import gregtech.api.unification.material.properties.ItemPipeProperties;
 
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 public class WorldItemPipeNet extends WorldPipeNet<ItemPipeProperties, ItemPipeNet> {
@@ -21,6 +22,17 @@ public class WorldItemPipeNet extends WorldPipeNet<ItemPipeProperties, ItemPipeN
 
     public WorldItemPipeNet(String name) {
         super(name);
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+        super.readFromNBT(nbt);
+        for (ItemPipeNet pipeNet : this.pipeNets) {
+            if (pipeNet.needsCodecNormalization()) {
+                markDirty();
+                break;
+            }
+        }
     }
 
     @Override

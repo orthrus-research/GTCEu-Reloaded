@@ -10,6 +10,7 @@ import gregtech.api.pipenet.WorldPipeNet;
 import gregtech.api.pipenet.block.BlockPipe;
 import gregtech.api.pipenet.block.IPipeType;
 import gregtech.api.unification.material.Material;
+import gregtech.api.util.TaskScheduler;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -54,6 +55,7 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
     public void setPipeData(BlockPipe<PipeType, NodeDataType, ?> pipeBlock, PipeType pipeType) {
         this.pipeBlock = pipeBlock;
         this.pipeType = pipeType;
+        this.cachedNodeData = null;
         if (!getWorld().isRemote) {
             writeCustomData(UPDATE_PIPE_TYPE, this::writePipeProperties);
         }
@@ -62,8 +64,11 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
     @Override
     public void transferDataFrom(IPipeTile<PipeType, NodeDataType> tileEntity) {
         this.pipeType = tileEntity.getPipeType();
-        this.paintingColor = tileEntity.getPaintingColor();
+        this.paintingColor = tileEntity.isPainted() ? tileEntity.getPaintingColor() : -1;
         this.connections = tileEntity.getConnections();
+        this.blockedConnections = tileEntity.getBlockedConnections();
+        this.pipeBlock = tileEntity.getPipeBlock();
+        this.cachedNodeData = null;
         if (tileEntity instanceof SyncedTileEntityBase pipeBase) {
             addPacketsFrom(pipeBase);
         }
@@ -72,6 +77,10 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
     }
 
     public abstract Class<PipeType> getPipeTypeClass();
+
+    protected final void resetCachedNodeData() {
+        this.cachedNodeData = null;
+    }
 
     @Nullable
     @Override
@@ -135,7 +144,10 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
         // create new tickable tile entity, transfer data, and replace it
         TileEntityPipeBase<PipeType, NodeDataType> newTile = getPipeBlock().createNewTileEntity(true);
         if (!newTile.supportsTicking()) throw new IllegalStateException("Expected pipe to be ticking, but isn't!");
+        newTile.setWorld(getWorld());
+        newTile.setPos(getPos());
         newTile.transferDataFrom(this);
+        this.coverableImplementation.retainForReplacement(newTile.coverableImplementation);
         getWorld().setTileEntity(getPos(), newTile);
         this.tickingPipe = newTile;
         return newTile;
@@ -271,7 +283,7 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
             WorldPipeNet<?, ?> worldPipeNet = getPipeBlock().getWorldPipeNet(getWorld());
             PipeNet<?> net = worldPipeNet.getNetFromPos(pos);
             if (net != null) {
-                net.onPipeConnectionsUpdate();
+                worldPipeNet.invalidateRoutesAt(pos);
             }
         }
     }
@@ -391,13 +403,18 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
             this.tickingPipe.readFromNBT(compound);
             return;
         }
+        int typeIndex = compound.getInteger("PipeType");
+        if (typeIndex < 0 || typeIndex >= getPipeTypeClass().getEnumConstants().length) {
+            throw new IllegalArgumentException("Unknown pipe type index: " + typeIndex);
+        }
         super.readFromNBT(compound);
         if (compound.hasKey("PipeBlock", NBT.TAG_STRING)) {
             Block block = Block.REGISTRY.getObject(new ResourceLocation(compound.getString("PipeBlock")));
             // noinspection unchecked
             this.pipeBlock = block instanceof BlockPipe blockPipe ? blockPipe : null;
         }
-        this.pipeType = getPipeTypeClass().getEnumConstants()[compound.getInteger("PipeType")];
+        this.pipeType = getPipeTypeClass().getEnumConstants()[typeIndex];
+        resetCachedNodeData();
 
         if (compound.hasKey("Connections")) {
             connections = compound.getInteger("Connections");
@@ -430,6 +447,31 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
     public void onLoad() {
         super.onLoad();
         this.coverableImplementation.onLoad();
+        World loadedWorld = getWorld();
+        if (loadedWorld instanceof WorldServer) {
+            BlockPos loadedPos = getPos().toImmutable();
+            TaskScheduler.scheduleTask(loadedWorld, () -> {
+                recoverPipeNetOnLoad(loadedWorld, loadedPos);
+                return false;
+            });
+        }
+    }
+
+    /** Restores only missing membership from a loaded tile; shared legacy graphs are never reassigned. */
+    protected void recoverPipeNetOnLoad(World loadedWorld, BlockPos loadedPos) {
+        if (loadedWorld == null || loadedWorld.isRemote || getWorld() != loadedWorld || isInvalid() ||
+                !getPos().equals(loadedPos) || !loadedWorld.isBlockLoaded(loadedPos) ||
+                loadedWorld.getTileEntity(loadedPos) != this) {
+            return;
+        }
+        BlockPipe<PipeType, NodeDataType, ?> block = getPipeBlock();
+        if (block != null) {
+            WorldPipeNet<NodeDataType, ?> graph = block.getWorldPipeNet(loadedWorld);
+            if (graph.getNetFromPos(loadedPos) == null) {
+                int openConnections = getConnections();
+                graph.addNode(loadedPos, getNodeData(), getCableMark(), openConnections, openConnections != 0);
+            }
+        }
     }
 
     protected void writePipeProperties(PacketBuffer buf) {
@@ -554,6 +596,7 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
             PipeNet<?> net = worldPipeNet.getNetFromPos(pos);
             if (net != null) {
                 net.onChunkUnload();
+                worldPipeNet.invalidateRoutes();
             }
         }
     }

@@ -28,8 +28,8 @@ import static gregtech.api.capability.GregtechDataCodes.*;
 public class PipeCoverableImplementation implements CoverHolder {
 
     private IPipeTile<?, ?> holder;
-    private final EnumMap<EnumFacing, Cover> covers = new EnumMap<>(EnumFacing.class);
-    private final int[] sidedRedstoneInput = new int[6];
+    private EnumMap<EnumFacing, Cover> covers = new EnumMap<>(EnumFacing.class);
+    private int[] sidedRedstoneInput = new int[6];
 
     public PipeCoverableImplementation(IPipeTile<?, ?> holder) {
         this.holder = holder;
@@ -45,6 +45,14 @@ public class PipeCoverableImplementation implements CoverHolder {
             newCover.readFromNBT(tagCompound);
             destImpl.covers.put(side, newCover);
         }
+    }
+
+    /** Keeps live cover and wrapper identity when the same pipe is promoted to a ticking tile. */
+    public void retainForReplacement(PipeCoverableImplementation destImpl) {
+        if (destImpl == this) return;
+        destImpl.covers = this.covers;
+        destImpl.sidedRedstoneInput = this.sidedRedstoneInput;
+        this.holder = destImpl.holder;
     }
 
     @Override

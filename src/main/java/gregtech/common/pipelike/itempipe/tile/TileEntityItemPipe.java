@@ -23,6 +23,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TileEntityItemPipe extends TileEntityMaterialPipeBase<ItemPipeType, ItemPipeProperties> {
 
@@ -35,6 +38,10 @@ public class TileEntityItemPipe extends TileEntityMaterialPipeBase<ItemPipeType,
 
     private int transferredItems = 0;
     private long timer = 0;
+    private final Map<Integer, ItemTransferBudget> exactTransferBudgets = new HashMap<>();
+    // A handoff shares this holder so either owner's unwind releases the same active operation.
+    private AtomicBoolean transferInProgress = new AtomicBoolean();
+    private TileEntityItemPipe accountingSuccessor;
 
     public long getWorldTime() {
         return hasWorld() ? getWorld().getTotalWorldTime() : 0L;
@@ -54,6 +61,19 @@ public class TileEntityItemPipe extends TileEntityMaterialPipeBase<ItemPipeType,
     @Override
     public boolean supportsTicking() {
         return false;
+    }
+
+    @Override
+    public IPipeTile<ItemPipeType, ItemPipeProperties> setSupportsTicking() {
+        IPipeTile<ItemPipeType, ItemPipeProperties> replacement = super.setSupportsTicking();
+        if (replacement != this) this.accountingSuccessor = (TileEntityItemPipe) replacement;
+        return replacement;
+    }
+
+    private TileEntityItemPipe accountingOwner() {
+        TileEntityItemPipe owner = this;
+        while (owner.accountingSuccessor != null) owner = owner.accountingSuccessor;
+        return owner;
     }
 
     private void initHandlers() {
@@ -111,17 +131,25 @@ public class TileEntityItemPipe extends TileEntityMaterialPipeBase<ItemPipeType,
     }
 
     public void resetTransferred() {
-        transferred.clear();
+        accountingOwner().transferred.clear();
     }
 
     public Object2IntMap<FacingPos> getTransferred() {
-        return transferred;
+        return accountingOwner().transferred;
     }
 
     @Override
     public void transferDataFrom(IPipeTile<ItemPipeType, ItemPipeProperties> tileEntity) {
         super.transferDataFrom(tileEntity);
         TileEntityItemPipe itemPipe = (TileEntityItemPipe) tileEntity;
+        TileEntityItemPipe accounting = itemPipe.accountingOwner();
+        this.transferredItems = accounting.transferredItems;
+        this.timer = accounting.timer;
+        this.transferred.clear();
+        this.transferred.putAll(accounting.transferred);
+        this.exactTransferBudgets.clear();
+        this.exactTransferBudgets.putAll(accounting.exactTransferBudgets);
+        this.transferInProgress = itemPipe.transferInProgress;
         // take handlers from old pipe
         if (!itemPipe.handlers.isEmpty()) {
             this.handlers.clear();
@@ -153,11 +181,43 @@ public class TileEntityItemPipe extends TileEntityMaterialPipeBase<ItemPipeType,
     }
 
     public void addTransferredItems(int amount) {
+        TileEntityItemPipe owner = accountingOwner();
+        if (owner != this) {
+            owner.addTransferredItems(amount);
+            return;
+        }
         updateTransferredState();
-        this.transferredItems += amount;
+        if (amount < 0) throw new IllegalArgumentException("Transferred item count cannot be negative");
+        if (amount == 0) return;
+        long now = getWorldTime();
+        for (ItemTransferBudget budget : exactTransferBudgets.values()) {
+            budget.spend(amount, now);
+        }
+        this.transferredItems = (int) Math.min(Integer.MAX_VALUE, (long) transferredItems + amount);
+    }
+
+    public boolean tryBeginItemTransfer() {
+        return transferInProgress.compareAndSet(false, true);
+    }
+
+    public void endItemTransfer() {
+        this.transferInProgress.set(false);
+    }
+
+    public int getAvailableExactTransferItems(int rate, int batch) {
+        TileEntityItemPipe owner = accountingOwner();
+        if (owner != this) return owner.getAvailableExactTransferItems(rate, batch);
+        if (rate <= 0 || batch <= 0) return 0;
+        updateTransferredState();
+        long now = getWorldTime();
+        ItemTransferBudget budget = exactTransferBudgets.computeIfAbsent(rate,
+                ignored -> new ItemTransferBudget(rate, transferredItems, batch, now));
+        return budget.available(batch, now);
     }
 
     public int getTransferredItems() {
+        TileEntityItemPipe owner = accountingOwner();
+        if (owner != this) return owner.getTransferredItems();
         updateTransferredState();
         return this.transferredItems;
     }

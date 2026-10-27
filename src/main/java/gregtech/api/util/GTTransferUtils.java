@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -82,6 +83,14 @@ public class GTTransferUtils {
     }
 
     public static void moveInventoryItems(IItemHandler sourceInventory, IItemHandler targetInventory) {
+        List<ItemStack> remainder = moveInventoryItemsWithRemainders(sourceInventory, targetInventory);
+        if (!remainder.isEmpty()) throw new ItemTransferException(remainder);
+    }
+
+    /** Returns items which an inconsistent source refused to receive back after real destination rejection. */
+    public static List<ItemStack> moveInventoryItemsWithRemainders(IItemHandler sourceInventory,
+                                                                   IItemHandler targetInventory) {
+        List<ItemStack> unrestored = new ArrayList<>();
         for (int srcIndex = 0; srcIndex < sourceInventory.getSlots(); srcIndex++) {
             ItemStack sourceStack = sourceInventory.extractItem(srcIndex, Integer.MAX_VALUE, true);
             if (sourceStack.isEmpty()) {
@@ -90,10 +99,47 @@ public class GTTransferUtils {
             ItemStack remainder = insertItem(targetInventory, sourceStack, true);
             int amountToInsert = sourceStack.getCount() - remainder.getCount();
             if (amountToInsert > 0) {
-                sourceStack = sourceInventory.extractItem(srcIndex, amountToInsert, false);
-                insertItem(targetInventory, sourceStack, false);
+                ItemStack extracted = sourceInventory.extractItem(srcIndex, amountToInsert, false);
+                if (extracted.isEmpty()) continue;
+                ItemStack rejected;
+                if (!ItemStack.areItemsEqual(sourceStack, extracted) ||
+                        !ItemStack.areItemStackTagsEqual(sourceStack, extracted)) {
+                    rejected = extracted;
+                } else {
+                    rejected = insertItem(targetInventory, extracted, false);
+                }
+                rejected = returnItemRemainder(sourceInventory, srcIndex, rejected);
+                if (!rejected.isEmpty()) unrestored.add(rejected.copy());
             }
         }
+        return unrestored;
+    }
+
+    /** Restores a rejected extraction, preferring its original slot and retaining any unrestorable remainder. */
+    public static ItemStack returnItemRemainder(IItemHandler source, int preferredSlot, ItemStack remainder) {
+        if (remainder.isEmpty()) return ItemStack.EMPTY;
+        ItemStack pending = remainder.copy();
+        if (preferredSlot >= 0 && preferredSlot < source.getSlots()) {
+            pending = source.insertItem(preferredSlot, pending.copy(), false);
+        }
+        for (int slot = 0; slot < source.getSlots() && !pending.isEmpty(); slot++) {
+            if (slot != preferredSlot) pending = source.insertItem(slot, pending.copy(), false);
+        }
+        if (pending.isEmpty() || !(source instanceof IItemHandlerModifiable modifiable)) return pending;
+        for (int slot = 0; slot < source.getSlots() && !pending.isEmpty(); slot++) {
+            ItemStack present = source.getStackInSlot(slot);
+            if (!present.isEmpty() && (!ItemStack.areItemsEqual(present, pending) ||
+                    !ItemStack.areItemStackTagsEqual(present, pending)))
+                continue;
+            int room = Math.min(source.getSlotLimit(slot), pending.getMaxStackSize()) - present.getCount();
+            int restored = Math.min(Math.max(0, room), pending.getCount());
+            if (restored == 0) continue;
+            ItemStack replacement = present.isEmpty() ? pending.copy() : present.copy();
+            replacement.setCount(present.getCount() + restored);
+            modifiable.setStackInSlot(slot, replacement);
+            pending.shrink(restored);
+        }
+        return pending;
     }
 
     /**

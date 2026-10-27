@@ -193,6 +193,7 @@ public class TileEntityCable extends TileEntityMaterialPipeBase<Insulation, Wire
         world.checkLight(pos);
         if (!world.isRemote) {
             writeCustomData(CABLE_TEMPERATURE, buf -> buf.writeVarInt(temperature));
+            markDirty();
         } else {
             if (temperature <= getDefaultTemp()) {
                 if (isParticleAlive())
@@ -278,7 +279,7 @@ public class TileEntityCable extends TileEntityMaterialPipeBase<Insulation, Wire
         }
     }
 
-    private EnergyNet getEnergyNet() {
+    public EnergyNet getEnergyNet() {
         if (world == null || world.isRemote)
             return null;
         EnergyNet currentEnergyNet = this.currentEnergyNet.get();

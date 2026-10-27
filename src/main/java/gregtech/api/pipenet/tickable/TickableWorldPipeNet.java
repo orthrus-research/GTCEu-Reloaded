@@ -3,12 +3,12 @@ package gregtech.api.pipenet.tickable;
 import gregtech.api.pipenet.PipeNet;
 import gregtech.api.pipenet.WorldPipeNet;
 
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ITickable;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.WorldServer;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,20 +25,27 @@ public abstract class TickableWorldPipeNet<NodeDataType, T extends PipeNet<NodeD
     }
 
     private boolean isChunkLoaded(ChunkPos chunkPos) {
-        WorldServer worldServer = (WorldServer) getWorld();
-        if (worldServer == null) return false;
-        return worldServer.getChunkProvider().chunkExists(chunkPos.x, chunkPos.z);
+        World world = getWorld();
+        return world != null && world.isBlockLoaded(new BlockPos(chunkPos.getXStart(), 0, chunkPos.getZStart()));
     }
 
     protected abstract int getUpdateRate();
 
     public void update() {
-        if (getWorld().getTotalWorldTime() % getUpdateRate() == 0L) {
-            tickingPipeNets.forEach(ITickable::update);
+        this.tickingPipeNets.removeAll(this.removeLater);
+        this.removeLater.clear();
+        World world = getWorld();
+        if (world == null) return;
+        int updateRate = getUpdateRate();
+        if (updateRate <= 0) {
+            throw new IllegalStateException("Pipe network update rate must be positive");
         }
-        if (removeLater.size() > 0) {
-            removeLater.forEach(tickingPipeNets::remove);
-            removeLater.clear();
+        if (world.getTotalWorldTime() % updateRate == 0L) {
+            for (T pipeNet : new ArrayList<>(this.tickingPipeNets)) {
+                if (pipeNet.isValid() && !this.removeLater.contains(pipeNet)) {
+                    pipeNet.update();
+                }
+            }
         }
     }
 
@@ -49,9 +56,11 @@ public abstract class TickableWorldPipeNet<NodeDataType, T extends PipeNet<NodeD
         for (T pipeNet : pipeNetsInThisChunk) {
             List<ChunkPos> loadedChunks = getOrCreateChunkListForPipeNet(pipeNet);
             if (loadedChunks.isEmpty()) {
-                this.tickingPipeNets.add(pipeNet);
+                addToTicking(pipeNet);
             }
-            loadedChunks.add(chunkPos);
+            if (!loadedChunks.contains(chunkPos)) {
+                loadedChunks.add(chunkPos);
+            }
         }
     }
 
@@ -73,13 +82,26 @@ public abstract class TickableWorldPipeNet<NodeDataType, T extends PipeNet<NodeD
     @Override
     protected void onWorldSet() {
         super.onWorldSet();
-        Map<T, List<ChunkPos>> pipeNetByLoadedChunks = pipeNets.stream()
-                .map(pipeNet -> Pair.of(pipeNet, getPipeNetLoadedChunks(pipeNet)))
-                .filter(pair -> !pair.getRight().isEmpty())
-                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
-        if (!pipeNetByLoadedChunks.isEmpty()) {
-            this.tickingPipeNets.addAll(pipeNetByLoadedChunks.keySet());
-            this.loadedChunksByPipeNet.putAll(pipeNetByLoadedChunks);
+        this.loadedChunksByPipeNet.clear();
+        this.tickingPipeNets.clear();
+        this.removeLater.clear();
+        for (T pipeNet : this.pipeNets) {
+            List<ChunkPos> loadedChunks = getPipeNetLoadedChunks(pipeNet);
+            if (!loadedChunks.isEmpty()) {
+                this.loadedChunksByPipeNet.put(pipeNet, loadedChunks);
+                addToTicking(pipeNet);
+            }
+        }
+    }
+
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+        super.readFromNBT(nbt);
+        this.loadedChunksByPipeNet.clear();
+        this.tickingPipeNets.clear();
+        this.removeLater.clear();
+        if (getWorld() != null) {
+            onWorldSet();
         }
     }
 
@@ -89,7 +111,7 @@ public abstract class TickableWorldPipeNet<NodeDataType, T extends PipeNet<NodeD
         List<ChunkPos> loadedChunks = getPipeNetLoadedChunks(pipeNet);
         if (!loadedChunks.isEmpty()) {
             this.loadedChunksByPipeNet.put(pipeNet, loadedChunks);
-            this.tickingPipeNets.add(pipeNet);
+            addToTicking(pipeNet);
         }
     }
 
@@ -112,6 +134,11 @@ public abstract class TickableWorldPipeNet<NodeDataType, T extends PipeNet<NodeD
         this.removeLater.add(pipeNet);
     }
 
+    private void addToTicking(T pipeNet) {
+        this.removeLater.remove(pipeNet);
+        this.tickingPipeNets.add(pipeNet);
+    }
+
     private List<ChunkPos> getOrCreateChunkListForPipeNet(T pipeNet) {
         return this.loadedChunksByPipeNet.computeIfAbsent(pipeNet, k -> new ArrayList<>());
     }
@@ -122,9 +149,11 @@ public abstract class TickableWorldPipeNet<NodeDataType, T extends PipeNet<NodeD
         if (isChunkLoaded(chunkPos)) {
             List<ChunkPos> loadedChunks = getOrCreateChunkListForPipeNet(pipeNet);
             if (loadedChunks.isEmpty()) {
-                this.tickingPipeNets.add(pipeNet);
+                addToTicking(pipeNet);
             }
-            loadedChunks.add(chunkPos);
+            if (!loadedChunks.contains(chunkPos)) {
+                loadedChunks.add(chunkPos);
+            }
         }
     }
 

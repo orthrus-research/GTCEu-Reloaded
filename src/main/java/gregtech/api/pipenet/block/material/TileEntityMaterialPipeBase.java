@@ -28,6 +28,7 @@ public abstract class TileEntityMaterialPipeBase<PipeType extends Enum<PipeType>
     public void setPipeData(BlockPipe<PipeType, NodeDataType, ?> pipeBlock, PipeType pipeType, Material pipeMaterial) {
         super.setPipeData(pipeBlock, pipeType);
         this.pipeMaterial = pipeMaterial;
+        resetCachedNodeData();
         if (!getWorld().isRemote) {
             writeCustomData(UPDATE_PIPE_MATERIAL, this::writePipeMaterial);
         }
@@ -52,6 +53,7 @@ public abstract class TileEntityMaterialPipeBase<PipeType extends Enum<PipeType>
     public void transferDataFrom(IPipeTile<PipeType, NodeDataType> tileEntity) {
         super.transferDataFrom(tileEntity);
         this.pipeMaterial = ((IMaterialPipeTile<PipeType, NodeDataType>) tileEntity).getPipeMaterial();
+        resetCachedNodeData();
     }
 
     @NotNull
@@ -70,6 +72,7 @@ public abstract class TileEntityMaterialPipeBase<PipeType extends Enum<PipeType>
         if (this.pipeMaterial == null) {
             this.pipeMaterial = registry.getFallbackMaterial();
         }
+        resetCachedNodeData();
     }
 
     private void writePipeMaterial(@NotNull PacketBuffer buf) {

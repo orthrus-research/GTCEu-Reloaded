@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 public class LaserNetHandler implements ILaserContainer {
 
     private LaserPipeNet net;
-    private final TileEntityLaserPipe pipe;
+    private TileEntityLaserPipe pipe;
     private final EnumFacing facing;
 
     public LaserNetHandler(LaserPipeNet net, @NotNull TileEntityLaserPipe pipe, @Nullable EnumFacing facing) {
@@ -25,9 +25,14 @@ public class LaserNetHandler implements ILaserContainer {
         this.net = net;
     }
 
+    public void updatePipe(@NotNull TileEntityLaserPipe pipe) {
+        this.pipe = pipe;
+    }
+
     private void setPipesActive() {
         for (BlockPos pos : net.getAllNodes().keySet()) {
-            if (pipe.getWorld().getTileEntity(pos) instanceof TileEntityLaserPipe laserPipe) {
+            if (pipe.getWorld().isBlockLoaded(pos) &&
+                    pipe.getWorld().getTileEntity(pos) instanceof TileEntityLaserPipe laserPipe) {
                 laserPipe.setActive(true, 100);
             }
         }
@@ -35,9 +40,14 @@ public class LaserNetHandler implements ILaserContainer {
 
     @Nullable
     private ILaserContainer getInnerContainer() {
-        if (net == null || pipe == null || pipe.isInvalid() || facing == null) {
+        if (pipe == null || pipe.isInvalid() || facing == null || !pipe.hasWorld() || pipe.getWorld().isRemote ||
+                !pipe.getWorld().isBlockLoaded(pipe.getPipePos()) ||
+                pipe.getWorld().getTileEntity(pipe.getPipePos()) != pipe) {
             return null;
         }
+
+        this.net = pipe.getLaserPipeNet();
+        if (net == null || !net.isValid()) return null;
 
         LaserRoutePath data = net.getNetData(pipe.getPipePos(), facing);
         if (data == null) {

@@ -37,12 +37,12 @@ public class EnergyNetHandler implements IEnergyContainer {
 
     @Override
     public long getInputPerSec() {
-        return net.getEnergyFluxPerSec();
+        return refreshNetwork() ? net.getEnergyFluxPerSec() : 0;
     }
 
     @Override
     public long getOutputPerSec() {
-        return net.getEnergyFluxPerSec();
+        return refreshNetwork() ? net.getEnergyFluxPerSec() : 0;
     }
 
     @Override
@@ -52,7 +52,7 @@ public class EnergyNetHandler implements IEnergyContainer {
 
     @Override
     public long acceptEnergyFromNetwork(EnumFacing side, long voltage, long amperage) {
-        if (transfer) return 0;
+        if (transfer || voltage <= 0 || amperage <= 0 || !refreshNetwork()) return 0;
         if (side == null) {
             if (facing == null) return 0;
             side = facing;
@@ -98,9 +98,14 @@ public class EnergyNetHandler implements IEnergyContainer {
 
             if (cableBroken) continue;
 
+            long amps;
             transfer = true;
-            long amps = dest.acceptEnergyFromNetwork(facing, pathVoltage, amperage - amperesUsed);
-            transfer = false;
+            try {
+                amps = dest.acceptEnergyFromNetwork(facing, pathVoltage, amperage - amperesUsed);
+            } finally {
+                transfer = false;
+            }
+            amps = Math.max(0, Math.min(amps, amperage - amperesUsed));
             if (amps == 0) continue;
 
             amperesUsed += amps;
@@ -119,6 +124,16 @@ public class EnergyNetHandler implements IEnergyContainer {
 
         net.addEnergyFluxPerSec(amperesUsed * voltage);
         return amperesUsed;
+    }
+
+    private boolean refreshNetwork() {
+        if (cable.isInvalid() || !cable.hasWorld() || cable.getWorld().isRemote ||
+                !cable.getWorld().isBlockLoaded(cable.getPos()) ||
+                cable.getWorld().getTileEntity(cable.getPos()) != cable) {
+            return false;
+        }
+        this.net = cable.getEnergyNet();
+        return net != null && net.isValid() && net.containsNode(cable.getPos());
     }
 
     private void burnCable(World world, BlockPos pos) {

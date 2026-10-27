@@ -127,6 +127,10 @@ public class TileEntityOpticalPipe extends TileEntityPipeBase<OpticalPipeType, O
             handlers.clear();
             handlers.putAll(pipe.handlers);
             defaultHandler = pipe.defaultHandler;
+            defaultHandler.updatePipe(this);
+            for (OpticalNetHandler handler : handlers.values()) {
+                handler.updatePipe(this);
+            }
             checkNetwork();
         } else {
             // create new handlers

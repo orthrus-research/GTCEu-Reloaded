@@ -17,8 +17,8 @@ import java.util.Collection;
 
 public class OpticalNetHandler implements IDataAccessHatch, IOpticalComputationProvider {
 
-    private final TileEntityOpticalPipe pipe;
-    private final World world;
+    private TileEntityOpticalPipe pipe;
+    private World world;
     private final EnumFacing facing;
 
     private OpticalPipeNet net;
@@ -32,6 +32,11 @@ public class OpticalNetHandler implements IDataAccessHatch, IOpticalComputationP
 
     public void updateNetwork(OpticalPipeNet net) {
         this.net = net;
+    }
+
+    public void updatePipe(@NotNull TileEntityOpticalPipe pipe) {
+        this.pipe = pipe;
+        this.world = pipe.getWorld();
     }
 
     public OpticalPipeNet getNet() {
@@ -69,14 +74,20 @@ public class OpticalNetHandler implements IDataAccessHatch, IOpticalComputationP
 
     private void setPipesActive() {
         for (BlockPos pos : net.getAllNodes().keySet()) {
-            if (world.getTileEntity(pos) instanceof TileEntityOpticalPipe opticalPipe) {
+            if (world.isBlockLoaded(pos) && world.getTileEntity(pos) instanceof TileEntityOpticalPipe opticalPipe) {
                 opticalPipe.setActive(true, 100);
             }
         }
     }
 
     private boolean isNetInvalidForTraversal() {
-        return net == null || pipe == null || pipe.isInvalid();
+        if (pipe == null || pipe.isInvalid() || !pipe.hasWorld() || pipe.getWorld().isRemote ||
+                !pipe.getWorld().isBlockLoaded(pipe.getPipePos()) ||
+                pipe.getWorld().getTileEntity(pipe.getPipePos()) != pipe) {
+            return true;
+        }
+        this.net = pipe.getOpticalPipeNet();
+        return net == null || !net.isValid();
     }
 
     private boolean traverseRecipeAvailable(@NotNull Recipe recipe, @NotNull Collection<IDataAccessHatch> seen) {

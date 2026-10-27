@@ -6,6 +6,7 @@ import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverWithUI;
 import gregtech.api.cover.CoverableView;
 import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
@@ -104,6 +105,9 @@ public class CoverItemFilter extends CoverBase implements CoverWithUI {
     public void setFilterMode(ItemFilterMode filterMode) {
         this.filterMode = filterMode;
         getCoverableView().markDirty();
+        if (getWorld() != null && !getWorld().isRemote && getTileEntityHere() instanceof IPipeTile<?, ?>pipe) {
+            pipe.getPipeBlock().getWorldPipeNet(getWorld()).invalidateRoutes();
+        }
     }
 
     public ItemFilterMode getFilterMode() {
