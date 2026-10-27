@@ -30,7 +30,7 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
     private final Map<BlockPos, Node<NodeDataType>> nodeByBlockPos = new HashMap<>();
     private final Map<BlockPos, Node<NodeDataType>> unmodifiableNodeByBlockPos = Collections
             .unmodifiableMap(nodeByBlockPos);
-    private final Map<ChunkPos, Integer> ownedChunks = new HashMap<>();
+    private final Object2IntOpenHashMap<ChunkPos> ownedChunks = new Object2IntOpenHashMap<>(1); // Credit: @unitazer.
     private long lastUpdate;
     boolean isValid = false;
 
@@ -127,7 +127,7 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
 
     protected void checkAddedInChunk(BlockPos nodePos) {
         ChunkPos chunkPos = new ChunkPos(nodePos);
-        int newValue = this.ownedChunks.compute(chunkPos, (pos, old) -> (old == null ? 0 : old) + 1);
+        int newValue = this.ownedChunks.addTo(chunkPos, 1) + 1;
         if (newValue == 1 && isValid()) {
             this.worldData.addPipeNetToChunk(chunkPos, this);
         }
@@ -135,12 +135,14 @@ public abstract class PipeNet<NodeDataType> implements INBTSerializable<NBTTagCo
 
     protected void ensureRemovedFromChunk(BlockPos nodePos) {
         ChunkPos chunkPos = new ChunkPos(nodePos);
-        int newValue = this.ownedChunks.compute(chunkPos, (pos, old) -> old == null ? 0 : old - 1);
-        if (newValue == 0) {
-            this.ownedChunks.remove(chunkPos);
+        int oldValue = this.ownedChunks.getInt(chunkPos);
+        if (oldValue <= 1) {
+            this.ownedChunks.removeInt(chunkPos);
             if (isValid()) {
                 this.worldData.removePipeNetFromChunk(chunkPos, this);
             }
+        } else {
+            this.ownedChunks.put(chunkPos, oldValue - 1);
         }
     }
 

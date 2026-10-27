@@ -168,8 +168,8 @@ public class MetaTileEntityQuantumStorageController extends MetaTileEntity imple
     @SuppressWarnings("SameParameterValue")
     private IQuantumStorage<?> getStorage(BlockPos pos, boolean rebuild) {
         if (getWorld().isRemote) return null;
-        if (storageInstances.containsKey(pos)) {
-            WeakReference<IQuantumStorage<?>> storageRef = storageInstances.get(pos);
+        WeakReference<IQuantumStorage<?>> storageRef = storageInstances.get(pos); // Adapted from @unitazer.
+        if (storageRef != null) {
             IQuantumStorage<?> storage = storageRef.get();
             if (storage != null) {
                 return storage;

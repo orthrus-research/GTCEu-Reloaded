@@ -245,6 +245,43 @@ public class TickableWorldPipeNetTest {
         return graph;
     }
 
+    @Test
+    void removingTheLastNodeInTheOnlyLoadedChunkStopsTheRemainingNetwork() {
+        BlockPos left = new BlockPos(-1, 64, -1);
+        BlockPos right = left.east();
+        TickablePipeFixtureWorld world = new TickablePipeFixtureWorld();
+        ChunkPos leftChunk = new ChunkPos(left);
+        ChunkPos rightChunk = new ChunkPos(right);
+        world.loaded.add(leftChunk);
+        world.loaded.add(rightChunk);
+        TickablePipeFixtureGraph graph = graph(world);
+        graph.addNode(left, 1, 0, 63, false);
+        graph.addNode(right, 1, 0, 63, false);
+        TickablePipeFixtureNetwork net = graph.getNetFromPos(left);
+        assertSame(net, graph.getNetFromPos(right));
+        graph.update();
+        assertEquals(1, net.updates);
+
+        world.loaded.remove(leftChunk);
+        graph.onChunkUnloaded(new Chunk(world, leftChunk.x, leftChunk.z));
+        graph.update();
+        assertEquals(2, net.updates);
+        world.loaded.remove(rightChunk);
+        graph.onChunkUnloaded(new Chunk(world, rightChunk.x, rightChunk.z));
+        graph.update();
+        assertEquals(2, net.updates);
+
+        world.loaded.add(leftChunk);
+        graph.onChunkLoaded(new Chunk(world, leftChunk.x, leftChunk.z));
+        graph.update();
+        assertEquals(3, net.updates);
+        graph.removeNode(left);
+        graph.update();
+        assertEquals(3, net.updates);
+        assertSame(net, graph.getNetFromPos(right));
+        assertFalse(net.getContainedChunks().contains(leftChunk));
+    }
+
     private static TickablePipeFixtureWorld loadedWorld() {
         TickablePipeFixtureWorld world = new TickablePipeFixtureWorld();
         world.loaded.add(new ChunkPos(A));

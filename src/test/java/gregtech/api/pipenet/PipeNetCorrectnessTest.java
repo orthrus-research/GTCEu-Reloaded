@@ -6,6 +6,9 @@ import net.minecraft.util.math.ChunkPos;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PipeNetCorrectnessTest {
@@ -103,6 +106,54 @@ public class PipeNetCorrectnessTest {
 
         assertNotNull(world.getNetFromPos(A));
         assertNull(world.getNetFromPos(mutable));
+    }
+
+    @Test
+    void denseNegativeChunkKeepsLiveViewsAndOwnershipUntilItsLastNodeIsRemoved() {
+        PipeNetTestWorld world = new PipeNetTestWorld();
+        BlockPos origin = new BlockPos(-32, -5000, -32);
+        world.addNode(origin, 1, 0, 0, false);
+        PipeNetTestNetwork net = world.getNetFromPos(origin);
+        Set<ChunkPos> chunks = net.getContainedChunks();
+        Map<BlockPos, Node<Integer>> nodes = net.getAllNodes();
+        for (int i = 1; i < 256; i++) {
+            net.addSilently(origin.add(i & 15, 0, i >> 4), new Node<>(1, 0, 0, false));
+        }
+        net.addSilently(origin, new Node<>(2, 0, 0, false));
+
+        assertEquals(256, nodes.size());
+        assertEquals(1, chunks.size());
+        assertEquals(1, world.networksInChunk(new ChunkPos(origin)));
+        assertThrows(UnsupportedOperationException.class, chunks::clear);
+        assertThrows(UnsupportedOperationException.class, nodes::clear);
+        for (int i = 1; i < 256; i++) net.removeSilently(origin.add(i & 15, 0, i >> 4));
+
+        assertEquals(1, nodes.size());
+        assertEquals(1, chunks.size());
+        assertSame(net, world.getNetFromPos(origin));
+        net.removeSilently(origin);
+        assertTrue(nodes.isEmpty());
+        assertTrue(chunks.isEmpty());
+        assertEquals(0, world.indexedChunkCount());
+    }
+
+    @Test
+    void liveNodeLookupRetainsDistinctPositionsOutsidePackedHeightRange() {
+        PipeNetTestWorld world = new PipeNetTestWorld();
+        BlockPos lower = new BlockPos(-17, -5000, -17);
+        BlockPos upper = lower.up(4096);
+        assertEquals(lower.toLong(), upper.toLong());
+        world.addNode(lower, 1, 0, 0, false);
+        PipeNetTestNetwork net = world.getNetFromPos(lower);
+        net.addSilently(upper, new Node<>(2, 0, 0, false));
+
+        assertEquals(Integer.valueOf(1), net.getNodeAt(lower).data);
+        assertEquals(Integer.valueOf(2), net.getNodeAt(upper).data);
+        net.removeSilently(lower);
+        assertNull(net.getNodeAt(lower));
+        assertSame(net, world.getNetFromPos(upper));
+        net.removeSilently(upper);
+        assertEquals(0, world.indexedChunkCount());
     }
 
     @Test
