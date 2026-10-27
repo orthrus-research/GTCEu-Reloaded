@@ -102,7 +102,7 @@ The selected Susy-Core 0.2.5 binary owns its tankless graph, caches and handlers
 Its literal `susy.tankless_fluid_pipe_net` record still uses shared world storage;
 its route cache is position-only without periodic discovery, and a retained fluid
 handler does not revalidate current tile/net ownership on each fill. These pre-existing
-addon limits are not repaired by the built-in optical/laser storage or handler changes.
+addon limits are not repaired by the built-in item/optical/laser storage or handler changes.
 Extension hooks remain eager and the existing physical hybrid-connection APIs are retained.
 
 PipeNet rejects duplicate positions in a saved graph and preserves the raw
@@ -112,10 +112,11 @@ dimension. Native hybrid transfer qualification does not imply tankless dimensio
 retained-handler qualification. A future addon repair must be owned, pinned and tested
 separately, with the same adaptation applied to both comparison candidates.
 
-## Optical and laser dimension storage
+## Item, optical and laser dimension storage
 
-Optical and laser topology now uses Forge's existing `World.getPerWorldStorage()`.
-The identifiers remain `gregtech.optical_pipe_net` and `gregtech.laser_pipe_net`.
+Item, optical and laser topology uses Forge's existing `World.getPerWorldStorage()`.
+The identifiers remain `gregtech.item_pipe_net`, `gregtech.optical_pipe_net` and
+`gregtech.laser_pipe_net`.
 Forge's `WorldSpecificSaveHandler` places these records in each dimension's own
 `data` directory. The overworld therefore keeps the existing literal filenames in
 the save's root `data` directory. Other dimensions receive independent records;
@@ -127,6 +128,20 @@ old save cannot resolve that ambiguity from coordinates alone. No root record is
 cloned into another dimension, assigned a guessed dimension, or deleted. A warning
 reports an existing shared record when a non-overworld local record is first created.
 
+Item ownership must also be dimension-local when two loaded worlds contain the
+same XYZ, properties, paint and connections. Graph insertion is idempotent within
+one world; an identical pipe in another dimension must retain a separate owner so
+removing one pipe cannot remove the other world's membership or redirect its
+retained handler. This corrects the interaction between node deduplication and
+the item's previous literal global storage key.
+
+Creating a non-overworld item record checks only the legacy file's existence
+through the save-handler API. It does not load the global item graph merely to
+report a warning: that reader may mark a Resistance-only record dirty for priority
+alias normalization. The actual overworld reader keeps its existing normalization
+policy and literal filename. An unqueried ambiguous root record is not rewritten
+as a side effect of creating or saving another dimension's item graph.
+
 On a real server world, each loaded pipe schedules one task through the existing
 `TaskScheduler`. It checks that the same valid tile is still loaded at the same
 position in the same world, then restores only missing membership from the tile's
@@ -137,9 +152,11 @@ automatically. Reconstruction is not a general repair of ambiguous historical da
 
 Before downgrading, retain a full copy of the upgraded save. Older versions read the
 shared root record and do not read the new non-overworld records, so changes made in
-those dimensions after upgrade will not be represented by the older reader. There
-is no automatic reverse migration. Any manual migration needs independent evidence
-of dimension ownership and must preserve the original records.
+those dimensions after upgrade will not be represented by the older reader for
+items, optical pipes or lasers. There is no automatic reverse migration. Restoring
+a pre-upgrade backup restores its earlier state, not later changes made to the
+upgraded save. Any manual migration needs independent evidence of dimension
+ownership and must preserve the original records.
 
 ## Runtime cover transfer modes
 

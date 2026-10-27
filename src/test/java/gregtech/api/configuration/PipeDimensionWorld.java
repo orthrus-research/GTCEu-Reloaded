@@ -6,6 +6,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.MapStorage;
 
 import java.util.HashMap;
@@ -19,11 +20,24 @@ final class PipeDimensionWorld extends DummyWorld {
     private final Map<BlockPos, TileEntity> tiles = new HashMap<>();
     private final Map<BlockPos, IBlockState> states = new HashMap<>();
     final Set<BlockPos> unloaded = new HashSet<>();
+    private ISaveHandler legacySaveHandler;
+    private boolean overridesSaveHandler;
 
     PipeDimensionWorld(int dimension, MapStorage global, MapStorage local) {
         this.provider.setDimension(dimension);
         this.mapStorage = global;
         this.perWorldStorage = local;
+    }
+
+    PipeDimensionWorld(int dimension, MapStorage global, MapStorage local, ISaveHandler legacySaveHandler) {
+        this(dimension, global, local);
+        this.legacySaveHandler = legacySaveHandler;
+        this.overridesSaveHandler = true;
+    }
+
+    @Override
+    public ISaveHandler getSaveHandler() {
+        return this.overridesSaveHandler ? this.legacySaveHandler : super.getSaveHandler();
     }
 
     void put(BlockPos pos, TileEntity tile, IBlockState state) {

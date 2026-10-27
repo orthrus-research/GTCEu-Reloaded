@@ -15,6 +15,13 @@ final class ItemTransferBudget {
         this.capacity = capacity(rate, batch);
     }
 
+    ItemTransferBudget(ItemTransferBudget original) {
+        this.rate = original.rate;
+        this.updatedAt = original.updatedAt;
+        this.items = original.items;
+        this.capacity = original.capacity;
+    }
+
     int available(int batch, long now) {
         if (now < updatedAt) {
             this.items = rate;

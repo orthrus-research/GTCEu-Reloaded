@@ -179,19 +179,31 @@ public class ItemPipePromotionRegressionTest {
     }
 
     @Test
-    void genericTransferCopyDoesNotForwardItsCountersOrRoundRobinMap() {
+    void genericTransferCopyKeepsCountersRoundRobinAndExactBudgetsIndependent() {
         ItemPipeTransportFixture fixture = new ItemPipeTransportFixture(0);
+        assertEquals(32, fixture.pipe.getAvailableExactTransferItems(32, 64));
         fixture.pipe.addTransferredItems(5);
         TileEntityItemPipe copy = new TileEntityItemPipe();
         copy.setWorld(fixture.world);
         copy.setPos(ItemPipeTransportFixture.POS.east(8));
         copy.transferDataFrom(fixture.pipe);
 
+        assertEquals(27, fixture.pipe.getAvailableExactTransferItems(32, 64));
+        assertEquals(27, copy.getAvailableExactTransferItems(32, 64));
+
         fixture.pipe.addTransferredItems(3);
+        assertEquals(24, fixture.pipe.getAvailableExactTransferItems(32, 64));
+        assertEquals(27, copy.getAvailableExactTransferItems(32, 64));
         copy.addTransferredItems(2);
 
         assertEquals(8, fixture.pipe.getTransferredItems());
         assertEquals(7, copy.getTransferredItems());
         assertNotSame(fixture.pipe.getTransferred(), copy.getTransferred());
+        assertEquals(24, fixture.pipe.getAvailableExactTransferItems(32, 64));
+        assertEquals(25, copy.getAvailableExactTransferItems(32, 64));
+
+        fixture.time(20);
+        assertEquals(56, fixture.pipe.getAvailableExactTransferItems(32, 64));
+        assertEquals(57, copy.getAvailableExactTransferItems(32, 64));
     }
 }

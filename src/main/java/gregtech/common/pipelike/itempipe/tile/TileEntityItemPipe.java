@@ -148,7 +148,8 @@ public class TileEntityItemPipe extends TileEntityMaterialPipeBase<ItemPipeType,
         this.transferred.clear();
         this.transferred.putAll(accounting.transferred);
         this.exactTransferBudgets.clear();
-        this.exactTransferBudgets.putAll(accounting.exactTransferBudgets);
+        accounting.exactTransferBudgets
+                .forEach((rate, budget) -> this.exactTransferBudgets.put(rate, new ItemTransferBudget(budget)));
         this.transferInProgress = itemPipe.transferInProgress;
         // take handlers from old pipe
         if (!itemPipe.handlers.isEmpty()) {
