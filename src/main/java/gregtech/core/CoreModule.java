@@ -41,6 +41,7 @@ import gregtech.common.blocks.BlockBatteryPart;
 import gregtech.common.blocks.BlockCleanroomCasing;
 import gregtech.common.blocks.BlockWireCoil;
 import gregtech.common.blocks.MetaBlocks;
+import gregtech.common.command.CommandFluidReconcile;
 import gregtech.common.command.CommandHand;
 import gregtech.common.command.CommandRecipeCheck;
 import gregtech.common.command.CommandShaders;
@@ -322,6 +323,7 @@ public class CoreModule implements IGregTechModule {
 
         GregTechAPI.commandManager.addCommand(new CommandWorldgen());
         GregTechAPI.commandManager.addCommand(new CommandHand());
+        GregTechAPI.commandManager.addCommand(new CommandFluidReconcile());
         GregTechAPI.commandManager.addCommand(new CommandRecipeCheck());
         GregTechAPI.commandManager.addCommand(new CommandShaders());
         GregTechAPI.commandManager.addCommand(new CommandBenchmark());

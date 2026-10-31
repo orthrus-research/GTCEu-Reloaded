@@ -61,11 +61,34 @@ the source where possible; leftovers return to the owning caller or a carrying
 This preserves ownership without promising atomic rollback of arbitrary addon effects.
 
 Built-in fluid distribution withdraws from its source before committing to a destination.
-If the destination rejects fluid or throws during the real fill, unaccepted fluid returns
-to the source tank; a remainder that no longer fits is retained in saved fluid records.
-The tile is marked dirty even when the original exception propagates. No other endpoint
-is retried after that exception. A foreign handler that accepts fluid and then throws
-does not report how much it accepted; its side effects cannot be rolled back atomically.
+When a destination returns normally, the reported unaccepted remainder returns to the
+source tank; a remainder that no longer fits is retained in saved fluid records. The
+per-pass allowance limits the total accepted amount, including minimum rounded shares.
+
+If a destination throws during its real fill, the caller cannot tell how much the
+destination accepted. The pipe does not return the uncertain withdrawal to circulation.
+It records the maximum uncertain amount, fluid identity, source channel, destination
+face and exception type, marks its chunk dirty, logs the record and propagates the
+original exception. Automatic distribution from that pipe pauses until an administrator
+investigates. This is an uncertainty record, not a claim that the amount is recoverable.
+Other fluid already in the pipe remains accessible through the ordinary capabilities.
+Exceptions before a successful source drain returns and arbitrary simulation side effects
+are outside this transaction boundary.
+
+Use a tricorder to identify the paused pipe. A permission-level 4 server operator can run
+`/gt fluid-reconcile <x> <y> <z> inspect` in that dimension, compare the record with
+the destination and server log, then use `clear acknowledge` at the same coordinates
+after deciding how to reconcile the discrepancy. Acknowledgement logs the old record
+and lifts this pipe's distribution pause; it never creates or restores fluid. A
+destination can remain unavailable after an exception, including when a P2P handler
+retains a recursion guard. Repair or reset the affected destination before expecting
+flow to resume. Acknowledgement does not reset third-party handler state or verify
+how much fluid the destination accepted.
+The chunk must already be loaded. Removing the pipe destroys its tile-local record;
+the server log records the removal. Normal saves and reloads retain the record, but a
+crash can occur before the dirty chunk reaches disk. Older versions do not preserve the
+new record on rewrite; resolve it before downgrading. These measures cannot make an
+arbitrary third-party fill atomic or establish crash-atomic cross-chunk transactions.
 
 ## Item priority aliases and first save
 
