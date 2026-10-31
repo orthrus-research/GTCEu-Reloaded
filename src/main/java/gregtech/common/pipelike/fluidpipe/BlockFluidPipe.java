@@ -7,6 +7,7 @@ import gregtech.api.pipenet.tile.TileEntityPipeBase;
 import gregtech.api.unification.material.properties.FluidPipeProperties;
 import gregtech.api.unification.material.registry.MaterialRegistry;
 import gregtech.api.util.EntityDamageUtil;
+import gregtech.api.util.GTLog;
 import gregtech.client.renderer.pipe.FluidPipeRenderer;
 import gregtech.client.renderer.pipe.PipeRenderer;
 import gregtech.common.creativetab.GTCreativeTabs;
@@ -60,6 +61,12 @@ public class BlockFluidPipe extends BlockMaterialPipe<FluidPipeType, FluidPipePr
 
     @Override
     public void breakBlock(@NotNull World worldIn, @NotNull BlockPos pos, @NotNull IBlockState state) {
+        TileEntity tile = worldIn.getTileEntity(pos);
+        if (!worldIn.isRemote && tile instanceof TileEntityFluidPipeTickable pipe &&
+                pipe.getUncertainFluidTransfer() != null) {
+            GTLog.logger.warn("Removing fluid pipe with an unresolved transfer at dimension {} position {}: {}",
+                    worldIn.provider.getDimension(), pos, pipe.getUncertainFluidTransfer());
+        }
         super.breakBlock(worldIn, pos, state);
         // TODO insert to neighbours
     }

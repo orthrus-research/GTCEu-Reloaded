@@ -11,6 +11,7 @@ import gregtech.api.fluids.attribute.FluidAttribute;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.unification.material.properties.FluidPipeProperties;
 import gregtech.api.util.EntityDamageUtil;
+import gregtech.api.util.GTLog;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.common.covers.CoverPump;
 import gregtech.common.pipelike.fluidpipe.net.PipeTankList;
@@ -18,6 +19,7 @@ import gregtech.common.pipelike.fluidpipe.net.PipeTankList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
@@ -54,6 +56,9 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
     private final EnumMap<EnumFacing, PipeTankList> tankLists = new EnumMap<>(EnumFacing.class);
     private FluidTank[] fluidTanks;
     private final Map<Integer, NBTTagCompound> retainedFluidData = new HashMap<>();
+    @Nullable
+    private NBTBase uncertainFluidTransfer;
+    private boolean distributingFluid;
     private long timer = 0L;
     private final int offset = GTValues.RNG.nextInt(20);
 
@@ -83,7 +88,8 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
                 lastReceivedFrom = 0;
             }
 
-            boolean shouldDistribute = (oldLastReceivedFrom == lastReceivedFrom);
+            boolean shouldDistribute = !distributingFluid && uncertainFluidTransfer == null &&
+                    (oldLastReceivedFrom == lastReceivedFrom);
             int tanks = getNodeData().getTanks();
             for (int i = 0, j = GTValues.RNG.nextInt(tanks); i < tanks; i++) {
                 int index = (i + j) % tanks;
@@ -97,7 +103,12 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
                 }
 
                 if (shouldDistribute) {
-                    distributeFluid(index, tank, fluid);
+                    this.distributingFluid = true;
+                    try {
+                        distributeFluid(index, tank, fluid);
+                    } finally {
+                        this.distributingFluid = false;
+                    }
                     lastReceivedFrom = 0;
                 }
             }
@@ -158,7 +169,7 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
             int filled = Math.min(fluidHandler.fill(maxFluid, false), drainable.amount);
 
             if (filled > 0) {
-                tanks.add(new FluidTransaction(fluidHandler, pipeTank, filled));
+                tanks.add(new FluidTransaction(fluidHandler, pipeTank, facing, filled));
                 availableCapacity += filled;
             }
             maxFluid.amount = amount; // Because some mods do actually modify input fluid stack
@@ -169,9 +180,11 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
 
         // How much of this fluid is available for distribution?
         final double maxAmount = Math.min(getCapacityPerTank() / 2, fluid.amount);
+        int remainingAmount = (int) maxAmount;
 
         // Now distribute
         for (FluidTransaction transaction : tanks) {
+            if (remainingAmount <= 0) break;
             if (availableCapacity > maxAmount) {
                 transaction.amount = (int) Math.floor(transaction.amount * maxAmount / availableCapacity); // Distribute
                                                                                                            // fluids
@@ -188,16 +201,24 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
             } else if (transaction.amount < 0) {
                 continue;
             }
+            transaction.amount = Math.min(transaction.amount, remainingAmount);
 
             FluidStack toInsert = fluid.copy();
             toInsert.amount = transaction.amount;
 
             FluidStack withdrawn = transaction.pipeTank.drain(toInsert, true);
             if (withdrawn != null && withdrawn.amount > 0) {
+                int accepted;
                 try {
-                    int accepted = transaction.target.fill(withdrawn.copy(), true);
+                    accepted = transaction.target.fill(withdrawn.copy(), true);
+                } catch (RuntimeException | Error failure) {
+                    quarantineUncertainFluid(channel, transaction.facing, withdrawn, failure);
+                    throw failure;
+                }
+                try {
                     accepted = Math.max(0, Math.min(accepted, withdrawn.amount));
                     withdrawn.amount -= accepted;
+                    remainingAmount -= accepted;
                 } finally {
                     if (withdrawn.amount > 0) {
                         withdrawn.amount -= tank.fill(withdrawn, true);
@@ -425,6 +446,39 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
         return retainedFluidData.containsKey(channel);
     }
 
+    private void quarantineUncertainFluid(int channel, EnumFacing facing, FluidStack withdrawn, Throwable failure) {
+        NBTTagCompound record = new NBTTagCompound();
+        record.setTag("Fluid", withdrawn.writeToNBT(new NBTTagCompound()));
+        record.setInteger("Channel", channel);
+        record.setInteger("Side", facing.getIndex());
+        record.setString("Failure", failure.getClass().getName());
+        this.uncertainFluidTransfer = record;
+        try {
+            markDirty();
+        } catch (RuntimeException | Error reportingFailure) {
+            if (reportingFailure != failure) failure.addSuppressed(reportingFailure);
+        }
+        try {
+            GTLog.logger
+                    .error("Fluid transfer outcome unknown at {} toward {}. Automatic pipe distribution is paused. " +
+                            "Record: {}", getPos(), facing, record, failure);
+        } catch (RuntimeException | Error reportingFailure) {
+            if (reportingFailure != failure) failure.addSuppressed(reportingFailure);
+        }
+    }
+
+    @Nullable
+    public NBTBase getUncertainFluidTransfer() {
+        return uncertainFluidTransfer == null ? null : uncertainFluidTransfer.copy();
+    }
+
+    public void acknowledgeUncertainFluidTransfer() {
+        if (uncertainFluidTransfer != null) {
+            this.uncertainFluidTransfer = null;
+            markDirty();
+        }
+    }
+
     private void retainUnassignedFluid(FluidStack fluid) {
         int channel = getFluidTanks().length;
         while (retainedFluidData.containsKey(channel)) channel++;
@@ -457,6 +511,8 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
             list.appendTag(retained.copy());
         }
         nbt.setTag("Fluids", list);
+        if (uncertainFluidTransfer == null) nbt.removeTag("UncertainFluidTransfer");
+        else nbt.setTag("UncertainFluidTransfer", uncertainFluidTransfer.copy());
         return nbt;
     }
 
@@ -473,6 +529,8 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
             }
         }
         super.readFromNBT(nbt);
+        this.uncertainFluidTransfer = nbt.hasKey("UncertainFluidTransfer") ?
+                nbt.getTag("UncertainFluidTransfer").copy() : null;
         createTanksList();
         retainedFluidData.clear();
         for (int i = 0; i < list.tagCount(); i++) {
@@ -492,6 +550,10 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
     @Override
     public List<ITextComponent> getDataInfo() {
         List<ITextComponent> list = new ArrayList<>();
+        if (uncertainFluidTransfer != null) {
+            list.add(new TextComponentTranslation("gregtech.pipe.uncertain_fluid_transfer")
+                    .setStyle(new Style().setColor(TextFormatting.RED)));
+        }
         if (!retainedFluidData.isEmpty()) {
             list.add(new TextComponentTranslation("gregtech.pipe.retained_fluid_records", retainedFluidData.size()));
         }
@@ -525,11 +587,13 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
 
         public final IFluidHandler target;
         public final IFluidHandler pipeTank;
+        public final EnumFacing facing;
         public int amount;
 
-        private FluidTransaction(IFluidHandler target, IFluidHandler pipeTank, int amount) {
+        private FluidTransaction(IFluidHandler target, IFluidHandler pipeTank, EnumFacing facing, int amount) {
             this.target = target;
             this.pipeTank = pipeTank;
+            this.facing = facing;
             this.amount = amount;
         }
     }

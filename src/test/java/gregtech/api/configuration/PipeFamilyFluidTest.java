@@ -45,7 +45,7 @@ public class PipeFamilyFluidTest {
     }
 
     @Test
-    void failedRealDistributionRestoresWithdrawnFluidAndPropagatesTheOriginalException() {
+    void failedRealDistributionQuarantinesUncertainFluidAndPropagatesTheOriginalException() {
         ConfigurationTestWorld world = new ConfigurationTestWorld();
         PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
         PipeDistributionFailureTarget target = new PipeDistributionFailureTarget(() -> {});
@@ -58,14 +58,17 @@ public class PipeFamilyFluidTest {
         assertSame(target.failure, failure);
         assertEquals(1, target.actualFills);
         assertEquals(0, target.getFluidAmount());
-        assertNotNull(pipe.getContainedFluid(0));
-        assertEquals(100, pipe.getContainedFluid(0).amount);
+        assertNull(pipe.getContainedFluid(0));
+        NBTTagCompound record = (NBTTagCompound) pipe.getUncertainFluidTransfer();
+        assertNotNull(record);
+        assertEquals(100, record.getCompoundTag("Fluid").getInteger("Amount"));
+        assertEquals(EnumFacing.EAST.getIndex(), record.getInteger("Side"));
         assertFalse(pipe.hasRetainedFluidData(1));
         assertTrue(pipe.dirtyNotifications > 0);
     }
 
     @Test
-    void failedDistributionRetainsWithdrawnFluidWhenReentryOccupiesTheSourceTank() {
+    void failedDistributionQuarantinesEvenWhenReentryOccupiesTheSourceTank() {
         ConfigurationTestWorld world = new ConfigurationTestWorld();
         PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
         int capacity = pipe.getCapacityPerTank();
@@ -86,12 +89,47 @@ public class PipeFamilyFluidTest {
         assertEquals(0, target.getFluidAmount());
         assertEquals(FluidRegistry.LAVA, pipe.getContainedFluid(0).getFluid());
         assertEquals(capacity, pipe.getContainedFluid(0).amount);
-        assertTrue(pipe.hasRetainedFluidData(1));
+        assertNotNull(pipe.getUncertainFluidTransfer());
         NBTTagCompound saved = saved(pipe);
-        assertEquals(water.writeToNBT(new NBTTagCompound()), saved.getTagList("Fluids", 10).getCompoundTagAt(1));
+        assertEquals(water.writeToNBT(new NBTTagCompound()),
+                saved.getCompoundTag("UncertainFluidTransfer").getCompoundTag("Fluid"));
         assertTrue(pipe.dirtyNotifications > 0);
         read(pipe, saved);
-        assertEquals(water.writeToNBT(new NBTTagCompound()), saved(pipe).getTagList("Fluids", 10).getCompoundTagAt(1));
+        assertEquals(water.writeToNBT(new NBTTagCompound()),
+                saved(pipe).getCompoundTag("UncertainFluidTransfer").getCompoundTag("Fluid"));
+    }
+
+    @Test
+    void uncertainTransferSurvivesReloadPausesDistributionAndCanBeAcknowledged() {
+        ConfigurationTestWorld world = new ConfigurationTestWorld();
+        PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
+        PipeDistributionFailureTarget badTarget = new PipeDistributionFailureTarget(() -> {});
+        connect(world, pipe, badTarget);
+        pipe.getFluidTanks()[0].fill(new FluidStack(FluidRegistry.WATER, 100), true);
+        assertThrows(IllegalStateException.class, () -> distribute(pipe));
+        NBTTagCompound record = (NBTTagCompound) pipe.getUncertainFluidTransfer();
+        NBTTagCompound snapshot = saved(pipe);
+        read(pipe, snapshot);
+        assertEquals(record, pipe.getUncertainFluidTransfer());
+        pipe.getFluidTanks()[0].fill(new FluidStack(FluidRegistry.WATER, 25), true);
+        distribute(pipe);
+        assertEquals(25, pipe.getContainedFluid(0).amount);
+        assertEquals(1, badTarget.actualFills);
+        pipe.acknowledgeUncertainFluidTransfer();
+        assertNull(pipe.getUncertainFluidTransfer());
+        assertFalse(saved(pipe).hasKey("UncertainFluidTransfer"));
+        assertThrows(IllegalStateException.class, () -> distribute(pipe));
+        assertEquals(2, badTarget.actualFills);
+    }
+
+    @Test
+    void unknownUncertainRecordRemainsBlockedAndRoundTrips() {
+        PipeTestFluidPipe pipe = pipe();
+        NBTTagCompound snapshot = saved(pipe);
+        snapshot.setString("UncertainFluidTransfer", "future format");
+        read(pipe, snapshot);
+        assertEquals(new NBTTagString("future format"), pipe.getUncertainFluidTransfer());
+        assertEquals(new NBTTagString("future format"), saved(pipe).getTag("UncertainFluidTransfer"));
     }
 
     @Test
