@@ -1,62 +1,131 @@
+<p align="center"><img src=".github/assets/banner.svg" alt="GTCEu: Reloaded by Orthrus Research" width="100%"></p>
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/orthrus-research/GTCEu-Reloaded/master/.github/assets/gtceu-reloaded-monochrome.svg"
-       alt="GTCEu Reloaded logo"
-       width="25%">
+<a href="#status"><img alt="Status: preview" src="https://img.shields.io/badge/status-preview-000000?style=flat-square&labelColor=000000"></a>
+<a href="LICENSE"><img alt="License: LGPL-3.0" src="https://img.shields.io/badge/license-LGPL--3.0-000000?style=flat-square&labelColor=000000"></a>
+<a href="https://discord.gg/qCVqhXtSzR"><img alt="Discord" src="https://img.shields.io/badge/discord-join-000000?style=flat-square&labelColor=000000"></a>
 </p>
-<h1 align="center">GregTech CEu: Reloaded</h1>
-<p align="center"><i>A fork of GregTech CEu by Orthrus Research</i></p>
-<h1 align="center">
-    <a href="https://github.com/GregTechCEu/GregTech/blob/master/LICENSE"><img src="https://img.shields.io/github/license/GregTechCEu/GregTech?style=for-the-badge" alt="License"></a>
-</h1>
 
-## Continuing GregTech with Orthrus Research
+GTCEu: Reloaded is a continuation of [GregTech CE Unofficial](https://github.com/GregTechCEu/GregTech)
+(GTCEu) for Minecraft 1.12.2, developed by Orthrus Research. It keeps GTCEu's machines, materials
+and progression, brings selected features from GregTech CEu: Modern and GregTech: New Horizons to
+1.12.2, and keeps existing worlds, addons and packs working.
 
-Orthrus Research is continuing development of GregTech CE: Unofficial, building on the work of it's maintainers and community. 
-<br><br>
-Our goal is to keep the project moving forward through ongoing maintenance, improvements, and adding new features. The brilliant and dedicated minds that brought this open-source project to this point have entered periods of their lives where they don't have as much time to contribute to CEu, or have moved on from the project entirely. We believe that the community should have an option to choose to provide their own support from the CEu latest release, or consider subsequent releases from Reloaded. 
-<br><br>
-Our first target is to bring CEu: Reloaded up-to-date with the development that has been taking place on both GTCEu: Modern, and GTNH.
+GTCEu: Reloaded is not an official GregTechCEu release and implies no endorsement by its
+maintainers.
 
-## Welcome to GregTech CEu: Reloaded
-### What is this?
-GregTech CE Unofficial, or **GTCEu**, is a Minecraft mod. The repository contains all the code and assets required to build and run that mod.
+## Status
 
-### Community Edition?
-**Community Edition** is a necessary part of the **GTCEu name**:
-* It is required by our permission to use the GregTech name
-* It is a reminder that the ideas and design are primarily driven by the community
-* It is a reminder that the implementation and work are solely provided by the community.
+Preview: public for study and testing, with no releases yet; they will be published on GitHub
+Releases. Worlds, mod IDs and APIs are kept compatible with GTCEu (see below), but no release yet
+promises compatibility guarantees of its own. [CHANGELOG.md](CHANGELOG.md) lists the changes so far.
 
-## Project Goal
-To bring preferred GregTech concepts and ideas from GT (Minecraft 1.7.10 and GTCEu: Modern) to Minecraft 1.12, targetting a feature-rich, UX-friendly and comprehensive play-through while streamlining and eliminating bloat and make-work details.
+## Changes from GTCEu
 
-We will continue to work with addon-providers to attempt to preserve backwards-compatibility.
+The fork began at upstream commit `52c04cd7b`, after GTCEu 2.8.10. In summary:
 
-### Contributions
-Orthrus encourages quality PRs from Large Language Models (LLMs) whereby the author has both read and understood the code changes. Though we were programmers before the advent of AI, we understand this is not the case for all persons, and we at least expect that contributors perform rounds of AI assisted bug-fixing and engaging in conversation with the tools in plain language to determine if what is intended is actually what is proposed. 
-<br><br>
-*All humans are endowed with a spirit of creativity and can come up with great ideas for play. We believe they should not be excluded from attempting to see something they are passionate about (or have domain expertise that doesn't include programming) come to life, even if it means using AI.*
+- Machine and recipe screens from CEu Modern: recipe-local JEI overclock estimates, observed recipe
+  failure reasons, live maintenance faults, contextual tool hints, optional tank fluid badges,
+  validated multiblock preview editing and a configuration memory card
+  ([docs/modern-backports.md](docs/modern-backports.md)).
+- Applied Energistics: ME stocking minimums, refresh controls and a preference for abundant
+  resources; ME processing pattern buffers with linked proxies
+  ([docs/ae-processing-buffers.md](docs/ae-processing-buffers.md)).
+- Multiblocks: combined item and fluid hatches, opt-in paint groups and private input views,
+  output filtering that holds completed products until they fit, and combined item and fluid
+  filters.
+- Recipes: immutable recipe conditions with processing holds
+  ([docs/recipe-conditions.md](docs/recipe-conditions.md)), composable startup recipe modifiers
+  ([docs/recipe-modifiers.md](docs/recipe-modifiers.md)), and alternatives tried without consuming
+  rejected inputs.
+- Pipes: repaired transport accounting and persistence for item, fluid, energy, optical and laser
+  networks, with state kept independent across copies and dimensions
+  ([docs/pipenet-compatibility.md](docs/pipenet-compatibility.md)).
+- Fewer idle costs: skipped idle recipe callbacks, auto-output probes and unchanged energy
+  notifications, and lighter pipe chunk accounting.
 
-## AI Usage
-We unabashedly use Artificial Intelligence in this project. There is no practical way for us to find time to support this project (which we have a deep connection to through our own time playing), without the assistance of LLMs.
-<br><br>
-We are committed to only using frontier models for critical code, and perform rounds of review and bug-fixing across at least 2 LLM providers. Frequently this means Anthropic & OpenAI models for quality reasons. 
-<br>
-This is always subject to change, based on what is giving the strongest results moving into the future.
+## For players and pack makers
 
-## Credited Works
-Heating Coil Textures, Wooden Forms, World Accelerators, and the Extreme Combustion Engine are from the **[GregTech: New Horizons Modpack](https://www.curseforge.com/minecraft/modpacks/gt-new-horizons)**.
+GTCEu: Reloaded replaces GTCEu: install one or the other, never both. It keeps the `gregtech` mod
+ID, the `gregtech` packages, registry names, configuration and the save format, so worlds and
+addons built for GTCEu find what they expect. New features that change behavior are opt-in or
+default off where the documents say so.
 
-Primitive Water Pump and Super Tank GUI Textures are from the **[IMPACT: GREGTECH EDITION Modpack](https://gt-impact.github.io/)**.
+| Component | Version | |
+| --- | --- | --- |
+| Minecraft | 1.12.2 | |
+| Forge | 14.23.5.2847 or later | Required |
+| CodeChickenLib | 3.2.3 or later | Required |
+| ModularUI | 3.0.4 or later | Required |
+| MixinBooter | 8.0 or later | Required |
+| Applied Energistics 2 Unofficial Extended Life | Built against 0.56.4 | Optional: ME parts and pattern buffers |
+| JEI, The One Probe, HWYLA, CraftTweaker, GroovyScript, Forestry | | Optional integrations, as in GTCEu |
 
-Ender Fluid Link Cover, Auto-Maintenance Hatch, Optical Fiber, and Data Bank Textures are from **[TecTech](https://github.com/Technus/TecTech)**.
+## For addon and mod developers
 
-Steam Grinder is from **[GregTech++](https://www.curseforge.com/minecraft/mc-mods/gregtech-gt-gtplusplus)**.
+The public API is `gregtech.api`, unchanged in its packages. New APIs are additive: recipe
+conditions, recipe modifier providers and the PipeNet extension points are described in their
+documents. [docs/pipenet-compatibility.md](docs/pipenet-compatibility.md) states what pipe
+networks guarantee to addon handlers and where those guarantees end, and
+[docs/helper-library-map.md](docs/helper-library-map.md) maps the PipeNet helpers and their owners.
 
-Certificate of Not Being a Noob Anymore is from **[Crops++](https://www.curseforge.com/minecraft/mc-mods/berries)**.
+## Building from source
 
-NanoMuscle and QuarkTech Suite Armors are from **[Nukepowered Utils](https://www.curseforge.com/minecraft/mc-mods/nukepowered-utils)**.
+The build needs JDK 17 and compiles to Java 8 bytecode; tests and the development client run on
+Java 8.
 
-OpenComputers compatibility has some code from **[GTCE2OC](https://www.curseforge.com/minecraft/mc-mods/gtce2oc)**.
+```sh
+git clone https://github.com/orthrus-research/GTCEu-Reloaded.git
+cd GTCEu-Reloaded
+./gradlew build
+```
 
-See something we forgot to credit? Reach out to us on Discord, or open an issue and ask for appropriate credit, we will happily mark it here
+The build writes the mod JAR to `build/libs`. [CONTRIBUTING.md](CONTRIBUTING.md) lists the checks a
+change must pass.
+
+## Documentation
+
+| Document | Contents |
+| --- | --- |
+| [docs/modern-backports.md](docs/modern-backports.md) | Features adapted from CEu Modern |
+| [docs/ae-processing-buffers.md](docs/ae-processing-buffers.md) | ME processing pattern buffers and proxies |
+| [docs/recipe-conditions.md](docs/recipe-conditions.md) | Recipe conditions and processing holds |
+| [docs/recipe-modifiers.md](docs/recipe-modifiers.md) | The startup recipe modifier API |
+| [docs/pipenet-compatibility.md](docs/pipenet-compatibility.md) | The PipeNet compatibility contract |
+| [docs/helper-library-map.md](docs/helper-library-map.md) | PipeNet helpers and ownership |
+| [CHANGELOG.md](CHANGELOG.md) | Changes since the fork |
+| [NOTICE.md](NOTICE.md) | License, credited works and permissions |
+
+## Community
+
+Questions and discussion: [Discord](https://discord.gg/qCVqhXtSzR). Bugs and requests for GTCEu:
+Reloaded: this repository's issues, not upstream's. Security and private matters:
+admin@orthrus.cc. Pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Orthrus Research develops with AI assistance (Claude Code and Codex). Every change meets the same
+verification gates whatever its origin. See
+[AI usage](https://github.com/orthrus-research/.github/blob/main/AI.md).
+
+## License
+
+GTCEu: Reloaded keeps GTCEu's terms: [LGPL-3.0](LICENSE). Original authorship and copyright
+headers are intact. [NOTICE.md](NOTICE.md) credits the textures and code adapted from other
+projects and records the permissions behind the GregTech name and assets.
+
+## Upstream
+
+GregTech CE Unofficial is an indirect descendant and total rewrite of GregTech, created with
+GregoriusT's knowledge and permission but neither created nor maintained by him. It is the work of
+the GregTechCEu team and its contributors, and GTCEu: Reloaded builds on all of it. The upstream
+project, its downloads and its community are theirs:
+
+- [GregTechCEu/GregTech](https://github.com/GregTechCEu/GregTech)
+- [GTCEu on CurseForge](https://www.curseforge.com/minecraft/mc-mods/gregtech-ce-unofficial) and
+  [Modrinth](https://modrinth.com/mod/gregtech-ce-unofficial)
+- The [GregTech CEu Discord](https://discord.gg/bWSWuYvURP)
+
+"Community Edition" stays part of the name: the permission to use the GregTech name requires it,
+and it marks the ideas and the work as the community's. The repository keeps upstream's full
+history, so every upstream author is credited in its commits.
+
+The upstream logo is not used for GTCEu: Reloaded.
