@@ -11,6 +11,7 @@ Changes since the fork from GTCEu at `52c04cd7b`, after 2.8.10.
 
 | Area | Change |
 | --- | --- |
+| Identity | The mod list, crash reports and the jar name show GTCEu: Reloaded; versions read `2.8.10-reloaded.N` |
 | Machines | Item and fluid output sides have independent permissions |
 | Machines | Maintenance hatch screens show live maintenance faults |
 | Machines | Common simple machines show contextual tool actions |

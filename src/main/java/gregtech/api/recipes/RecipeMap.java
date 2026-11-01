@@ -191,7 +191,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             Material currentMaterial = OrePrefix.getCurrentMaterial();
             GTLog.logger.error(
                     "Error happened during processing ore registration of prefix {} and material {}. " +
-                            "Seems like cross-mod compatibility issue. Report to GTCEu github.",
+                            "Seems like cross-mod compatibility issue. Report it to GTCEu: Reloaded at " +
+                            "https://github.com/orthrus-research/GTCEu-Reloaded/issues",
                     currentOrePrefix, currentMaterial);
         }
     }

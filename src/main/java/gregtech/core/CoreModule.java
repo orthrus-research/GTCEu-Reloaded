@@ -273,7 +273,7 @@ public class CoreModule implements IGregTechModule {
                 logger.fatal("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                 logger.fatal("Ignoring invalid recipes and continuing loading");
                 logger.fatal("Some things may lack recipes or have invalid ones, proceed at your own risk");
-                logger.fatal("Report to GTCEu GitHub to get more help and fix the problem");
+                logger.fatal("Report it at https://github.com/orthrus-research/GTCEu-Reloaded/issues for help");
                 logger.fatal("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             }
         }
