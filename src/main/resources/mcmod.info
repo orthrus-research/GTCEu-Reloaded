@@ -1,22 +1,15 @@
 [{
-  "modid": "gregtech",
-  "name": "GregTech",
-  "description": "Finally, the awesome technology of GregTech-Intergalactical can be used in 1.12, now new and improved!",
+  "modid": "${modid}",
+  "name": "${modname}",
+  "description": "A continuation of GregTech CE Unofficial for Minecraft 1.12.2 by Orthrus Research. It replaces GTCEu: install one or the other, never both.",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "logoFile": "assets/gregtech/textures/gt_logo_long.png",
-  "url": "https://www.curseforge.com/minecraft/mc-mods/gregtech-ce-unofficial",
+  "logoFile": "assets/gregtech/textures/gtceu_reloaded_logo.png",
+  "url": "https://github.com/orthrus-research/GTCEu-Reloaded",
   "authorList": [
-    "serenibyss",
-    "TechLord22",
-    "KilaBash",
-    "Archengius",
-    "Exidex",
-    "BloodAsp",
-    "Muramasa",
-    "GregoriusT"
+    "Orthrus Research"
   ],
-  "credits": "GregoriusT for making GregTech and textures, the GT5u authors and maintainers for providing the original code, and the community.",
+  "credits": "Built on GregTech CE Unofficial by the GregTechCEu team (serenibyss, TechLord22, KilaBash, Exidex, BloodAsp, Muramasa and its contributors) and on GregTech Community Edition by Archengius. GregoriusT for making GregTech and its textures, the GT5u authors and maintainers for the original code, and the community.",
   "dependencies": [
     "codechickenlib"
   ]

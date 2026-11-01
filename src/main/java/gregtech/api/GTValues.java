@@ -167,7 +167,8 @@ public class GTValues {
     public static final String MODID = "gregtech";
 
     /**
-     * GregTech Mod Name
+     * GregTech Mod Name. It keys logger, keybinding, HWYLA and GroovyScript entries, so it stays as it was; the
+     * name players see is {@code modName} in gradle.properties.
      */
     public static final String MOD_NAME = "GregTech";
 

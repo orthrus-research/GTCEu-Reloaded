@@ -201,7 +201,7 @@ public enum Mods {
         if (isModLoaded()) {
             String modName = TextFormatting.BOLD + ID + TextFormatting.RESET;
             List<String> messages = new ArrayList<>();
-            messages.add(modName + " mod detected, this mod is incompatible with GregTech CE Unofficial.");
+            messages.add(modName + " mod detected, this mod is incompatible with GTCEu: Reloaded.");
             messages.addAll(Arrays.asList(customMessages));
             if (FMLLaunchHandler.side() == Side.SERVER) {
                 throw new RuntimeException(String.join(",", messages));

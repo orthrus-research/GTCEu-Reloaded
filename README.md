@@ -49,7 +49,8 @@ The fork began at upstream commit `52c04cd7b`, after GTCEu 2.8.10. In summary:
 GTCEu: Reloaded replaces GTCEu: install one or the other, never both. It keeps the `gregtech` mod
 ID, the `gregtech` packages, registry names, configuration and the save format, so worlds and
 addons built for GTCEu find what they expect. New features that change behavior are opt-in or
-default off where the documents say so.
+default off where the documents say so. Versions carry the GTCEu release they build on plus a
+Reloaded number, such as `2.8.10-reloaded.1`, so addons that require a GTCEu version still load.
 
 | Component | Version | |
 | --- | --- | --- |
