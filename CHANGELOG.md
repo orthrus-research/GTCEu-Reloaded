@@ -1,7 +1,6 @@
 # Changelog
 
-One line per change that players, pack makers or addons can see. Releases will be published on
-GitHub Releases. GTCEu's own history up to the fork is in the
+Changes for players, pack makers and addon developers. GTCEu's history up to the fork is in the
 [upstream changelog](https://github.com/GregTechCEu/GregTech/blob/master/CHANGELOG.md) and
 [upstream releases](https://github.com/GregTechCEu/GregTech/releases).
 
@@ -13,9 +12,8 @@ GitHub Releases. GTCEu's own history up to the fork is in the
 | --- | --- |
 | Build | Normalize packaged text line endings so Windows checkouts and clean source exports produce identical mod JARs |
 | Recipes | Clear old recipe-viewer category lookups when HEI rebuilds, preventing duplicate machine recipe links and retained obsolete category objects after reload |
-| Authoring | Replace the recipe-map class allowlist and assembly-line transaction special case with shared immutable registration state maintained by native and typed recipe operations |
+| Authoring | Let native and typed recipe operations maintain addon-declared registration state and secondary indexes through one shared API |
 | Authoring | Keep quantum controller, proxy and extender rendering methods and the clipboard GUI cache client-only so dedicated-server Groovy inspection does not resolve client types |
-| Integration | Remove Better Questing database repair, import hooks and the quest data-fix command; quest content resolution belongs to the quest mod |
 | Authoring | Remove the remaining CT-specific material-component array accessor; use the native material-component list |
 | Pipes | Preserve named fluid-containment attributes through pipe sizing and graph saves; restore loaded pipes' derived decisions without replacing tanks or changing saved geometry and connections |
 | Storage | Expose native crate layouts and retention behavior; support retained machine replacement across namespaces without stale harvest state |

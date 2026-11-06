@@ -1,11 +1,9 @@
 # Native Java and Groovy authoring migration
 
-`ct-overhaul` targets Java 26 and Cleanroom. It removes the CraftTweaker/ZenScript adapter and
-dependency rather than shipping a compatibility bridge. This document describes the current
-replacement surface; it is not a release qualification receipt.
-
-Reloaded release acceptance requires these pack capabilities through its own API. Supporting
-existing GTCEu addon binaries is a separate optional service; see [release-readiness.md](release-readiness.md).
+Reloaded 3.0 targets Java 26 and Cleanroom. CraftTweaker/ZenScript scripts and addon APIs must
+migrate to native Java or Groovy authoring. This guide maps the replacements and their lifecycle
+requirements. See [release validation](pre-delivery-qualification.md) for supported versions and
+compatibility limits.
 
 ## Replacement map
 
@@ -110,7 +108,7 @@ group. The crafting registry can instead retain a nonmatching placeholder to pre
 ID. Neither operation inserts a null recipe into a native matching index. A null value in the
 internal crafting replacement map is an explicit disable instruction, not an unresolved ingredient.
 
-The initial Groovy typed-group adapter restores its owned recipes to the unscripted baseline on
+The Groovy typed-group adapter restores its owned recipes to the unscripted baseline on
 reload, then accepts new groups. Clearing all owned groups is atomic. Replacement transactions cover each supported group; they do
 not promise rollback of arbitrary script code or retention of an earlier run after a failed whole
 reload. Do not independently remove recipes belonging to a typed group through another frontend.
@@ -141,16 +139,16 @@ in one transaction across both group kinds. A failed restore preserves both kind
 The lower-level `RecyclingOwnershipRegistry.prepareRecovery` supports native owners and exposes a
 detached `resolved()` metadata view; prepared changes are revision-checked and single-use.
 
-This combined API still does not mutate crafting registrations. A crafting frontend must coordinate
-its producer changes before the pack's immediate recycling helper can be migrated. Its native
-generation runs during registration; no script closure is retained in recipe matching.
+`replaceRecovery` does not mutate crafting registrations. Use `replaceCrafting` when a helper needs
+to coordinate crafting with composition and generated recovery. Generation runs during registration;
+no script closure is retained in recipe matching.
 
 The internal `CraftingRegistryTransaction` prepares already-compiled native crafting recipes in
 detached Cleanroom registry copies. It mirrors available ACTIVE/FROZEN/VANILLA views, preserves
 numeric IDs and registry collection identities, and can restore the captured tables if a combined
 operation aborts. Disabling an existing name retains a nonmatching, dynamic placeholder at its ID;
 removing an absent name is a no-op. It does not itself compile typed crafting descriptors or join
-`replaceRecovery`; callers must not treat it as completed crafting/recycling coordination.
+`replaceRecovery`; use the registrar's `replaceCrafting` method for coordinated publication.
 Its cached Java method/field handles are used only at registration, never during crafting matches.
 
 `CraftingDefinitionCompiler.compile(definition)` now compiles immutable `ShapedCraftingDefinition`
@@ -172,13 +170,12 @@ overlapping alternatives. Nonconsumable inputs return one item to their matched 
 inputs use native container-item/tool behavior on a copy. Output and display-stack accessors return
 copies. No script callback or reflection is retained in these recipes. Arbitrary dynamic output and
 ingredient-transform closures are not part of this descriptor surface; existing native/Groovy custom
-recipe facilities remain available while adoption is completed.
+recipe facilities remain available for those cases.
 
-Development compilation alone does not qualify statically compiled Groovy calls to Minecraft
-members. A production probe emitted `Items.COAL` literally under `@CompileStatic` and failed with
-`NoSuchFieldError`, while the development test passed. Keep the checked boundary on Reloaded's
-Java API; use the engine's remapped authoring helpers for Minecraft access, or implement that
-access in build-remapped Java. Native qualification must exercise the actual production names.
+Under `@CompileStatic`, direct Minecraft member references such as `Items.COAL` can retain
+development names and fail with `NoSuchFieldError` in production. Keep statically checked calls
+on Reloaded's Java API; use GroovyScript's remapped helpers for Minecraft access, or implement
+that access in build-remapped Java. Test compiled scripts against the production mod JAR.
 
 Built-in `GTRecipeOreInput` now follows the native ore membership list directly, including additions,
 removals and same-size replacements during authoring. `getInputStacks()` returns fresh, quantity-adjusted
@@ -187,7 +184,7 @@ snapshots. The old `refreshStackCache()` method and Groovy/HEI/load-complete ref
 callers should remove explicit invalidations. Ore names must still exist when typed crafting
 definitions are compiled: an unknown name produces a diagnostic without allocating an ore entry.
 
-## Dependencies and qualification
+## Crafting ownership
 
 Typed crafting ownership is available through `RecipeDefinitionRegistrar.replaceCrafting` and
 `mods.gregtech.definitions.replaceCrafting`. Pass shaped/shapeless definitions to create or overwrite;
@@ -206,12 +203,10 @@ Existing imperative helper calls do not automatically acquire these guarantees. 
 operation, including its composition policy, to the shared API. Ownership can adopt the initial
 FROZEN crafting copy after verifying native copy semantics. The registered Groovy frontend now clears
 before Groovy's ordinary reload callbacks, so its baselines are restored before imperative crafting
-backups. Other registry-stage replacements still reject restoration. Actual pack helper migration
-remains separate work. Isolated integrated-server checks now cover mixed imperative/typed crafting
-and machine ownership, repeated reload, disable/re-enable and recovery after a script exception.
-Combined lifecycle fixtures also cover crafting-owned composition, downstream recovery amounts,
-explicit zero recovery, generated scanner/station research and its indexes, rejected overflowing
-edits, disable/re-enable and clear. Other expansion combinations still need their own checks.
+backups. Other registry-stage replacements still reject restoration. Migrate and test each pack
+helper's ownership and reload behavior as a complete operation.
+
+## Machine and storage APIs
 
 Mufflers provide exhaust obstruction checks and particles; they have no recovery inventory or
 item-generation mechanic. The unused `MultiblockWithDisplayBase.recoveryItems` field and
@@ -220,8 +215,8 @@ intentionally produces byproducts should declare ordinary or chanced recipe outp
 native recipe API. Mufflers do not open an inventory screen; their tooltip describes their role.
 This does not provide a migration for inventories saved by older recovery-enabled mufflers.
 
-The ported Sussy side-cache extension is also retired. Determine logical side from the attached
-world's `isRemote` flag. A missing `MinecraftServer` reference does not make a world client-side;
+Determine logical side from the attached world's `isRemote` flag.
+A missing `MinecraftServer` reference does not make a world client-side;
 guard server-only operations separately. Reloaded's native update loop already makes that distinction.
 
 Crate subclasses use `getMaterial()`, `getInventorySize()` and `getRowSize()` for their
@@ -239,6 +234,8 @@ a rollback transaction over arbitrary world callbacks or a general inventory-siz
 Addons remain responsible for compatible target state and consuming an unlocking tool only
 after successful replacement.
 
+## Dependencies and runtime
+
 The 3.0 alpha line requires Java 26 and Cleanroom 0.7.14-alpha. GroovyScript 1.5.0 is optional for
 native Java consumers and required for Groovy authoring. Publication metadata includes CodeChickenLib 3.3.10,
 ModularUI and compile annotations; it does not install the development loader bundle, Groovy engine,
@@ -248,14 +245,10 @@ registration and collapsible groups. The `mezz.jei` package and `jei` mod ID are
 
 Each full viewer registration now resets Reloaded's category lookups. Categories from an earlier
 runtime must not be retained by consumers across a rebuild; resolve them again from the current
-runtime. Repeated full and recipe-only reloads pass the selected lifecycle fixture with synchronous
-search and with a separately repaired HEI asynchronous-completion implementation. The original
-pinned HEI artifact still has a completion lock conflict with GroovyScript. The repaired candidate
-also passes ingredient hide/add/removal and autonomous rebuild checks; exact artifact identity and
-remaining dependency-delivery work are recorded in [release-readiness.md](release-readiness.md).
+runtime. Asynchronous reload with GroovyScript requires the repaired HEI 4.36.1 dependency;
+unpatched 4.36.1 has a completion lock conflict. See
+[the repair instructions](../tools/dependency-patches/hei-async/README.md) and
+[release validation](pre-delivery-qualification.md) for its exact identity and tested behavior.
 
-Qualification applies to exact artifacts and scenarios. Builds, source-level tests and isolated native
-probes do not alone qualify client behavior, production reload, multiplayer or existing pack worlds.
-Earlier development results must be revalidated when affected code or dependencies change. Old ZenScript
-source is not executed. The retained Supersymmetry stack requires its own migration and loader qualification.
-Exact artifact hashes and gate outcomes belong to the release qualification receipt, not this API guide.
+Pack and addon compatibility must be tested against the selected production dependencies,
+including reload and copied-world migration where those features are used.

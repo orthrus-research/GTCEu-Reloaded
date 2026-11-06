@@ -32,8 +32,9 @@ Custom compilation transforms that read undeclared external files must arrange t
 invalidation; the guard cannot infer arbitrary I/O dependencies. This is not a security signature.
 
 Tests cover same/older timestamps, helper edits/additions/deletion, dependency byte/order changes,
-compiler settings, rollback, relocation, corrupt compiled files and incomplete manifests. Actual
-pack startup cost, native cache reuse and deployment/update behavior require separate qualification.
+compiler settings, rollback, relocation, corrupt compiled files and incomplete manifests.
+[Release validation](pre-delivery-qualification.md) records native cache reuse and measured
+compilation cost. Pack-specific startup performance requires separate measurement.
 
 Cached helper loading normalizes binary class names and resolves secondary classes to their actual source
 file. A warm cache must execute helper-dependent scripts successfully; an index hit alone is insufficient.

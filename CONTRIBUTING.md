@@ -8,9 +8,9 @@ what is specific to GTCEu: Reloaded. Report GTCEu: Reloaded problems here, not t
 
 ## Compatibility is a contract
 
-- Reloaded's own APIs and pack capabilities define release readiness. Upstream GTCEu addon binary
-  compatibility and existing-pack migration are optional services, not automatic release gates.
-  Preserve the underlying functionality through native contracts; see [release acceptance](docs/release-readiness.md).
+- Release requirements cover Reloaded's documented APIs and pack capabilities. Compatibility with
+  upstream GTCEu addons and existing packs must be documented and tested separately;
+  see [release acceptance](docs/release-readiness.md).
 
 - The `gregtech` mod ID, the `gregtech` packages, registry names, configuration keys, network
   messages and the save format stay as they are. Renaming or removing any of them needs an
@@ -33,7 +33,7 @@ Build with the tests and the formatting check (JDK 26):
 ```
 
 The standard `test` task includes authoring lifecycle regressions for Java and both Groovy modes,
-recipe replacement/disable/re-enable, and restoration ordering. No local-only init script is required.
+recipe replacement/disable/re-enable, and restoration ordering.
 CI uses Temurin 26 through the shared build setup action.
 
 `./gradlew spotlessApply` applies the formatting. Follow [CODESTYLE.md](CODESTYLE.md) and
