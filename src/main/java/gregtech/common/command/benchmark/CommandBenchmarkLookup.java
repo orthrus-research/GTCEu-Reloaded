@@ -19,7 +19,6 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.common.Loader;
 
-import com.github.bsideup.jabel.Desugar;
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -79,10 +78,8 @@ public class CommandBenchmarkLookup extends CommandBase {
         Collection<Recipe> find(long voltage, List<ItemStack> items, List<FluidStack> fluids);
     }
 
-    @Desugar
     record TrialResults(long noMatchTest, long oneMatchExactTest, long threeMatchExcessTest) {}
 
-    @Desugar
     record BenchmarkResults(double[] noMatchTest, double[] oneMatchExactTest, double[] threeMatchExcessTest) {}
 
     private static class BenchmarkingTask implements BenchmarkTask {
@@ -111,7 +108,8 @@ public class CommandBenchmarkLookup extends CommandBase {
             if (trialsCompleted == Integer.MIN_VALUE) return false;
             for (int i = 0; i < rate; i++) {
                 for (RecipeMap<?> map : RecipeMap.getRecipeMaps()) {
-                    if (recipeLists.computeIfAbsent(map, m -> new ObjectArrayList<>(m.getRecipeList())).isEmpty())
+                    if (recipeLists.computeIfAbsent(map, (RecipeMap<?> m) -> new ObjectArrayList<>(m.getRecipeList()))
+                            .isEmpty())
                         continue;
                     nsTrialTimes.computeIfAbsent(map, m -> new ObjectArrayList<>())
                             .add(trial(recipeLists.get(map), (v, it, f) -> {
@@ -123,7 +121,7 @@ public class CommandBenchmarkLookup extends CommandBase {
                 if ((trialsCompleted > 1) && ((trialsCompleted & (trialsCompleted - 1)) == 0)) {
                     sender.sendMessage(new TextComponentTranslation("gregtech.command.benchmark.lookup.progress",
                             trialsCompleted, trials)
-                                    .setStyle(new Style().setColor(TextFormatting.GREEN)));
+                            .setStyle(new Style().setColor(TextFormatting.GREEN)));
                     GTLog.logger.info("[Benchmarking] {}th trial complete...", trialsCompleted);
                 }
             }

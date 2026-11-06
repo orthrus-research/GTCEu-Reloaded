@@ -48,12 +48,16 @@ public class GTTextFieldWidget extends BaseTextFieldWidget<GTTextFieldWidget> {
 
     public double parse(String num) {
         ParseResult result = MathUtils.parseExpression(num, this.defaultNumber, true);
-        double value = result.getResult();
         if (result.isFailure()) {
-            String mathFailMessage = result.getError();
+            String mathFailMessage = result.getErrorMessage();
             GTLog.logger.error("Math expression error in {}: {}", this, mathFailMessage);
+            return this.defaultNumber;
         }
-        return value;
+        if (!result.hasValue() || !result.getResult().isNumberValue()) {
+            GTLog.logger.error("Math expression in {} did not produce a number: {}", this, num);
+            return this.defaultNumber;
+        }
+        return result.getResult().getNumberValue().doubleValue();
     }
 
     @Override
@@ -71,8 +75,8 @@ public class GTTextFieldWidget extends BaseTextFieldWidget<GTTextFieldWidget> {
 
     @Override
     public boolean isValidSyncHandler(SyncHandler syncHandler) {
-        if (syncHandler instanceof IStringValue<?>iStringValue &&
-                syncHandler instanceof ValueSyncHandler<?>valueSyncHandler) {
+        if (syncHandler instanceof IStringValue<?> iStringValue &&
+                syncHandler instanceof ValueSyncHandler<?> valueSyncHandler) {
             this.stringValue = iStringValue;
             valueSyncHandler.setChangeListener(() -> {
                 markTooltipDirty();

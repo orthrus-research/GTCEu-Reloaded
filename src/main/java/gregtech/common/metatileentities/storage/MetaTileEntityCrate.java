@@ -60,10 +60,30 @@ public class MetaTileEntityCrate extends MetaTileEntity {
 
     public MetaTileEntityCrate(ResourceLocation metaTileEntityId, Material material, int inventorySize, int rowSize) {
         super(metaTileEntityId);
+        if (inventorySize <= 0 || rowSize <= 0 || inventorySize % rowSize != 0) {
+            throw new IllegalArgumentException("Crate inventory must contain complete, nonempty rows");
+        }
         this.material = material;
         this.inventorySize = inventorySize;
         this.rowSize = rowSize;
         initializeInventory();
+    }
+
+    public final Material getMaterial() {
+        return material;
+    }
+
+    public final int getInventorySize() {
+        return inventorySize;
+    }
+
+    public final int getRowSize() {
+        return rowSize;
+    }
+
+    @Override
+    public boolean keepsInventory() {
+        return isTaped;
     }
 
     @Override
@@ -90,7 +110,7 @@ public class MetaTileEntityCrate extends MetaTileEntity {
 
     @Override
     public void clearMachineInventory(@NotNull List<@NotNull ItemStack> itemBuffer) {
-        if (!isTaped) {
+        if (!keepsInventory()) {
             clearInventory(itemBuffer, inventory);
         }
     }
@@ -179,7 +199,7 @@ public class MetaTileEntityCrate extends MetaTileEntity {
     public boolean onRightClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing,
                                 CuboidRayTraceResult hitResult) {
         ItemStack stack = playerIn.getHeldItem(hand);
-        if (playerIn.isSneaking() && !isTaped) {
+        if (playerIn.isSneaking() && !keepsInventory()) {
             if (stack.isItemEqual(MetaItems.DUCT_TAPE.getStackForm()) ||
                     stack.isItemEqual(MetaItems.BASIC_TAPE.getStackForm())) {
                 if (!playerIn.isCreative()) {
@@ -229,7 +249,7 @@ public class MetaTileEntityCrate extends MetaTileEntity {
             this.setPaintingColor(data.getInteger(TAG_KEY_PAINTING_COLOR));
         }
         this.isTaped = data.getBoolean(TAPED_NBT);
-        if (isTaped) {
+        if (keepsInventory() && data.hasKey("Inventory", 10)) {
             this.inventory.deserializeNBT(data.getCompoundTag("Inventory"));
         }
 
@@ -248,8 +268,8 @@ public class MetaTileEntityCrate extends MetaTileEntity {
             data.setInteger(TAG_KEY_PAINTING_COLOR, this.getPaintingColor());
         }
         // Don't write tape NBT if not taped, to stack with ones from JEI
-        if (isTaped) {
-            data.setBoolean(TAPED_NBT, isTaped);
+        if (keepsInventory()) {
+            data.setBoolean(TAPED_NBT, true);
             data.setTag("Inventory", inventory.serializeNBT());
         }
     }

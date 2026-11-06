@@ -1,10 +1,11 @@
 # Runs tests
-name: Java Tests
+name: Java Build and Tests
 
 on:
   push:
     branches:
       - master
+      - ct-overhaul
   pull_request:
 
 concurrency:
@@ -13,7 +14,7 @@ concurrency:
 
 jobs:
   test:
-    name: Tests
+    name: Build and Tests
     runs-on: ubuntu-latest
     env:
       DISABLE_BUILDSCRIPT_UPDATE_CHECK: true
@@ -25,5 +26,5 @@ jobs:
       - name: Setup Build
         uses: ./.github/actions/build_setup
 
-      - name: Run Tests with Gradle
-        run: ./gradlew test --warning-mode all --build-cache
+      - name: Build and Verify with Gradle
+        run: ./gradlew build --warning-mode all --build-cache

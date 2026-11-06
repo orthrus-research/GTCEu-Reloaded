@@ -244,7 +244,7 @@ public enum GTBeeDefinition implements IBeeDefinition {
     FERTILIZER(GTBranchDefinition.GT_ORGANIC, "Stercorat", true, 0x7FCEF5, 0x654525,
             beeSpecies -> {
                 if (Mods.ExtraBees.isModLoaded()) {
-                    beeSpecies.addProduct(getExtraBeesComb(9), 0.15f); // SEED
+                    beeSpecies.addProduct(getExtraBeesComb(9), 0.15f);// SEED
                 } else {
                     beeSpecies.addProduct(getForestryComb(EnumHoneyComb.MOSSY), 0.15f);
                 }
@@ -282,7 +282,7 @@ public enum GTBeeDefinition implements IBeeDefinition {
                 beeSpecies.addProduct(Mods.GregTechFoodOption.getItem("gtfo_meta_item", 79), 0.05f); // Tomato Slice
                 beeSpecies.addSpecialty(new ItemStack(Items.COOKED_PORKCHOP), 0.05f);
                 beeSpecies.addSpecialty(new ItemStack(Items.COOKED_BEEF), 0.15f);
-                beeSpecies.addSpecialty(Mods.GregTechFoodOption.getItem("gtfo_meta_item", 97), 0.05f); // Cheddar Slice
+                beeSpecies.addSpecialty(Mods.GregTechFoodOption.getItem("gtfo_meta_item", 97), 0.05f);// Cheddar Slice
                 beeSpecies.setHumidity(EnumHumidity.NORMAL);
                 beeSpecies.setTemperature(EnumTemperature.NORMAL);
             },

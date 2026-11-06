@@ -7,12 +7,8 @@ import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIFactory;
 import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.pattern.TraceabilityPredicate;
-import gregtech.api.unification.OreDictUnifier;
-import gregtech.api.unification.material.Materials;
-import gregtech.api.unification.ore.OrePrefix;
 import gregtech.common.ConfigHolder;
 
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.*;
@@ -49,12 +45,6 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
 
     // Held since it is frequently accessed
     private IMaintenanceHatch maintenanceHatch;
-
-    /**
-     * Items to recover in a muffler hatch
-     */
-    protected final List<ItemStack> recoveryItems = new ArrayList<>(
-            Collections.singleton(OreDictUnifier.get(OrePrefix.dustTiny, Materials.Ash)));
 
     private int timeActive;
 
@@ -263,16 +253,6 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
     @SideOnly(Side.CLIENT)
     public @NotNull EnumParticleTypes getMufflerParticle() {
         return EnumParticleTypes.SMOKE_LARGE;
-    }
-
-    /**
-     * Sets the recovery items of this multiblock
-     *
-     * @param recoveryItems is the items to set
-     */
-    protected void setRecoveryItems(ItemStack... recoveryItems) {
-        this.recoveryItems.clear();
-        this.recoveryItems.addAll(Arrays.asList(recoveryItems));
     }
 
     /**

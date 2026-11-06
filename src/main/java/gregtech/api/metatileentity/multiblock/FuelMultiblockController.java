@@ -95,7 +95,7 @@ public abstract class FuelMultiblockController extends RecipeMapMultiblockContro
                             .setStyle(new Style().setColor(TextFormatting.GREEN)),
                     new TextComponentTranslation(
                             TextFormattingUtil.formatNumbers(recipeMapWorkable.getMaxProgress() / 20))
-                                    .setStyle(new Style().setColor(TextFormatting.YELLOW))));
+                            .setStyle(new Style().setColor(TextFormatting.YELLOW))));
         }
 
         list.add(new TextComponentTranslation("behavior.tricorder.energy_container_storage",
@@ -108,17 +108,17 @@ public abstract class FuelMultiblockController extends RecipeMapMultiblockContro
             list.add(new TextComponentTranslation("behavior.tricorder.workable_production",
                     new TextComponentTranslation(
                             TextFormattingUtil.formatNumbers(Math.abs(recipeMapWorkable.getInfoProviderEUt())))
-                                    .setStyle(new Style().setColor(TextFormatting.RED)),
+                            .setStyle(new Style().setColor(TextFormatting.RED)),
                     new TextComponentTranslation(
                             TextFormattingUtil.formatNumbers(recipeMapWorkable.getInfoProviderEUt() == 0 ? 0 : 1))
-                                    .setStyle(new Style().setColor(TextFormatting.RED))));
+                            .setStyle(new Style().setColor(TextFormatting.RED))));
 
             list.add(new TextComponentTranslation("behavior.tricorder.multiblock_energy_output",
                     new TextComponentTranslation(TextFormattingUtil.formatNumbers(energyContainer.getOutputVoltage()))
                             .setStyle(new Style().setColor(TextFormatting.YELLOW)),
                     new TextComponentTranslation(
                             GTValues.VN[GTUtility.getTierByVoltage(energyContainer.getOutputVoltage())])
-                                    .setStyle(new Style().setColor(TextFormatting.YELLOW))));
+                            .setStyle(new Style().setColor(TextFormatting.YELLOW))));
         }
 
         if (ConfigHolder.machines.enableMaintenance && hasMaintenanceMechanics()) {

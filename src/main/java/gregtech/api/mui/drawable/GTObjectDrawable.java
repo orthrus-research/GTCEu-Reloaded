@@ -85,7 +85,7 @@ public class GTObjectDrawable implements IDrawable, RecipeViewerIngredientProvid
                 background.draw(context, x, y, width, height, theme);
             }
             GuiDraw.drawFluidTexture(stack, x + 1, y + 1, width - 2, height - 2, 0);
-        } else if (object instanceof BoostableChanceEntry<?>entry) {
+        } else if (object instanceof BoostableChanceEntry<?> entry) {
             drawObject(entry.getIngredient(), context, x, y, width, height);
             String chance = "~" + this.boostFunction.apply(entry) / 100 + "%";
             if (amount > 0) y -= 4;
@@ -106,7 +106,7 @@ public class GTObjectDrawable implements IDrawable, RecipeViewerIngredientProvid
 
     @Override
     public @Nullable Object getIngredient() {
-        if (object instanceof BoostableChanceEntry<?>entry) {
+        if (object instanceof BoostableChanceEntry<?> entry) {
             return entry.getIngredient();
         }
         return object;

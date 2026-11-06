@@ -17,7 +17,8 @@ public class SpecialArmorPropertiesMixin {
 
     @ModifyExpressionValue(method = "applyArmor",
                            at = @At(value = "INVOKE",
-                                    target = "Lnet/minecraft/util/CombatRules;getDamageAfterAbsorb(FFF)F"),
+                                    target = "Lnet/minecraft/util/CombatRules;getDamageAfterAbsorb(FFF)F",
+                                    remap = true),
                            remap = false)
     private static float adjustArmorAbsorption(float originalDamage, EntityLivingBase entity,
                                                NonNullList<ItemStack> inventory,

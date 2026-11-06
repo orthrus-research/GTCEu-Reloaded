@@ -17,7 +17,6 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.category.GTRecipeCategory;
 import gregtech.api.recipes.category.ICategoryOverride;
-import gregtech.api.recipes.ingredients.GTRecipeOreInput;
 import gregtech.api.recipes.ingredients.IntCircuitIngredient;
 import gregtech.api.recipes.machines.IScannerRecipeMap;
 import gregtech.api.recipes.machines.RecipeMapFurnace;
@@ -119,7 +118,7 @@ public class JustEnoughItemsModule extends IntegrationSubmodule implements IModP
     }
 
     @Override
-    public void registerItemSubtypes(@NotNull ISubtypeRegistry subtypeRegistry) {
+    public void registerSubtypes(@NotNull ISubtypeRegistry subtypeRegistry) {
         MetaItemSubtypeHandler subtype = new MetaItemSubtypeHandler();
         for (MetaItem<?> metaItem : MetaItems.ITEMS) {
             subtypeRegistry.registerSubtypeInterpreter(metaItem, subtype);
@@ -132,6 +131,7 @@ public class JustEnoughItemsModule extends IntegrationSubmodule implements IModP
 
     @Override
     public void registerCategories(@NotNull IRecipeCategoryRegistration registry) {
+        RecipeMapCategory.clearCategories();
         guiHelper = registry.getJeiHelpers().getGuiHelper();
         registry.addRecipeCategories(new IntCircuitCategory(registry.getJeiHelpers().getGuiHelper()));
         registry.addRecipeCategories(new MultiblockInfoCategory(registry.getJeiHelpers()));
@@ -328,9 +328,6 @@ public class JustEnoughItemsModule extends IntegrationSubmodule implements IModP
         });
         registry.addIngredientInfo(new ItemStack(MetaBlocks.BRITTLE_CHARCOAL), VanillaTypes.ITEM,
                 I18n.format("tile.brittle_charcoal.tooltip.1", I18n.format("tile.brittle_charcoal.tooltip.2")));
-
-        // Refresh Ore Ingredients Cache
-        GTRecipeOreInput.refreshStackCache();
     }
 
     private void setupInputHandler() {

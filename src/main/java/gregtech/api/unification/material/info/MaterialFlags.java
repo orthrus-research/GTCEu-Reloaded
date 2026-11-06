@@ -140,22 +140,22 @@ public class MaterialFlags {
      */
     public static final MaterialFlag EXCLUDE_BLOCK_CRAFTING_RECIPES = new MaterialFlag.Builder(
             "exclude_block_crafting_recipes")
-                    .requireProps(PropertyKey.DUST)
-                    .build();
+            .requireProps(PropertyKey.DUST)
+            .build();
 
     public static final MaterialFlag EXCLUDE_PLATE_COMPRESSOR_RECIPE = new MaterialFlag.Builder(
             "exclude_plate_compressor_recipe")
-                    .requireFlags(GENERATE_PLATE)
-                    .requireProps(PropertyKey.DUST)
-                    .build();
+            .requireFlags(GENERATE_PLATE)
+            .requireProps(PropertyKey.DUST)
+            .build();
 
     /**
      * This will prevent material from creating Shapeless recipes for dust to block and vice versa
      */
     public static final MaterialFlag EXCLUDE_BLOCK_CRAFTING_BY_HAND_RECIPES = new MaterialFlag.Builder(
             "exclude_block_crafting_by_hand_recipes")
-                    .requireProps(PropertyKey.DUST)
-                    .build();
+            .requireProps(PropertyKey.DUST)
+            .build();
 
     public static final MaterialFlag MORTAR_GRINDABLE = new MaterialFlag.Builder("mortar_grindable")
             .requireProps(PropertyKey.DUST)
@@ -190,13 +190,13 @@ public class MaterialFlags {
      */
     public static final MaterialFlag BLAST_FURNACE_CALCITE_DOUBLE = new MaterialFlag.Builder(
             "blast_furnace_calcite_double")
-                    .requireProps(PropertyKey.DUST)
-                    .build();
+            .requireProps(PropertyKey.DUST)
+            .build();
 
     public static final MaterialFlag BLAST_FURNACE_CALCITE_TRIPLE = new MaterialFlag.Builder(
             "blast_furnace_calcite_triple")
-                    .requireProps(PropertyKey.DUST)
-                    .build();
+            .requireProps(PropertyKey.DUST)
+            .build();
 
     /////////////////
     // FLUID //

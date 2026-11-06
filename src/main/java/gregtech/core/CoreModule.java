@@ -29,7 +29,6 @@ import gregtech.api.unification.material.event.MaterialRegistryEvent;
 import gregtech.api.unification.material.event.PostMaterialEvent;
 import gregtech.api.unification.material.registry.MarkerMaterialRegistry;
 import gregtech.api.util.CapesRegistry;
-import gregtech.api.util.Mods;
 import gregtech.api.util.oreglob.OreGlob;
 import gregtech.api.util.virtualregistry.VirtualEnderRegistry;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
@@ -74,8 +73,6 @@ import gregtech.core.network.packets.PacketUIWidgetUpdate;
 import gregtech.core.sound.GTSoundEvents;
 import gregtech.core.sound.internal.SoundManager;
 import gregtech.core.unification.material.internal.MaterialRegistryManager;
-import gregtech.datafix.command.CommandDataFix;
-import gregtech.integration.bq.BQuDataFixer;
 import gregtech.loaders.dungeon.DungeonLootLoader;
 import gregtech.modules.GregTechModules;
 
@@ -299,6 +296,7 @@ public class CoreModule implements IGregTechModule {
         BedrockFluidVeinHandler.recalculateChances(true);
         // registers coil types for the BlastTemperatureProperty used in Blast Furnace Recipes
         // runs AFTER craftTweaker
+        gregtech.api.definition.ContentDefinitions.freezeCoils();
         for (Map.Entry<IBlockState, IHeatingCoilBlockStats> entry : GregTechAPI.HEATING_COILS.entrySet()) {
             IHeatingCoilBlockStats value = entry.getValue();
             if (value != null) {
@@ -326,13 +324,8 @@ public class CoreModule implements IGregTechModule {
         GregTechAPI.commandManager.addCommand(new CommandHand());
         GregTechAPI.commandManager.addCommand(new CommandRecipeCheck());
         GregTechAPI.commandManager.addCommand(new CommandShaders());
-        GregTechAPI.commandManager.addCommand(new CommandDataFix());
         GregTechAPI.commandManager.addCommand(new CommandBenchmark());
         CapesRegistry.load();
-
-        if (Mods.BetterQuestingUnofficial.isModLoaded()) {
-            BQuDataFixer.onServerStarting(event.getServer());
-        }
     }
 
     @Override

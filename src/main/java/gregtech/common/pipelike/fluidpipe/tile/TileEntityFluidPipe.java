@@ -44,6 +44,18 @@ public class TileEntityFluidPipe extends TileEntityMaterialPipeBase<FluidPipeTyp
         return getNodeData().getThroughput() * 20;
     }
 
+    @Override
+    protected void recoverPipeNetOnLoad(World loadedWorld, BlockPos loadedPos) {
+        if (loadedWorld == null || loadedWorld.isRemote || getWorld() != loadedWorld || isInvalid() ||
+                !getPos().equals(loadedPos) || !loadedWorld.isBlockLoaded(loadedPos) ||
+                loadedWorld.getTileEntity(loadedPos) != this || getPipeBlock() == null) {
+            return;
+        }
+        super.recoverPipeNetOnLoad(loadedWorld, loadedPos);
+        FluidPipeNet net = getFluidPipeNet();
+        if (net != null) net.synchronizeNodeAttributes(loadedPos, getNodeData());
+    }
+
     public FluidPipeNet getFluidPipeNet() {
         if (world == null || world.isRemote)
             return null;

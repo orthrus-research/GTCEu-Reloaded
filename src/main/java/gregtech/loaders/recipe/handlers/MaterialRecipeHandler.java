@@ -256,9 +256,11 @@ public class MaterialRecipeHandler {
         ItemStack smallDustStack = OreDictUnifier.get(orePrefix, material);
         ItemStack dustStack = OreDictUnifier.get(OrePrefix.dust, material);
 
-        ModHandler.addShapedRecipe(String.format("small_dust_disassembling_%s", material),
+        ModHandler.addShapedRecipe(
+                ModHandler.materialRecipeName(material, String.format("small_dust_disassembling_%s", material)),
                 GTUtility.copy(4, smallDustStack), " X", "  ", 'X', new UnificationEntry(OrePrefix.dust, material));
-        ModHandler.addShapedRecipe(String.format("small_dust_assembling_%s", material),
+        ModHandler.addShapedRecipe(
+                ModHandler.materialRecipeName(material, String.format("small_dust_assembling_%s", material)),
                 dustStack, "XX", "XX", 'X', new UnificationEntry(orePrefix, material));
 
         RecipeMaps.PACKER_RECIPES.recipeBuilder().input(orePrefix, material, 4)
@@ -276,9 +278,11 @@ public class MaterialRecipeHandler {
         ItemStack tinyDustStack = OreDictUnifier.get(orePrefix, material);
         ItemStack dustStack = OreDictUnifier.get(OrePrefix.dust, material);
 
-        ModHandler.addShapedRecipe(String.format("tiny_dust_disassembling_%s", material),
+        ModHandler.addShapedRecipe(
+                ModHandler.materialRecipeName(material, String.format("tiny_dust_disassembling_%s", material)),
                 GTUtility.copy(9, tinyDustStack), "X ", "  ", 'X', new UnificationEntry(OrePrefix.dust, material));
-        ModHandler.addShapedRecipe(String.format("tiny_dust_assembling_%s", material),
+        ModHandler.addShapedRecipe(
+                ModHandler.materialRecipeName(material, String.format("tiny_dust_assembling_%s", material)),
                 dustStack, "XXX", "XXX", "XXX", 'X', new UnificationEntry(orePrefix, material));
 
         RecipeMaps.PACKER_RECIPES.recipeBuilder().input(orePrefix, material, 9)
@@ -296,14 +300,15 @@ public class MaterialRecipeHandler {
         int workingTier = material.getWorkingTier();
 
         if (material.hasFlag(MORTAR_GRINDABLE) && workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("mortar_grind_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("mortar_grind_%s", material)),
                     OreDictUnifier.get(OrePrefix.dust, material), "X", "m", 'X',
                     new UnificationEntry(ingotPrefix, material));
         }
 
         if (material.hasFlag(GENERATE_ROD)) {
             if (workingTier <= HV) {
-                ModHandler.addShapedRecipe(String.format("stick_%s", material),
+                ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("stick_%s", material)),
                         OreDictUnifier.get(OrePrefix.stick, material, 1),
                         "f ", " X",
                         'X', new UnificationEntry(ingotPrefix, material));
@@ -386,7 +391,8 @@ public class MaterialRecipeHandler {
                             .buildAndRegister();
 
                     if (workingTier <= HV) {
-                        ModHandler.addShapedRecipe(String.format("plate_%s", material),
+                        ModHandler.addShapedRecipe(
+                                ModHandler.materialRecipeName(material, String.format("plate_%s", material)),
                                 plateStack, "h", "I", "I", 'I', new UnificationEntry(ingotPrefix, material));
                     }
                 }
@@ -421,13 +427,21 @@ public class MaterialRecipeHandler {
         int workingTier = material.getWorkingTier();
 
         if (material.hasFlag(MORTAR_GRINDABLE) && workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("gem_to_dust_%s_%s", material, gemPrefix), crushedStack,
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material,
+                            String.format("gem_to_dust_%s_%s", material, gemPrefix.name()),
+                            String.format("gem_to_dust_%s_%s", material, gemPrefix)),
+                    crushedStack,
                     "X", "m", 'X', new UnificationEntry(gemPrefix, material));
         }
 
         ItemStack prevStack = prevPrefix == null ? ItemStack.EMPTY : OreDictUnifier.get(prevPrefix, material, 2);
         if (!prevStack.isEmpty()) {
-            ModHandler.addShapelessRecipe(String.format("gem_to_gem_%s_%s", prevPrefix, material), prevStack,
+            ModHandler.addShapelessRecipe(
+                    ModHandler.materialRecipeName(material,
+                            String.format("gem_to_gem_%s_%s", prevPrefix.name(), material),
+                            String.format("gem_to_gem_%s_%s", prevPrefix, material)),
+                    prevStack,
                     "h", new UnificationEntry(gemPrefix, material));
 
             RecipeMaps.CUTTER_RECIPES.recipeBuilder()
@@ -455,9 +469,11 @@ public class MaterialRecipeHandler {
             ItemStack ingotStack = OreDictUnifier.get(OrePrefix.ingot, material);
 
             if (!ConfigHolder.recipes.disableManualCompression && workingTier <= HV) {
-                ModHandler.addShapelessRecipe(String.format("nugget_disassembling_%s", material),
+                ModHandler.addShapelessRecipe(
+                        ModHandler.materialRecipeName(material, String.format("nugget_disassembling_%s", material)),
                         GTUtility.copy(9, nuggetStack), new UnificationEntry(OrePrefix.ingot, material));
-                ModHandler.addShapedRecipe(String.format("nugget_assembling_%s", material),
+                ModHandler.addShapedRecipe(
+                        ModHandler.materialRecipeName(material, String.format("nugget_assembling_%s", material)),
                         ingotStack, "XXX", "XXX", "XXX", 'X', new UnificationEntry(orePrefix, material));
             }
 
@@ -488,9 +504,11 @@ public class MaterialRecipeHandler {
         } else if (material.hasProperty(PropertyKey.GEM)) {
             if (!ConfigHolder.recipes.disableManualCompression && workingTier <= HV) {
                 ItemStack gemStack = OreDictUnifier.get(OrePrefix.gem, material);
-                ModHandler.addShapelessRecipe(String.format("nugget_disassembling_%s", material),
+                ModHandler.addShapelessRecipe(
+                        ModHandler.materialRecipeName(material, String.format("nugget_disassembling_%s", material)),
                         GTUtility.copy(9, nuggetStack), new UnificationEntry(OrePrefix.gem, material));
-                ModHandler.addShapedRecipe(String.format("nugget_assembling_%s", material),
+                ModHandler.addShapedRecipe(
+                        ModHandler.materialRecipeName(material, String.format("nugget_assembling_%s", material)),
                         gemStack, "XXX", "XXX", "XXX", 'X', new UnificationEntry(orePrefix, material));
             }
         }
@@ -500,7 +518,7 @@ public class MaterialRecipeHandler {
         if (material.hasFlag(GENERATE_FRAME)) {
             int workingTier = material.getWorkingTier();
             boolean isWoodenFrame = ModHandler.isMaterialWood(material);
-            ModHandler.addShapedRecipe(String.format("frame_%s", material),
+            ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("frame_%s", material)),
                     OreDictUnifier.get(framePrefix, material, 2),
                     "SSS", isWoodenFrame ? "SsS" : "SwS", "SSS",
                     'S', new UnificationEntry(OrePrefix.stick, material));
@@ -562,10 +580,13 @@ public class MaterialRecipeHandler {
             // do not allow hand crafting or uncrafting of blacklisted blocks
             if (!material.hasFlag(EXCLUDE_BLOCK_CRAFTING_BY_HAND_RECIPES) &&
                     !ConfigHolder.recipes.disableManualCompression && workingTier <= HV) {
-                ModHandler.addShapelessRecipe(String.format("block_compress_%s", material), blockStack,
+                ModHandler.addShapelessRecipe(
+                        ModHandler.materialRecipeName(material, String.format("block_compress_%s", material)),
+                        blockStack,
                         result.toArray());
 
-                ModHandler.addShapelessRecipe(String.format("block_decompress_%s", material),
+                ModHandler.addShapelessRecipe(
+                        ModHandler.materialRecipeName(material, String.format("block_decompress_%s", material)),
                         GTUtility.copy((int) (materialAmount / M), OreDictUnifier.get(blockEntry)),
                         new UnificationEntry(blockPrefix, material));
             }

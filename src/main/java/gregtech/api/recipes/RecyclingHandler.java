@@ -8,6 +8,7 @@ import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.MarkerMaterial;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
+import gregtech.api.unification.stack.ItemAndMetadata;
 import gregtech.api.unification.stack.MaterialStack;
 import gregtech.api.unification.stack.RecyclingData;
 import gregtech.api.unification.stack.UnificationEntry;
@@ -15,25 +16,35 @@ import gregtech.api.unification.stack.UnificationEntry;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.Ingredient;
 
 import it.unimi.dsi.fastutil.chars.Char2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2LongMap;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.math.BigInteger;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class RecyclingHandler {
 
     public static @Nullable RecyclingData getRecyclingIngredients(int outputCount, @NotNull Object... recipe) {
+        return getRecyclingIngredients(shapedInputs(recipe), outputCount,
+                GregTechAPI.RECYCLING_MANAGER::getRecyclingData);
+    }
+
+    /** Counts consumed crafting cells, skipping tool symbols; input stack size does not multiply a cell. */
+    static Map<ItemAndMetadata, Long> shapedInputs(Object... recipe) {
         Char2IntOpenHashMap inputCountMap = new Char2IntOpenHashMap();
-        Object2LongMap<Material> materialStacksExploded = new Object2LongOpenHashMap<>();
+        Map<ItemAndMetadata, Long> inputs = new LinkedHashMap<>();
 
         int itr = 0;
-        while (recipe[itr] instanceof String s) {
+        while (itr < recipe.length && recipe[itr] instanceof String s) {
             for (char c : s.toCharArray()) {
                 if (ToolHelper.getToolFromSymbol(c) != null) continue; // skip tools
                 int count = inputCountMap.getOrDefault(c, 0);
@@ -55,7 +66,7 @@ public class RecyclingHandler {
             // Should never happen if recipe is formatted correctly
             // In the case that it isn't, this error should be handled
             // by an earlier method call parsing the recipe.
-            if (lastChar == ' ') return null;
+            if (lastChar == ' ') return Map.of();
 
             ItemStack stack;
             if (ingredient instanceof MetaItem.MetaValueItem) {
@@ -70,38 +81,81 @@ public class RecyclingHandler {
                 stack = new ItemStack((Block) ingredient, 1);
             } else if (ingredient instanceof String) {
                 stack = OreDictUnifier.get((String) ingredient);
+            } else if (ingredient instanceof Ingredient matching) {
+                ItemStack[] alternatives = matching.getMatchingStacks();
+                stack = alternatives.length == 0 ? ItemStack.EMPTY : alternatives[0];
             } else continue; // throw out bad entries
 
-            addItemStackToMaterialStacks(stack, materialStacksExploded, inputCountMap.get(lastChar));
+            long count = inputCountMap.get(lastChar);
+            if (!stack.isEmpty() && count > 0) inputs.merge(new ItemAndMetadata(stack), count, Math::addExact);
         }
 
-        return new RecyclingData(materialStacksExploded.entrySet().stream()
-                .map(e -> new MaterialStack(e.getKey(), e.getValue() / outputCount))
-                .sorted(Comparator.comparingLong(m -> -m.amount))
-                .collect(Collectors.toList()));
+        return Map.copyOf(inputs);
     }
 
     public static @Nullable RecyclingData getRecyclingIngredients(List<GTRecipeInput> inputs, int outputCount) {
-        Object2LongMap<Material> materialStacksExploded = new Object2LongOpenHashMap<>();
-        for (GTRecipeInput input : inputs) {
-            if (input == null || input.isNonConsumable()) continue;
-            ItemStack[] inputStacks = input.getInputStacks();
-            if (inputStacks == null || inputStacks.length == 0) continue;
-            ItemStack inputStack = inputStacks[0];
-            addItemStackToMaterialStacks(inputStack, materialStacksExploded, inputStack.getCount());
-        }
+        return getRecyclingIngredients(inputs, outputCount, GregTechAPI.RECYCLING_MANAGER::getRecyclingData);
+    }
 
+    /** Resolves existing material data from an isolated registration view when preparing a transaction. */
+    public static @Nullable RecyclingData getRecyclingIngredients(List<GTRecipeInput> inputs, int outputCount,
+                                                                  Function<ItemStack, RecyclingData> recycling) {
+        requireOutputCount(outputCount);
+        Map<Material, BigInteger> materialStacksExploded = new HashMap<>();
+        for (GTRecipeInput input : inputs) {
+            if (input == null || !input.isRecyclingInput()) continue;
+            ItemStack[] alternatives = input.getInputStacks();
+            if (alternatives == null || alternatives.length == 0) continue;
+            addItemStackToMaterialStacks(alternatives[0], materialStacksExploded, input.getAmount(), recycling);
+        }
+        return composition(materialStacksExploded, outputCount);
+    }
+
+    /** Resolves a detached contribution without retaining builders, ingredients or frontend state. */
+    public static @Nullable RecyclingData getRecyclingIngredients(Map<ItemAndMetadata, Long> inputs, int outputCount,
+                                                                  Function<ItemStack, RecyclingData> recycling) {
+        requireOutputCount(outputCount);
+        Map<Material, BigInteger> materialStacksExploded = new HashMap<>();
+        inputs.forEach((input, amount) -> addItemStackToMaterialStacks(input.toItemStack(),
+                materialStacksExploded, amount, recycling));
+        return composition(materialStacksExploded, outputCount);
+    }
+
+    static Map<Material, BigInteger> materialTotals(ItemStack input, Function<ItemStack, RecyclingData> recycling) {
+        Map<Material, BigInteger> totals = new HashMap<>();
+        addItemStackToMaterialStacks(input, totals, 1, recycling);
+        return totals;
+    }
+
+    private static @Nullable RecyclingData composition(Map<Material, BigInteger> materialStacksExploded,
+                                                       int outputCount) {
+        if (materialStacksExploded.isEmpty()) return null;
+        BigInteger divisor = BigInteger.valueOf(outputCount);
         return new RecyclingData(materialStacksExploded.entrySet().stream()
-                .map(e -> new MaterialStack(e.getKey(), e.getValue() / outputCount))
-                .sorted(Comparator.comparingLong(m -> -m.amount))
+                .map(e -> new MaterialStack(e.getKey(), e.getValue().divide(divisor).longValueExact()))
+                .sorted(Comparator.<MaterialStack>comparingLong(m -> m.amount).reversed()
+                        .thenComparing(m -> m.material.getRegistryName().toString()))
                 .collect(Collectors.toList()));
     }
 
+    private static void requireOutputCount(int outputCount) {
+        if (outputCount <= 0) throw new IllegalArgumentException("Recycling output count must be positive");
+    }
+
     private static void addItemStackToMaterialStacks(@NotNull ItemStack itemStack,
-                                                     @NotNull Object2LongMap<Material> materialStacksExploded,
+                                                     @NotNull Map<Material, BigInteger> materialStacksExploded,
                                                      int inputCount) {
+        addItemStackToMaterialStacks(itemStack, materialStacksExploded, inputCount,
+                GregTechAPI.RECYCLING_MANAGER::getRecyclingData);
+    }
+
+    private static void addItemStackToMaterialStacks(ItemStack itemStack,
+                                                     Map<Material, BigInteger> materialStacksExploded,
+                                                     long inputCount, Function<ItemStack, RecyclingData> recycling) {
+        if (inputCount < 0) throw new ArithmeticException("Negative recycling input quantity");
+        if (inputCount == 0 || itemStack.isEmpty()) return;
         // First try to get Recycling Data
-        RecyclingData data = GregTechAPI.RECYCLING_MANAGER.getRecyclingData(itemStack);
+        RecyclingData data = recycling.apply(itemStack);
         if (data != null) {
             for (MaterialStack ms : data.getMaterials()) {
                 if (!(ms.material instanceof MarkerMaterial)) {
@@ -113,7 +167,9 @@ public class RecyclingHandler {
 
         // Then try to get a single Material (UnificationEntry needs this, for example)
         MaterialStack materialStack = OreDictUnifier.getMaterial(itemStack);
-        if (materialStack != null && !(materialStack.material instanceof MarkerMaterial)) {
+        // Prefixes such as plank/slab use -1 for an unspecified quantity. It is not signed composition data.
+        // Explicit RecyclingData still goes through quantity validation above.
+        if (materialStack != null && materialStack.amount >= 0 && !(materialStack.material instanceof MarkerMaterial)) {
             addMaterialStack(materialStacksExploded, inputCount, materialStack);
         }
 
@@ -133,9 +189,10 @@ public class RecyclingHandler {
      * @param inputCount             the number of items in the stack
      * @param ms                     the stack to add
      */
-    private static void addMaterialStack(@NotNull Object2LongMap<Material> materialStacksExploded,
-                                         int inputCount, @NotNull MaterialStack ms) {
-        long amount = materialStacksExploded.getOrDefault(ms.material, 0L);
-        materialStacksExploded.put(ms.material, (ms.amount * inputCount) + amount);
+    private static void addMaterialStack(@NotNull Map<Material, BigInteger> materialStacksExploded,
+                                         long inputCount, @NotNull MaterialStack ms) {
+        if (ms.amount < 0) throw new ArithmeticException("Negative recycling material quantity");
+        BigInteger amount = BigInteger.valueOf(ms.amount).multiply(BigInteger.valueOf(inputCount));
+        materialStacksExploded.merge(ms.material, amount, BigInteger::add);
     }
 }

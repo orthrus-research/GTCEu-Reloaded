@@ -61,7 +61,7 @@ public final class TankItemFluidPreviewRenderer {
         float lightX = OpenGlHelper.lastBrightnessX;
         float lightY = OpenGlHelper.lastBrightnessY;
         CURRENT_COLOR.clear();
-        GL11.glGetFloat(GL11.GL_CURRENT_COLOR, CURRENT_COLOR);
+        GL11.glGetFloatv(GL11.GL_CURRENT_COLOR, CURRENT_COLOR);
         float red = CURRENT_COLOR.get(0);
         float green = CURRENT_COLOR.get(1);
         float blue = CURRENT_COLOR.get(2);

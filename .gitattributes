@@ -1,0 +1,3 @@
+# Keep text resources consistent in checkouts; binary assets retain their bytes.
+src/main/resources/** text=auto eol=lf
+NOTICE.md text eol=lf

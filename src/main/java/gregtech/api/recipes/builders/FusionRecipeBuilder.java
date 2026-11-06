@@ -28,12 +28,12 @@ public class FusionRecipeBuilder extends RecipeBuilder<FusionRecipeBuilder> {
     }
 
     @Override
-    public boolean applyPropertyCT(@NotNull String key, @NotNull Object value) {
+    public boolean applyNamedProperty(@NotNull String key, @NotNull Object value) {
         if (key.equals(FusionEUToStartProperty.KEY)) {
             this.EUToStart(((Number) value).longValue());
             return true;
         }
-        return super.applyPropertyCT(key, value);
+        return super.applyNamedProperty(key, value);
     }
 
     public FusionRecipeBuilder EUToStart(long EUToStart) {

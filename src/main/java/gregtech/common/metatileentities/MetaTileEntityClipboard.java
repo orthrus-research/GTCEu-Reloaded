@@ -87,6 +87,7 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
             15.7 / 16.0, 14.25 / 16.0, 13 / 16.0);
 
     public static final float scale = 1;
+    @SideOnly(Side.CLIENT)
     public FakeModularGui guiCache;
     public FakeModularUIContainerClipboard guiContainerCache;
     private static final NBTBase NO_CLIPBOARD_SIG = new NBTTagInt(0);
@@ -117,12 +118,14 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void renderMetaTileEntityFast(CCRenderState renderState, Matrix4 translation, float partialTicks) {
         ClipboardRenderer.renderBoard(renderState, translation.copy(), new IVertexOperation[] {}, getFrontFacing(),
                 this, partialTicks);
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void renderMetaTileEntity(double x, double y, double z, float partialTicks) {
         if (this.getClipboard() != null)
             ClipboardRenderer.renderGUI(x, y, z, this.getFrontFacing(), this, partialTicks);

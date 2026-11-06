@@ -132,7 +132,7 @@ public abstract class ResearchRecipeBuilder<T extends ResearchRecipeBuilder<T>> 
         }
 
         boolean foundBehavior = false;
-        if (dataStack.getItem() instanceof MetaItem<?>metaItem) {
+        if (dataStack.getItem() instanceof MetaItem<?> metaItem) {
             for (IItemBehaviour behaviour : metaItem.getBehaviours(dataStack)) {
                 if (behaviour instanceof IDataItem) {
                     foundBehavior = true;

@@ -56,8 +56,8 @@ RecipeModifierList getRecipeModifiers() { MODIFIERS }
 ```
 
 The class declaration must include `implements IRecipeModifierProvider` and its normal cloned machine must preserve
-that class/provider. The example covers provider construction; loading and registering the machine through GroovyScript requires the addon's normal registration. CraftTweaker-created source
-recipes work and retain provenance; a CraftTweaker custom-machine registration facade is not supplied.
+that class/provider. The example covers provider construction; loading and registering the machine through GroovyScript requires the addon's normal registration. Native pack-authored source
+recipes retain their provenance through modifier views. Machine registration uses the native addon API.
 
 ## Startup and numeric rules
 

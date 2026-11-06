@@ -284,7 +284,7 @@ public class MetaTileEntityObjectHolder extends MetaTileEntityMultiblockNotifiab
             }
 
             boolean isDataItem = false;
-            if (stack.getItem() instanceof MetaItem<?>metaItem) {
+            if (stack.getItem() instanceof MetaItem<?> metaItem) {
                 for (IItemBehaviour behaviour : metaItem.getBehaviours(stack)) {
                     if (behaviour instanceof IDataItem) {
                         isDataItem = true;

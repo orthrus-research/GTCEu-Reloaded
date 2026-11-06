@@ -20,6 +20,24 @@ public class FluidCellInput extends GTRecipeItemInput {
         this.fluid = fluid;
     }
 
+    private FluidCellInput(FluidCellInput original, int amount) {
+        super(original.getInputStacks(), amount);
+        this.fluid = original.fluid;
+        this.isConsumable = original.isConsumable;
+        this.nbtMatcher = original.nbtMatcher;
+        this.nbtCondition = original.nbtCondition;
+    }
+
+    @Override
+    protected FluidCellInput copy() {
+        return new FluidCellInput(this, getAmount());
+    }
+
+    @Override
+    public FluidCellInput copyWithAmount(int amount) {
+        return new FluidCellInput(this, amount);
+    }
+
     public static ItemStack getFilledCell(Fluid fluid, int count) {
         ItemStack fluidCell = MetaItems.FLUID_CELL.getStackForm().copy();
         IFluidHandlerItem fluidHandlerItem = fluidCell
@@ -36,6 +54,11 @@ public class FluidCellInput extends GTRecipeItemInput {
 
     public static ItemStack getFilledCell(Fluid fluid) {
         return getFilledCell(fluid, 1);
+    }
+
+    @Override
+    public boolean isRecyclingInput() {
+        return false;
     }
 
     @Override

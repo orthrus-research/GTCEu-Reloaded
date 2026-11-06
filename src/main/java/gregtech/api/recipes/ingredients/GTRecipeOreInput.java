@@ -1,47 +1,58 @@
 package gregtech.api.recipes.ingredients;
 
+import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.UnificationEntry;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.oredict.OreDictionary;
 
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class GTRecipeOreInput extends GTRecipeInput {
 
-    // Standard forces a refresh of the input stack cache
-    // Used in GroovyScript Reload, and to avoid race conditions with CraftTweaker.
-    // Short.MAX_VALUE should be enough for the amount of times this is loaded
-    // (1 without GroovyScript Reload, Amount of GroovyScript Reloads otherwise)
-    private static short STANDARD = 0;
-    private short currentStandard;
     private final int ore;
-    private ItemStack[] inputStacks;
+    private final List<ItemStack> entries;
+    private final String oreName;
+    private final @Nullable ResourceLocation materialIdentity;
 
     public GTRecipeOreInput(String ore) {
         this(ore, 1);
     }
 
     public GTRecipeOreInput(String ore, int amount) {
-        this.ore = OreDictionary.getOreID(ore);
-        this.amount = amount;
+        this(OreDictionary.getOreID(ore), amount);
     }
 
     public GTRecipeOreInput(OrePrefix prefix, Material material) {
-        this(new UnificationEntry(prefix, material).toString(), 1);
+        this(prefix, material, 1);
     }
 
     public GTRecipeOreInput(OrePrefix prefix, Material material, int amount) {
-        this(new UnificationEntry(prefix, material).toString(), amount);
+        this(OreDictionary.getOreID(new UnificationEntry(prefix, material).toString()),
+                material == null ? null : material.getResourceLocation(), amount);
+    }
+
+    public GTRecipeOreInput(String oreName, ResourceLocation materialIdentity, int amount) {
+        this(OreDictionary.getOreID(oreName), Objects.requireNonNull(materialIdentity, "materialIdentity"), amount);
     }
 
     protected GTRecipeOreInput(int ore, int amount) {
+        this(ore, null, amount);
+    }
+
+    private GTRecipeOreInput(int ore, @Nullable ResourceLocation materialIdentity, int amount) {
         this.ore = ore;
+        this.oreName = OreDictionary.getOreName(ore);
+        this.materialIdentity = materialIdentity;
+        // Cleanroom retains this list across registration, removal, reload and reverse-map rebakes.
+        this.entries = OreDictionary.getOres(oreName);
         this.amount = amount;
     }
 
@@ -79,7 +90,7 @@ public class GTRecipeOreInput extends GTRecipeInput {
 
     @Override
     protected GTRecipeOreInput copy() {
-        GTRecipeOreInput copy = new GTRecipeOreInput(ore, this.amount);
+        GTRecipeOreInput copy = new GTRecipeOreInput(ore, materialIdentity, this.amount);
         copy.isConsumable = this.isConsumable;
         copy.nbtMatcher = this.nbtMatcher;
         copy.nbtCondition = this.nbtCondition;
@@ -88,29 +99,42 @@ public class GTRecipeOreInput extends GTRecipeInput {
 
     @Override
     public GTRecipeInput copyWithAmount(int amount) {
-        GTRecipeOreInput copy = new GTRecipeOreInput(ore, amount);
+        GTRecipeOreInput copy = new GTRecipeOreInput(ore, materialIdentity, amount);
         copy.isConsumable = this.isConsumable;
         copy.nbtMatcher = this.nbtMatcher;
         copy.nbtCondition = this.nbtCondition;
         return copy;
     }
 
-    // The items returned here are not updated after its first call, unless standard is changed,
-    // so they are not suitable for use while recipes are being processed and
-    // the OreDicts being modified.
+    /** Returns an owned, quantity-adjusted snapshot; matching reads native membership directly. */
     @Override
     public ItemStack[] getInputStacks() {
-        // Standard forces a refresh of the input stack cache.
-        // Used in GroovyScript Reload, and upon Load Complete to fix unreliable behaviour with CT and GS scripts.
-        if (inputStacks == null || currentStandard != STANDARD) {
-            currentStandard = STANDARD;
-            inputStacks = (OreDictionary.getOres(OreDictionary.getOreName(ore)).stream().map(is -> {
-                is = is.copy();
-                is.setCount(this.amount);
-                return is;
-            })).toArray(ItemStack[]::new);
+        if (materialIdentity == null) {
+            ItemStack[] snapshot = new ItemStack[entries.size()];
+            for (int i = 0; i < snapshot.length; i++) {
+                snapshot[i] = entries.get(i).copy();
+                snapshot[i].setCount(amount);
+            }
+            return snapshot;
         }
-        return inputStacks;
+        List<ItemStack> snapshot = new ArrayList<>(entries.size());
+        for (ItemStack entry : entries) {
+            if (!matchesMaterial(entry)) continue;
+            ItemStack copy = entry.copy();
+            copy.setCount(amount);
+            snapshot.add(copy);
+        }
+        return snapshot.toArray(ItemStack[]::new);
+    }
+
+    @Override
+    public @Nullable ResourceLocation getMaterialIdentity() {
+        return materialIdentity;
+    }
+
+    private boolean matchesMaterial(ItemStack member) {
+        return materialIdentity == null || materialIdentity.equals(
+                OreDictUnifier.getOreMaterial(oreName, member.getItem(), member.getItemDamage()));
     }
 
     @Override
@@ -128,8 +152,9 @@ public class GTRecipeOreInput extends GTRecipeInput {
         if (input == null || input.isEmpty()) {
             return false;
         }
-        for (ItemStack target : getInputStacks()) {
-            if (OreDictionary.itemMatches(target, input, false)) {
+        for (int i = 0; i < entries.size(); i++) {
+            ItemStack target = entries.get(i);
+            if (OreDictionary.itemMatches(target, input, false) && matchesMaterial(target)) {
                 return nbtMatcher == null || nbtMatcher.evaluate(input, nbtCondition);
             }
         }
@@ -138,7 +163,7 @@ public class GTRecipeOreInput extends GTRecipeInput {
 
     @Override
     protected int computeHash() {
-        return Objects.hash(amount, ore, isConsumable, nbtMatcher, nbtCondition);
+        return Objects.hash(amount, ore, materialIdentity, isConsumable, nbtMatcher, nbtCondition);
     }
 
     @Override
@@ -152,7 +177,7 @@ public class GTRecipeOreInput extends GTRecipeInput {
         if (this.amount != other.amount || this.isConsumable != other.isConsumable) return false;
         if (!Objects.equals(this.nbtMatcher, other.nbtMatcher)) return false;
         if (!Objects.equals(this.nbtCondition, other.nbtCondition)) return false;
-        return ore == other.ore;
+        return ore == other.ore && Objects.equals(materialIdentity, other.materialIdentity);
     }
 
     @Override
@@ -165,20 +190,12 @@ public class GTRecipeOreInput extends GTRecipeInput {
 
         if (!Objects.equals(this.nbtMatcher, other.nbtMatcher)) return false;
         if (!Objects.equals(this.nbtCondition, other.nbtCondition)) return false;
-        return ore == other.ore;
+        return ore == other.ore && Objects.equals(materialIdentity, other.materialIdentity);
     }
 
     @Override
     public String toString() {
         // noinspection StringConcatenationMissingWhitespace
-        return amount + "x" + OreDictionary.getOreName(ore);
-    }
-
-    /**
-     * Forces a Refresh of every GTRecipeOreInput's Stack Cache.
-     */
-    @ApiStatus.Internal
-    public static void refreshStackCache() {
-        STANDARD++;
+        return amount + "x" + oreName + (materialIdentity == null ? "" : " [" + materialIdentity + "]");
     }
 }

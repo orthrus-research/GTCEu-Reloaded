@@ -58,6 +58,7 @@ public class SearchComponent<T> extends WidgetGroup implements IMenuComponent {
 
     @Override
     public void drawInBackground(int mouseX, int mouseY, float partialTicks, IRenderContext context) {
+        engine.drainResults();
         super.drawInBackground(mouseX, mouseY, partialTicks, context);
         int x = getPosition().x;
         int width = getSize().width;

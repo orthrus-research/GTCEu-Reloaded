@@ -310,9 +310,9 @@ public abstract class WorldSceneRenderer {
 
     public static Vector3f project(BlockPos pos) {
         // read current rendering parameters
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
+        GL11.glGetFloatv(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+        GL11.glGetFloatv(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
 
         // rewind buffers after write by OpenGL glGet calls
         MODELVIEW_MATRIX_BUFFER.rewind();
@@ -356,9 +356,9 @@ public abstract class WorldSceneRenderer {
         PIXEL_DEPTH_BUFFER.rewind();
 
         // read current rendering parameters
-        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
-        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
-        GL11.glGetInteger(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
+        GL11.glGetFloatv(GL11.GL_MODELVIEW_MATRIX, MODELVIEW_MATRIX_BUFFER);
+        GL11.glGetFloatv(GL11.GL_PROJECTION_MATRIX, PROJECTION_MATRIX_BUFFER);
+        GL11.glGetIntegerv(GL11.GL_VIEWPORT, VIEWPORT_BUFFER);
 
         // rewind buffers after write by OpenGL glGet calls
         MODELVIEW_MATRIX_BUFFER.rewind();

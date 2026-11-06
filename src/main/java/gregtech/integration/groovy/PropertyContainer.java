@@ -17,6 +17,9 @@ import groovy.lang.DelegatesTo;
 
 public class PropertyContainer extends GroovyPropertyContainer {
 
+    public final GroovyDefinitions definitions = new GroovyDefinitions();
+    public final GroovyContent content = new GroovyContent();
+
     public void materialEvent(EventPriority priority, @DelegatesTo(MaterialEvent.class) Closure<?> eventListener) {
         if (GroovyScriptModule.isCurrentlyRunning() &&
                 GroovyScript.getSandbox().getCurrentLoader() != LoadStage.PRE_INIT) {

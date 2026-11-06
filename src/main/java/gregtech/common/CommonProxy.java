@@ -6,12 +6,13 @@ import gregtech.api.block.VariantItemBlock;
 import gregtech.api.block.coil.CoilRegistry;
 import gregtech.api.block.coil.CustomCoilBlock;
 import gregtech.api.block.machines.MachineItemBlock;
+import gregtech.api.definition.DefinitionDiagnostic;
+import gregtech.api.definition.OreBlockRegistryPlan;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.toolitem.IGTTool;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.recipes.GTRecipeInputCache;
 import gregtech.api.recipes.ModHandler;
-import gregtech.api.recipes.ingredients.GTRecipeOreInput;
 import gregtech.api.recipes.properties.impl.FusionEUToStartProperty;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.info.MaterialFlags;
@@ -46,12 +47,10 @@ import gregtech.common.pipelike.laser.ItemBlockLaserPipe;
 import gregtech.common.pipelike.optical.BlockOpticalPipe;
 import gregtech.common.pipelike.optical.ItemBlockOpticalPipe;
 import gregtech.datafix.GTDataFixers;
-import gregtech.integration.groovy.GroovyScriptModule;
 import gregtech.loaders.MaterialInfoLoader;
 import gregtech.loaders.OreDictionaryLoader;
 import gregtech.loaders.recipe.CraftingComponent;
 import gregtech.loaders.recipe.GTRecipeManager;
-import gregtech.modules.GregTechModules;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -66,7 +65,6 @@ import net.minecraftforge.common.config.ConfigManager;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.LoaderState;
 import net.minecraftforge.fml.common.Mod;
@@ -79,6 +77,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static gregtech.common.blocks.MetaBlocks.*;
 
@@ -89,6 +88,14 @@ public class CommonProxy {
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
         GTLog.logger.info("Registering Blocks...");
         IForgeRegistry<Block> registry = event.getRegistry();
+        var oreNames = OreBlockRegistryPlan.prepareRegistries(
+                GregTechAPI.materialManager.getRegistries());
+        if (oreNames.value().isEmpty()) {
+            throw new IllegalStateException(oreNames.diagnostics().stream()
+                    .map(DefinitionDiagnostic::format)
+                    .collect(Collectors.joining("\n")));
+        }
+        var orePlan = oreNames.value().orElseThrow();
 
         for (MTERegistry r : GregTechAPI.mteManager.getRegistries()) {
             if (!registry.getKeys().isEmpty()) {
@@ -107,7 +114,7 @@ public class CommonProxy {
         for (MaterialRegistry materialRegistry : GregTechAPI.materialManager.getRegistries()) {
             for (Material material : materialRegistry) {
                 if (material.hasProperty(PropertyKey.ORE) && !material.hasFlag(MaterialFlags.DISABLE_ORE_BLOCK)) {
-                    createOreBlock(material);
+                    createOreBlock(material, orePlan);
                 }
 
                 if (material.hasProperty(PropertyKey.WIRE)) {
@@ -206,19 +213,19 @@ public class CommonProxy {
         for (BlockOre block : ORES) registry.register(block);
     }
 
-    private static void createOreBlock(Material material) {
+    private static void createOreBlock(Material material, OreBlockRegistryPlan names) {
         StoneType[] stoneTypeBuffer = new StoneType[16];
         int generationIndex = 0;
         for (StoneType stoneType : StoneType.STONE_TYPE_REGISTRY) {
             int id = StoneType.STONE_TYPE_REGISTRY.getIDForObject(stoneType), index = id / 16;
             if (index > generationIndex) {
-                createOreBlock(material, copyNotNull(stoneTypeBuffer), generationIndex);
+                createOreBlock(material, copyNotNull(stoneTypeBuffer), generationIndex, names);
                 Arrays.fill(stoneTypeBuffer, null);
             }
             stoneTypeBuffer[id % 16] = stoneType;
             generationIndex = index;
         }
-        createOreBlock(material, copyNotNull(stoneTypeBuffer), generationIndex);
+        createOreBlock(material, copyNotNull(stoneTypeBuffer), generationIndex, names);
     }
 
     private static <T> T[] copyNotNull(T[] src) {
@@ -226,9 +233,10 @@ public class CommonProxy {
         return Arrays.copyOfRange(src, 0, nullIndex == -1 ? src.length : nullIndex);
     }
 
-    private static void createOreBlock(Material material, StoneType[] stoneTypes, int index) {
+    private static void createOreBlock(Material material, StoneType[] stoneTypes, int index,
+                                       OreBlockRegistryPlan names) {
         BlockOre block = new BlockOre(material, stoneTypes);
-        block.setRegistryName("ore_" + material + "_" + index);
+        block.setRegistryName(names.blockName(material.getResourceLocation(), index));
         for (StoneType stoneType : stoneTypes) {
             GregTechAPI.oreBlockTable.computeIfAbsent(material, m -> new HashMap<>()).put(stoneType, block);
         }
@@ -244,6 +252,7 @@ public class CommonProxy {
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         GTLog.logger.info("Registering Items...");
+        gregtech.api.definition.ContentDefinitions.ORE_ITEMS.freeze();
         IForgeRegistry<Item> registry = event.getRegistry();
 
         for (MetaItem<?> item : MetaItems.ITEMS) {
@@ -457,17 +466,6 @@ public class CommonProxy {
 
     public void onLoadComplete() {
         GTRecipeInputCache.disableCache();
-
-        // If JEI and GS is not loaded, refresh ore dict ingredients
-        // Not needed if JEI is loaded, as done in the JEI plugin (and this runs after that)
-        // Not needed if GS is loaded, as done after script loads (and this runs after that)
-        if (!GroovyScriptModule.isCurrentlyRunning()) {
-            // EXCEPTION: IF GrS is not loaded, and JEI is loaded, and we are in a dedicated server env, refresh
-            // This is due to JEI Plugin Register not taking place on server, and GrS not acting as the backup.
-            if (!GregTechAPI.moduleManager.isModuleEnabled(GregTechModules.MODULE_JEI) ||
-                    FMLCommonHandler.instance().getSide().isServer())
-                GTRecipeOreInput.refreshStackCache();
-        }
     }
 
     public boolean isFancyGraphics() {

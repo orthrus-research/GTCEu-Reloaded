@@ -164,7 +164,7 @@ public class MetaTileEntityLargeCombustionEngine extends FuelMultiblockControlle
                                     container.getOutputVoltage() * container.getOutputAmperage() >= GTValues.V[tier];
                         })
                         .toArray(MetaTileEntity[]::new))
-                                .addTooltip("gregtech.multiblock.pattern.error.limited.1", GTValues.VN[tier]))
+                        .addTooltip("gregtech.multiblock.pattern.error.limited.1", GTValues.VN[tier]))
                 .where('A', states(getIntakeState()).addTooltips("gregtech.multiblock.pattern.clear_amount_1"))
                 .where('Y', selfPredicate())
                 .build();

@@ -64,7 +64,7 @@ public abstract class BaseFilter implements IFilter {
     }
 
     public static @NotNull BaseFilter getFilterFromStack(ItemStack stack) {
-        if (stack.getItem() instanceof MetaItem<?>metaItem) {
+        if (stack.getItem() instanceof MetaItem<?> metaItem) {
             var metaValueItem = metaItem.getItem(stack);
             var factory = metaValueItem == null ? null : metaValueItem.getFilterFactory();
             if (factory != null)

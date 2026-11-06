@@ -86,7 +86,7 @@ public class Shaders {
         try {
             return new ShaderObject(shaderType,
                     readShader(getStream(String.format("/assets/%s/shaders/%s", GTValues.MODID, location))))
-                            .compileShader();
+                    .compileShader();
         } catch (Exception exception) {
             GTLog.logger.error("error while loading shader {}", location, exception);
         }

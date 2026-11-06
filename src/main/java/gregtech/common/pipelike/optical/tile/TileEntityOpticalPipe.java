@@ -146,7 +146,7 @@ public class TileEntityOpticalPipe extends TileEntityPipeBase<OpticalPipeType, O
 
             // also check the other pipe
             TileEntity tile = getWorld().getTileEntity(getPos().offset(side));
-            if (tile instanceof IPipeTile<?, ?>pipeTile &&
+            if (tile instanceof IPipeTile<?, ?> pipeTile &&
                     pipeTile.getPipeType().getClass() == this.getPipeType().getClass()) {
                 if (pipeTile.getNumConnections() >= 2) return;
             }

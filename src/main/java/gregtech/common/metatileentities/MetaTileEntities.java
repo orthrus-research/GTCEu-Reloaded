@@ -436,7 +436,7 @@ public final class MetaTileEntities {
      * @param <T> the MTE class
      */
     public static <T extends MetaTileEntity> @NotNull T registerMetaTileEntity(int id, @NotNull T mte) {
-        if (mte instanceof IMultiblockAbilityPart<?>abilityPart) {
+        if (mte instanceof IMultiblockAbilityPart<?> abilityPart) {
             for (var ability : abilityPart.getAbilities())
                 MultiblockAbility.registerMultiblockAbility(ability, mte);
         }

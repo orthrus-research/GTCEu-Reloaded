@@ -264,7 +264,7 @@ public class MetaTileEntityHolder extends TickableTileEntityBase implements IGre
                 list.add(new TextComponentTranslation("behavior.tricorder.debug_cpu_load",
                         new TextComponentTranslation(
                                 TextFormattingUtil.formatNumbers(averageTickTime / timeStatistics.length))
-                                        .setStyle(new Style().setColor(TextFormatting.YELLOW)),
+                                .setStyle(new Style().setColor(TextFormatting.YELLOW)),
                         new TextComponentTranslation(TextFormattingUtil.formatNumbers(timeStatistics.length))
                                 .setStyle(new Style().setColor(TextFormatting.GREEN)),
                         new TextComponentTranslation(TextFormattingUtil.formatNumbers(worstTickTime))

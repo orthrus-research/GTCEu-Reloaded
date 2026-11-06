@@ -19,6 +19,8 @@ public enum GTDataVersion {
      * Version of data after MTE IDs were reallocated
      */
     V2_POST_ID_REALLOC,
+    /** Owner-qualified generated crafting names in saved player recipe books. */
+    V3_MATERIAL_RECIPE_IDENTITIES,
     ;
 
     static final @NotNull GTDataVersion @NotNull [] VALUES = values();

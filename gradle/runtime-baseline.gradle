@@ -1,0 +1,69 @@
+// Export the exact supported MUI pair for native qualification and verify both build classpaths.
+configurations {
+    codeChickenLibRuntime { canBeConsumed = false; transitive = false }
+    modularUiRuntime { canBeConsumed = false; transitive = false }
+    modularUiDevelopment { canBeConsumed = false; transitive = false }
+}
+dependencies {
+    codeChickenLibRuntime "maven.modrinth:KphJPRlN:${codeChickenLibRelease}"
+    modularUiRuntime "com.cleanroommc:modularui:${modularUiVersion}@jar"
+    modularUiDevelopment "com.cleanroommc:modularui:${modularUiVersion}:dev"
+}
+
+tasks.register('verifyRuntimeBaseline') {
+    dependsOn tasks.reobfJar
+    inputs.files(configurations.modularUiRuntime, configurations.modularUiDevelopment, configurations.codeChickenLibRuntime)
+    inputs.properties(version: modularUiVersion, runtimeSha256: modularUiRuntimeSha256,
+        developmentSha256: modularUiDevelopmentSha256, javaFeature: project.property('javaVersion'),
+        cclRelease: codeChickenLibRelease, cclSha256: codeChickenLibRuntimeSha256)
+    doLast {
+        def record = { File file ->
+            [path: file.absolutePath, bytes: file.length(),
+             sha256: java.security.MessageDigest.getInstance('SHA-256').digest(file.bytes).encodeHex().toString()]
+        }
+        def runtime = record(configurations.modularUiRuntime.singleFile)
+        def ccl = record(configurations.codeChickenLibRuntime.singleFile)
+        if (ccl.sha256 != codeChickenLibRuntimeSha256) {
+            throw new GradleException('CodeChickenLib artifact identity differs from the declared baseline')
+        }
+        def development = record(configurations.modularUiDevelopment.singleFile)
+        if (runtime.sha256 != modularUiRuntimeSha256 || development.sha256 != modularUiDevelopmentSha256) {
+            throw new GradleException('ModularUI artifact identity differs from the declared baseline')
+        }
+        def classpaths = [:]
+        ['compileClasspath', 'testRuntimeClasspath'].each { name ->
+            def cclArtifacts = configurations[name].resolvedConfiguration.resolvedArtifacts.findAll {
+                it.moduleVersion.id.group == 'maven.modrinth' && it.moduleVersion.id.name == 'KphJPRlN'
+            }
+            if (cclArtifacts.size() != 1 || cclArtifacts.first().moduleVersion.id.version != codeChickenLibRelease) {
+                throw new GradleException("${name} does not resolve the declared CodeChickenLib release")
+            }
+            def artifacts = configurations[name].resolvedConfiguration.resolvedArtifacts.findAll {
+                it.moduleVersion.id.name == 'modularui'
+            }
+            if (artifacts.size() != 1 || artifacts.first().moduleVersion.id.version != modularUiVersion) {
+                throw new GradleException("${name} does not resolve the declared ModularUI version")
+            }
+            if (record(artifacts.first().file).sha256 != development.sha256) {
+                throw new GradleException("${name} does not resolve the verified ModularUI development artifact")
+            }
+            classpaths[name] = artifacts.collect { record(it.file) + [component: it.moduleVersion.id.toString()] }
+        }
+        def launcher = javaToolchains.launcherFor(java.toolchain).get()
+        def feature = project.property('javaVersion').toInteger()
+        if (launcher.metadata.languageVersion.asInt() != feature) {
+            throw new GradleException('Java toolchain differs from the declared runtime feature')
+        }
+        def report = layout.buildDirectory.file('reports/runtime-baseline.json').get().asFile
+        report.parentFile.mkdirs()
+        report.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
+            schema: 1, javaFeature: feature, java: record(launcher.executablePath.asFile),
+            javaRuntime: launcher.metadata.javaRuntimeVersion, cleanroomVersion: cleanroomVersion,
+            candidate: record(tasks.reobfJar.outputs.files.singleFile),
+            modularUi: [version: modularUiVersion, runtime: runtime, development: development, classpaths: classpaths],
+            codeChickenLib: [version: codeChickenLibVersion, release: codeChickenLibRelease, runtime: ccl],
+            scope: 'Java, ModularUI and CodeChickenLib; native launch additionally inventories the full stack'
+        ]))
+    }
+}
+tasks.named('check') { dependsOn 'verifyRuntimeBaseline' }

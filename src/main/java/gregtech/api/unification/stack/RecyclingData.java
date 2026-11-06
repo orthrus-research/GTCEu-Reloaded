@@ -9,7 +9,17 @@ import java.util.List;
 
 public final class RecyclingData {
 
+    private static final RecyclingData EMPTY = new RecyclingData();
     private final List<MaterialStack> materials;
+
+    private RecyclingData() {
+        materials = List.of();
+    }
+
+    /** Explicitly no recoverable composition, suppressing unification and wildcard fallback. */
+    public static RecyclingData empty() {
+        return EMPTY;
+    }
 
     public RecyclingData(@NotNull MaterialStack @NotNull... materials) {
         this(Arrays.asList(materials));
@@ -19,7 +29,7 @@ public final class RecyclingData {
         if (materials.isEmpty()) {
             throw new IllegalArgumentException("materials cannot be empty");
         }
-        this.materials = materials;
+        this.materials = materials.stream().map(MaterialStack::copy).toList();
     }
 
     /**

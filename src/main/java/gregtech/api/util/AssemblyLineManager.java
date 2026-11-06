@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 public final class AssemblyLineManager {
 
@@ -82,7 +83,7 @@ public final class AssemblyLineManager {
      * @return if the stack is a data item
      */
     public static boolean isStackDataItem(@NotNull ItemStack stack, boolean isDataBank) {
-        if (stack.getItem() instanceof MetaItem<?>metaItem) {
+        if (stack.getItem() instanceof MetaItem<?> metaItem) {
             MetaItem<?>.MetaValueItem valueItem = metaItem.getItem(stack);
             if (valueItem == null) return false;
             for (IItemBehaviour behaviour : valueItem.getBehaviours()) {
@@ -117,20 +118,34 @@ public final class AssemblyLineManager {
      * @param builder the builder to retrieve recipe info from
      */
     public static void createDefaultResearchRecipe(@NotNull AssemblyLineRecipeBuilder builder) {
+        expandDefaultResearchRecipes(builder, RecipeBuilder::buildAndRegister);
+    }
+
+    /** Prepare derived research builders without publishing recipes or mutating the declaration's data items. */
+    public static void expandDefaultResearchRecipes(@NotNull AssemblyLineRecipeBuilder builder,
+                                                    Consumer<RecipeBuilder<?>> recipes) {
         if (!ConfigHolder.machines.enableResearch) return;
 
         for (AssemblyLineRecipeBuilder.ResearchRecipeEntry entry : builder.getRecipeEntries()) {
-            createDefaultResearchRecipe(entry.getResearchId(), entry.getResearchStack(), entry.getDataStack(),
+            prepareDefaultResearchRecipe(entry.getResearchId(), entry.getResearchStack(), entry.getDataStack(),
                     entry.getIgnoreNBT(),
-                    entry.getDuration(), entry.getEUt(), entry.getCWUt());
+                    entry.getDuration(), entry.getEUt(), entry.getCWUt(), recipes);
         }
     }
 
     public static void createDefaultResearchRecipe(@NotNull String researchId, @NotNull ItemStack researchItem,
                                                    @NotNull ItemStack dataItem, boolean ignoreNBT, int duration,
                                                    long EUt, int CWUt) {
+        prepareDefaultResearchRecipe(researchId, researchItem, dataItem, ignoreNBT, duration, EUt, CWUt,
+                RecipeBuilder::buildAndRegister);
+    }
+
+    private static void prepareDefaultResearchRecipe(String researchId, ItemStack researchItem, ItemStack dataItem,
+                                                     boolean ignoreNBT, int duration, long EUt, int CWUt,
+                                                     Consumer<RecipeBuilder<?>> recipes) {
         if (!ConfigHolder.machines.enableResearch) return;
 
+        dataItem = dataItem.copy();
         NBTTagCompound compound = GTUtility.getOrCreateNbtCompound(dataItem);
         writeResearchToNBT(compound, researchId);
 
@@ -149,7 +164,7 @@ public final class AssemblyLineManager {
                 researchBuilder.inputs(researchItem);
             }
 
-            researchBuilder.buildAndRegister();
+            recipes.accept(researchBuilder);
         } else {
             RecipeBuilder<?> builder = RecipeMaps.SCANNER_RECIPES.recipeBuilder()
                     .inputNBT(dataItem.getItem(), 1, dataItem.getMetadata(), NBTMatcher.ANY, NBTCondition.ANY)
@@ -165,7 +180,7 @@ public final class AssemblyLineManager {
             }
 
             builder.applyProperty(ScanProperty.getInstance(), true);
-            builder.buildAndRegister();
+            recipes.accept(builder);
         }
     }
 

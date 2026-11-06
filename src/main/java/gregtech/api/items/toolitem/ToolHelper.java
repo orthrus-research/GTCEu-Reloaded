@@ -68,6 +68,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -107,7 +108,6 @@ public final class ToolHelper {
     public static final String ATTACK_SPEED_KEY = "AttackSpeed";
     public static final String ENCHANTABILITY_KEY = "Enchantability";
     public static final String HARVEST_LEVEL_KEY = "HarvestLevel";
-    public static final String LAST_CRAFTING_USE_KEY = "LastCraftingUse";
 
     // Keys that resides in behaviours tag
 
@@ -161,14 +161,11 @@ public final class ToolHelper {
 
     static {
         try {
-            // archaic way to get around access violations for method handles.
-            // this was improved in Java 9 with MethodHandles.privateLookupIn(),
-            // but that does not exist in Java 8, so we have to unreflect instead.
-            Method method = ObfuscationReflectionHelper.findMethod(Block.class, "func_180643_i", ItemStack.class,
+            Method method = ObfuscationReflectionHelper.findMethod(Block.class,
+                    GTValues.isDeobfEnvironment() ? "getSilkTouchDrop" : "func_180643_i", ItemStack.class,
                     IBlockState.class);
-            method.setAccessible(true);
-            GET_SILK_TOUCH_DROP = MethodHandles.lookup().unreflect(method);
             method.setAccessible(false);
+            GET_SILK_TOUCH_DROP = MethodHandles.privateLookupIn(Block.class, MethodHandles.lookup()).unreflect(method);
         } catch (IllegalAccessException e) {
             throw new IllegalStateException(e);
         }
@@ -202,6 +199,12 @@ public final class ToolHelper {
         return stack.getOrCreateSubCompound(TOOL_TAG_KEY);
     }
 
+    /** Reads existing tool data without attaching a tag to raw or partially initialized stacks. */
+    static NBTTagCompound readToolTag(ItemStack stack) {
+        var tag = toolbeltPassthrough(stack).getSubCompound(TOOL_TAG_KEY);
+        return tag == null ? new NBTTagCompound() : tag;
+    }
+
     public static ItemStack toolbeltPassthrough(ItemStack stack) {
         if (stack.getItem() instanceof ItemGTToolbelt toolbelt && hasMaterial(stack)) {
             ItemStack selected = toolbelt.getSelectedTool(stack);
@@ -213,6 +216,11 @@ public final class ToolHelper {
     public static NBTTagCompound getBehaviorsTag(ItemStack stack) {
         stack = toolbeltPassthrough(stack);
         return stack.getOrCreateSubCompound(BEHAVIOURS_TAG_KEY);
+    }
+
+    static NBTTagCompound readBehaviorsTag(ItemStack stack) {
+        var tag = toolbeltPassthrough(stack).getSubCompound(BEHAVIOURS_TAG_KEY);
+        return tag == null ? new NBTTagCompound() : tag;
     }
 
     public static void setBehaviorsTag(ItemStack stack, NBTTagCompound tag) {
@@ -232,11 +240,14 @@ public final class ToolHelper {
         toolTag.setFloat(ATTACK_DAMAGE_KEY, attackDamage);
         MaterialToolProperty materialToolProperty = material.getProperty(PropertyKey.TOOL);
         if (materialToolProperty != null) {
-            materialToolProperty.getEnchantments().forEach((enchantment, level) -> {
-                if (stack.getItem().canApplyAtEnchantingTable(stack, enchantment)) {
-                    stack.addEnchantment(enchantment, level.getLevel(materialToolProperty.getToolHarvestLevel()));
-                }
-            });
+            materialToolProperty.getEnchantments().object2ObjectEntrySet().stream()
+                    .sorted(Comparator.comparing(entry -> entry.getKey().getRegistryName()))
+                    .forEach(entry -> {
+                        if (stack.getItem().canApplyAtEnchantingTable(stack, entry.getKey())) {
+                            stack.addEnchantment(entry.getKey(),
+                                    entry.getValue().getLevel(materialToolProperty.getToolHarvestLevel()));
+                        }
+                    });
         }
         return stack;
     }
@@ -406,7 +417,7 @@ public final class ToolHelper {
      * @return if the itemstack should be considered a spraycan
      */
     public static boolean isSpraycan(ItemStack spraycan) {
-        if (spraycan.getItem() instanceof MetaItem<?>meta) {
+        if (spraycan.getItem() instanceof MetaItem<?> meta) {
             for (IItemBehaviour behaviour : meta.getBehaviours(spraycan)) {
                 if (behaviour instanceof ColorSprayBehaviour) return true;
             }
@@ -442,11 +453,12 @@ public final class ToolHelper {
     }
 
     public static AoESymmetrical getMaxAoEDefinition(ItemStack stack) {
-        return AoESymmetrical.readMax(getBehaviorsTag(stack));
+        return AoESymmetrical.readMax(readBehaviorsTag(stack));
     }
 
     public static AoESymmetrical getAoEDefinition(ItemStack stack) {
-        return AoESymmetrical.read(getBehaviorsTag(stack), getMaxAoEDefinition(stack));
+        var tag = readBehaviorsTag(stack);
+        return AoESymmetrical.read(tag, AoESymmetrical.readMax(tag));
     }
 
     /**

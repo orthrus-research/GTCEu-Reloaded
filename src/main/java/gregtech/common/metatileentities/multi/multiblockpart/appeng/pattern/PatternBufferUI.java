@@ -85,7 +85,9 @@ public final class PatternBufferUI {
             if (buffer.canAccess(player)) this.entryPage = (entryPage + 1) % 34;
         }));
         batches.addWidget(new ClickButtonWidget(7, 99, 162, 16, "gregtech.pattern_buffer.refund_batch",
-                data -> { if (selectedBatch > 0) buffer.requestRefund(player, selectedBatch); }));
+                data -> {
+                    if (selectedBatch > 0) buffer.requestRefund(player, selectedBatch);
+                }));
         tabs.addTab(new ItemTabInfo("gregtech.pattern_buffer.batches", new ItemStack(Items.BOOK)), batches);
         ui.widget(tabs);
         ui.widget(new ClickButtonWidget(7, 156, 77, 18, "gregtech.pattern_buffer.toggle", data -> {

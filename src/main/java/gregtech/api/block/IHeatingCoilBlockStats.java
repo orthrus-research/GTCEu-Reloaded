@@ -4,6 +4,9 @@ import gregtech.api.recipes.properties.impl.TemperatureProperty;
 import gregtech.api.unification.material.Material;
 import gregtech.client.model.ActiveVariantBlockBakedModel;
 
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,6 +63,7 @@ public interface IHeatingCoilBlockStats {
         return getMaterial() == null ? 0xFFFFFFFF : getMaterial().getMaterialRGB();
     }
 
+    @SideOnly(Side.CLIENT)
     default ActiveVariantBlockBakedModel createModel(BooleanSupplier bloomConfig) {
         return null;
     }

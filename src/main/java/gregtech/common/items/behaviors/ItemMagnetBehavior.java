@@ -177,7 +177,7 @@ public class ItemMagnetBehavior implements IItemBehaviour {
     }
 
     private boolean isMagnet(@NotNull ItemStack stack) {
-        if (stack.getItem() instanceof MetaItem<?>metaItem) {
+        if (stack.getItem() instanceof MetaItem<?> metaItem) {
             for (var behavior : metaItem.getBehaviours(stack)) {
                 if (behavior instanceof ItemMagnetBehavior) {
                     return true;

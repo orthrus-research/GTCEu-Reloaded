@@ -43,7 +43,7 @@ public interface IQuantumStorage<T> extends CoverableView {
             }
 
             IQuantumController candidate = null;
-            if (mte instanceof IQuantumStorage<?>storage) {
+            if (mte instanceof IQuantumStorage<?> storage) {
                 if (storage.isConnected()) {
                     IQuantumController controller = storage.getQuantumController();
                     if (controller != null && controller.canConnect(this)) {

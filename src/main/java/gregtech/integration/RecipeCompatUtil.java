@@ -12,7 +12,6 @@ import gregtech.api.unification.material.Material;
 import gregtech.api.util.GTUtility;
 import gregtech.common.blocks.BlockCompressed;
 import gregtech.common.blocks.BlockFrame;
-import gregtech.integration.crafttweaker.CTRecipeHelper;
 import gregtech.integration.groovy.GrSRecipeHelper;
 import gregtech.modules.GregTechModules;
 
@@ -77,9 +76,11 @@ public final class RecipeCompatUtil {
                 Material material = blockFrame.getGtMaterial(item);
                 return getRLPrefix(material) + "frame" + material.toCamelCaseString();
             }
-            if (block instanceof BlockMaterialPipe<?, ?, ?>blockMaterialPipe) {
+            if (block instanceof BlockMaterialPipe<?, ?, ?> blockMaterialPipe) {
                 Material material = blockMaterialPipe.getItemMaterial(item);
-                return getRLPrefix(material) + blockMaterialPipe.getPrefix().name + material.toCamelCaseString();
+                String namespace = blockMaterialPipe.getMaterialRegistry().getModid();
+                String prefix = namespace.equals(GTValues.MODID) ? "" : namespace + ":";
+                return prefix + blockMaterialPipe.getPrefix().name + material.toCamelCaseString();
             }
         }
         return null;
@@ -90,9 +91,7 @@ public final class RecipeCompatUtil {
         if (type == TweakerType.GROOVYSCRIPT) {
             return GrSRecipeHelper.getRecipeRemoveLine(recipeMap, recipe);
         }
-        if (type == TweakerType.CRAFTTWEAKER) {
-            return CTRecipeHelper.getRecipeRemoveLine(recipeMap, recipe);
-        }
+
         return null;
     }
 
@@ -101,9 +100,7 @@ public final class RecipeCompatUtil {
         if (GregTechAPI.moduleManager.isModuleEnabled(GregTechModules.MODULE_GRS)) {
             return TweakerType.GROOVYSCRIPT;
         }
-        if (GregTechAPI.moduleManager.isModuleEnabled(GregTechModules.MODULE_CT)) {
-            return TweakerType.CRAFTTWEAKER;
-        }
+
         return TweakerType.NONE;
     }
 
@@ -121,7 +118,6 @@ public final class RecipeCompatUtil {
 
     public enum TweakerType {
 
-        CRAFTTWEAKER("CraftTweaker"),
         GROOVYSCRIPT("GroovyScript"),
         NONE("");
 

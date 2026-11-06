@@ -296,7 +296,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
 
     private boolean hasRecipeMapChanged() {
         RecipeMap<?> map = getRecipeMap();
-        return map != observedRecipeMap || map.getRecipeRevision() != observedRecipeRevision;
+        return map != observedRecipeMap || (map != null && map.getRecipeRevision() != observedRecipeRevision);
     }
 
     private void prepareScheduledRecipeUpdate() {
@@ -304,7 +304,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         if (progressTime > 0 || !hasRecipeMapChanged()) return;
         RecipeMap<?> map = getRecipeMap();
         this.observedRecipeMap = map;
-        this.observedRecipeRevision = map.getRecipeRevision();
+        this.observedRecipeRevision = map == null ? 0 : map.getRecipeRevision();
         // Only invalidate the idle lookup cache. Sampled outputs and running resources are never touched here.
         this.previousRecipe = null;
         this.invalidInputsForRecipes = false;
@@ -318,7 +318,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         World world = getMetaTileEntity().getWorld();
         if (world != null && !world.isRemote) {
             boolean scheduled = isIdleRecipeSchedulingEnabled();
-            if (scheduled) prepareScheduledRecipeUpdate();
+            prepareScheduledRecipeUpdate();
             if (workingEnabled) {
                 if (awaitingOutputs) {
                     tryCompleteRecipe();
@@ -834,9 +834,15 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * @return true if the previous recipe is valid and can be run again
      */
     protected boolean checkPreviousRecipe() {
-        if (this.previousRecipe == null) return false;
+        if (!canReusePreviousRecipe()) return false;
         if (this.previousRecipe.getEUt() > this.getMaxVoltage()) return false;
         return this.previousRecipe.matches(false, getInputInventory(), getInputTank());
+    }
+
+    protected final boolean canReusePreviousRecipe() {
+        RecipeMap<?> map = getRecipeMap();
+        return previousRecipe != null && !hasRecipeMapChanged() &&
+                (map == null || map.canReuseRecipe(previousRecipe));
     }
 
     /**

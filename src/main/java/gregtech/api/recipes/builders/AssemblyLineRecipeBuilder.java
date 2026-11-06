@@ -49,7 +49,7 @@ public class AssemblyLineRecipeBuilder extends RecipeBuilder<AssemblyLineRecipeB
     }
 
     @Override
-    public boolean applyPropertyCT(@NotNull String key, @NotNull Object value) {
+    public boolean applyNamedProperty(@NotNull String key, @NotNull Object value) {
         if (key.equals(ResearchProperty.KEY)) {
             if (value instanceof ItemStack itemStack) {
                 scannerResearch(itemStack);
@@ -57,7 +57,7 @@ public class AssemblyLineRecipeBuilder extends RecipeBuilder<AssemblyLineRecipeB
             }
             return false;
         }
-        return super.applyPropertyCT(key, value);
+        return super.applyNamedProperty(key, value);
     }
 
     private boolean applyResearchProperty(ResearchPropertyData.ResearchEntry researchEntry) {

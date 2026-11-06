@@ -112,7 +112,7 @@ public class TricorderBehavior implements IItemBehaviour {
         list.add(new TextComponentTranslation("behavior.tricorder.block_hardness",
                 new TextComponentTranslation(
                         TextFormattingUtil.formatNumbers(block.getBlockHardness(state, world, pos)))
-                                .setStyle(new Style().setColor(TextFormatting.YELLOW)),
+                        .setStyle(new Style().setColor(TextFormatting.YELLOW)),
                 new TextComponentTranslation(TextFormattingUtil.formatNumbers(block.getExplosionResistance(player)))
                         .setStyle(new Style().setColor(TextFormatting.YELLOW))));
 
@@ -149,7 +149,7 @@ public class TricorderBehavior implements IItemBehaviour {
                     new TextComponentTranslation(TextFormattingUtil
                             .formatNumbers(
                                     metaTileEntity.getRegistry().getIdByObjectName(metaTileEntity.metaTileEntityId)))
-                                            .setStyle(new Style().setColor(TextFormatting.BLUE))));
+                            .setStyle(new Style().setColor(TextFormatting.BLUE))));
 
             UUID owner = metaTileEntity.getOwner();
             if (owner != null) {
@@ -251,7 +251,7 @@ public class TricorderBehavior implements IItemBehaviour {
                                     .setStyle(new Style().setColor(TextFormatting.RED)),
                             new TextComponentTranslation(
                                     GTValues.VN[GTUtility.getTierByVoltage(container.getInputVoltage())])
-                                            .setStyle(new Style().setColor(TextFormatting.RED)),
+                                    .setStyle(new Style().setColor(TextFormatting.RED)),
                             new TextComponentTranslation(TextFormattingUtil.formatNumbers(container.getInputAmperage()))
                                     .setStyle(new Style().setColor(TextFormatting.RED))));
                 }
@@ -261,10 +261,10 @@ public class TricorderBehavior implements IItemBehaviour {
                                     .setStyle(new Style().setColor(TextFormatting.RED)),
                             new TextComponentTranslation(
                                     GTValues.VN[GTUtility.getTierByVoltage(container.getOutputVoltage())])
-                                            .setStyle(new Style().setColor(TextFormatting.RED)),
+                                    .setStyle(new Style().setColor(TextFormatting.RED)),
                             new TextComponentTranslation(
                                     TextFormattingUtil.formatNumbers(container.getOutputAmperage()))
-                                            .setStyle(new Style().setColor(TextFormatting.RED))));
+                                    .setStyle(new Style().setColor(TextFormatting.RED))));
                 }
                 list.add(new TextComponentTranslation("behavior.tricorder.energy_container_storage",
                         new TextComponentTranslation(TextFormattingUtil.formatNumbers(container.getEnergyStored()))
@@ -299,7 +299,7 @@ public class TricorderBehavior implements IItemBehaviour {
                         TextFormatting.RED.toString() + handler.getItemDelegate().getSlots()));
                 list.add(new TextComponentTranslation("behavior.tricorder.quantum_controller.connected_fluids",
                         TextFormatting.RED.toString() + handler.getFluidDelegate().getTanks()));
-            } else if (metaTileEntity instanceof IQuantumStorage<?>storage) {
+            } else if (metaTileEntity instanceof IQuantumStorage<?> storage) {
                 var qcontrollor = storage.getQuantumController();
                 if (qcontrollor != null) {
                     long eut = qcontrollor.getTypeEnergy(storage);
@@ -318,10 +318,10 @@ public class TricorderBehavior implements IItemBehaviour {
                 list.add(new TextComponentTranslation("behavior.tricorder.block_name",
                         new TextComponentTranslation(
                                 LocalizationUtils.format(pipeTile.getPipeBlock().getTranslationKey()))
-                                        .setStyle(new Style().setColor(TextFormatting.BLUE)),
+                                .setStyle(new Style().setColor(TextFormatting.BLUE)),
                         new TextComponentTranslation(
                                 TextFormattingUtil.formatNumbers(block.getMetaFromState(world.getBlockState(pos))))
-                                        .setStyle(new Style().setColor(TextFormatting.BLUE))));
+                                .setStyle(new Style().setColor(TextFormatting.BLUE))));
             }
 
             // pipe-specific info
@@ -349,7 +349,7 @@ public class TricorderBehavior implements IItemBehaviour {
                             .setStyle(new Style().setColor(TextFormatting.BLUE)),
                     new TextComponentTranslation(
                             TextFormattingUtil.formatNumbers(block.getMetaFromState(world.getBlockState(pos))))
-                                    .setStyle(new Style().setColor(TextFormatting.BLUE))));
+                            .setStyle(new Style().setColor(TextFormatting.BLUE))));
         }
 
         // crops (adds 1000EU)
@@ -369,7 +369,7 @@ public class TricorderBehavior implements IItemBehaviour {
                                 .setStyle(new Style().setColor(TextFormatting.GOLD)),
                         new TextComponentTranslation(String.valueOf(
                                 BedrockFluidVeinHandler.getFluidYield(world, pos.getX() / 16, pos.getZ() / 16)))
-                                        .setStyle(new Style().setColor(TextFormatting.GOLD)),
+                                .setStyle(new Style().setColor(TextFormatting.GOLD)),
                         new TextComponentTranslation(String.valueOf(fluidPercent))
                                 .setStyle(new Style().setColor(TextFormatting.YELLOW))));
             } else {

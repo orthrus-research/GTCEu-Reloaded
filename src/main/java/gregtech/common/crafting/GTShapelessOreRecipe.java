@@ -17,11 +17,12 @@ public class GTShapelessOreRecipe extends ShapelessOreRecipe {
                                 Object... recipe) {
         super(group, result);
         this.isClearing = isClearing;
+        // The simple matcher rejects renamed/enchanted stacks even when their ingredients accept them.
+        this.isSimple = false;
         for (Object in : recipe) {
             Ingredient ing = GTShapedOreRecipe.getIngredient(isClearing, in);
             if (ing != null) {
                 input.add(ing);
-                this.isSimple = this.isSimple && ing.isSimple();
             } else {
                 StringBuilder ret = new StringBuilder("Invalid shapeless ore recipe: ");
                 for (Object tmp : recipe) {

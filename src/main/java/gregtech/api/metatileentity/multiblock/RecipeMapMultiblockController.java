@@ -335,7 +335,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
                             .setStyle(new Style().setColor(TextFormatting.GREEN)),
                     new TextComponentTranslation(
                             TextFormattingUtil.formatNumbers(recipeMapWorkable.getMaxProgress() / 20))
-                                    .setStyle(new Style().setColor(TextFormatting.YELLOW))));
+                            .setStyle(new Style().setColor(TextFormatting.YELLOW))));
         }
 
         list.add(new TextComponentTranslation("behavior.tricorder.energy_container_storage",
@@ -350,7 +350,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
                             .setStyle(new Style().setColor(TextFormatting.RED)),
                     new TextComponentTranslation(
                             TextFormattingUtil.formatNumbers(recipeMapWorkable.getRecipeEUt() == 0 ? 0 : 1))
-                                    .setStyle(new Style().setColor(TextFormatting.RED))));
+                            .setStyle(new Style().setColor(TextFormatting.RED))));
         }
 
         list.add(new TextComponentTranslation("behavior.tricorder.multiblock_energy_input",

@@ -201,10 +201,10 @@ public class MetaTileEntityLargeTurbine extends FuelMultiblockController
                         .filter(mte -> (mte instanceof ITieredMetaTileEntity) &&
                                 (((ITieredMetaTileEntity) mte).getTier() >= tier))
                         .toArray(MetaTileEntity[]::new))
-                                .addTooltips("gregtech.multiblock.pattern.clear_amount_3")
-                                .addTooltip("gregtech.multiblock.pattern.error.limited.1", GTValues.VN[tier])
-                                .setExactLimit(1)
-                                .or(abilities(MultiblockAbility.OUTPUT_ENERGY)).setExactLimit(1))
+                        .addTooltips("gregtech.multiblock.pattern.clear_amount_3")
+                        .addTooltip("gregtech.multiblock.pattern.error.limited.1", GTValues.VN[tier])
+                        .setExactLimit(1)
+                        .or(abilities(MultiblockAbility.OUTPUT_ENERGY)).setExactLimit(1))
                 .where('H', states(getCasingState()).or(autoAbilities(false, true, false, false, true, true, true)))
                 .build();
     }

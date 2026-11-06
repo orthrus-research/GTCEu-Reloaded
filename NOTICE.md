@@ -41,6 +41,12 @@ and it will be added here.
 
 ## Third-party source
 
+- Inventory-based meta-item UI support adapts the inventory/slot factory from
+  [SussyPatches](https://github.com/MCTian-mi/SussyPatches), offered under LGPL-3.0.
+  Reloaded owns its typed provider contract and distinct factory identity.
+- Groovy hand-command clipboard routing adapts SussyPatches' client/server player fix,
+  offered under LGPL-3.0, into the native command.
+
 - `gregtech.api.util.random` adapts Sebastiano Vigna's generators, offered under the LGPL-2.1 or
   later or the Apache License 2.0; their notices remain in the source.
 - `src/api/java` holds the public APIs of other mods (BuildCraft, Railcraft, CoFH, Ender IO,

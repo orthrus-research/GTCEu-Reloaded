@@ -38,7 +38,7 @@ public class QuantumStorageProvider implements IWailaDataProvider {
     public NBTTagCompound getNBTData(EntityPlayerMP player, TileEntity te, NBTTagCompound tag, World world,
                                      BlockPos pos) {
         if (te instanceof IGregTechTileEntity gtte) {
-            if (gtte.getMetaTileEntity() instanceof IQuantumStorage<?>storage &&
+            if (gtte.getMetaTileEntity() instanceof IQuantumStorage<?> storage &&
                     (storage.getType() == IQuantumStorage.Type.ITEM ||
                             storage.getType() == IQuantumStorage.Type.FLUID)) {
                 var controller = storage.getQuantumController();
@@ -81,7 +81,7 @@ public class QuantumStorageProvider implements IWailaDataProvider {
             } else {
                 tooltip.add(I18n.format("gregtech.top.energy_consumption") + eutText);
             }
-        } else if (gtte.getMetaTileEntity() instanceof IQuantumStorage<?>storage &&
+        } else if (gtte.getMetaTileEntity() instanceof IQuantumStorage<?> storage &&
                 (storage.getType() == IQuantumStorage.Type.ITEM ||
                         storage.getType() == IQuantumStorage.Type.FLUID)) {
                             if (accessor.getNBTData().hasKey("gregtech.IQuantumStorageController")) {

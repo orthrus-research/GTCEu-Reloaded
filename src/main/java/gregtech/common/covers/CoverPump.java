@@ -33,7 +33,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.ITickable;
-import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -47,6 +46,7 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import com.cleanroommc.modularui.api.drawable.IDrawable;
+import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.drawable.DynamicDrawable;
 import com.cleanroommc.modularui.factory.GuiData;
 import com.cleanroommc.modularui.factory.SidedPosGuiData;
@@ -54,6 +54,7 @@ import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.utils.Color;
 import com.cleanroommc.modularui.utils.MouseData;
+import com.cleanroommc.modularui.value.StringValue;
 import com.cleanroommc.modularui.value.sync.EnumSyncValue;
 import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
@@ -89,21 +90,24 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     }
 
     public void setStringTransferRate(String s) {
-        this.fluidFilterContainer.setTransferSize(
-                getBucketMode() == BucketMode.MILLI_BUCKET ?
-                        Integer.parseInt(s) :
-                        Integer.parseInt(s) * 1000);
+        this.fluidFilterContainer.setTransferSize(bucketMode.parseRate(s, Integer.MAX_VALUE));
     }
 
     public String getStringTransferRate() {
-        return String.valueOf(getBucketMode() == BucketMode.MILLI_BUCKET ?
-                this.fluidFilterContainer.getTransferSize() :
-                this.fluidFilterContainer.getTransferSize() / 1000);
+        return bucketMode.formatRate(this.fluidFilterContainer.getTransferSize());
     }
 
     public void setTransferRate(int transferRate) {
-        if (bucketMode == BucketMode.BUCKET) transferRate *= 1000;
-        this.transferRate = MathHelper.clamp(transferRate, 1, maxFluidTransferRate);
+        setTransferRateMilliBuckets((long) transferRate * bucketMode.milliBucketsPerUnit);
+    }
+
+    /** Canonical rate, independent of the authoring or display unit. */
+    public int getTransferRateMilliBuckets() {
+        return transferRate;
+    }
+
+    public void setTransferRateMilliBuckets(long milliBuckets) {
+        this.transferRate = (int) Math.clamp(milliBuckets, 1, maxFluidTransferRate);
         markDirty();
     }
 
@@ -160,8 +164,7 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     }
 
     protected void adjustTransferRate(int amount) {
-        amount *= this.bucketMode == BucketMode.BUCKET ? 1000 : 1;
-        setTransferRate(this.transferRate + amount);
+        setTransferRateMilliBuckets((long) transferRate + (long) amount * bucketMode.milliBucketsPerUnit);
     }
 
     public void setPumpMode(PumpMode pumpMode) {
@@ -175,9 +178,7 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     }
 
     public void setBucketMode(BucketMode bucketMode) {
-        this.bucketMode = bucketMode;
-        if (this.bucketMode == BucketMode.BUCKET)
-            setTransferRate(transferRate / 1000 * 1000);
+        this.bucketMode = java.util.Objects.requireNonNull(bucketMode);
         markDirty();
     }
 
@@ -239,7 +240,7 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
 
     @Override
     public ModularPanel buildUI(SidedPosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
-        var panel = GTGuis.createPanel(this, 176, 192);
+        var panel = GTGuis.createPanel(this, 176, createThroughputUnitRow() ? 210 : 192);
 
         getFluidFilterContainer().setMaxTransferSize(getMaxTransferRate());
 
@@ -252,7 +253,12 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
         var manualIOmode = new EnumSyncValue<>(ManualImportExportMode.class,
                 this::getManualImportExportMode, this::setManualImportExportMode);
 
-        var throughput = new IntSyncValue(this::getTransferRate, this::setTransferRate);
+        var throughput = new IntSyncValue(this::getTransferRateMilliBuckets, this::setTransferRateMilliBuckets);
+        var units = new EnumSyncValue<>(BucketMode.class, this::getBucketMode, this::setBucketMode);
+        throughput.updateCacheFromSource(true);
+        units.updateCacheFromSource(true);
+        syncManager.syncValue("throughput_millibuckets", throughput);
+        syncManager.syncValue("throughput_units", units);
 
         var pumpMode = new EnumSyncValue<>(PumpMode.class, this::getPumpMode, this::setPumpMode);
 
@@ -268,26 +274,39 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
                     .child(new ButtonWidget<>()
                             .left(0).width(18)
                             .onMousePressed(mouseButton -> {
-                                int val = throughput.getValue() - getIncrementValue(MouseData.create(mouseButton));
-                                throughput.setValue(val);
+                                long val = (long) throughput.getValue() -
+                                        (long) getIncrementValue(MouseData.create(mouseButton)) *
+                                                units.getValue().milliBucketsPerUnit;
+                                throughput.setValue((int) Math.clamp(val, 1, maxFluidTransferRate), true, true);
                                 return true;
                             })
                             .onUpdateListener(w -> w.overlay(createAdjustOverlay(false))))
                     .child(new GTTextFieldWidget()
                             .left(18).right(18)
-                            .setPostFix(" L/s")
+                            .setPostFix(() -> units.getValue() == BucketMode.BUCKET ? " kL/s" : " L/s")
                             .setTextColor(Color.WHITE.darker(1))
-                            .setNumbers(1, maxFluidTransferRate)
-                            .value(throughput)
+                            .setNumbersDouble(value -> Math.clamp(value,
+                                    1.0 / units.getValue().milliBucketsPerUnit,
+                                    (double) maxFluidTransferRate / units.getValue().milliBucketsPerUnit))
+                            .value(new StringValue.Dynamic(
+                                    () -> units.getValue().formatRate(throughput.getValue()),
+                                    value -> throughput.setValue(
+                                            units.getValue().parseRate(value, maxFluidTransferRate), true, true)))
                             .background(GTGuiTextures.DISPLAY))
                     .child(new ButtonWidget<>()
                             .right(0).width(18)
                             .onMousePressed(mouseButton -> {
-                                int val = throughput.getValue() + getIncrementValue(MouseData.create(mouseButton));
-                                throughput.setValue(val);
+                                long val = (long) throughput.getValue() +
+                                        (long) getIncrementValue(MouseData.create(mouseButton)) *
+                                                units.getValue().milliBucketsPerUnit;
+                                throughput.setValue((int) Math.clamp(val, 1, maxFluidTransferRate), true, true);
                                 return true;
                             })
                             .onUpdateListener(w -> w.overlay(createAdjustOverlay(true)))));
+
+        if (createThroughputUnitRow())
+            column.child(new EnumRowBuilder<>(BucketMode.class).value(units)
+                    .overlay(IKey.str("kL"), IKey.str("L")).build());
 
         if (createFilterRow())
             column.child(getFluidFilterContainer().initUI(data, syncManager));
@@ -318,6 +337,10 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
 
     protected boolean createThroughputRow() {
         return true;
+    }
+
+    protected boolean createThroughputUnitRow() {
+        return createThroughputRow();
     }
 
     protected boolean createFilterRow() {
@@ -487,14 +510,32 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
 
     public enum BucketMode implements IStringSerializable {
 
-        BUCKET("cover.bucket.mode.bucket"),
-        MILLI_BUCKET("cover.bucket.mode.milli_bucket");
+        BUCKET("cover.bucket.mode.bucket", 1000),
+        MILLI_BUCKET("cover.bucket.mode.milli_bucket", 1);
 
         public static final BucketMode[] VALUES = values();
         public final String localeName;
+        private final int milliBucketsPerUnit;
 
-        BucketMode(String localeName) {
+        BucketMode(String localeName, int milliBucketsPerUnit) {
             this.localeName = localeName;
+            this.milliBucketsPerUnit = milliBucketsPerUnit;
+        }
+
+        public String formatRate(int milliBuckets) {
+            return java.math.BigDecimal.valueOf(milliBuckets)
+                    .divide(java.math.BigDecimal.valueOf(milliBucketsPerUnit)).stripTrailingZeros().toPlainString();
+        }
+
+        public double displayAmount(int milliBuckets) {
+            return (double) milliBuckets / milliBucketsPerUnit;
+        }
+
+        public int parseRate(String value, int maximum) {
+            var amount = new java.math.BigDecimal(value.replace(",", ""))
+                    .multiply(java.math.BigDecimal.valueOf(milliBucketsPerUnit));
+            return amount.max(java.math.BigDecimal.ONE).min(java.math.BigDecimal.valueOf(maximum))
+                    .setScale(0, java.math.RoundingMode.HALF_UP).intValueExact();
         }
 
         @NotNull

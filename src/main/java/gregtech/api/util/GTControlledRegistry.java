@@ -55,14 +55,13 @@ public class GTControlledRegistry<K, V> extends RegistryNamespaced<K, V> {
             throw new IndexOutOfBoundsException("Id is out of range: " + id);
         }
 
-        super.putObject(key, value);
-
         V objectWithId = getObjectById(id);
         if (objectWithId != null) {
             throw new IllegalArgumentException(
                     String.format("Tried to reassign id %d to %s (%s), but it is already assigned to %s (%s)!",
                             id, value, key, objectWithId, getNameForObject(objectWithId)));
         }
+        super.putObject(key, value);
         underlyingIntegerMap.put(value, id);
     }
 

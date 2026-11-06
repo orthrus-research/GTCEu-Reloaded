@@ -44,7 +44,9 @@ public class MultiblockInfoCategory implements IRecipeCategory<MultiblockInfoRec
     }
 
     public static void registerRecipes(IModRegistry registry) {
-        registry.addRecipes(REGISTER.stream().map(MultiblockInfoCategory::createWrapper).collect(Collectors.toList()),
+        registry.addRecipes(REGISTER.stream()
+                .filter(controller -> !gregtech.api.definition.MultiblockPreviews.isHidden(controller.metaTileEntityId))
+                .map(MultiblockInfoCategory::createWrapper).collect(Collectors.toList()),
                 UID);
     }
 

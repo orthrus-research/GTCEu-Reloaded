@@ -6,6 +6,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 
 import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.ModularSyncManager;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.WidgetTree;
 import io.netty.buffer.Unpooled;
@@ -78,7 +79,7 @@ class PaintGroupPersistenceTest {
                 new PaintGroupTestController(map()), new PaintGroupTestSmelter() }) {
             for (boolean enabled : new boolean[] { false, true }) {
                 controller.setPaintGroupingEnabled(enabled);
-                PanelSyncManager manager = new PanelSyncManager(false);
+                PanelSyncManager manager = new PanelSyncManager(new ModularSyncManager(false), true);
                 ModularPanel panel = controller.buildUI(null, manager, null);
                 assertDoesNotThrow(() -> WidgetTree.collectSyncValues(manager, panel));
                 assertNotNull(manager.findSyncHandlerNullable("display", 0));

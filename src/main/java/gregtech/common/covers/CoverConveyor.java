@@ -163,7 +163,7 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
     }
 
     protected void adjustTransferRate(int amount) {
-        setTransferRate(MathHelper.clamp(transferRate + amount, 1, maxItemTransferRate));
+        setTransferRate((int) Math.clamp((long) transferRate + amount, 1, maxItemTransferRate));
     }
 
     public void setConveyorMode(ConveyorMode conveyorMode) {
@@ -629,7 +629,9 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
                     .child(new ButtonWidget<>()
                             .left(0).width(18)
                             .onMousePressed(mouseButton -> {
-                                int val = throughput.getValue() - getIncrementValue(MouseData.create(mouseButton));
+                                int val = (int) Math.clamp(
+                                        (long) throughput.getValue() - getIncrementValue(MouseData.create(mouseButton)),
+                                        1, maxItemTransferRate);
                                 throughput.setValue(val, true, true);
                                 return true;
                             })
@@ -644,7 +646,9 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
                     .child(new ButtonWidget<>()
                             .right(0).width(18)
                             .onMousePressed(mouseButton -> {
-                                int val = throughput.getValue() + getIncrementValue(MouseData.create(mouseButton));
+                                int val = (int) Math.clamp(
+                                        (long) throughput.getValue() + getIncrementValue(MouseData.create(mouseButton)),
+                                        1, maxItemTransferRate);
                                 throughput.setValue(val, true, true);
                                 return true;
                             })

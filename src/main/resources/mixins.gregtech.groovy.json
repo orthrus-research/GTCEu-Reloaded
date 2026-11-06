@@ -1,0 +1,8 @@
+{
+  "package": "gregtech.mixins.groovy",
+  "refmap": "mixins.gregtech.refmap.json",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_25",
+  "required": true,
+  "mixins": ["CompiledClassAccessor", "ScriptCacheMixin", "ScriptStageCacheMixin", "ReloadableRegistryManagerMixin"]
+}

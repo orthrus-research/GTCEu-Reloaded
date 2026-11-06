@@ -117,13 +117,13 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
                                 this.flippedY)))
                 .widget(new WidgetScrollBar(25, 40, 210, -180, 180, 1,
                         value -> setConfig(this.url, value, this.scaleX, this.scaleY, this.flippedX, this.flippedY))
-                                .setTitle("rotation", 0XFFFFFFFF).setInitValue(this.rotation))
+                        .setTitle("rotation", 0XFFFFFFFF).setInitValue(this.rotation))
                 .widget(new WidgetScrollBar(25, 60, 210, 0, 1, 0.05f,
                         value -> setConfig(this.url, this.rotation, value, this.scaleY, this.flippedX, this.flippedY))
-                                .setTitle("scaleX", 0XFFFFFFFF).setInitValue(this.scaleX))
+                        .setTitle("scaleX", 0XFFFFFFFF).setInitValue(this.scaleX))
                 .widget(new WidgetScrollBar(25, 80, 210, 0, 1, 0.05f,
                         value -> setConfig(this.url, this.rotation, this.scaleX, value, this.flippedX, this.flippedY))
-                                .setTitle("scaleY", 0XFFFFFFFF).setInitValue(this.scaleY))
+                        .setTitle("scaleY", 0XFFFFFFFF).setInitValue(this.scaleY))
                 .widget(new LabelWidget(40, 115, "flippedX:", 0XFFFFFFFF))
                 .widget(new ToggleButtonWidget(90, 110, 20, 20, () -> this.flippedX,
                         state -> setConfig(this.url, this.rotation, this.scaleX, this.scaleY, state, this.flippedY)))

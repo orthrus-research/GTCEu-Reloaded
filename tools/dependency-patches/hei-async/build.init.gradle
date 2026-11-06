@@ -1,0 +1,48 @@
+gradle.projectsEvaluated {
+    def p = gradle.rootProject
+    def root = new File(p.rootDir, 'tools/dependency-patches/hei-async')
+    def repair = p.sourceSets.create('heiAsyncRepair') {
+        java.srcDir(new File(root, 'src'))
+        compileClasspath = p.sourceSets.main.compileClasspath
+    }
+    p.tasks.named(repair.compileJavaTaskName).configure {
+        options.release = 8
+        options.annotationProcessorPath = p.files()
+    }
+    def dev = p.tasks.register('heiAsyncRepairJar', Jar) {
+        dependsOn(repair.classesTaskName)
+        from(repair.output)
+        archiveFileName = 'hei-async-repair-dev.jar'
+        destinationDirectory = new File(root, 'build')
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+    def productReobf = p.tasks.named('reobfJar')
+    def renameType = productReobf.get().class.classLoader.loadClass('net.minecraftforge.renamer.gradle.RenameJar')
+    p.tasks.register('reobfHeiAsyncRepairJar', renameType, p.extensions.getByName('renamer')).configure {
+        dependsOn(dev)
+        javaLauncher.set(p.javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(26) })
+        input.set(dev.flatMap { it.archiveFile })
+        output.set(new File(root, 'build/hei-async-repair.jar'))
+        map.setFrom(productReobf.map { it.map })
+        libraries.from(repair.compileClasspath)
+    }
+    def checks = p.sourceSets.create('heiAsyncRepairTest') {
+        java.srcDir(new File(root, 'test'))
+        compileClasspath = repair.output + p.sourceSets.test.compileClasspath
+        runtimeClasspath = output + repair.output + p.sourceSets.test.runtimeClasspath
+    }
+    p.tasks.named(checks.compileJavaTaskName).configure { options.annotationProcessorPath = p.files() }
+    p.tasks.register('testHeiAsyncRepair', Test) {
+        dependsOn(checks.classesTaskName)
+        testClassesDirs = checks.output.classesDirs
+        classpath = checks.runtimeClasspath
+        useJUnitPlatform()
+    }
+    p.tasks.register('testHeiAsyncBaseline', Test) {
+        dependsOn(checks.classesTaskName)
+        testClassesDirs = checks.output.classesDirs
+        classpath = checks.output + p.sourceSets.test.runtimeClasspath
+        useJUnitPlatform()
+    }
+}

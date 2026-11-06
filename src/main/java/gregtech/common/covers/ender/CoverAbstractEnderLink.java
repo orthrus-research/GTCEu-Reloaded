@@ -199,10 +199,10 @@ public abstract class CoverAbstractEnderLink<T extends VirtualEntry> extends Cov
         return new DynamicDrawable(() -> new Rectangle()
                 .setColor(this.activeEntry.getColor())
                 .asIcon().size(16))
-                        .asWidget()
-                        .background(GTGuiTextures.SLOT)
-                        .size(18)
-                        .marginRight(2);
+                .asWidget()
+                .background(GTGuiTextures.SLOT)
+                .size(18)
+                .marginRight(2);
     }
 
     protected IWidget createPrivateButton(UUID uniqueID) {

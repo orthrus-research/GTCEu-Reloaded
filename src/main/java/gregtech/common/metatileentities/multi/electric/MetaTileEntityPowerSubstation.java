@@ -321,7 +321,7 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
                     .sorted(Comparator.comparingInt(entry -> entry.getValue().getTier()))
                     .map(entry -> new BlockInfo(entry.getKey(), null))
                     .toArray(BlockInfo[]::new))
-                            .addTooltips("gregtech.multiblock.pattern.error.batteries");
+            .addTooltips("gregtech.multiblock.pattern.error.batteries");
 
     @SideOnly(Side.CLIENT)
     @Override
@@ -406,7 +406,7 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
                 if (avgIn > avgOut) {
                     IKey timeToFill = getTimeToFillDrainText(energyCapacity.subtract(energyStored)
                             .divide(BigInteger.valueOf((avgIn - avgOut) * 20)))
-                                    .style(TextFormatting.GREEN);
+                            .style(TextFormatting.GREEN);
 
                     manager.add(KeyUtil.lang(TextFormatting.GRAY, "gregtech.multiblock.power_substation.time_to_fill",
                             timeToFill));
@@ -414,7 +414,7 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
                 } else if (avgIn < avgOut) {
                     IKey timeToDrain = getTimeToFillDrainText(
                             energyStored.divide(BigInteger.valueOf((avgOut - avgIn) * 20)))
-                                    .style(TextFormatting.RED);
+                            .style(TextFormatting.RED);
 
                     manager.add(KeyUtil.lang(TextFormatting.GRAY, "gregtech.multiblock.power_substation.time_to_drain",
                             timeToDrain));

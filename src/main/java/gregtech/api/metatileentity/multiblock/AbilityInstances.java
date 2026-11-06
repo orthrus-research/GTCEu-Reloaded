@@ -95,7 +95,7 @@ public class AbilityInstances extends AbstractObjectList<Object> {
         int s = size();
         // if what's added isn't what the key expects,
         // and it's an iterable, try to add all of its elements instead
-        if (!canAdd(o) && o instanceof Iterable<?>iterable) {
+        if (!canAdd(o) && o instanceof Iterable<?> iterable) {
             for (var e : iterable)
                 add(size(), e);
         } else {

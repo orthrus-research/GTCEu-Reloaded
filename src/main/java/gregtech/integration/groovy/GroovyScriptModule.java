@@ -10,7 +10,6 @@ import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.recipes.RecipeBuilder;
 import gregtech.api.recipes.RecipeMap;
-import gregtech.api.recipes.ingredients.GTRecipeOreInput;
 import gregtech.api.unification.Element;
 import gregtech.api.unification.Elements;
 import gregtech.api.unification.material.Material;
@@ -33,7 +32,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -45,7 +43,6 @@ import com.cleanroommc.groovyscript.api.IObjectParser;
 import com.cleanroommc.groovyscript.api.Result;
 import com.cleanroommc.groovyscript.compat.mods.GroovyContainer;
 import com.cleanroommc.groovyscript.compat.mods.GroovyPropertyContainer;
-import com.cleanroommc.groovyscript.event.ScriptRunEvent;
 import com.cleanroommc.groovyscript.helper.EnumHelper;
 import com.cleanroommc.groovyscript.sandbox.expand.ExpansionHelper;
 import com.google.common.collect.ImmutableList;
@@ -92,15 +89,6 @@ public class GroovyScriptModule extends IntegrationSubmodule implements GroovyPl
     }
 
     @SubscribeEvent
-    @Optional.Method(modid = Mods.Names.GROOVY_SCRIPT)
-    public static void afterScriptLoad(ScriptRunEvent.Post event) {
-        // Not Needed if JEI Module is enabled, unless we are on server (JEI Plugin Register doesn't take place)
-        if (!GregTechAPI.moduleManager.isModuleEnabled(GregTechModules.MODULE_JEI) ||
-                FMLCommonHandler.instance().getSide().isServer())
-            GTRecipeOreInput.refreshStackCache();
-    }
-
-    @SubscribeEvent
     public static void onMTERegistries(MTEManager.MTERegistryEvent event) {
         // automatically create a registry for groovyscript to store its MTEs
         GregTechAPI.mteManager.createRegistry(getPackId());
@@ -135,6 +123,14 @@ public class GroovyScriptModule extends IntegrationSubmodule implements GroovyPl
     @Optional.Method(modid = Mods.Names.GROOVY_SCRIPT)
     public static GroovyContainer<?> getInstance() {
         return modSupportContainer;
+    }
+
+    /** Runs before Groovy restores any imperative registry backups; the later ordinary callback is idempotent. */
+    @com.cleanroommc.groovyscript.api.GroovyBlacklist
+    public static void restoreDefinitionsBeforeReload() {
+        var container = modSupportContainer;
+        if (container != null && container.isLoaded() && container.get() instanceof PropertyContainer properties)
+            properties.definitions.onReload();
     }
 
     public static boolean validateNonNull(Object o, Supplier<String> errorMsg) {

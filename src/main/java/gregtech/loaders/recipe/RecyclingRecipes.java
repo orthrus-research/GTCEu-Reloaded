@@ -29,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -41,8 +41,10 @@ public class RecyclingRecipes {
 
     private static final NBTCondition RENAMED_NBT = NBTCondition.create(NBTTagType.COMPOUND, "display", "");
     private static final NBTCondition REPAIRCOST_NBT = NBTCondition.create(NBTTagType.INT, "RepairCost", "");
+    private static final Comparator<MaterialStack> MATERIAL_ORDER = Comparator
+            .comparingLong((MaterialStack stack) -> stack.amount).reversed()
+            .thenComparing(stack -> stack.material.getRegistryName());
 
-    // TODO - Fix recipe order with some things (noticed Hermetic Casings)
     // TODO - Figure out solution to LuV+ components
     // TODO - (to remember) Do NOT calculate any material component lists for circuits, they are simply totally lost
     // TODO - Work on durations and EUt's
@@ -55,27 +57,29 @@ public class RecyclingRecipes {
 
     public static void registerRecyclingRecipes(ItemStack input, List<MaterialStack> components,
                                                 boolean ignoreArcSmelting, @Nullable OrePrefix prefix) {
-        // Gather the valid Materials for use in recycling recipes.
-        // - Filter out Materials that cannot create a Dust
-        // - Filter out Materials that do not equate to at least 1 Nugget worth of Material.
-        // - Sort Materials on a descending material amount
-        List<MaterialStack> materials = components.stream()
-                .filter(stack -> stack.material.hasProperty(PropertyKey.DUST))
-                .filter(stack -> stack.amount >= M / 9)
-                .sorted(Comparator.comparingLong(ms -> -ms.amount))
-                .collect(Collectors.toList());
+        generateRecyclingRecipes(input, components, ignoreArcSmelting, prefix, RecipeBuilder::buildAndRegister);
+    }
 
-        // Exit if no Materials matching the above requirements exist.
-        if (materials.isEmpty()) return;
+    /** Emits native builders without publishing them; the caller chooses preparation or immediate registration. */
+    public static void generateRecyclingRecipes(ItemStack input, List<MaterialStack> components,
+                                                boolean ignoreArcSmelting, @Nullable OrePrefix prefix,
+                                                Consumer<RecipeBuilder<?>> sink) {
+        Objects.requireNonNull(sink, "sink");
+        components = combineStacks(components);
+        // Recovery requires at least one dust-capable component of at least a nugget's quantity.
+        // Keep other components and their declared priority for native fluid and arc conversion.
+        if (components.stream()
+                .noneMatch(stack -> stack.material.hasProperty(PropertyKey.DUST) && stack.amount >= M / 9))
+            return;
 
         // Calculate the voltage multiplier based on if a Material has a Blast Property
         int voltageMultiplier = calculateVoltageMultiplier(components);
 
         if (prefix != OrePrefix.dust) {
-            registerMaceratorRecycling(input, components, voltageMultiplier);
+            registerMaceratorRecycling(input, components, voltageMultiplier, sink);
         }
         if (prefix != null) {
-            registerExtractorRecycling(input, components, voltageMultiplier, prefix);
+            registerExtractorRecycling(input, components, voltageMultiplier, prefix, sink);
         }
         if (ignoreArcSmelting) return;
 
@@ -99,10 +103,11 @@ public class RecyclingRecipes {
                 return;
             }
         }
-        registerArcRecycling(input, components, prefix);
+        registerArcRecycling(input, components, prefix, sink);
     }
 
-    private static void registerMaceratorRecycling(ItemStack input, List<MaterialStack> materials, int multiplier) {
+    private static void registerMaceratorRecycling(ItemStack input, List<MaterialStack> materials, int multiplier,
+                                                   Consumer<RecipeBuilder<?>> sink) {
         // Finalize the output list.
         List<ItemStack> outputs = finalizeOutputs(
                 materials,
@@ -122,11 +127,11 @@ public class RecyclingRecipes {
 
         cleanInputNBT(input, recipe);
 
-        recipe.buildAndRegister();
+        sink.accept(recipe);
     }
 
     private static void registerExtractorRecycling(ItemStack input, List<MaterialStack> materials, int multiplier,
-                                                   @Nullable OrePrefix prefix) {
+                                                   @Nullable OrePrefix prefix, Consumer<RecipeBuilder<?>> sink) {
         // Handle simple materials separately
         if (prefix != null && prefix.secondaryMaterials.isEmpty()) {
             MaterialStack ms = OreDictUnifier.getMaterial(input);
@@ -143,13 +148,12 @@ public class RecyclingRecipes {
             if (prefix == OrePrefix.dust && m.hasProperty(PropertyKey.BLAST)) {
                 return;
             }
-            RecipeMaps.EXTRACTOR_RECIPES.recipeBuilder()
+            sink.accept(RecipeMaps.EXTRACTOR_RECIPES.recipeBuilder()
                     .inputs(input.copy())
                     .fluidOutputs(m.getFluid((int) (ms.amount * L / M)))
                     .duration((int) Math.max(1, ms.amount * ms.material.getMass() / M))
                     .EUt(GTValues.VA[GTValues.LV] * multiplier)
-                    .category(RecipeCategories.EXTRACTOR_RECYCLING)
-                    .buildAndRegister();
+                    .category(RecipeCategories.EXTRACTOR_RECYCLING));
 
             return;
         }
@@ -189,11 +193,11 @@ public class RecyclingRecipes {
         }
 
         cleanInputNBT(input, extractorBuilder);
-        extractorBuilder.buildAndRegister();
+        sink.accept(extractorBuilder);
     }
 
     private static void registerArcRecycling(ItemStack input, List<MaterialStack> materials,
-                                             @Nullable OrePrefix prefix) {
+                                             @Nullable OrePrefix prefix, Consumer<RecipeBuilder<?>> sink) {
         // Block dusts from being arc'd instead of EBF'd
         MaterialStack ms = OreDictUnifier.getMaterial(input);
         if (prefix == OrePrefix.dust && ms != null && ms.material.hasProperty(PropertyKey.BLAST)) {
@@ -238,7 +242,7 @@ public class RecyclingRecipes {
                 if (ms.material.hasFlag(IS_MAGNETIC) || ms.material == arcSmeltInto) {
                     builder.category(RecipeCategories.ARC_FURNACE_RECYCLING);
                 }
-                builder.buildAndRegister();
+                sink.accept(builder);
             }
             return;
         }
@@ -273,7 +277,7 @@ public class RecyclingRecipes {
         }
 
         cleanInputNBT(input, builder);
-        builder.buildAndRegister();
+        sink.accept(builder);
     }
 
     private static boolean needsRecyclingCategory(@Nullable OrePrefix prefix, @Nullable MaterialStack inputStack,
@@ -405,10 +409,10 @@ public class RecyclingRecipes {
      */
     private static List<MaterialStack> combineStacks(List<MaterialStack> rawList) {
         // Combine any stacks in the List that have the same Item.
-        Map<Material, Long> materialStacksExploded = new HashMap<>();
+        Map<Material, Long> materialStacksExploded = new LinkedHashMap<>();
         for (MaterialStack ms : rawList) {
             long amount = materialStacksExploded.getOrDefault(ms.material, 0L);
-            materialStacksExploded.put(ms.material, ms.amount + amount);
+            materialStacksExploded.put(ms.material, Math.addExact(ms.amount, amount));
         }
         return materialStacksExploded.entrySet().stream()
                 .map(e -> new MaterialStack(e.getKey(), e.getValue()))
@@ -448,48 +452,11 @@ public class RecyclingRecipes {
             } else outputs.add(new Tuple<>(stack, ms));
         }
 
-        // Sort the List by total material amount descending.
-        outputs.sort(Comparator.comparingLong(e -> -e.getSecond().amount));
-
-        // Sort "duplicate" outputs to the end.
-        // For example, if there are blocks of Steel and nuggets of Steel, and the nuggets
-        // are preventing some other output from occupying one of the final slots of the machine,
-        // cut the nuggets out to favor the newer item instead of having 2 slots occupied by Steel.
-        //
-        // There is probably a better way to do this.
-        Map<MaterialStack, ItemStack> temp = new HashMap<>();
-        for (Tuple<ItemStack, MaterialStack> t : outputs) {
-            boolean isInMap = false;
-            for (MaterialStack ms : temp.keySet()) {
-                if (ms.material == t.getSecond().material) {
-                    isInMap = true;
-                    break;
-                }
-            }
-            if (!isInMap) temp.put(t.getSecond(), t.getFirst());
-        }
-        temp.putAll(outputs.stream()
-                .filter(t -> !temp.containsKey(t.getSecond()))
-                .collect(Collectors.toMap(Tuple::getSecond, Tuple::getFirst)));
-
-        // Filter Ash to the very end of the list, after all others
-        List<ItemStack> ashStacks = temp.entrySet().stream()
-                .filter(e -> isAshMaterial(e.getKey()))
-                .sorted(Comparator.comparingLong(e -> -e.getKey().amount))
-                .map(Entry::getValue)
-                .collect(Collectors.toList());
-
-        List<ItemStack> returnValues = temp.entrySet().stream()
-                .sorted(Comparator.comparingLong(e -> -e.getKey().amount))
-                .filter(e -> !isAshMaterial(e.getKey()))
-                .limit(maxOutputs)
-                .map(Entry::getValue)
-                .collect(Collectors.toList());
-
-        for (int i = 0; i < ashStacks.size() && returnValues.size() < maxOutputs; i++) {
-            returnValues.add(ashStacks.get(i));
-        }
-        return returnValues;
+        // Rank by actual material amount, keeping ash last and resolving ties before the capacity cutoff.
+        // A list preserves repeated full stacks: a material/quantity map silently discards equal splits.
+        outputs.sort(Comparator.comparing((Tuple<ItemStack, MaterialStack> output) -> isAshMaterial(output.getSecond()))
+                .thenComparing(Tuple::getSecond, MATERIAL_ORDER));
+        return outputs.stream().limit(maxOutputs).map(Tuple::getFirst).collect(Collectors.toList());
     }
 
     private static void splitStacks(List<Tuple<ItemStack, MaterialStack>> list, ItemStack originalStack,

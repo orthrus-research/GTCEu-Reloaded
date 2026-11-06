@@ -40,7 +40,7 @@ death.attack.screwdriver_lv=%s的螺丝被%s扭掉了
 enchantment.disjunction=末影离析
 
 gregtech.jei.remove_recipe.tooltip=复制用于删除此配方的%s代码片段
-gregtech.jei.ct_recipe.tooltip=CraftTweaker配方
+
 gregtech.jei.gs_recipe.tooltip=GroovyScript配方
 
 gregtech.machine.steam_grinder.name=蒸汽碾磨机
@@ -6020,12 +6020,6 @@ gregtech.command.copy.copied_and_click=已复制至剪贴板。点击以再次�
 gregtech.command.copy.click_to_copy=点击以复制
 gregtech.command.copy.copied_start=已复制[
 gregtech.command.copy.copied_end=]至剪贴板
-gregtech.command.datafix.usage=用法：/gregtech datafix <bqu>
-gregtech.command.datafix.bqu.usage=用法：/gregtech datafix <bqu> [confirm]
-gregtech.command.datafix.bqu.backup=备份你的存档和BQu配置文件，然后使用“confirm”参数重新运行
-gregtech.command.datafix.bqu.start=开始迁移BQu任务数据库…
-gregtech.command.datafix.bqu.complete=BQu任务数据库迁移完成
-gregtech.command.datafix.bqu.failed=BQu任务数据库迁移失败。恢复你的备份！
 
 gregtech.chat.cape=§5恭喜你：你刚刚解锁了一件新披风！查看终端应用程序“披风选择器”来使用它。§r
 

@@ -41,7 +41,7 @@ public class QuantumStorageProvider implements IProbeInfoProvider {
                 } else {
                     probeInfo.text(TextStyleClass.INFO + "{*gregtech.top.energy_consumption*} " + eutText);
                 }
-            } else if (gtte.getMetaTileEntity() instanceof IQuantumStorage<?>storage &&
+            } else if (gtte.getMetaTileEntity() instanceof IQuantumStorage<?> storage &&
                     (storage.getType() == IQuantumStorage.Type.ITEM ||
                             storage.getType() == IQuantumStorage.Type.FLUID)) {
                                 probeInfo.text(getConnectionStatus(storage));

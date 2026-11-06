@@ -34,7 +34,7 @@ public class MetaItemGuiFactory extends AbstractUIFactory<HandGuiData> {
     @Override
     public @NotNull IGuiHolder<HandGuiData> getGuiHolder(HandGuiData data) {
         ItemStack stack = data.getUsedItemStack();
-        if (!(stack.getItem() instanceof MetaItem<?>metaItem)) {
+        if (!(stack.getItem() instanceof MetaItem<?> metaItem)) {
             throw new IllegalArgumentException("Found item is not a valid MetaItem!");
         }
         MetaItem<?>.MetaValueItem valueItem = metaItem.getItem(stack);

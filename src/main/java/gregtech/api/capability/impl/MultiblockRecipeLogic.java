@@ -511,7 +511,7 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
     }
 
     protected boolean checkPreviousRecipeDistinct(IItemHandlerModifiable previousBus) {
-        return previousRecipe != null && previousRecipe.getEUt() <= getMaxVoltage() &&
+        return canReusePreviousRecipe() && previousRecipe.getEUt() <= getMaxVoltage() &&
                 previousRecipe.matches(false, previousBus, getInputTank(previousBus));
     }
 

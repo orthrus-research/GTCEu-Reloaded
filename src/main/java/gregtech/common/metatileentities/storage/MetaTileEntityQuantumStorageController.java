@@ -32,6 +32,8 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -130,6 +132,7 @@ public class MetaTileEntityQuantumStorageController extends MetaTileEntity imple
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         var front = isPowered() ?
                 Textures.QUANTUM_CONTROLLER_FRONT_ACTIVE :
@@ -150,6 +153,7 @@ public class MetaTileEntityQuantumStorageController extends MetaTileEntity imple
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
         return Pair.of(Textures.QUANTUM_CONTROLLER_ACTIVE.getParticleSprite(), getPaintingColorForRendering());
     }
@@ -177,7 +181,7 @@ public class MetaTileEntityQuantumStorageController extends MetaTileEntity imple
         }
         // need to make sure it still exists
         MetaTileEntity mte = GTUtility.getMetaTileEntity(getWorld(), pos);
-        if (mte instanceof IQuantumStorage<?>storage) {
+        if (mte instanceof IQuantumStorage<?> storage) {
             storageInstances.put(pos, new WeakReference<>(storage));
             return storage;
         } else if (rebuild) {
@@ -327,7 +331,7 @@ public class MetaTileEntityQuantumStorageController extends MetaTileEntity imple
             IQuantumStorage<?> storage = oldInstances.get(pos).get();
             if (storage == null) {
                 MetaTileEntity mte = GTUtility.getMetaTileEntity(getWorld(), pos);
-                if (!(mte instanceof IQuantumStorage<?>quantumStorage)) {
+                if (!(mte instanceof IQuantumStorage<?> quantumStorage)) {
                     continue;
                 }
                 storage = quantumStorage;

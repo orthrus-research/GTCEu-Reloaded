@@ -7,6 +7,7 @@ import gregtech.api.util.GTTransferUtils;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.covers.filter.CompositeFilter;
 import gregtech.common.covers.filter.CompositeFilterOverflow;
+import gregtech.common.mui.widget.GTTextFieldWidget;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -27,11 +28,11 @@ import com.cleanroommc.modularui.factory.SidedPosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.StringValue;
 import com.cleanroommc.modularui.value.sync.EnumSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
-import com.cleanroommc.modularui.value.sync.StringSyncValue;
 import com.cleanroommc.modularui.widgets.layout.Flow;
-import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
@@ -122,8 +123,11 @@ public class CoverFluidVoidingAdvanced extends CoverFluidVoiding {
         bucketMode.updateCacheFromSource(true);
         syncManager.syncValue("bucket_mode", bucketMode);
 
-        var filterTransferSize = new StringSyncValue(this::getStringTransferRate, this::setStringTransferRate);
-        var transferTextField = new TextFieldWidget().widthRel(0.5f).right(0);
+        var filterTransferSize = new IntSyncValue(
+                fluidFilterContainer::getTransferSize, fluidFilterContainer::setTransferSize);
+        filterTransferSize.updateCacheFromSource(true);
+        syncManager.syncValue("filter_transfer_millibuckets", filterTransferSize);
+        var transferTextField = new GTTextFieldWidget().widthRel(0.5f).right(0);
         transferTextField.setEnabled(this.fluidFilterContainer.showGlobalTransferLimitSlider() &&
                 this.voidingMode == VoidingMode.VOID_OVERFLOW);
 
@@ -140,8 +144,12 @@ public class CoverFluidVoidingAdvanced extends CoverFluidVoiding {
                         .child(transferTextField
                                 .setEnabledIf(w -> this.fluidFilterContainer.showGlobalTransferLimitSlider() &&
                                         this.voidingMode == VoidingMode.VOID_OVERFLOW)
-                                .setNumbers(0, Integer.MAX_VALUE)
-                                .value(filterTransferSize)
+                                .setNumbersDouble(value -> Math.clamp(value, bucketMode.getValue().displayAmount(1),
+                                        bucketMode.getValue().displayAmount(fluidFilterContainer.getMaxTransferSize())))
+                                .value(new StringValue.Dynamic(
+                                        () -> bucketMode.getValue().formatRate(filterTransferSize.getValue()),
+                                        value -> filterTransferSize.setValue(bucketMode.getValue().parseRate(value,
+                                                fluidFilterContainer.getMaxTransferSize()), true, true)))
                                 .setTextColor(Color.WHITE.darker(1))));
     }
 

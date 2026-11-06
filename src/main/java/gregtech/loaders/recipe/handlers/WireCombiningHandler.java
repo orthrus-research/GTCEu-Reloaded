@@ -50,20 +50,29 @@ public class WireCombiningHandler {
         int wireIndex = ArrayUtils.indexOf(WIRE_DOUBLING_ORDER, wirePrefix);
 
         if (wireIndex < WIRE_DOUBLING_ORDER.length - 1) {
-            ModHandler.addShapelessRecipe(String.format("%s_wire_%s_doubling", material, wirePrefix),
+            ModHandler.addShapelessRecipe(
+                    ModHandler.materialRecipeName(material,
+                            String.format("%s_wire_%s_doubling", material, wirePrefix.name()),
+                            String.format("%s_wire_%s_doubling", material, wirePrefix)),
                     OreDictUnifier.get(WIRE_DOUBLING_ORDER[wireIndex + 1], material),
                     new UnificationEntry(wirePrefix, material),
                     new UnificationEntry(wirePrefix, material));
         }
 
         if (wireIndex > 0) {
-            ModHandler.addShapelessRecipe(String.format("%s_wire_%s_splitting", material, wirePrefix),
+            ModHandler.addShapelessRecipe(
+                    ModHandler.materialRecipeName(material,
+                            String.format("%s_wire_%s_splitting", material, wirePrefix.name()),
+                            String.format("%s_wire_%s_splitting", material, wirePrefix)),
                     OreDictUnifier.get(WIRE_DOUBLING_ORDER[wireIndex - 1], material, 2),
                     new UnificationEntry(wirePrefix, material));
         }
 
         if (wireIndex < 3) {
-            ModHandler.addShapelessRecipe(String.format("%s_wire_%s_quadrupling", material, wirePrefix),
+            ModHandler.addShapelessRecipe(
+                    ModHandler.materialRecipeName(material,
+                            String.format("%s_wire_%s_quadrupling", material, wirePrefix.name()),
+                            String.format("%s_wire_%s_quadrupling", material, wirePrefix)),
                     OreDictUnifier.get(WIRE_DOUBLING_ORDER[wireIndex + 2], material),
                     new UnificationEntry(wirePrefix, material),
                     new UnificationEntry(wirePrefix, material),

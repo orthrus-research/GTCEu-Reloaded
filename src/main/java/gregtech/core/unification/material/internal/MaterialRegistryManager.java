@@ -102,7 +102,8 @@ public final class MaterialRegistryManager implements IMaterialRegistryManager {
                 modid = GTValues.MODID;
                 materialName = name;
             }
-            return getRegistry(modid).getObject(materialName);
+            MaterialRegistry registry = getRegistry(modid);
+            return index >= 0 ? registry.getQualifiedMaterial(name) : registry.getObject(materialName);
         }
         return null;
     }

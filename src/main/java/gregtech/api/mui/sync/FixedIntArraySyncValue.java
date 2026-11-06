@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 /**
  * Sync Value for an array with fixed length.
  * <p>
- * Does not create new arrays.
+ * Reuses a fixed-size cache, isolated from the source array.
  */
 public class FixedIntArraySyncValue extends ValueSyncHandler<int[]> {
 
@@ -28,7 +28,7 @@ public class FixedIntArraySyncValue extends ValueSyncHandler<int[]> {
     public FixedIntArraySyncValue(@NotNull Supplier<int[]> getter, @Nullable Consumer<int[]> setter) {
         this.getter = Objects.requireNonNull(getter);
         this.setter = setter;
-        this.cache = getter.get();
+        this.cache = getter.get().clone();
     }
 
     @Contract("null, _, null, _ -> fail")
@@ -44,7 +44,7 @@ public class FixedIntArraySyncValue extends ValueSyncHandler<int[]> {
             this.getter = serverGetter != null ? serverGetter : clientGetter;
             this.setter = serverSetter != null ? serverSetter : clientSetter;
         }
-        this.cache = this.getter.get();
+        this.cache = this.getter.get().clone();
     }
 
     @Override
@@ -56,18 +56,25 @@ public class FixedIntArraySyncValue extends ValueSyncHandler<int[]> {
         if (setSource && this.setter != null) {
             this.setter.accept(value);
         }
+        onValueChanged();
         if (sync) {
-            sync(0, this::write);
+            sync();
         }
     }
 
     @Override
     public boolean updateCacheFromSource(boolean isFirstSync) {
-        if (isFirstSync || !Arrays.equals(this.getter.get(), this.cache)) {
-            setValue(this.getter.get(), false, false);
+        int[] source = this.getter.get();
+        if (isFirstSync || !Arrays.equals(source, this.cache)) {
+            setValue(source, false, false);
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void notifyUpdate() {
+        setValue(this.getter.get(), false, true);
     }
 
     @Override
@@ -79,14 +86,21 @@ public class FixedIntArraySyncValue extends ValueSyncHandler<int[]> {
 
     @Override
     public void read(@NotNull PacketBuffer buffer) throws IOException {
-        for (int i = 0; i < cache.length; i++) {
-            cache[i] = buffer.readVarInt();
+        int[] value = new int[cache.length];
+        for (int i = 0; i < value.length; i++) {
+            value[i] = buffer.readVarInt();
         }
+        setValue(value, true, false);
     }
 
     @Override
     public int[] getValue() {
         return this.cache;
+    }
+
+    @Override
+    public Class<int[]> getValueType() {
+        return int[].class;
     }
 
     public int getValue(int index) {

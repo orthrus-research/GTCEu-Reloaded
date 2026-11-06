@@ -1,5 +1,6 @@
 package gregtech.api.recipes.builders;
 
+import gregtech.api.recipes.NativeRecipeRegistration;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeBuilder;
 import gregtech.api.recipes.RecipeMap;
@@ -9,6 +10,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 import org.jetbrains.annotations.Nullable;
+
+import java.util.function.Consumer;
 
 import static gregtech.api.recipes.logic.OverclockingLogic.STD_DURATION_FACTOR_INV;
 
@@ -24,6 +27,9 @@ public class UniversalDistillationRecipeBuilder extends RecipeBuilder<UniversalD
 
     public UniversalDistillationRecipeBuilder(RecipeBuilder<UniversalDistillationRecipeBuilder> recipeBuilder) {
         super(recipeBuilder);
+        if (recipeBuilder instanceof UniversalDistillationRecipeBuilder distillation) {
+            this.doDistilleryRecipes = distillation.doDistilleryRecipes;
+        }
     }
 
     @Override
@@ -32,11 +38,14 @@ public class UniversalDistillationRecipeBuilder extends RecipeBuilder<UniversalD
     }
 
     @Override
-    public void buildAndRegister() {
-        if (!this.doDistilleryRecipes) {
-            super.buildAndRegister();
-            return;
-        }
+    public java.util.Optional<NativeRecipeRegistration> buildAndRegisterWithReceipt() {
+        expandDistilleryRecipes(RecipeBuilder::buildAndRegister);
+        return super.buildAndRegisterWithReceipt();
+    }
+
+    /** Prepares derived builders without registering them. */
+    public void expandDistilleryRecipes(Consumer<RecipeBuilder<?>> derived) {
+        if (!this.doDistilleryRecipes) return;
 
         for (int i = 0; i < fluidOutputs.size(); i++) {
             SimpleRecipeBuilder builder = RecipeMaps.DISTILLERY_RECIPES.recipeBuilder().copy()
@@ -76,7 +85,7 @@ public class UniversalDistillationRecipeBuilder extends RecipeBuilder<UniversalD
                             this.chancedOutputs.get(0).getChanceBoost());
                 }
 
-                distilleryBuilder.buildAndRegister();
+                derived.accept(distilleryBuilder);
 
                 continue;
             }
@@ -98,10 +107,8 @@ public class UniversalDistillationRecipeBuilder extends RecipeBuilder<UniversalD
                 }
 
             }
-            builder.buildAndRegister();
+            derived.accept(builder);
         }
-
-        super.buildAndRegister();
     }
 
     private static int getRatioForDistillery(FluidStack fluidInput, FluidStack fluidOutput,
@@ -130,7 +137,6 @@ public class UniversalDistillationRecipeBuilder extends RecipeBuilder<UniversalD
         return fluidStack.amount % divisor == 0 && fluidStack.amount / divisor >= 25;
     }
 
-    // todo expose to CT
     public UniversalDistillationRecipeBuilder disableDistilleryRecipes() {
         this.doDistilleryRecipes = false;
         return this;

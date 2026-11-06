@@ -45,7 +45,7 @@ death.attack.screwdriver_lv=%s は %s に高速でねじられた。
 enchantment.disjunction=ディスジャンクション
 
 gregtech.jei.remove_recipe.tooltip=このレシピを削除するための%s用スニペットをコピー
-gregtech.jei.ct_recipe.tooltip=CraftTweaker Recipe
+
 gregtech.jei.gs_recipe.tooltip=GroovyScript Recipe
 
 gregtech.machine.steam_grinder.name=蒸気式破砕機
@@ -5940,12 +5940,6 @@ gregtech.command.copy.copied_and_click=をクリップボードにコピーし�
 gregtech.command.copy.click_to_copy=クリックでコピー
 gregtech.command.copy.copied_start=クリップボードに [
 gregtech.command.copy.copied_end=] をコピーしました
-gregtech.command.datafix.usage=使い方: /gregtech datafix <bqu>
-gregtech.command.datafix.bqu.usage=使い方: /gregtech datafix bqu [confirm]
-gregtech.command.datafix.bqu.backup=セーブデータとBQuのcfgをバックアップし、'confirm'を再実行してください。
-gregtech.command.datafix.bqu.start=BQu Questデータベースの移行を開始...
-gregtech.command.datafix.bqu.complete=BQu Questデータベースの移行が修了しました
-gregtech.command.datafix.bqu.failed=BQu Questデータベースの移行に失敗しました。バックアップから復元してください!
 
 gregtech.chat.cape=§5おめでとうございます: 新しいマントを解放できました! 使用するためにはターミナルのマントセレクタのアプリをご覧ください.§r
 

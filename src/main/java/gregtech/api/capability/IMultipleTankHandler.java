@@ -109,7 +109,7 @@ public interface IMultipleTankHandler extends IFluidHandler, Iterable<IMultipleT
         default NBTTagCompound serializeNBT() {
             if (getDelegate() instanceof FluidTank fluidTank) {
                 return fluidTank.writeToNBT(new NBTTagCompound());
-            } else if (getDelegate() instanceof INBTSerializable<?>serializable) {
+            } else if (getDelegate() instanceof INBTSerializable<?> serializable) {
                 if (serializable.serializeNBT() instanceof NBTTagCompound compound) {
                     return compound;
                 }
@@ -122,7 +122,7 @@ public interface IMultipleTankHandler extends IFluidHandler, Iterable<IMultipleT
         default void deserializeNBT(NBTTagCompound nbt) {
             if (getDelegate() instanceof FluidTank fluidTank) {
                 fluidTank.readFromNBT(nbt);
-            } else if (getDelegate() instanceof INBTSerializable<?>serializable) {
+            } else if (getDelegate() instanceof INBTSerializable<?> serializable) {
                 try {
                     ((INBTSerializable<NBTBase>) serializable).deserializeNBT(nbt);
                 } catch (ClassCastException ignored) {}
