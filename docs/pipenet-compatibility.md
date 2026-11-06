@@ -1,11 +1,8 @@
 # PipeNet compatibility contract
 
-Baseline: `316f0df8d5b029f905b8af79ee34c09a15623c20`.
-
-This implementation retains existing component and physical-walker ownership while repairing
-transport accounting, capability lifetimes, cache invalidation, graph mutation and persistence.
-The original baseline remains the reference for supported API and saved-data compatibility;
-the intentional behavior corrections and migration limits are recorded below.
+PipeNet owns transport accounting, capability lifetimes, route-cache invalidation, graph mutation
+and persistence. The following contracts describe its behavior and the limits of addon and saved-data
+compatibility.
 
 - Preserve registered blocks/tiles, material/type identities, enum ordering, concrete
   capabilities, cover wrappers, protected extension hooks and legacy NBT codecs.
@@ -20,29 +17,19 @@ the intentional behavior corrections and migration limits are recorded below.
   endpoints. Do not impose per-edge budgets on ordinary item routing.
 - Refresh endpoint discovery within 200 ticks even when other destinations already work.
   Handle backwards world time. Live covers/capability admission remain operation-time checks.
-- Preserve runtime-added cover modes and the exact selected addon cohort. Native qualification
-  must prove required injections, mode save/sync and mixed buffered/tankless fluid connections.
+- Preserve supported runtime-added cover ordinals and saved selections. Addon compatibility
+  requires tests of its injections, synchronization and mixed buffered/tankless connections.
 - Reject malformed graph replacement without damaging current state. Never discard otherwise
   recoverable stored fluid merely because its saved channel layout is unexpected.
 - Keep built-in fluid storage, distribution cadence, channels and hazards; energy path loss,
   heat and telemetry; optical/laser topology restrictions and query behavior.
 
-The full gates include source/tests/build/reobfuscation, old/new save roundtrips, isolated
-Cleanroom client/server, multiplayer, exact transformed cohort, copied-pack runs, and ten or
-more matched process pairs with identical workloads. Reports distinguish each evidence scope.
-No source test or microbenchmark alone establishes native or full-pack compatibility.
-
 ## Validation scope
 
-The selected implementation passed source/build checks, original-compiled API and codec probes,
-built-in native transport and save fixtures, and isolated client/server synchronization and
-reconnection in Cleanroom 0.7.12-alpha on Java 25 with ModularUI 3.1.6. The runtime-added arm
-mode was tested with an explicit RETAIN-only Sussy configuration, not every Sussy feature.
-
-The broader retained Core/addon cohort fails on existing GregTech API mismatches, including
-the `Elements.add` signature and `RecipeProperty` types. Its mixed tankless/buffered, bulk-tool
-and telemetry fixtures cannot run past initialization. Full-pack compatibility therefore
-remains unqualified. These repairs do not supply replacement addon APIs or loader shims.
+Built-in transport, persistence and client/server synchronization are covered by the current
+[release validation](pre-delivery-qualification.md). Its runtime versions and artifact identity
+define the supported baseline. Optional cover modes, tankless networks and other addon behavior
+require separate tests with those addons installed.
 
 ## Component identity and extension equality
 
@@ -113,8 +100,7 @@ PipeNet rejects duplicate positions in a saved graph and preserves the raw
 rejected record through quarantine. A historical shared addon record may already be
 ambiguous; neither graph validation nor loaded-tile recovery can infer its original
 dimension. Native hybrid transfer qualification does not imply tankless dimension or
-retained-handler qualification. A future addon repair must be owned, pinned and tested
-separately, with the same adaptation applied to both comparison candidates.
+retained-handler qualification. Any addon repair must preserve its existing saved data and be tested separately.
 
 ## Item, optical and laser dimension storage
 
@@ -186,8 +172,7 @@ before relying on raw field consumers. Dynamic ordinal decoding does not promise
 that arbitrary additions after javac switch maps initialize have operational cover
 behavior, or change the existing byte-sized packet ordinal format. This correction
 adds no fourth-mode implementation, dependency or Mixin. Native qualification still
-requires the original public-cache gate plus actual fourth-mode NBT and packet
-roundtrips under the selected transformed addon cohort.
+requires NBT and packet roundtrips with the installed enum-extension addon.
 
 ## Rejected initial graph records
 

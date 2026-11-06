@@ -1,20 +1,22 @@
-# Typed recipe definitions (ct-overhaul development)
+# Typed recipe definitions
 
-The new configuration boundary is shared by Java and Groovy. A declaration owns its lists,
+The configuration API is shared by Java and Groovy. A declaration owns its lists,
 stack copies and NBT policy; preparation produces native recipe inputs. Machine lookup does
-not invoke a script closure or retain a Groovy interpreter. This is an implementation-stage
-API, not a qualified release or complete replacement of the scripting module yet.
+not invoke a script closure or retain a Groovy interpreter. Custom crafting callbacks remain
+available where needed; their execution rules are described below. See
+[release validation](pre-delivery-qualification.md) for the supported runtime and tested scope.
 
-## Current supported domain
+## Supported definitions
 
 `RecipeDefinition` describes item and fluid inputs, deterministic and chanced outputs on ordinary
 `RecipeMap` instances. Supported builders are Simple, Blast, Fusion, Computation, Implosion,
-CircuitAssembler, UniversalDistillation and Primitive, without implicit input/output/property
-defaults. Native oxygen, solder, chemical-reactor copying, cutter-fluid
+CircuitAssembler, UniversalDistillation, Primitive, Fuel and AssemblyLine, without implicit
+input/output/property defaults. Native oxygen, solder, chemical-reactor copying, cutter-fluid
 and distillery expansions use the same preparation algorithm for Java and Groovy.
-Other domains currently receive a diagnostic. They must gain explicit
-adapters before the overhaul is complete; this restriction is not a permanent removal of those
-features. Native registries must already exist when declarations are prepared.
+Additional builder classes require an explicit preparation contract through
+`RecipeDefinitionExtensions.registerBuilder`; see [native addon extensions](#native-addon-extensions).
+Unsupported builders produce a diagnostic. Native builders remain available independently of
+typed definitions. Native registries must already exist when declarations are prepared.
 
 `SourceOrigin` carries frontend, source, one-based line/column (zero means unknown), declaration
 identity and authoring stage. Diagnostics have a stable code, field path and source. Stage is
@@ -34,7 +36,7 @@ var prepared = RecipeDefinitionCompiler.compile(recipe);
 ```
 
 These same Java types and calls work in statically checked Groovy; no parallel Groovy recipe
-implementation is needed. `RecipeDefinitionTest` executes both frontends and native lookup.
+implementation is needed.
 When reading native objects from Groovy, use explicit Java accessors where bean names collide.
 For example, `material.getElement()` returns its element identity, whereas `material.isElement()`
 returns a boolean; Groovy's `material.element` selects the boolean accessor. Keep identity and
@@ -123,6 +125,8 @@ Likewise, a consumed water bucket returns its empty bucket through that hook. A 
 is intentionally preserved without wear. Crafting quantities are one ingredient per occupied
 slot; repeated output taking consumes successive sets of inputs.
 
+## Tool state
+
 Tool crafting sounds use a server-side, session-only cooldown per player and sound. They do
 not write timing metadata into the tool remainder. The same sound is limited to once per
 second for that player, including when using different copies of a tool. Existing saved
@@ -148,6 +152,8 @@ under `GT.Tool` are ignored and preserved. Configuration setup and value reads d
 behavior data; explicit adjustments still write through `ToolHelper.getBehaviorsTag` and
 clamp to the existing maximum. Stored integers are not sanitized by reads. Custom maximum
 overrides, tooltip callbacks and toolbelt capabilities remain responsible for their own behavior.
+
+## Materials and recipe identities
 
 GroovyScript's `stack * n` sets the stack's absolute amount to `n`. Applying `* 3` to an
 existing two-item output produces a three-item stack, not six. Declare six explicitly when
@@ -201,7 +207,7 @@ recipe. Generated prefix components use prefix names, not diagnostic strings con
 No short-name alias is registered. Explicitly qualified recipe IDs use the same resolution for duplicate
 checking and publication; ordinary registration cannot overwrite an existing recipe implicitly.
 
-Player data before GregTech data version3 migrates generated recipe-book IDs before Minecraft reads
+Player data before GregTech data version 3 migrates generated recipe-book IDs before Minecraft reads
 them. Generation records old-to-current names in `RecipeBookMigrationTable.GENERATED`; the overload
 `materialRecipeName(material, path, previousPath)` also records former prefix paths containing ordinals.
 The table is migration metadata and does not register crafting recipes. Its snapshots are immutable.
@@ -256,8 +262,9 @@ will create that ingredient later. A failed machine group replacement preserves 
 the same `RecipeDefinition` can be submitted again after the content script registers the ore.
 Successful preparation keeps native ore matching live, including members registered afterward.
 There is no automatic deferred retry: order dependent scripts explicitly so recipe creation, removal
-and replacement retain their authored order. `ScriptCreatedIngredientLifecycleTest` exercises this
-boundary with dynamic and statically checked Groovy, native recipe lookup, disable and re-enable.
+and replacement retain their authored order.
+
+## Crafting and recovery ownership
 
 `generatedRecovery(group)` returns an immutable list of the group's current native recovery handles.
 It excludes displaced originals and other owners' recipes. Helpers can exclude their own generated
@@ -324,9 +331,8 @@ Intentionally empty shaped cells and zero-contribution recovery inputs are separ
 Ownership retained during startup can adopt Cleanroom's first FROZEN crafting view when its recipe
 objects, IDs, allocation state, aliases, override history and native owner-copy rules agree. Original
 ACTIVE and VANILLA entries remain separate baselines; the new FROZEN baseline is derived from ACTIVE.
-Other stage replacements and mismatched copies still reject restoration. This does not yet qualify
-the complete integrated-server reload or client lifecycle. Existing imperative Groovy crafting
-operations remain available; do not modify a typed group's claimed names through independent removers.
+Other stage replacements and mismatched copies still reject restoration. Existing imperative Groovy
+crafting operations remain available; do not modify a typed group's claimed names through independent removers.
 
 Recipe index conflicts are checked before inserting any alternative path. A path may end in a
 recipe and also continue to longer recipes. Lookup tries eligible descendants before that path's
@@ -445,10 +451,10 @@ uses this same contract, without an assembly-line branch in the compiler or tran
 
 Implement registration reducers in Java or as explicit `@CompileStatic` classes implementing
 `BiFunction<T, RecipeRegistrationChange, T>`. GroovyScript 1.5.0 intercepts exceptions from script
-closures, including closures coerced to Java functional interfaces. In the production fixture, a
-rejected closure logged an engine error and the registrar received a null prepared value. An explicit
-typed implementation preserved the original rejection message in `recipe.state.prepare` without an
-engine error. `@CompileStatic` on the enclosing class alone does not bypass closure interception.
+closures, including closures coerced to Java functional interfaces. A thrown rejection can therefore
+reach the registrar as a null prepared value and a separate engine error. An explicit typed
+implementation preserves the rejection message in the `recipe.state.prepare` diagnostic.
+`@CompileStatic` on the enclosing class alone does not bypass closure interception.
 This distinction concerns registration infrastructure; ordinary Groovy recipe declarations remain
 supported. Neither reducer form belongs on the recipe matching or per-tick execution path.
 
@@ -553,9 +559,9 @@ registrars share this graph; equal group names under separate owners remain dist
 owner preserves the other owners and recomputes their dependents. Native integrations retain a
 `RecyclingOwner` and use `RecyclingManager.ownership().prepare(...)` on the quiescent registration
 thread. Prepared changes reject stale ownership or registry revisions before publication. Arbitrary
-direct registry writes do not automatically create graph contributions. Adoption by an existing
-pack such as Supersymmetry is separate integration work. Startup capture and generated-recycling
-ownership are available through the explicit contracts below.
+direct registry writes do not automatically create graph contributions. Pack helpers must explicitly
+adopt these ownership contracts. Startup capture and generated-recycling ownership are available
+through the explicit contracts below.
 
 `RecyclingManager.beginNativeCapture()` opens an opt-in collector before native recipe registration.
 It records accepted recycling-enabled machine and shaped recipes, including unknown compositions.
@@ -598,11 +604,11 @@ admission succeeds. Missing deterministic outputs reject recycling-enabled recip
 overflow throws before recipe admission. This native path is not an owned group transaction and
 cannot undo arbitrary callback effects or already registered derived recipes.
 
-Native builders invoke `postValidateRecipe` once, then the map's admission path and virtual
-`compileRecipe`. They no longer dispatch through overrides of `addRecipe`; addon validation belongs
-in `postValidateRecipe`, and lookup admission belongs in `compileRecipe`. Addons tracking registration
-should use the receipt rather than private builder callbacks. Derived registrations have their own
-results; the primary receipt does not represent an entire expansion group.
+Native builders invoke `postValidateRecipe` once, then the map's final admission methods.
+`addRecipe` and `compileRecipe` cannot be overridden. Addon validation belongs in
+`postValidateRecipe`; secondary indexes belong in declared `RecipeRegistrationState` values.
+Addons tracking registration should use the receipt rather than private builder callbacks. Derived
+registrations have their own results; the primary receipt does not represent an entire expansion group.
 
 Contribution keys deliberately follow the native item/metadata composition registry; NBT and
 capabilities are not part of that registry identity. The existing native callback overload still
@@ -655,22 +661,15 @@ It replaces only that node's property value, retaining connections, paint mark, 
 contents; it does not modify shared property objects or infer properties for unloaded tiles.
 Ordinary fluid handling remains native and does not invoke the authoring script.
 
-## Qualification boundary
+## Content registration and runtime support
 
 Content becomes available through its native registration, including declarations authored in Groovy.
 Consumers resolve registered identities after the relevant content phase. Reloaded does not parse,
 rewrite, or repair external quest databases. Native saved-state migration remains separate from
 content registration: it translates historical identities rather than making current content valid.
 
-Unit tests cover Java/Groovy equivalence, negative diagnostics, alternatives, NBT, capabilities,
-defensive copying, failed multi-map preparation, repeat replacement, hidden recipes and ownership
-violations. Separate isolated native checks exercise client/server loading, actual machine execution,
-repeated integrated Groovy reload, mixed recipe ownership and original-writer saved identities.
-Combined native checks cover crafting composition and dependent recovery, explicit zero recovery,
-research expansion/index cleanup, disable/re-enable, restoration and rejected overflowing edits.
-Selected HEI recipe/category checks pass repeated full and recipe-only reloads with synchronous
-search and with an independently repaired asynchronous HEI dependency. Ingredient visibility and
-autonomous rebuild completion also pass that candidate; the original HEI pin remains affected.
-See [release-readiness.md](release-readiness.md) for exact artifacts and the remaining delivery boundary.
-These do not establish arbitrary addon or full-pack compatibility. CT adapter sources and dependencies
-are removed; callers must migrate explicitly as described in [ct-migration.md](ct-migration.md).
+Asynchronous HEI reload requires the repaired dependency listed in
+[release validation](pre-delivery-qualification.md). That report defines the tested runtime,
+reload, persistence and multiplayer scope. Pack and addon compatibility requires separate testing.
+CT adapter sources and dependencies are removed; migrate callers using
+[the migration guide](ct-migration.md).

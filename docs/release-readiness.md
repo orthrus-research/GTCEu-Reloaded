@@ -1,29 +1,27 @@
 # Reloaded release acceptance
 
-Reloaded is an independent Cleanroom/Java 26 mod. Release readiness is measured against its own
-documented APIs and the capabilities required to build and play a GregTech-style pack. Servicing
-upstream GTCEu addon binaries, old scripting APIs or existing third-party packs is optional work.
-An incompatibility in an unclaimed legacy integration is not a core release blocker.
+Release acceptance covers Reloaded's documented APIs and the capabilities needed to build and
+play a GregTech-style pack. Compatibility with upstream addon binaries, old scripting APIs and
+existing packs is supported only where explicitly documented and tested.
 
-Optional compatibility does not make missing functionality acceptable. Materials, content, machines,
-recipes, research, recycling, scripting and player persistence must work through Reloaded's native
-contracts. New content owners must be able to declare their own identities and state without editing
-a list of supported mods in Reloaded. Quest database ownership belongs to a separate quest mod.
+Materials, content, machines, recipes, research, recycling, scripting and player persistence must
+work through native contracts. Content providers declare their own identities and registration
+state; registration must not depend on a list of recognized mods. Quest databases remain the
+responsibility of the quest mod.
 
 ## Supported release target
 
-The consolidated current evidence is in [pre-delivery qualification](pre-delivery-qualification.md).
+The current results are in [release validation](pre-delivery-qualification.md).
 It records the tested artifact, supported runtime and known limits. Earlier candidates do not
 extend that qualification to different artifacts or integrations.
 
 The current candidate targets Java 26, CodeChickenLib 3.3.10, ModularUI 3.1.6, Cleanroom
-0.7.14-alpha and the dependencies pinned in the build. GroovyScript 1.5.0 is required for Groovy authoring, optional for Java-only consumers.
-Additional JVM versions require their own evidence. Freeze exact runtime, source, configuration and
-artifact hashes for each qualification run. A build or static addon scan is not a gameplay pass.
+0.7.14-alpha and the dependencies pinned in the build. GroovyScript 1.5.0 is required for Groovy
+authoring and optional for Java-only consumers. Record runtime, source, configuration and artifact
+identities for each validation run. Additional JVM versions require separate validation.
 
-This release retains CodeChickenLib. The OrthLib replacement handoff is future work and is
-not a release gate. The final candidate aligns and verifies its CCL build/runtime baseline;
-removing CCL or reducing the JAR count is outside this release's scope.
+CodeChickenLib remains a required dependency. Compilation and runtime validation use the same
+pinned release; this release does not replace CCL.
 
 ## Required pack capabilities
 
@@ -43,15 +41,14 @@ removing CCL or reducing the JAR count is outside this release's scope.
 | Runtime compilation | Groovy cache/environment identity | Cold/warm loads, modified scripts/helpers, changed dependencies and damaged caches execute the correct code; measure compilation and allocation cost. |
 | Player experience | Native UI, HEI integration, networking and saved state | Representative processing and crafting work on client, dedicated server and separate multiplayer clients, including reconnect/restart. |
 
-The responsibility mapping in [ct-migration.md](ct-migration.md) is the starting inventory.
-Every missing capability is implementation work, not a request to restore an upstream wrapper.
-The typed compiler's explicit builder/effect contracts are declarations of behavior; registration
-must not depend on recognizing a mod's name. Arbitrary external side effects cannot be rolled back.
+The responsibility mapping in [ct-migration.md](ct-migration.md) identifies the replacement APIs.
+Builder and effect contracts must describe their registration behavior explicitly. Transactional
+publication covers declared state; arbitrary external side effects cannot be rolled back.
 
 ## Release gates and evidence
 
 1. **Completeness:** account for the capability inventory above and all replaced CT responsibilities;
-   document intentional removals explicitly. Source/API churn alone is not functional completion.
+   document intentional removals and verify the replacement behavior.
 2. **Build:** full tests, formatting, definition/mixin/publication checks and reobfuscation pass for the
    frozen source. Exclude test probes, old CT dependencies and quest resolvers from the product.
 3. **Native registration:** exercise Java and Groovy providers in a fresh, purpose-built core fixture,
@@ -69,16 +66,13 @@ must not depend on recognizing a mod's name. Arbitrary external side effects can
 8. **Delivery:** distribute the tested bytes with supported-version metadata, API migration notes,
    known limits and a gate-by-gate evidence receipt. A newer build requires refreshed evidence.
 
-The consolidated receipt records current gate outcomes and their limits. No percentage-complete
-estimate substitutes for
-the actual registration, lifecycle, persistence, client, multiplayer and performance checks.
+The [validation report](pre-delivery-qualification.md) records the current outcomes and limits.
 
-## Separate optional services
+## Optional compatibility
 
-Upstream addon ports, old-binary bridges, CT script conversion, legacy-world import and compatibility
-with a named existing pack each have separate scope and receipts. They do not enter the release gate
-merely because their source or JAR was used as a research reference. If advertised as supported in a
-release, test that claim; otherwise do not describe its untested behavior as supported.
-Existing native migration code can remain useful without promising universal legacy import.
-Never silently rewrite an unidentified legacy world or infer a missing content declaration from a
-quest reference. Preserve originals in any optional migration experiment.
+Addon ports, CT script conversion, legacy-world import and compatibility with a named existing pack
+each require a defined scope and validation. A source or JAR used as a reference does not establish
+support. Advertised integrations must pass their own runtime and persistence checks.
+
+Migration must preserve original saves and require an identified source format. Registered content
+is authoritative; a quest reference does not create or validate an item, fluid or material.

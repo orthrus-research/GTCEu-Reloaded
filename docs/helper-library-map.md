@@ -1,26 +1,26 @@
-# PipeNet helper and ownership map
+# PipeNet helpers and ownership
 
-This records concrete implementation requirements for the compatibility-preserving PipeNet work.
-The implementation retains the existing Minecraft/Forge capability APIs and is also tested in the
-selected Cleanroom 0.7.12-alpha / Java 25 runtime. GuideGTR and Signal are separate consumers.
+PipeNet uses the existing Minecraft, Forge and GregTech capability and persistence APIs.
+The table identifies which component owns each behavior and the constraints for extending it.
 
-| Requirement | Existing facility checked | Decision |
+| Responsibility | Owner | Extension constraints |
 | --- | --- | --- |
-| Neighbor access, pipe identities, covers and transport endpoints | `INeighborCache`, `IPipeTile`, `IRoutePath`, Forge item/fluid capabilities, GregTech energy/data capabilities | Reuse these contracts and concrete handlers. No substitute capability framework. |
-| Route-cache keys and collections | Existing `FacingPos`, JDK collections and bundled fastutil | Reuse. `FacingPos` supports all six ingress faces and null without packed-coordinate truncation. No graph dependency. |
-| Dirty world/tile persistence and chunk lifetime | `WorldSavedData`, native tile NBT, existing pipe unload hooks and `TaskScheduler` | Reuse native ownership. Do not add duplicate ticking/loaders or a parallel persistence service. |
-| Item/optical/laser ownership in multiple dimensions | Forge `World.getPerWorldStorage()`, shipped `WorldSpecificSaveHandler`, `ISaveHandler.getMapFileFromName` and existing tile recovery | Reuse dimension-local native storage with existing literal IDs. Old global records cannot identify non-overworld ownership; preserve them and recover only from actual loaded tiles. The item legacy-presence warning checks the existing file without decoding its global graph, because decoding can dirty priority aliases. No custom save handler or new loader. |
-| Exact item batches through probe-before-commit consumers | Existing item handlers, `CoverRoboticArm` buffer and ingress 20-tick ledger | These do not provide simulation-pure elapsed-time credit across rejected probes. The arm buffer is changed by simulation and its own tick. Add transient ingress-owned accounting, including route-rate limits, as GTCEuR-specific transport policy. Ordinary transfer cadence and source ownership remain unchanged. |
-| Virtual cover-admission packets larger than one ordinary stack | Forge `ItemStackHandler` | Its ordinary extraction caps a packet at the item's normal stack size. The transient cover-admission handler needs to preserve the requested count of a virtual exact packet, so a narrow subclass copies and extracts up to the packet's present count. This does not change real inventory stack limits or add a dependency. |
-| Runtime enum extension and legacy cover ordinal readers | Shipped Forge/Cleanroom `EnumHelper` and ImagineBreaker enum cache maintenance | These update the synthetic enum values and JDK enum caches, not the owner-defined `TransferMode.VALUES` alias. The pinned Sussy extension yields four values but leaves that alias at three. Preserve its field descriptor/ordinals, allow the owner to refresh the array snapshot, and refresh before owned NBT/sync ordinal decoding and after safe initialization boundaries. Do not force enum loading during construction or rewrite the addon mode. Retained external old array references cannot be extended in place. No Mixin/dependency is added. |
-| Live covers and retained wrappers during non-ticking to ticking promotion | Existing mutable pipe-cover holder and generic `transferDataTo` | Generic transfer recreates covers through NBT and must stay detached for copies. Promotion instead redirects the existing cover-holder view and shares the live cover map with the replacement tile, retaining cover/filter/wrapper identity. No new cover framework or Mixin is required. |
-| In-flight item reentry and accounting across actual tile promotion | Existing `setSupportsTicking` handoff, ingress ledgers and JDK `AtomicBoolean` | Reuse a shared transient guard so either owner's unwind releases the same operation. Actual promotion records a successor for counter/budget/fairness API forwarding; generic data transfer alone does not link owners. No world lookup on every insertion or replacement capability layer. |
-| Distinct network instances with equal extension values | Existing protected component/chunk lists and JDK identity semantics | Keep collection descriptors. Narrow identity comparisons prevent idempotence checks or removal from collapsing distinct subclass network instances. No new collection dependency. |
-| Validated graph and fluid save records | Existing NBT compound/list APIs; OrthLib NBT decoder/schema APIs inspected | Native formats and local validation preserve the existing API/toolchain and avoid a new dependency solely for these records. Reject malformed graph replacement atomically; retain unassignable fluid records rather than silently drop contents. |
-| Reusable presentation and client rendering | Cleanroom/Kirino and OrthLib APIs | These do not own PipeNet gameplay, route budgets or graph mutation. No dependency is added for unrelated presentation facilities. |
-| Isolated native runtime support | Shipped Cleanroom facilities and the pinned required Fugue/Scalar, CCL, HEI and ModularUI runtime artifacts | Reuse the already qualified runtime versions in fresh experiment directories. Do not install duplicate Cleanroom facilities. These runtime inputs do not become new PipeNet library dependencies. |
-| Test-only native timing, allocation and live-object measurements | Existing server `tickTimeArray`, JDK `ThreadMXBean`, JDK 25 `jcmd`, Forge tick events and `ReflectionHelper` | Reuse shipped observability. Producer work runs at START so the native tick counter includes it; document that the counter excludes END hooks. Live histograms occur after timed samples. No production instrumentation or Mixin. |
-| Experimental admission of the retained addon cohort against this fork | Cleanroom/FML injected dependencies, Fugue and Scalar loader facilities | The available injected-dependency facility adds ordering dependencies but cannot replace an annotation version range. Four retained addons require GregTech 2.8.10+, while this fork declares 2.8.7. Test-only copies may adjust only that annotation range with explicit original/adapted hashes and byte-identical method code; both comparison arms use the same copies. Preserve the fork version and original JARs. This bypass tests admission only and establishes no API or Mixin compatibility. No production loader patch or dependency is added. |
+| Neighbor discovery and endpoints | `INeighborCache`, `IPipeTile`, `IRoutePath`, Forge item/fluid capabilities and GregTech energy/data capabilities | Preserve concrete handler contracts and operation-time cover checks. |
+| Route keys and caches | `FacingPos`, JDK collections and fastutil | Keys distinguish all six ingress faces and null without truncating coordinates. |
+| World persistence and chunk lifetime | `WorldSavedData`, native tile NBT, unload hooks and `TaskScheduler` | Use the existing dirty/save lifecycle. Avoid duplicate tickers, chunk loaders or persistence services. |
+| Item, optical and laser dimension ownership | `World.getPerWorldStorage()` and `WorldSpecificSaveHandler` | Keep existing record IDs. Recover missing membership from loaded tiles; old shared records cannot establish non-overworld ownership. |
+| Exact item batches | Ingress-owned allowance accounting and the robotic-arm buffer | Rejected simulations must not spend live inventory, fairness or elapsed-time credit. Real transfers debit shared ingress accounting. |
+| Virtual cover-admission packets | Transient `ItemStackHandler` subclass | Preserve the requested virtual packet count without changing real inventory stack limits. |
+| Runtime cover modes | Forge/Cleanroom enum helpers and `TransferMode` | Refresh the owner-defined `VALUES` snapshot separately from JVM enum caches. Preserve saved ordinals; external references to an older array remain unchanged. |
+| Pipe promotion to a ticking tile | Existing pipe-cover holder and promotion handoff | Retain live cover/filter/wrapper identity during promotion. Generic copies remain detached and do not share covers. |
+| In-flight transfers during promotion | Shared transient guard and successor forwarding | A transfer must release the same guard after promotion. Counter, budget and fairness access forwards to the replacement owner. |
+| Network identity | Existing component and chunk collections | Distinct network instances remain distinct even if an addon gives them equal values. Membership and removal use object identity. |
+| Graph and fluid records | Native NBT codecs and validation | Reject malformed graph replacement atomically. Preserve recoverable fluid records that cannot be assigned to the current channel layout. |
 
-These repairs add no production library or Mixin. Any later reusable helper extraction
-must identify its concrete requirement here and remain separate from gameplay policy.
+These responsibilities stay in the transport implementation. Presentation libraries do not own
+route budgets, graph mutation or saved pipe state. Additional helpers should have one clearly
+defined owner and preserve the contracts in [PipeNet compatibility](pipenet-compatibility.md).
+
+The supported runtime and validation scope are recorded in
+[release validation](pre-delivery-qualification.md). Optional addon behavior requires its own
+compatibility checks; a successful loader start does not establish transfer or save correctness.

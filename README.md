@@ -54,7 +54,7 @@ ID and saved registry identities. The 3.0 line changes the authoring API and run
 it is not a drop-in upgrade for every GTCEu addon or pack. Preserve original content IDs, migrate
 scripts, rebuild affected addons and test a copied world before adopting it.
 
-| Component | Version | |
+| Component | Version | Notes |
 | --- | --- | --- |
 | Minecraft | 1.12.2 | |
 | Cleanroom | 0.7.14-alpha | Required on the ct-overhaul branch |
@@ -84,11 +84,10 @@ networks guarantee to addon handlers and where those guarantees end, and
 
 The ct-overhaul build requires JDK 26 and uses CleanroomGradle. Product code and tests target
 Java 26; Java 8 and the standalone Forge development runtime are no longer supported.
-Qualification is recorded against frozen candidate bytes in
-[release acceptance](docs/release-readiness.md). Publication remains a separate step.
+See [release validation](docs/pre-delivery-qualification.md) for the tested artifact and runtime.
 
 ```sh
-git clone https://github.com/orthrus-research/GTCEu-Reloaded.git
+git clone --branch ct-overhaul https://github.com/orthrus-research/GTCEu-Reloaded.git
 cd GTCEu-Reloaded
 ./gradlew build
 ```
@@ -102,6 +101,10 @@ ModularUI development/production artifact pair and CodeChickenLib release used f
 
 | Document | Contents |
 | --- | --- |
+| [docs/ct-migration.md](docs/ct-migration.md) | Migrating CraftTweaker scripts and addon APIs |
+| [docs/typed-definitions.md](docs/typed-definitions.md) | Java and Groovy recipe/content definitions |
+| [docs/groovy-cache.md](docs/groovy-cache.md) | Script cache validity and restart requirements |
+| [docs/pre-delivery-qualification.md](docs/pre-delivery-qualification.md) | Tested runtime, validation scope and known limitations |
 | [docs/modern-backports.md](docs/modern-backports.md) | Features adapted from CEu Modern |
 | [docs/ae-processing-buffers.md](docs/ae-processing-buffers.md) | ME processing pattern buffers and proxies |
 | [docs/recipe-conditions.md](docs/recipe-conditions.md) | Recipe conditions and processing holds |
