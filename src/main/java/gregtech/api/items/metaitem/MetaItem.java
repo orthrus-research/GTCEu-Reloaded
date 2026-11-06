@@ -10,6 +10,7 @@ import gregtech.api.capability.impl.CombinedCapabilityProvider;
 import gregtech.api.capability.impl.ElectricItem;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.items.OreDictNames;
+import gregtech.api.items.gui.InventoryItemUIFactory;
 import gregtech.api.items.gui.ItemUIFactory;
 import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.items.metaitem.stats.*;
@@ -770,6 +771,7 @@ public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
         private final List<IItemBehaviour> behaviours = new ArrayList<>();
         private IItemUseManager useManager;
         private ItemUIFactory uiManager;
+        private InventoryItemUIFactory inventoryUIManager;
         private IFilter.Factory filterBehavior;
         private IItemColorProvider colorProvider;
         private IItemDurabilityManager durabilityManager;
@@ -902,6 +904,9 @@ public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
                 if (itemComponent instanceof ItemUIFactory) {
                     this.uiManager = (ItemUIFactory) itemComponent;
                 }
+                if (itemComponent instanceof InventoryItemUIFactory inventoryFactory) {
+                    this.inventoryUIManager = inventoryFactory;
+                }
                 if (itemComponent instanceof IFilter.Factory) {
                     this.filterBehavior = (IFilter.Factory) itemComponent;
                 }
@@ -951,6 +956,10 @@ public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
         @Nullable
         public ItemUIFactory getUIManager() {
             return uiManager;
+        }
+
+        public InventoryItemUIFactory getInventoryUIManager() {
+            return inventoryUIManager;
         }
 
         @Nullable

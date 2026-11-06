@@ -56,7 +56,7 @@ public final class PipeConfigurationAdapter implements ConfigurationAdapter {
             context.guardTile(neighborPos, neighbor, transaction);
             ConfigurationData.require(pipe.getNeighbor(side) == neighbor);
             transaction.guard(() -> pipe.getNeighbor(side) == neighbor);
-            if (!(neighbor instanceof IPipeTile<?, ?>other)) continue;
+            if (!(neighbor instanceof IPipeTile<?, ?> other)) continue;
             ConfigurationData.require(other != pipe && other.getPipeType() != null);
             ConfigurationAdapter otherAdapter = other.getConfigurationAdapter();
             ConfigurationData.require(otherAdapter != null && schema.equals(otherAdapter.getSchema()));

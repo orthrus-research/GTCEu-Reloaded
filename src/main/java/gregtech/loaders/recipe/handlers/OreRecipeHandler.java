@@ -206,7 +206,8 @@ public class OreRecipeHandler {
                     .buildAndRegister();
         }
 
-        ModHandler.addShapelessRecipe(String.format("crushed_ore_to_dust_%s", material),
+        ModHandler.addShapelessRecipe(
+                ModHandler.materialRecipeName(material, String.format("crushed_ore_to_dust_%s", material)),
                 impureDustStack, 'h', new UnificationEntry(crushedPrefix, material));
 
         processMetalSmelting(crushedPrefix, material, property);
@@ -229,7 +230,9 @@ public class OreRecipeHandler {
                 .duration(400)
                 .buildAndRegister();
 
-        ModHandler.addShapelessRecipe(String.format("centrifuged_ore_to_dust_%s", material), dustStack,
+        ModHandler.addShapelessRecipe(
+                ModHandler.materialRecipeName(material, String.format("centrifuged_ore_to_dust_%s", material)),
+                dustStack,
                 'h', new UnificationEntry(centrifugedPrefix, material));
 
         processMetalSmelting(centrifugedPrefix, material, property);
@@ -255,7 +258,8 @@ public class OreRecipeHandler {
                 .duration(400)
                 .buildAndRegister();
 
-        ModHandler.addShapelessRecipe(String.format("purified_ore_to_dust_%s", material), dustStack,
+        ModHandler.addShapelessRecipe(
+                ModHandler.materialRecipeName(material, String.format("purified_ore_to_dust_%s", material)), dustStack,
                 'h', new UnificationEntry(purifiedPrefix, material));
 
         if (!crushedCentrifugedStack.isEmpty()) {

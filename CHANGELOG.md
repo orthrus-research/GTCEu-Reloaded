@@ -7,11 +7,62 @@ GitHub Releases. GTCEu's own history up to the fork is in the
 
 ## Unreleased
 
+### 3.0 authoring overhaul (alpha)
+
+| Area | Change |
+| --- | --- |
+| Build | Normalize packaged text line endings so Windows checkouts and clean source exports produce identical mod JARs |
+| Recipes | Clear old recipe-viewer category lookups when HEI rebuilds, preventing duplicate machine recipe links and retained obsolete category objects after reload |
+| Authoring | Replace the recipe-map class allowlist and assembly-line transaction special case with shared immutable registration state maintained by native and typed recipe operations |
+| Authoring | Keep quantum controller, proxy and extender rendering methods and the clipboard GUI cache client-only so dedicated-server Groovy inspection does not resolve client types |
+| Integration | Remove Better Questing database repair, import hooks and the quest data-fix command; quest content resolution belongs to the quest mod |
+| Authoring | Remove the remaining CT-specific material-component array accessor; use the native material-component list |
+| Pipes | Preserve named fluid-containment attributes through pipe sizing and graph saves; restore loaded pipes' derived decisions without replacing tanks or changing saved geometry and connections |
+| Storage | Expose native crate layouts and retention behavior; support retained machine replacement across namespaces without stale harvest state |
+| Runtime | Require Java 26 and Cleanroom 0.7.14-alpha; remove the Java 8 and standalone Forge lanes |
+| Dependencies | Align CodeChickenLib compilation, tests and runtime on the pinned 3.3.10 release; verify its production artifact hash during the build |
+| Inventory | Reject out-of-range slots in combined item handlers before dispatch, preserving input stacks and avoiding missing-handler exceptions |
+| Authoring | Replace CT/Zen adapters with shared typed Java definitions, source diagnostics and GroovyScript 1.5.0 authoring |
+| Authoring | Handle Groovy hand inspection on both client and server players, preserving copyable item expressions without an unsafe server-player cast |
+| Authoring | Generate pipe and cable copy expressions using the owning material registry so cross-namespace materials resolve to the existing item |
+| Authoring | Resolve qualified material names exactly across shared storage registries; reject duplicate material identities and occupied IDs before publishing names |
+| Authoring | Support explicit Java/Groovy material overrides with source diagnostics while retaining existing numeric identities and captured component references |
+| Authoring | Enumerate every current qualified material in declaration order so shared short names cannot hide another owner's content |
+| Recipes | Preserve qualified material ownership through typed ore registration, recipe matching and indexing; keep named ore ingredients broad and live |
+| Recipes | Preserve material namespaces and live membership in native shaped/shapeless crafting; share ingredient conversion and remove per-recipe reflection |
+| Recipes | Expand wildcard ore display variants and refresh packed recipe-book alternatives after late ore registration or removal |
+| Recipes | Give generated material recipes owner-qualified names, process current declarations deterministically, and check explicit recipe IDs consistently before registration |
+| Saves | Migrate learned and pending recipe-book entries to generated material recipe IDs before loading; retain surviving discoveries for ambiguous former names and respect pack removals |
+| Authoring | Preserve owned crafting groups across native registry synchronization during world loading while continuing to reject foreign edits |
+| Tools | Serialize built-in tool enchantments in stable registry-name order while retaining level overrides and applicability rules |
+| Recipes | Accept tool-only shaped recipes and preserve caller arguments in fluid-replacement and energy-transfer helpers |
+| Recipes | Resolve vanilla fluid-replacement buckets through the native bucket API without requiring a universal-bucket registration |
+| Machines | Remove unused muffler recovery state from multiblocks and describe exhaust-only behavior accurately in muffler tooltips |
+| Recipes | Stage owned registration groups, derived recipes, research indexes, recycling metadata and furnace recipes/XP before publication |
+| Recipes | Prepare and replace generated recycling recipes through shared Java/Groovy definitions, validating every affected map before publication |
+| Recipes | Own crafting names across typed Java/Groovy groups and stage their explicit composition and generated recovery together; preserve unrelated registrations when restoring baselines |
+| Recipes | Retain unchanged crafting declarations and native recipe instances across group edits; fresh declarations, disabling and re-enabling explicitly control preparation |
+| Recipes | Let crafting and recovery groups adopt additional native recovery recipes during later edits while retaining every original for cleanup |
+| Authoring | Expose immutable accepted crafting groups to Java and Groovy helpers so repeated edits can share registrar state and clear it on reload |
+| Recipes | Allow recipes at shared input prefixes; prefer eligible descendants, preserve both on removal/replacement, and refresh affected machine caches |
+| Content | Register custom ore items and coils through native APIs; retain saved carrier and explicit material identities |
+| Reload | Support typed ownership alongside native Groovy recipe builders during integrated-server reload |
+| Reload | Carry crafting baselines into the initial frozen registry and restore the typed frontend before Groovy's ordinary reload callbacks |
+| Compilation | Validate script cache reuse against source/dependency/compiler contents and compiled artifact integrity |
+| Loader | Use Cleanroom MixinConnector and remapped mixin members; fix server-side inspection of particle and coil interfaces |
+| Dependencies | Publish required mod APIs without development loader bundles or optional scripting/integration dependencies |
+| API | Rename CT-specific provenance and property hooks; affected Java addons must migrate and rebuild |
+| API | Let native addons register exact preparation-safe builder classes and typed descriptor codecs/setters; preserve source diagnostics and owned recipe transactions |
+
+See [the migration guide](docs/ct-migration.md). Alpha qualification does not imply arbitrary pack compatibility.
+
+### Earlier fork changes
+
 Changes since the fork from GTCEu at `52c04cd7b`, after 2.8.10.
 
 | Area | Change |
 | --- | --- |
-| Identity | The mod list, crash reports and the jar name show GTCEu: Reloaded; versions read `2.8.10-reloaded.N` |
+| Identity | The mod list, crash reports and the jar name show GTCEu: Reloaded |
 | Machines | Item and fluid output sides have independent permissions |
 | Machines | Maintenance hatch screens show live maintenance faults |
 | Machines | Common simple machines show contextual tool actions |

@@ -129,7 +129,7 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
             return metaTileEntities(MultiblockAbility.REGISTRY.get(MultiblockAbility.IMPORT_FLUIDS).stream()
                     .filter(mte -> !(mte instanceof MetaTileEntityMultiFluidHatch))
                     .toArray(MetaTileEntity[]::new))
-                            .setMaxGlobalLimited(4);
+                    .setMaxGlobalLimited(4);
         }
         return abilities(MultiblockAbility.IMPORT_FLUIDS);
     }

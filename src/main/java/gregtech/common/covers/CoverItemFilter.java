@@ -105,7 +105,7 @@ public class CoverItemFilter extends CoverBase implements CoverWithUI {
     public void setFilterMode(ItemFilterMode filterMode) {
         this.filterMode = filterMode;
         getCoverableView().markDirty();
-        if (getWorld() != null && !getWorld().isRemote && getTileEntityHere() instanceof IPipeTile<?, ?>pipe) {
+        if (getWorld() != null && !getWorld().isRemote && getTileEntityHere() instanceof IPipeTile<?, ?> pipe) {
             pipe.getPipeBlock().getWorldPipeNet(getWorld()).invalidateRoutes();
         }
     }

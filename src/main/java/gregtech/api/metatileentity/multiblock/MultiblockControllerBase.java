@@ -232,7 +232,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
 
     public static TraceabilityPredicate abilities(MultiblockAbility<?>... allowedAbilities) {
         return tilePredicate((state, tile) -> {
-            if (tile instanceof IMultiblockAbilityPart<?>abilityPart) {
+            if (tile instanceof IMultiblockAbilityPart<?> abilityPart) {
                 for (var ability : abilityPart.getAbilities()) {
                     if (ArrayUtils.contains(allowedAbilities, ability))
                         return true;
@@ -260,14 +260,14 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
     public static TraceabilityPredicate frames(Material... frameMaterials) {
         return states(Arrays.stream(frameMaterials).map(m -> MetaBlocks.FRAMES.get(m).getBlock(m))
                 .toArray(IBlockState[]::new))
-                        .or(new TraceabilityPredicate(blockWorldState -> {
-                            TileEntity tileEntity = blockWorldState.getTileEntity();
-                            if (!(tileEntity instanceof IPipeTile)) {
-                                return false;
-                            }
-                            IPipeTile<?, ?> pipeTile = (IPipeTile<?, ?>) tileEntity;
-                            return ArrayUtils.contains(frameMaterials, pipeTile.getFrameMaterial());
-                        }));
+                .or(new TraceabilityPredicate(blockWorldState -> {
+                    TileEntity tileEntity = blockWorldState.getTileEntity();
+                    if (!(tileEntity instanceof IPipeTile)) {
+                        return false;
+                    }
+                    IPipeTile<?, ?> pipeTile = (IPipeTile<?, ?>) tileEntity;
+                    return ArrayUtils.contains(frameMaterials, pipeTile.getFrameMaterial());
+                }));
     }
 
     public static TraceabilityPredicate blocks(Block... block) {

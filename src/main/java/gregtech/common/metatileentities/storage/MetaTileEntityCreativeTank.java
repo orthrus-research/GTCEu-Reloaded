@@ -94,13 +94,13 @@ public class MetaTileEntityCreativeTank extends MetaTileEntityQuantumTank {
                 new BoolValue.Dynamic(() -> active, b -> active = b),
                 new IntSyncValue(() -> mBPerCycle, v -> mBPerCycle = v),
                 new IntSyncValue(() -> ticksPerCycle, v -> ticksPerCycle = v))
-                        .child(IKey.lang("gregtech.creative.tank.fluid").asWidget()
-                                .pos(7, 9))
-                        .child(new GTFluidSlot()
-                                .syncHandler(GTFluidSlot.sync(this.modifiableTank)
-                                        .phantom(true)
-                                        .showAmount(false, false))
-                                .pos(36, 6));
+                .child(IKey.lang("gregtech.creative.tank.fluid").asWidget()
+                        .pos(7, 9))
+                .child(new GTFluidSlot()
+                        .syncHandler(GTFluidSlot.sync(this.modifiableTank)
+                                .phantom(true)
+                                .showAmount(false, false))
+                        .pos(36, 6));
     }
 
     @Override

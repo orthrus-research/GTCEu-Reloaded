@@ -29,7 +29,6 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -154,7 +153,7 @@ class PendingSpecialOutputTest {
     void actualMeOutputAbilitiesReceiveCompletedProductsExactlyOnce() throws Exception {
         // AE2 resolves GT's tool interface through LaunchWrapper, which the standalone harness does not install.
         LaunchClassLoader previous = Launch.classLoader;
-        try (LaunchClassLoader bridge = new LaunchClassLoader(new URL[0]) {
+        try (LaunchClassLoader bridge = new LaunchClassLoader(PendingSpecialOutputTest.class.getClassLoader()) {
 
             @Override
             public Class<?> findClass(String name) throws ClassNotFoundException {

@@ -13,6 +13,7 @@ import gregtech.common.ConfigHolder;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.oredict.OreDictionary;
@@ -20,6 +21,8 @@ import net.minecraftforge.oredict.OreDictionary.OreRegisterEvent;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.jetbrains.annotations.NotNull;
@@ -39,6 +42,9 @@ public class OreDictUnifier {
     private static final Map<UnificationEntry, ArrayList<ItemAndMetadata>> stackUnificationItems = new Object2ObjectOpenHashMap<>();
     private static final Map<Item, ItemVariantMap.Mutable<Set<String>>> stackOreDictName = new Object2ObjectOpenHashMap<>();
     private static final Map<String, List<ItemStack>> oreDictNameStacks = new Object2ObjectOpenHashMap<>();
+    private static final Map<Item, Int2ObjectMap<Map<String, OreRegistration>>> oreRegistrations = new Object2ObjectOpenHashMap<>();
+
+    private record OreRegistration(UnificationEntry entry, boolean explicit) {}
 
     @Nullable
     private static Comparator<ItemAndMetadata> stackComparator;
@@ -63,11 +69,21 @@ public class OreDictUnifier {
     }
 
     public static void registerOre(ItemStack itemStack, OrePrefix orePrefix, @Nullable Material material) {
-        registerOre(itemStack, orePrefix.name(), material);
+        if (itemStack.isEmpty()) return;
+        UnificationEntry entry = new UnificationEntry(orePrefix, material);
+        registerIdentity(entry.toString(), itemStack, entry, true);
+        OreDictionary.registerOre(entry.toString(), itemStack);
+        // An existing raw registration may not emit another event. Replay is idempotent.
+        onItemRegistration(new OreRegisterEvent(entry.toString(), itemStack));
     }
 
     public static void registerOre(ItemStack itemStack, String customOrePrefix, @Nullable Material material) {
         if (itemStack.isEmpty()) return;
+        OrePrefix prefix = OrePrefix.getPrefix(customOrePrefix);
+        if (prefix != null) {
+            registerOre(itemStack, prefix, material);
+            return;
+        }
         OreDictionary.registerOre(customOrePrefix + (material == null ? "" : material.toCamelCaseString()), itemStack);
     }
 
@@ -99,7 +115,14 @@ public class OreDictUnifier {
         set.add(oreName);
         List<ItemStack> itemStackListForOreDictName = oreDictNameStacks.computeIfAbsent(oreName,
                 k -> new ArrayList<>());
-        addAndSort(itemStackListForOreDictName, event.getOre().copy(), getItemStackComparator());
+        if (itemStackListForOreDictName.stream().noneMatch(stack -> stack.getItem() == event.getOre().getItem() &&
+                stack.getItemDamage() == event.getOre().getItemDamage())) {
+            addAndSort(itemStackListForOreDictName, event.getOre().copy(), getItemStackComparator());
+        }
+
+        Map<String, OreRegistration> bindings = registrations(event.getOre().getItem(), event.getOre().getItemDamage());
+        OreRegistration declared = bindings == null ? null : bindings.get(oreName);
+        if (declared != null && declared.explicit()) return;
 
         // and try to transform registration name into OrePrefix + Material pair
         OrePrefix orePrefix = OrePrefix.getPrefix(oreName);
@@ -146,17 +169,50 @@ public class OreDictUnifier {
 
         // finally register item
         if (orePrefix != null && (material != null || orePrefix.isSelfReferencing)) {
-            ItemAndMetadata key = new ItemAndMetadata(event.getOre());
-            UnificationEntry unificationEntry = new UnificationEntry(orePrefix, material);
-            ArrayList<ItemAndMetadata> itemListForUnifiedEntry = stackUnificationItems.computeIfAbsent(unificationEntry,
-                    p -> new ArrayList<>());
-            addAndSort(itemListForUnifiedEntry, key, getSimpleItemStackComparator());
-
-            if (!unificationEntry.orePrefix.isMarkerPrefix()) {
-                stackUnificationInfo.put(key, unificationEntry);
-            }
-            orePrefix.processOreRegistration(material);
+            registerIdentity(oreName, event.getOre(), new UnificationEntry(orePrefix, material), false);
         }
+    }
+
+    private static void registerIdentity(String oreName, ItemStack stack, UnificationEntry entry, boolean explicit) {
+        Map<String, OreRegistration> bindings = oreRegistrations
+                .computeIfAbsent(stack.getItem(), item -> new Int2ObjectOpenHashMap<>())
+                .computeIfAbsent(stack.getItemDamage(), meta -> new LinkedHashMap<>());
+        OreRegistration previous = bindings.get(oreName);
+        if (previous != null && previous.explicit() && !explicit) return;
+        if (previous != null && previous.entry().equals(entry) && previous.explicit() == explicit) return;
+        bindings.put(oreName, new OreRegistration(entry, explicit));
+        ItemAndMetadata key = new ItemAndMetadata(stack);
+        if (previous != null && !previous.entry().equals(entry) &&
+                bindings.values().stream().noneMatch(binding -> binding.entry().equals(previous.entry()))) {
+            var obsolete = stackUnificationItems.get(previous.entry());
+            if (obsolete != null) {
+                obsolete.remove(key);
+                if (obsolete.isEmpty()) stackUnificationItems.remove(previous.entry());
+            }
+        }
+        var items = stackUnificationItems.computeIfAbsent(entry, ignored -> new ArrayList<>());
+        if (!items.contains(key)) addAndSort(items, key, getSimpleItemStackComparator());
+        OreRegistration primary = null;
+        for (var binding : bindings.values()) {
+            if (!binding.entry().orePrefix.isMarkerPrefix() &&
+                    (primary == null || binding.explicit() || !primary.explicit()))
+                primary = binding;
+        }
+        if (primary != null) stackUnificationInfo.put(key, primary.entry());
+        entry.orePrefix.processOreRegistration(entry.material);
+    }
+
+    private static @Nullable Map<String, OreRegistration> registrations(Item item, int metadata) {
+        var variants = oreRegistrations.get(item);
+        return variants == null ? null : variants.get(metadata);
+    }
+
+    /** Exact registered member identity. Wildcard membership is queried separately by the native index. */
+    public static @Nullable ResourceLocation getOreMaterial(String oreName, Item item, int metadata) {
+        var bindings = registrations(item, metadata);
+        var binding = bindings == null ? null : bindings.get(oreName);
+        Material material = binding == null ? null : binding.entry().material;
+        return material == null ? null : material.getResourceLocation();
     }
 
     @NotNull

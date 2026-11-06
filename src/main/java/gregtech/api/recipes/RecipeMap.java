@@ -17,10 +17,12 @@ import gregtech.api.recipes.map.Either;
 import gregtech.api.recipes.map.MapFluidIngredient;
 import gregtech.api.recipes.map.MapItemStackIngredient;
 import gregtech.api.recipes.map.MapItemStackNBTIngredient;
+import gregtech.api.recipes.map.MapMaterialIngredient;
 import gregtech.api.recipes.map.MapOreDictIngredient;
 import gregtech.api.recipes.map.MapOreDictNBTIngredient;
 import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.api.recipes.ui.RecipeMapUIFunction;
+import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.EnumValidationResult;
@@ -30,9 +32,6 @@ import gregtech.api.util.LocalizationUtils;
 import gregtech.api.util.Mods;
 import gregtech.api.util.ValidationResult;
 import gregtech.common.ConfigHolder;
-import gregtech.integration.crafttweaker.CTRecipeHelper;
-import gregtech.integration.crafttweaker.recipe.CTRecipe;
-import gregtech.integration.crafttweaker.recipe.CTRecipeBuilder;
 import gregtech.integration.groovy.GroovyScriptModule;
 import gregtech.integration.groovy.VirtualizedRecipeMap;
 import gregtech.modules.GregTechModules;
@@ -48,11 +47,6 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import com.cleanroommc.groovyscript.api.GroovyLog;
 import com.google.common.collect.ImmutableList;
-import crafttweaker.CraftTweakerAPI;
-import crafttweaker.annotations.ZenRegister;
-import crafttweaker.api.item.IItemStack;
-import crafttweaker.api.liquid.ILiquidStack;
-import crafttweaker.api.minecraft.CraftTweakerMC;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -61,15 +55,9 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
-import stanhebben.zenscript.annotations.Optional;
-import stanhebben.zenscript.annotations.ZenClass;
-import stanhebben.zenscript.annotations.ZenGetter;
-import stanhebben.zenscript.annotations.ZenMethod;
-import stanhebben.zenscript.annotations.ZenSetter;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -82,8 +70,6 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-@ZenClass("mods.gregtech.recipe.RecipeMap")
-@ZenRegister
 public class RecipeMap<R extends RecipeBuilder<R>> {
 
     private static final Map<String, RecipeMap<?>> RECIPE_MAP_REGISTRY = new Object2ReferenceOpenHashMap<>();
@@ -119,14 +105,17 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private boolean allowEmptyOutput;
 
     private final Object grsVirtualizedRecipeMap;
-    private final Branch lookup = new Branch();
+    private Branch lookup = new Branch();
+    private Set<Recipe> prefixRecipes = Collections.newSetFromMap(new IdentityHashMap<>());
     private boolean hasOreDictedInputs = false;
+    private boolean hasMaterialInputs = false;
     private boolean hasNBTMatcherInputs = false;
     private static final WeakHashMap<AbstractMapIngredient, WeakReference<AbstractMapIngredient>> ingredientRoot = new WeakHashMap<>();
     private final WeakHashMap<AbstractMapIngredient, WeakReference<AbstractMapIngredient>> fluidIngredientRoot = new WeakHashMap<>();
 
-    private final Map<GTRecipeCategory, List<Recipe>> recipeByCategory = new Object2ObjectOpenHashMap<>();
+    private Map<GTRecipeCategory, List<Recipe>> recipeByCategory = new Object2ObjectOpenHashMap<>();
     private long recipeRevision;
+    private final List<RecipeRegistrationState<?>> registrationStates = new ArrayList<>();
 
     private final Map<ResourceLocation, RecipeBuildAction<R>> recipeBuildActions = new Object2ObjectOpenHashMap<>();
     protected @Nullable SoundEvent sound;
@@ -165,17 +154,14 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                 new VirtualizedRecipeMap(this) : null;
     }
 
-    @ZenMethod
     public static List<RecipeMap<? extends RecipeBuilder<?>>> getRecipeMaps() {
         return ImmutableList.copyOf(RECIPE_MAP_REGISTRY.values());
     }
 
-    @ZenMethod
     public static RecipeMap<? extends RecipeBuilder<?>> getByName(String unlocalizedName) {
         return RECIPE_MAP_REGISTRY.get(unlocalizedName);
     }
 
-    @ZenMethod
     public ChanceBoostFunction getChanceFunction() {
         return chanceFunction;
     }
@@ -288,6 +274,84 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         return this;
     }
 
+    public boolean allowsEmptyOutputs() {
+        return this.allowEmptyOutput;
+    }
+
+    /** Declare an immutable secondary index before registering recipes; both authoring paths maintain it. */
+    protected final <T> RecipeRegistrationState<T> registrationState(T initial,
+                                                                     java.util.function.BiFunction<T, RecipeRegistrationChange, T> prepare) {
+        if (!recipeByCategory.isEmpty())
+            throw new IllegalStateException("Declare registration state before registering recipes");
+        var state = new RecipeRegistrationState<>(this, initial, prepare);
+        registrationStates.add(state);
+        onRecipesChanged();
+        return state;
+    }
+
+    private List<PreparedRecipeRegistrationState<?>> prepareRegistrationStates(List<Recipe> removed,
+                                                                               List<Recipe> added, boolean clear) {
+        if (registrationStates.isEmpty()) return List.of();
+        long revision = recipeRevision;
+        var change = new RecipeRegistrationChange(removed, added, clear);
+        List<PreparedRecipeRegistrationState<?>> prepared = new ArrayList<>();
+        for (var state : registrationStates) prepared.add(state.prepare(change));
+        if (recipeRevision != revision || prepared.stream().anyMatch(state -> !state.isCurrent()))
+            throw new IllegalStateException("Recipe registration state changed during preparation");
+        return List.copyOf(prepared);
+    }
+
+    /** Prepares an owned replacement on detached indexes. Must run while recipe registration is quiescent. */
+    final PreparedRecipeMapChange prepareOwnedChange(List<Recipe> removed, List<Recipe> added) {
+        Set<Recipe> identities = Collections.newSetFromMap(new IdentityHashMap<>());
+        identities.addAll(removed);
+        Set<Recipe> present = Collections.newSetFromMap(new IdentityHashMap<>());
+        recipeByCategory.values().forEach(present::addAll);
+        if (!present.containsAll(identities)) {
+            throw new IllegalStateException("An owned recipe was removed outside its registration group");
+        }
+        var states = prepareRegistrationStates(removed, added, false);
+        Branch staged = lookup.copyWithoutRecipes(removed);
+        Set<Recipe> stagedPrefixes = Collections.newSetFromMap(new IdentityHashMap<>());
+        stagedPrefixes.addAll(prefixRecipes);
+        stagedPrefixes.removeAll(identities);
+        Map<GTRecipeCategory, List<Recipe>> categories = new Object2ObjectOpenHashMap<>();
+        recipeByCategory.forEach((category, recipes) -> {
+            List<Recipe> retained = new ArrayList<>();
+            for (Recipe recipe : recipes) {
+                if (!identities.contains(recipe)) retained.add(recipe);
+            }
+            if (!retained.isEmpty()) categories.put(category, retained);
+        });
+        boolean previousOre = hasOreDictedInputs;
+        boolean previousMaterial = hasMaterialInputs;
+        boolean previousNbt = hasNBTMatcherInputs;
+        try {
+            for (Recipe recipe : added) {
+                if (!addToIngredientTree(recipe, fromRecipe(recipe), staged, stagedPrefixes)) return null;
+                categories.computeIfAbsent(recipe.getRecipeCategory(), unused -> new ArrayList<>()).add(recipe);
+            }
+            return new PreparedRecipeMapChange(this, recipeRevision, staged, categories, stagedPrefixes,
+                    hasOreDictedInputs, hasMaterialInputs, hasNBTMatcherInputs, states);
+        } finally {
+            this.hasOreDictedInputs = previousOre;
+            this.hasMaterialInputs = previousMaterial;
+            this.hasNBTMatcherInputs = previousNbt;
+        }
+    }
+
+    /** No callbacks or fallible recipe operations occur after every map revision has been checked by the registrar. */
+    final void publishOwnedChange(PreparedRecipeMapChange change) {
+        this.lookup = change.lookup();
+        this.prefixRecipes = change.prefixRecipes();
+        this.recipeByCategory = change.categories();
+        this.hasOreDictedInputs = change.oreInputs();
+        this.hasMaterialInputs = change.materialInputs();
+        this.hasNBTMatcherInputs = change.nbtInputs();
+        change.states().forEach(PreparedRecipeRegistrationState::publish);
+        onRecipesChanged();
+    }
+
     public RecipeMap<R> setSmallRecipeMap(RecipeMap<?> recipeMap) {
         this.smallRecipeMap = recipeMap;
         return this;
@@ -303,8 +367,12 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      * @param validationResult the validation result from building the recipe
      * @return if adding the recipe was successful
      */
-    public boolean addRecipe(@NotNull ValidationResult<Recipe> validationResult) {
-        validationResult = postValidateRecipe(validationResult);
+    public final boolean addRecipe(@NotNull ValidationResult<Recipe> validationResult) {
+        return addValidatedRecipe(postValidateRecipe(validationResult));
+    }
+
+    /** Native builder entry after this map's post-validation, so extension validation runs exactly once. */
+    final boolean addValidatedRecipe(@NotNull ValidationResult<Recipe> validationResult) {
         switch (validationResult.getType()) {
             case SKIP -> {
                 return false;
@@ -316,10 +384,11 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         }
         Recipe recipe = validationResult.getResult();
 
-        if (recipe.isGroovyRecipe()) {
+        boolean accepted = compileRecipe(recipe);
+        if (accepted && recipe.isGroovyRecipe()) {
             this.getGroovyScriptRecipeMap().addScripted(recipe);
         }
-        return compileRecipe(recipe);
+        return accepted;
     }
 
     /**
@@ -328,20 +397,28 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      * @param recipe the recipe to compile
      * @return if the recipe was successfully compiled
      */
-    public boolean compileRecipe(Recipe recipe) {
+    public final boolean compileRecipe(Recipe recipe) {
         if (recipe == null) {
             return false;
         }
+        var states = prepareRegistrationStates(List.of(), List.of(recipe), false);
+        boolean previousOre = hasOreDictedInputs;
+        boolean previousMaterial = hasMaterialInputs;
+        boolean previousNbt = hasNBTMatcherInputs;
         List<List<AbstractMapIngredient>> items = fromRecipe(recipe);
-        if (recurseIngredientTreeAdd(recipe, items, lookup, 0, 0)) {
+        if (addToIngredientTree(recipe, items, lookup, prefixRecipes)) {
             recipeByCategory.compute(recipe.getRecipeCategory(), (k, v) -> {
                 if (v == null) v = new ArrayList<>();
                 v.add(recipe);
                 return v;
             });
+            states.forEach(PreparedRecipeRegistrationState::publish);
             onRecipesChanged();
             return true;
         }
+        this.hasOreDictedInputs = previousOre;
+        this.hasMaterialInputs = previousMaterial;
+        this.hasNBTMatcherInputs = previousNbt;
         return false;
     }
 
@@ -349,16 +426,21 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      * @param recipe the recipe to remove
      * @return if removal was successful
      */
-    public boolean removeRecipe(@NotNull Recipe recipe) {
+    public final boolean removeRecipe(@NotNull Recipe recipe) {
+        var category = recipeByCategory.get(recipe.getRecipeCategory());
+        if (category == null || category.stream().noneMatch(value -> value == recipe)) return false;
+        var states = prepareRegistrationStates(List.of(recipe), List.of(), false);
         List<List<AbstractMapIngredient>> items = fromRecipe(recipe);
-        if (recurseIngredientTreeRemove(recipe, items, lookup, 0) != null) {
+        if (recurseIngredientTreeRemove(recipe, items, lookup, 0)) {
             if (GroovyScriptModule.isCurrentlyRunning()) {
                 this.getGroovyScriptRecipeMap().addBackup(recipe);
             }
             recipeByCategory.compute(recipe.getRecipeCategory(), (k, v) -> {
-                if (v != null) v.remove(recipe);
+                if (v != null) v.removeIf(entry -> entry == recipe);
                 return v == null || v.isEmpty() ? null : v;
             });
+            prefixRecipes.remove(recipe);
+            states.forEach(PreparedRecipeRegistrationState::publish);
             onRecipesChanged();
             return true;
         }
@@ -371,7 +453,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      * @see GTRecipeHandler#removeAllRecipes(RecipeMap)
      */
     @ApiStatus.Internal
-    protected void removeAllRecipes() {
+    protected final void removeAllRecipes() {
+        var states = prepareRegistrationStates(List.copyOf(getRecipeList()), List.of(), true);
         boolean hadRecipes = !this.recipeByCategory.isEmpty();
         if (GroovyScriptModule.isCurrentlyRunning()) {
             this.lookup.getRecipes(false).forEach(this.getGroovyScriptRecipeMap()::addBackup);
@@ -379,7 +462,9 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         this.lookup.getNodes().clear();
         this.lookup.getSpecialNodes().clear();
         this.recipeByCategory.clear();
-        if (hadRecipes) onRecipesChanged();
+        this.prefixRecipes.clear();
+        states.forEach(PreparedRecipeRegistrationState::publish);
+        if (hadRecipes || !states.isEmpty()) onRecipesChanged();
     }
 
     /**
@@ -416,9 +501,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         boolean emptyInputs = recipe.getInputs().isEmpty() && recipe.getFluidInputs().isEmpty();
         if (emptyInputs) {
             GTLog.logger.error("Invalid amount of recipe inputs. Recipe inputs are empty.", new Throwable());
-            if (recipe.getIsCTRecipe()) {
-                CraftTweakerAPI.logError("Invalid amount of recipe inputs. Recipe inputs are empty.", new Throwable());
-            }
+
             recipeStatus = EnumValidationResult.INVALID;
         }
         boolean emptyOutputs = !this.allowEmptyOutput && recipe.getEUt() > 0 && recipe.getOutputs().isEmpty() &&
@@ -426,10 +509,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                 recipe.getChancedFluidOutputs().getChancedEntries().isEmpty();
         if (emptyOutputs) {
             GTLog.logger.error("Invalid amount of recipe outputs. Recipe outputs are empty.", new Throwable());
-            if (recipe.getIsCTRecipe()) {
-                CraftTweakerAPI.logError("Invalid amount of outputs inputs. Recipe outputs are empty.",
-                        new Throwable());
-            }
+
             recipeStatus = EnumValidationResult.INVALID;
         }
 
@@ -437,11 +517,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         if (amount > getMaxInputs()) {
             GTLog.logger.error("Invalid amount of recipe inputs. Actual: {}. Should be at most {}.", amount,
                     getMaxInputs(), new Throwable());
-            if (recipe.getIsCTRecipe()) {
-                CraftTweakerAPI.logError(String.format(
-                        "Invalid amount of recipe inputs. Actual: %s. Should be at most %s.", amount, getMaxInputs()),
-                        new Throwable());
-            }
+
             recipeStatus = EnumValidationResult.INVALID;
         }
 
@@ -449,11 +525,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         if (amount > getMaxOutputs()) {
             GTLog.logger.error("Invalid amount of recipe outputs. Actual: {}. Should be at most {}.", amount,
                     getMaxOutputs(), new Throwable());
-            if (recipe.getIsCTRecipe()) {
-                CraftTweakerAPI
-                        .logError(String.format("Invalid amount of recipe outputs. Actual: %s. Should be at most %s.",
-                                amount, getMaxOutputs()), new Throwable());
-            }
+
             recipeStatus = EnumValidationResult.INVALID;
         }
 
@@ -461,12 +533,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         if (amount > getMaxFluidInputs()) {
             GTLog.logger.error("Invalid amount of recipe fluid inputs. Actual: {}. Should be at most {}.", amount,
                     getMaxFluidInputs(), new Throwable());
-            if (recipe.getIsCTRecipe()) {
-                CraftTweakerAPI.logError(
-                        String.format("Invalid amount of recipe fluid inputs. Actual: %s. Should be at most %s.",
-                                amount, getMaxFluidInputs()),
-                        new Throwable());
-            }
+
             recipeStatus = EnumValidationResult.INVALID;
         }
 
@@ -474,12 +541,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         if (amount > getMaxFluidOutputs()) {
             GTLog.logger.error("Invalid amount of recipe fluid outputs. Actual: {}. Should be at most {}.", amount,
                     getMaxFluidOutputs(), new Throwable());
-            if (recipe.getIsCTRecipe()) {
-                CraftTweakerAPI.logError(
-                        String.format("Invalid amount of recipe fluid outputs. Actual: %s. Should be at most %s.",
-                                amount, getMaxFluidOutputs()),
-                        new Throwable());
-            }
+
             recipeStatus = EnumValidationResult.INVALID;
         }
         return ValidationResult.newResult(recipeStatus, recipe);
@@ -793,7 +855,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             // increment the index if the current index is skipped, or the recipe is not found
             i = (i + 1) % ingredients.size();
         }
-        return null;
+        Recipe terminal = map.getTerminalRecipe();
+        return terminal != null && canHandle.test(terminal) ? terminal : null;
     }
 
     /**
@@ -880,6 +943,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private Recipe diveIngredientTreeFindRecipeCollisions(@NotNull List<List<AbstractMapIngredient>> ingredients,
                                                           @NotNull Branch map, int currentIndex, int count, long skip,
                                                           @NotNull Set<Recipe> collidingRecipes) {
+        if (map.getTerminalRecipe() != null) collidingRecipes.add(map.getTerminalRecipe());
         // We loop around ingredients.size() if we reach the end.
         // only end when all ingredients are exhausted, or a recipe is found
         int i = (currentIndex + 1) % ingredients.size();
@@ -995,141 +1059,124 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         return 0;
     }
 
-    /**
-     * Adds a recipe to the map. (recursive part)
-     *
-     * @param recipe      the recipe to add.
-     * @param ingredients list of input ingredients representing the recipe.
-     * @param branchMap   the current branch in the recursion.
-     * @param index       where in the ingredients list we are.
-     * @param count       how many branches were added already.
-     */
-    private boolean recurseIngredientTreeAdd(@NotNull Recipe recipe,
-                                             @NotNull List<List<AbstractMapIngredient>> ingredients,
-                                             @NotNull Branch branchMap, int index, int count) {
-        if (count >= ingredients.size()) return true;
-        if (index >= ingredients.size()) {
-            throw new IllegalStateException("Index out of bounds for recurseItemTreeAdd, should not happen");
+    /** A cached prefix must be searched again when a more specific recipe might now be eligible. */
+    public final boolean canReuseRecipe(Recipe recipe) {
+        return !prefixRecipes.contains(recipe);
+    }
+
+    /** Exact registration endpoints only; craftable prefixes and descendants are not replacement targets. */
+    List<Recipe> registrationConflicts(Recipe recipe) {
+        boolean previousOre = hasOreDictedInputs;
+        boolean previousMaterial = hasMaterialInputs;
+        boolean previousNbt = hasNBTMatcherInputs;
+        try {
+            Set<Recipe> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+            List<Recipe> conflicts = new ArrayList<>();
+            collectRegistrationConflicts(recipe, fromRecipe(recipe), lookup, 0, seen, conflicts);
+            return List.copyOf(conflicts);
+        } finally {
+            this.hasOreDictedInputs = previousOre;
+            this.hasMaterialInputs = previousMaterial;
+            this.hasNBTMatcherInputs = previousNbt;
         }
-        // Loop through NUMBER_OF_INGREDIENTS times.
+    }
 
-        // the current contents to be added to a node in the branch
-        final List<AbstractMapIngredient> current = ingredients.get(index);
-        final Branch branchRight = new Branch();
-        Either<Recipe, Branch> r;
+    private void collectRegistrationConflicts(Recipe recipe, List<List<AbstractMapIngredient>> ingredients,
+                                              Branch branch, int index, Set<Recipe> seen, List<Recipe> conflicts) {
+        if (index >= ingredients.size()) return;
+        for (AbstractMapIngredient ingredient : ingredients.get(index)) {
+            var existing = determineRootNodes(ingredient, branch).get(ingredient);
+            if (existing == null) continue;
+            if (index == ingredients.size() - 1) {
+                Recipe terminal = existing.map(value -> value, Branch::getTerminalRecipe);
+                if (terminal != null && terminal != recipe && seen.add(terminal)) conflicts.add(terminal);
+            } else if (existing.right().isPresent()) {
+                collectRegistrationConflicts(recipe, ingredients, existing.right().orElseThrow(), index + 1,
+                        seen, conflicts);
+            }
+        }
+    }
 
-        // for every ingredient, add it to a node
-        for (AbstractMapIngredient obj : current) {
-            // determine the root nodes
-            Map<AbstractMapIngredient, Either<Recipe, Branch>> targetMap = determineRootNodes(obj, branchMap);
+    /** Reject duplicate endpoints before changing any existing path. Prefixes can coexist with descendants. */
+    private boolean addToIngredientTree(Recipe recipe, List<List<AbstractMapIngredient>> ingredients, Branch root,
+                                        Set<Recipe> prefixes) {
+        if (!canAddToIngredientTree(recipe, ingredients, root, 0)) return false;
+        insertIngredientTree(recipe, ingredients, root, 0, prefixes);
+        return true;
+    }
 
-            // Either add the recipe or create a branch.
-            r = targetMap.compute(obj, (k, v) -> {
-                if (count == ingredients.size() - 1) {
-                    // handle very last ingredient
-                    if (v != null) {
-                        // handle the existing branch
-                        if (!v.left().isPresent() || v.left().get() != recipe) {
-                            // the recipe already there was not the one being added, so there is a conflict
-                            if (recipe.getIsCTRecipe()) {
-                                CraftTweakerAPI.logError(String.format(
-                                        "Recipe duplicate or conflict found in RecipeMap %s and was not added. See next lines for details.",
-                                        this.unlocalizedName));
-
-                                CraftTweakerAPI.logError(String.format("Attempted to add Recipe: %s",
-                                        CTRecipeHelper.getRecipeAddLine(this, recipe)));
-
-                                if (v.left().isPresent()) {
-                                    CraftTweakerAPI.logError(String.format("Which conflicts with: %s",
-                                            CTRecipeHelper.getRecipeAddLine(this, v.left().get())));
-                                } else {
-                                    CraftTweakerAPI.logError("Could not identify exact duplicate/conflict.");
-                                }
-                            }
-                            if (recipe.isGroovyRecipe()) {
-                                GroovyLog log = GroovyLog.get();
-                                log.warn(
-                                        "Recipe duplicate or conflict found in RecipeMap {} and was not added. See next lines for details",
-                                        this.unlocalizedName);
-
-                                log.warn("Attempted to add Recipe: {}", recipe.toString());
-
-                                if (v.left().isPresent()) {
-                                    log.warn("Which conflicts with: {}", v.left().get().toString());
-                                } else {
-                                    log.warn("Could not find exact duplicate/conflict.");
-                                }
-                            }
-                            if (ConfigHolder.misc.debug || GTValues.isDeobfEnvironment()) {
-                                GTLog.logger.warn(
-                                        "Recipe duplicate or conflict found in RecipeMap {} and was not added. See next lines for details",
-                                        this.unlocalizedName);
-
-                                GTLog.logger.warn("Attempted to add Recipe: {}", recipe.toString());
-
-                                if (v.left().isPresent()) {
-                                    GTLog.logger.warn("Which conflicts with: {}", v.left().get().toString());
-                                } else {
-                                    GTLog.logger.warn("Could not find exact duplicate/conflict.");
-                                }
-                            }
-                        }
-                        // Return the existing recipe, even on conflicts.
-                        // If there was no conflict but a recipe was still present, it was added on an earlier recurse,
-                        // and this will carry the result further back in the call stack
-                        return v;
-                    } else {
-                        // nothing exists for this path, so end with the recipe
-                        return Either.left(recipe);
-                    }
-                } else if (v == null) {
-                    // no existing ingredient is present, so use the new one
-                    return Either.right(branchRight);
-                }
-                // there is an existing ingredient here already, so use it
-                return v;
-            });
-
-            // left branches are always either empty or contain recipes.
-            // If there's a recipe present, the addition is finished for this ingredient
-            if (r.left().isPresent()) {
-                if (r.left().get() == recipe) {
-                    // Cannot return here, since each ingredient to add is a separate path to the recipe
-                    continue;
-                } else {
-                    // exit if a different recipe is already present for this path
+    private boolean canAddToIngredientTree(Recipe recipe, List<List<AbstractMapIngredient>> ingredients,
+                                           Branch branch, int index) {
+        if (index >= ingredients.size()) return true;
+        for (AbstractMapIngredient ingredient : ingredients.get(index)) {
+            var existing = determineRootNodes(ingredient, branch).get(ingredient);
+            if (existing == null) continue;
+            if (index == ingredients.size() - 1) {
+                Recipe terminal = existing.map(value -> value, Branch::getTerminalRecipe);
+                if (terminal != null && terminal != recipe) {
+                    logIngredientTreeConflict(recipe, Either.left(terminal));
                     return false;
                 }
-            }
-
-            // recursive part: apply the addition for the next ingredient in the list, for the right branch.
-            // the right branch only contains ingredients, or is empty when the left branch is present
-            boolean addedNextBranch = r.right()
-                    .filter(m -> recurseIngredientTreeAdd(recipe, ingredients, m, (index + 1) % ingredients.size(),
-                            count + 1))
-                    .isPresent();
-
-            if (!addedNextBranch) {
-                // failed to add the next branch, so undo any made changes
-                if (count == ingredients.size() - 1) {
-                    // was the final ingredient, so the mapping of it to a recipe needs to be removed
-                    targetMap.remove(obj);
-                } else {
-                    // was a regular ingredient
-                    if (targetMap.get(obj).right().isPresent()) {
-                        // if something was put into the map
-                        if (targetMap.get(obj).right().get().isEmptyBranch()) {
-                            // if what was put was empty (invalid), remove it
-                            targetMap.remove(obj);
-                        }
+            } else if (existing.right().isPresent() &&
+                    !canAddToIngredientTree(recipe, ingredients, existing.right().orElseThrow(), index + 1)) {
+                        return false;
                     }
-                }
-                // because a branch addition failure happened, fail the recipe addition for this step
-                return false;
-            }
         }
-        // recipe addition was successful
         return true;
+    }
+
+    private void insertIngredientTree(Recipe recipe, List<List<AbstractMapIngredient>> ingredients,
+                                      Branch branch, int index, Set<Recipe> prefixes) {
+        if (index >= ingredients.size()) return;
+        Branch sharedChild = new Branch();
+        for (AbstractMapIngredient ingredient : ingredients.get(index)) {
+            var nodes = determineRootNodes(ingredient, branch);
+            var existing = nodes.get(ingredient);
+            if (index == ingredients.size() - 1) {
+                if (existing == null) nodes.put(ingredient, Either.left(recipe));
+                else if (existing.right().isPresent()) {
+                    existing.right().orElseThrow().setTerminalRecipe(recipe);
+                    prefixes.add(recipe);
+                }
+                continue;
+            }
+            Branch child;
+            if (existing == null) {
+                child = sharedChild;
+                nodes.put(ingredient, Either.right(child));
+            } else if (existing.left().isPresent()) {
+                child = new Branch();
+                Recipe terminal = existing.left().orElseThrow();
+                child.setTerminalRecipe(terminal);
+                prefixes.add(terminal);
+                nodes.put(ingredient, Either.right(child));
+            } else {
+                child = existing.right().orElseThrow();
+            }
+            insertIngredientTree(recipe, ingredients, child, index + 1, prefixes);
+        }
+    }
+
+    private void logIngredientTreeConflict(Recipe recipe, Either<Recipe, Branch> existing) {
+        boolean debug = ConfigHolder.misc.debug || GTValues.isDeobfEnvironment();
+        if (!recipe.isGroovyRecipe() && !debug) return;
+        String details = existing.left().isPresent() ? "Which conflicts with: " + existing.left().orElseThrow() :
+                "Input prefix is already used by: " + existing.right().orElseThrow().getRecipes(false)
+                        .distinct().limit(3).toList();
+        if (recipe.isGroovyRecipe()) {
+            GroovyLog log = GroovyLog.get();
+            log.warn("Recipe duplicate or conflict found in RecipeMap {} and was not added. See next lines for details",
+                    this.unlocalizedName);
+            log.warn("Attempted to add Recipe: {}", recipe);
+            log.warn("{}", details);
+        }
+        if (debug) {
+            GTLog.logger.warn(
+                    "Recipe duplicate or conflict found in RecipeMap {} and was not added. See next lines for details",
+                    this.unlocalizedName);
+            GTLog.logger.warn("Attempted to add Recipe: {}", recipe);
+            GTLog.logger.warn("{}", details);
+        }
     }
 
     /**
@@ -1223,7 +1270,10 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             if (r.isOreDict()) {
                 AbstractMapIngredient ingredient;
                 this.hasOreDictedInputs = true;
-                if (r.hasNBTMatchingCondition()) {
+                if (r.getMaterialIdentity() != null) {
+                    this.hasMaterialInputs = true;
+                    ingredient = new MapMaterialIngredient(r);
+                } else if (r.hasNBTMatchingCondition()) {
                     hasNBTMatcherInputs = true;
                     ingredient = new MapOreDictNBTIngredient(r.getOreDict(), r.getNBTMatcher(),
                             r.getNBTMatchingCondition());
@@ -1280,6 +1330,18 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
 
                 // add the ore dict inputs
                 for (int i : OreDictionary.getOreIDs(stack)) {
+                    if (hasMaterialInputs) {
+                        String oreName = OreDictionary.getOreName(i);
+                        ResourceLocation exact = OreDictUnifier.getOreMaterial(oreName, stack.getItem(),
+                                stack.getItemDamage());
+                        if (exact != null) ls.add(new MapMaterialIngredient(i, exact, stack));
+                        if (stack.getItemDamage() != GTValues.W) {
+                            ResourceLocation wildcard = OreDictUnifier.getOreMaterial(oreName, stack.getItem(),
+                                    GTValues.W);
+                            if (wildcard != null && !wildcard.equals(exact))
+                                ls.add(new MapMaterialIngredient(i, wildcard, stack));
+                        }
+                    }
                     ingredient = new MapOreDictIngredient(i);
                     ls.add(ingredient);
 
@@ -1327,42 +1389,28 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         return sound;
     }
 
-    @ZenMethod("findRecipe")
-    @Method(modid = Mods.Names.CRAFT_TWEAKER)
-    @Nullable
-    public CTRecipe ctFindRecipe(long maxVoltage, IItemStack[] itemInputs, ILiquidStack[] fluidInputs,
-                                 @Optional(valueLong = Integer.MAX_VALUE) int outputFluidTankCapacity) {
-        List<ItemStack> mcItemInputs = itemInputs == null ? Collections.emptyList() :
-                Arrays.stream(itemInputs).map(CraftTweakerMC::getItemStack).collect(Collectors.toList());
-        List<FluidStack> mcFluidInputs = fluidInputs == null ? Collections.emptyList() :
-                Arrays.stream(fluidInputs).map(CraftTweakerMC::getLiquidStack).collect(Collectors.toList());
-        Recipe backingRecipe = findRecipe(maxVoltage, mcItemInputs, mcFluidInputs, true);
-        return backingRecipe == null ? null : new CTRecipe(this, backingRecipe);
-    }
-
-    @ZenGetter("recipes")
-    @Method(modid = Mods.Names.CRAFT_TWEAKER)
-    public List<CTRecipe> ctGetRecipeList() {
-        return getRecipeList().stream().map(recipe -> new CTRecipe(this, recipe)).collect(Collectors.toList());
-    }
-
-    @ZenGetter("localizedName")
     public String getLocalizedName() {
         return LocalizationUtils.format(getTranslationKey());
     }
 
-    @ZenGetter("translationKey")
     public String getTranslationKey() {
         return "recipemap." + unlocalizedName + ".name";
     }
 
-    @ZenGetter("unlocalizedName")
     public String getUnlocalizedName() {
         return unlocalizedName;
     }
 
     public R recipeBuilder() {
         return recipeBuilderSample.copy();
+    }
+
+    Class<?> recipeBuilderType() {
+        return recipeBuilderSample.getClass();
+    }
+
+    boolean isRecipeBuilderSample(RecipeBuilder<?> builder) {
+        return builder == recipeBuilderSample;
     }
 
     /**
@@ -1372,75 +1420,37 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      * @param ingredients    list of input ingredients.
      * @param branchMap      the current branch in the recursion.
      */
-    private @Nullable Recipe recurseIngredientTreeRemove(@NotNull Recipe recipeToRemove,
-                                                         @NotNull List<List<AbstractMapIngredient>> ingredients,
-                                                         @NotNull Branch branchMap, int depth) {
-        // for every ingredient
-        for (List<AbstractMapIngredient> current : ingredients) {
-            // for all possibilities as keys
-            for (AbstractMapIngredient obj : current) {
-                // determine the root nodes
-                Map<AbstractMapIngredient, Either<Recipe, Branch>> targetMap = determineRootNodes(obj, branchMap);
-
-                // recursive part:
-                Recipe found = null;
-                Either<Recipe, Branch> result = targetMap.get(obj);
-                if (result != null) {
-                    // if there is a recipe (left mapping), return it immediately as found
-                    // otherwise, recurse and go to the next branch. Do so by omitting the current ingredient.
-                    Recipe r = result.map(potentialRecipe -> potentialRecipe,
-                            potentialBranch -> recurseIngredientTreeRemove(recipeToRemove,
-                                    ingredients.subList(1, ingredients.size()), potentialBranch, depth + 1));
-                    if (r == recipeToRemove) {
-                        found = r;
-                    } else {
-                        // wasn't the correct recipe
-                        if (recipeToRemove.getIsCTRecipe()) {
-                            CraftTweakerAPI.logError(String.format("Failed to remove Recipe from RecipeMap %s: %s",
-                                    this.unlocalizedName, CTRecipeHelper.getRecipeRemoveLine(this, recipeToRemove)));
-                        }
-                        if (ConfigHolder.misc.debug || GTValues.isDeobfEnvironment()) {
-                            GTLog.logger.warn("Failed to remove recipe from RecipeMap {}. See next lines for details",
-                                    this.unlocalizedName);
-                            GTLog.logger.warn("Failed to remove Recipe: {}", recipeToRemove.toString());
-                        }
-                    }
+    private boolean recurseIngredientTreeRemove(Recipe recipe, List<List<AbstractMapIngredient>> ingredients,
+                                                Branch branch, int depth) {
+        if (depth >= ingredients.size()) return false;
+        boolean removed = false;
+        for (AbstractMapIngredient ingredient : ingredients.get(depth)) {
+            var nodes = determineRootNodes(ingredient, branch);
+            var existing = nodes.get(ingredient);
+            if (existing == null) continue;
+            if (existing.left().isPresent()) {
+                if (existing.left().orElseThrow() == recipe) {
+                    nodes.remove(ingredient);
+                    removed = true;
                 }
-
-                if (found != null) {
-                    if (ingredients.size() == 1) {
-                        // a recipe was found, and this is the only ingredient, so remove it directly
-                        targetMap.remove(obj);
-                    } else {
-                        if (targetMap.get(obj).right().isPresent()) {
-                            Branch branch = targetMap.get(obj).right().get();
-                            if (branch.isEmptyBranch()) {
-                                // have a branch at this stage, so remove the ingredient for this step
-                                targetMap.remove(obj);
-                            }
-                        }
-                    }
-                    // return the successfully removed recipe
-                    return found;
+            } else {
+                Branch child = existing.right().orElseThrow();
+                if (depth == ingredients.size() - 1 && child.getTerminalRecipe() == recipe) {
+                    child.setTerminalRecipe(null);
+                    removed = true;
+                } else {
+                    removed |= recurseIngredientTreeRemove(recipe, ingredients, child, depth + 1);
                 }
+                if (child.isEmptyBranch()) nodes.remove(ingredient);
             }
         }
-        // could not remove the recipe
-        return null;
+        return removed;
     }
 
-    @ZenMethod("recipeBuilder")
-    @Method(modid = Mods.Names.CRAFT_TWEAKER)
-    public CTRecipeBuilder ctRecipeBuilder() {
-        return new CTRecipeBuilder(recipeBuilder());
-    }
-
-    @ZenGetter("maxInputs")
     public int getMaxInputs() {
         return maxInputs;
     }
 
-    @ZenSetter("maxInputs")
     public void setMaxInputs(int maxInputs) {
         this.maxInputs = Math.max(this.maxInputs, maxInputs);
         if (!recipeMapUI.canModifyItemInputs()) {
@@ -1450,12 +1460,10 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         }
     }
 
-    @ZenGetter("maxOutputs")
     public int getMaxOutputs() {
         return maxOutputs;
     }
 
-    @ZenSetter("maxOutputs")
     public void setMaxOutputs(int maxOutputs) {
         this.maxOutputs = Math.max(this.maxOutputs, maxOutputs);
         if (!recipeMapUI.canModifyItemOutputs()) {
@@ -1465,12 +1473,10 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         }
     }
 
-    @ZenGetter("maxFluidInputs")
     public int getMaxFluidInputs() {
         return maxFluidInputs;
     }
 
-    @ZenSetter("maxFluidInputs")
     public void setMaxFluidInputs(int maxFluidInputs) {
         this.maxFluidInputs = Math.max(this.maxFluidInputs, maxFluidInputs);
         if (!recipeMapUI.canModifyFluidInputs()) {
@@ -1480,12 +1486,10 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         }
     }
 
-    @ZenGetter("maxFluidOutputs")
     public int getMaxFluidOutputs() {
         return maxFluidOutputs;
     }
 
-    @ZenSetter("maxFluidOutputs")
     public void setMaxFluidOutputs(int maxFluidOutputs) {
         this.maxFluidOutputs = Math.max(this.maxFluidOutputs, maxFluidOutputs);
         if (!recipeMapUI.canModifyFluidOutputs()) {
@@ -1529,7 +1533,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     }
 
     @Override
-    @ZenMethod
+
     public String toString() {
         return "RecipeMap{" + unlocalizedName + '}';
     }

@@ -1438,7 +1438,7 @@ gregtech.material.galena=Галеніт
 gregtech.material.garnierite=Гарнієрит
 gregtech.creative.energy.voltage=Вольтаж
 for.bees.species.clay=Глина
-gregtech.jei.ct_recipe.tooltip=Рецепт CraftTweaker
+
 gregtech.jei.gs_recipe.tooltip=Рецепт GroovyScript
 gregtech.material.darmstadtium=Дармштадтій
 gregtech.material.erbium=Ербій

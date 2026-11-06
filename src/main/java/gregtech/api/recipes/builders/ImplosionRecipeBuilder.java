@@ -13,7 +13,6 @@ import net.minecraft.item.ItemStack;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.jetbrains.annotations.NotNull;
-import stanhebben.zenscript.annotations.ZenMethod;
 
 public class ImplosionRecipeBuilder extends RecipeBuilder<ImplosionRecipeBuilder> {
 
@@ -33,7 +32,7 @@ public class ImplosionRecipeBuilder extends RecipeBuilder<ImplosionRecipeBuilder
     }
 
     @Override
-    public boolean applyPropertyCT(@NotNull String key, @NotNull Object value) {
+    public boolean applyNamedProperty(@NotNull String key, @NotNull Object value) {
         if (key.equals(ImplosionExplosiveProperty.KEY)) {
             if (value instanceof ItemStack stack) {
                 return this.applyProperty(ImplosionExplosiveProperty.getInstance(), stack);
@@ -42,15 +41,13 @@ public class ImplosionRecipeBuilder extends RecipeBuilder<ImplosionRecipeBuilder
             }
             return false;
         }
-        return super.applyPropertyCT(key, value);
+        return super.applyNamedProperty(key, value);
     }
 
-    @ZenMethod
     public ImplosionRecipeBuilder explosives(int amount) {
         return explosives(new ItemStack(Blocks.TNT, amount));
     }
 
-    @ZenMethod
     public ImplosionRecipeBuilder explosives(@NotNull ItemStack explosive) {
         if (explosive.isEmpty()) {
             GTLog.logger.error("Cannot use empty explosives", new Throwable());

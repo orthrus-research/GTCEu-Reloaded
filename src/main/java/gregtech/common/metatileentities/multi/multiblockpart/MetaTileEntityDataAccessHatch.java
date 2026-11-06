@@ -114,7 +114,7 @@ public class MetaTileEntityDataAccessHatch extends MetaTileEntityMultiblockNotif
                 int index = y * rowSize + x;
                 builder.widget(new SlotWidget(isExportHatch ? exportItems : importItems, index,
                         88 - rowSize * 9 + x * 18, 18 + y * 18, true, !isExportHatch)
-                                .setBackgroundTexture(GuiTextures.SLOT));
+                        .setBackgroundTexture(GuiTextures.SLOT));
             }
         }
         return builder.bindPlayerInventory(entityPlayer.inventory, GuiTextures.SLOT, 7, 18 + 18 * rowSize + 12)

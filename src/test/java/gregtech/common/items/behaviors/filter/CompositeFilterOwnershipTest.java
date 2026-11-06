@@ -17,6 +17,7 @@ import net.minecraft.util.EnumHand;
 
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.ModularSyncManager;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.WidgetTree;
 import com.cleanroommc.modularui.widgets.CycleButtonWidget;
@@ -109,7 +110,7 @@ class CompositeFilterOwnershipTest {
         CompositeFilter hosted = editable(ITEM, itemLeaf(new ItemStack(Items.IRON_INGOT)));
         // Hosted instances are created independently from their physical parent, with no editor authorization.
         hosted = new CompositeFilter(hosted.getContainerStack(), ITEM);
-        PanelSyncManager manager = new PanelSyncManager(false);
+        PanelSyncManager manager = new PanelSyncManager(new ModularSyncManager(false), true);
         hosted.createWidgets(manager);
         assertFalse(manager.getSlotGroup("composite_children").allowShiftTransfer());
         assertFalse(manager.getSlotGroup("composite_children").isAllowSorting());
@@ -123,7 +124,7 @@ class CompositeFilterOwnershipTest {
         player.setHeldItem(EnumHand.MAIN_HAND, root);
         CompositeFilterContainer container = new CompositeFilterContainer(player, EnumHand.MAIN_HAND, root);
         player.openContainer = container;
-        PanelSyncManager editable = new PanelSyncManager(false);
+        PanelSyncManager editable = new PanelSyncManager(new ModularSyncManager(false), true);
         hosted.createEditableWidgets(editable, container::ownsParent);
         BooleanSyncValue editableBlacklist = editable.findSyncHandler("composite_blacklist", BooleanSyncValue.class);
         send(editableBlacklist, true);
@@ -137,7 +138,7 @@ class CompositeFilterOwnershipTest {
     void handheldItemAndFluidTreesCollectSyncHandlersWithoutReregisteringNamedValues() {
         for (FilterType type : FilterType.values()) {
             CompositeFilter filter = editable(type);
-            PanelSyncManager manager = new PanelSyncManager(false);
+            PanelSyncManager manager = new PanelSyncManager(new ModularSyncManager(false), true);
             ModularPanel panel = filter.createPanel(manager)
                     .child(filter.createEditableWidgets(manager, () -> true));
             BooleanSyncValue blacklist = manager.findSyncHandler("composite_blacklist", BooleanSyncValue.class);
@@ -147,8 +148,9 @@ class CompositeFilterOwnershipTest {
             assertSame(valid, manager.findSyncHandler("composite_valid", BooleanSyncValue.class));
             CycleButtonWidget button = WidgetTree.findFirst(panel, CycleButtonWidget.class, widget -> true);
             assertNotNull(button);
-            assertTrue(button.isValidSyncHandler(blacklist));
+            assertTrue(button.isValidSyncOrValue(blacklist));
             // Native initialization owns packet transport; verify its two valid states and the real reader here.
+            button.onInit();
             assertDoesNotThrow(() -> button.setState(1, false));
             send(blacklist, true);
             assertTrue(filter.isBlacklistFilter());
@@ -163,7 +165,7 @@ class CompositeFilterOwnershipTest {
     void hostedItemAndFluidTreesRetainNamedReadOnlyHandlersDuringCollection() {
         for (FilterType type : FilterType.values()) {
             CompositeFilter filter = editable(type);
-            PanelSyncManager manager = new PanelSyncManager(false);
+            PanelSyncManager manager = new PanelSyncManager(new ModularSyncManager(false), true);
             ModularPanel panel = filter.createPopupPanel(manager, "composite_hosted_registration");
             BooleanSyncValue blacklist = manager.findSyncHandler("composite_blacklist", BooleanSyncValue.class);
             BooleanSyncValue valid = manager.findSyncHandler("composite_valid", BooleanSyncValue.class);

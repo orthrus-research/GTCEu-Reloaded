@@ -3,13 +3,15 @@
   "refmap": "mixins.gregtech.refmap.json",
   "target": "@env(DEFAULT)",
   "minVersion": "0.8",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_25",
+  "required": true,
   "mixins": [
-    "GuiIngameForgeMixin",
-    "ModelLoaderRegistryMixin",
     "OreIngredientMixin",
     "SpecialArmorPropertiesMixin"
   ],
-  "client": [],
+  "client": [
+    "GuiIngameForgeMixin",
+    "ModelLoaderRegistryMixin"
+  ],
   "server": []
 }

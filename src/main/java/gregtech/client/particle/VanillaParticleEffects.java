@@ -64,7 +64,8 @@ public enum VanillaParticleEffects implements IMachineParticleEffect {
         } else if (facing == EnumFacing.NORTH) {
             x = offX + horizontal;
             z = offZ - offset;
-        } else { // south
+        } else {
+            // south
             x = offX + horizontal;
             z = offZ + offset;
         }
@@ -102,7 +103,8 @@ public enum VanillaParticleEffects implements IMachineParticleEffect {
                 mX = 0.0D;
                 z = pos.getZ() - offset;
                 mZ = -0.05D;
-            } else { // south
+            } else {
+                // south
                 x = pos.getX() + horizontal;
                 mX = 0.0D;
                 z = pos.getZ() + offset;

@@ -14,6 +14,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 
 import codechicken.lib.render.CCRenderState;
@@ -36,6 +38,7 @@ public class MetaTileEntityQuantumProxy extends MetaTileEntityQuantumStorage<Dua
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         var newPipeline = ArrayUtils.add(pipeline,
                 new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getPaintingColorForRendering())));
@@ -47,6 +50,7 @@ public class MetaTileEntityQuantumProxy extends MetaTileEntityQuantumStorage<Dua
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
         return Pair.of(Textures.QUANTUM_PROXY_INACTIVE.getParticleSprite(), getPaintingColorForRendering());
     }

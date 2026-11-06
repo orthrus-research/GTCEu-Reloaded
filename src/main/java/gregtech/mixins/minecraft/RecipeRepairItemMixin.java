@@ -49,14 +49,16 @@ public class RecipeRepairItemMixin {
         else return instance.getItem();
     }
 
-    @ModifyReturnValue(method = "matches", at = @At(value = "RETURN", ordinal = 1), remap = false)
+    @ModifyReturnValue(method = "matches", at = @At(value = "RETURN", ordinal = 1))
     public boolean gregtechCEu$matches(boolean b, @Local List<ItemStack> list) {
         if (!b) return false; // list size is not two
 
         ItemStack stack1 = list.get(0);
         ItemStack stack2 = list.get(1);
 
-        if (!(stack1.getItem() instanceof IGTTool) || stack1.getItem() instanceof ItemGTToolbelt)
+        if (!(stack1.getItem() instanceof IGTTool)) return b;
+        if (!(stack2.getItem() instanceof IGTTool) || stack1.getItem() instanceof ItemGTToolbelt ||
+                stack2.getItem() instanceof ItemGTToolbelt)
             return false;
 
         // items must be the same at this point
@@ -85,17 +87,14 @@ public class RecipeRepairItemMixin {
     }
 
     @Inject(method = "getCraftingResult(Lnet/minecraft/inventory/InventoryCrafting;)Lnet/minecraft/item/ItemStack;",
-            at = @At(value = "INVOKE_ASSIGN",
-                     target = "Ljava/util/List;get(I)Ljava/lang/Object;",
-                     ordinal = 0),
+            at = @At("HEAD"),
             cancellable = true)
-    public void gregtechCEu$getCraftingResultFirst(InventoryCrafting inv, CallbackInfoReturnable<ItemStack> cir,
-                                                   @Local(ordinal = 0) ItemStack itemstack,
-                                                   @Local(ordinal = 1) ItemStack itemstack1) {
-        if (itemstack.getItem() instanceof IGTTool tool && tool.isElectric()) {
-            cir.setReturnValue(ItemStack.EMPTY);
-        } else if (itemstack1.getItem() instanceof IGTTool tool && tool.isElectric()) {
-            cir.setReturnValue(ItemStack.EMPTY);
+    public void gregtechCEu$getCraftingResultFirst(InventoryCrafting inv, CallbackInfoReturnable<ItemStack> cir) {
+        for (int slot = 0; slot < inv.getSizeInventory(); slot++) {
+            if (inv.getStackInSlot(slot).getItem() instanceof IGTTool tool && tool.isElectric()) {
+                cir.setReturnValue(ItemStack.EMPTY);
+                return;
+            }
         }
     }
 
@@ -129,7 +128,7 @@ public class RecipeRepairItemMixin {
             ForgeEventFactory.onPlayerDestroyItem(ForgeHooks.getCraftingPlayer(), itemStack, null);
             return instance.get(index);
         } else {
-            return instance.set(index, newValue);
+            return original.call(instance, index, newValue);
         }
     }
 }

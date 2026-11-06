@@ -72,7 +72,7 @@ public class ColorSprayBehaviour extends AbstractUsableBehaviour implements IIte
 
     @Nullable
     public static ColorSprayBehaviour getBehavior(ItemStack spraycan) {
-        if (!(spraycan.getItem() instanceof MetaItem<?>meta)) return null;
+        if (!(spraycan.getItem() instanceof MetaItem<?> meta)) return null;
         for (IItemBehaviour behaviour : meta.getBehaviours(spraycan)) {
             if (behaviour instanceof ColorSprayBehaviour spray) return spray;
         }

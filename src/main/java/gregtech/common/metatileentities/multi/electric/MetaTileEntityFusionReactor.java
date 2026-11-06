@@ -143,7 +143,7 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
                                 .stream(MetaTileEntities.ENERGY_INPUT_HATCH)
                                 .filter(mte -> mte != null && tier <= mte.getTier() && mte.getTier() <= GTValues.UV)
                                 .toArray(MetaTileEntity[]::new))
-                                        .setMinGlobalLimited(1).setPreviewCount(16)))
+                                .setMinGlobalLimited(1).setPreviewCount(16)))
                 .where('C', states(getCasingState()))
                 .where('K', states(getCoilState()))
                 .where('O', states(getCasingState(), getGlassState()).or(abilities(MultiblockAbility.EXPORT_FLUIDS)))

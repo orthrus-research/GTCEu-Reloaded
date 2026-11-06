@@ -8,6 +8,7 @@ import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import gregtech.common.covers.filter.FluidFilterContainer;
 import gregtech.common.covers.filter.SimpleFluidFilter;
+import gregtech.common.mui.widget.GTTextFieldWidget;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.nbt.NBTTagCompound;
@@ -25,11 +26,11 @@ import com.cleanroommc.modularui.factory.SidedPosGuiData;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.StringValue;
 import com.cleanroommc.modularui.value.sync.EnumSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
-import com.cleanroommc.modularui.value.sync.StringSyncValue;
 import com.cleanroommc.modularui.widgets.layout.Flow;
-import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.apache.logging.log4j.message.FormattedMessage;
 import org.jetbrains.annotations.NotNull;
@@ -258,8 +259,10 @@ public class CoverFluidRegulator extends CoverPump {
         bucketMode.updateCacheFromSource(true);
         syncManager.syncValue("bucket_mode", bucketMode);
 
-        var filterTransferSize = new StringSyncValue(this::getStringTransferRate, this::setStringTransferRate);
+        var filterTransferSize = new IntSyncValue(
+                fluidFilterContainer::getTransferSize, fluidFilterContainer::setTransferSize);
         filterTransferSize.updateCacheFromSource(true);
+        syncManager.syncValue("filter_transfer_millibuckets", filterTransferSize);
 
         return super.createUI(data, syncManager)
                 .child(new EnumRowBuilder<>(TransferMode.class)
@@ -271,11 +274,20 @@ public class CoverFluidRegulator extends CoverPump {
                         .value(bucketMode)
                         .overlay(IKey.str("kL"), IKey.str("L"))
                         .build()
-                        .child(new TextFieldWidget().widthRel(0.5f).right(0)
+                        .child(new GTTextFieldWidget().widthRel(0.5f).right(0)
                                 .setEnabledIf(w -> shouldDisplayAmountSlider())
-                                .setNumbers(0, Integer.MAX_VALUE)
-                                .value(filterTransferSize)
+                                .setNumbersDouble(value -> Math.clamp(value, bucketMode.getValue().displayAmount(1),
+                                        bucketMode.getValue().displayAmount(fluidFilterContainer.getMaxTransferSize())))
+                                .value(new StringValue.Dynamic(
+                                        () -> bucketMode.getValue().formatRate(filterTransferSize.getValue()),
+                                        value -> filterTransferSize.setValue(bucketMode.getValue().parseRate(value,
+                                                fluidFilterContainer.getMaxTransferSize()), true, true)))
                                 .setTextColor(Color.WHITE.darker(1))));
+    }
+
+    @Override
+    protected boolean createThroughputUnitRow() {
+        return false; // The regulator already provides its shared unit selector beside the batch size.
     }
 
     @Override

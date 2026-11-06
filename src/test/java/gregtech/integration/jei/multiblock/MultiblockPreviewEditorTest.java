@@ -60,7 +60,7 @@ public class MultiblockPreviewEditorTest {
         limited = registry.register(new PreviewTestController(PreviewTestRegistry.id("limited"), self -> {
             TraceabilityPredicate metal = states(Blocks.GOLD_BLOCK.getDefaultState(),
                     Blocks.DIAMOND_BLOCK.getDefaultState())
-                            .setMinLayerLimited(1).setMaxLayerLimited(1);
+                    .setMinLayerLimited(1).setMaxLayerLimited(1);
             return FactoryBlockPattern.start().aisle("XXX").setRepeatable(1, 2).aisle("SXX")
                     .where('S', self.selfPredicate()).where('X', states(Blocks.STONE.getDefaultState()).or(metal))
                     .build();

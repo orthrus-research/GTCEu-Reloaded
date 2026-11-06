@@ -23,7 +23,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import com.github.bsideup.jabel.Desugar;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -517,7 +516,6 @@ public class BloomEffectUtil {
         }
     }
 
-    @Desugar
     private record BloomRenderKey(@Nullable IRenderSetup renderSetup, @NotNull BloomType bloomType) {}
 
     public static final class BloomRenderTicket {

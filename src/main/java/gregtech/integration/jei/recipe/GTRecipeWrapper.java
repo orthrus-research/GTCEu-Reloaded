@@ -252,7 +252,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
     public void addIngredientTooltips(@NotNull Collection<String> tooltip, boolean notConsumed, boolean input,
                                       @Nullable Object ingredient, @Nullable Object ingredient2) {
         if (ingredient2 instanceof ChancedOutputLogic logic) {
-            if (ingredient instanceof BoostableChanceEntry<?>entry) {
+            if (ingredient instanceof BoostableChanceEntry<?> entry) {
                 double chance = entry.getChance() / 100.0;
                 double boost = entry.getChanceBoost() / 100.0;
                 if (logic != ChancedOutputLogic.NONE && logic != ChancedOutputLogic.OR) {
@@ -272,7 +272,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
             // check for "normal" data items
             if (stack.getItem() instanceof IDataItem) return;
             // check for metaitem data items
-            if (stack.getItem() instanceof MetaItem<?>metaItem) {
+            if (stack.getItem() instanceof MetaItem<?> metaItem) {
                 for (IItemBehaviour behaviour : metaItem.getBehaviours(stack)) {
                     if (behaviour instanceof IDataItem) {
                         return;
@@ -380,8 +380,8 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         BooleanSupplier creativePlayerPredicate = () -> Minecraft.getMinecraft().player != null &&
                 Minecraft.getMinecraft().player.isCreative();
         BooleanSupplier creativeTweaker = () -> creativePlayerPredicate.getAsBoolean() &&
-                (recipe.getIsCTRecipe() || recipe.isGroovyRecipe());
-        BooleanSupplier creativeDefault = () -> creativePlayerPredicate.getAsBoolean() && !recipe.getIsCTRecipe() &&
+                (recipe.isAuthoredRecipe() || recipe.isGroovyRecipe());
+        BooleanSupplier creativeDefault = () -> creativePlayerPredicate.getAsBoolean() && !recipe.isAuthoredRecipe() &&
                 !recipe.isGroovyRecipe();
 
         // X Button
@@ -404,12 +404,12 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
                 })
                 .setActiveSupplier(creativeDefault));
 
-        // CT/GS Info
+        // Authoring provenance
         buttons.add(new JeiButton(166, 2, 10, 10)
                 .setTextures(GuiTextures.INFO_ICON)
                 .setTooltipBuilder(lines -> lines.add(recipe.isGroovyRecipe() ?
                         LocalizationUtils.format("gregtech.jei.gs_recipe.tooltip") :
-                        LocalizationUtils.format("gregtech.jei.ct_recipe.tooltip")))
+                        LocalizationUtils.format("gregtech.jei.authored_recipe.tooltip")))
                 .setClickAction((mc, x, y, button) -> false)
                 .setActiveSupplier(creativeTweaker));
     }

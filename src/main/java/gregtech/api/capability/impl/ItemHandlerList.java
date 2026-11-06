@@ -101,6 +101,6 @@ public class ItemHandlerList implements IItemHandlerModifiable {
     }
 
     private boolean invalidSlot(int slot) {
-        return slot < 0 && slot >= this.getSlots();
+        return slot < 0 || slot >= this.getSlots();
     }
 }

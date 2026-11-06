@@ -24,7 +24,7 @@ public class AEMultiblockHatchProvider implements IProbeInfoProvider {
                              IBlockState blockState, IProbeHitData probeHitData) {
         if (blockState.getBlock().hasTileEntity(blockState) &&
                 world.getTileEntity(probeHitData.getPos()) instanceof IGregTechTileEntity gtte &&
-                gtte.getMetaTileEntity() instanceof MetaTileEntityAEHostablePart<?>aeHostablePart) {
+                gtte.getMetaTileEntity() instanceof MetaTileEntityAEHostablePart<?> aeHostablePart) {
             if (aeHostablePart.isOnline()) {
                 probeInfo.text("{*gregtech.gui.me_network.online*}");
             } else {

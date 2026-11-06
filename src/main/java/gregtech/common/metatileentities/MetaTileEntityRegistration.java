@@ -220,9 +220,9 @@ final class MetaTileEntityRegistration {
                         RecipeMaps.MACERATOR_RECIPES,
                         -1,
                         switch (tier) {
-                        case 1, 2 -> 1;
-                        case 3 -> 3;
-                        default -> 4;
+                            case 1, 2 -> 1;
+                            case 3 -> 3;
+                            default -> 4;
                         },
                         tier <= GTValues.MV ? Textures.MACERATOR_OVERLAY : Textures.PULVERIZER_OVERLAY,
                         tier,

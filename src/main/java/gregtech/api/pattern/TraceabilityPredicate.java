@@ -49,7 +49,7 @@ public class TraceabilityPredicate {
             .sorted(Comparator.comparingInt(entry -> entry.getValue().getTier()))
             .map(entry -> new BlockInfo(entry.getKey(), null))
             .toArray(BlockInfo[]::new))
-                    .addTooltips("gregtech.multiblock.pattern.error.coils");
+            .addTooltips("gregtech.multiblock.pattern.error.coils");
 
     public final List<SimplePredicate> common = new ArrayList<>();
     public final List<SimplePredicate> limited = new ArrayList<>();
@@ -217,7 +217,7 @@ public class TraceabilityPredicate {
 
     public boolean test(BlockWorldState blockWorldState) {
         if (!limited.isEmpty() && blockWorldState.getTileEntity() instanceof IGregTechTileEntity holder &&
-                holder.getMetaTileEntity() instanceof IMultiblockAbilityPart<?>part &&
+                holder.getMetaTileEntity() instanceof IMultiblockAbilityPart<?> part &&
                 part.requiresAllAbilityLimits()) {
             return testAllAbilityLimits(blockWorldState);
         }

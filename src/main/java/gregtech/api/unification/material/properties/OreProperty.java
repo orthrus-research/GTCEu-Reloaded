@@ -1,5 +1,6 @@
 package gregtech.api.unification.material.properties;
 
+import gregtech.api.definition.OreBlockIdentity;
 import gregtech.api.unification.material.Material;
 
 import net.minecraft.util.math.MathHelper;
@@ -14,6 +15,9 @@ import java.util.Collection;
 import java.util.List;
 
 public class OreProperty implements IMaterialProperty {
+
+    @Nullable
+    private OreBlockIdentity blockIdentity;
 
     /**
      * List of Ore byproducts.
@@ -103,6 +107,17 @@ public class OreProperty implements IMaterialProperty {
      */
     public OreProperty() {
         this(1, 1);
+    }
+
+    /** Explicit startup identity, for packs which need a different stable name for generated ore blocks. */
+    public OreProperty setBlockIdentity(@Nullable OreBlockIdentity identity) {
+        this.blockIdentity = identity;
+        return this;
+    }
+
+    @Nullable
+    public OreBlockIdentity getBlockIdentity() {
+        return blockIdentity;
     }
 
     public OreProperty setOreMultiplier(int multiplier) {

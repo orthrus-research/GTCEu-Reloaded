@@ -215,8 +215,8 @@ public class SteamMiner extends MetaTileEntity implements IMiner, IControllable,
                                         "gregtech.machine.steam_miner.steam"));
                             }
                         })
-                                .left(10)
-                                .top(18))
+                        .left(10)
+                        .top(18))
                 .child(SlotGroupWidget.playerInventory(false)
                         .left(7)
                         .bottom(7));

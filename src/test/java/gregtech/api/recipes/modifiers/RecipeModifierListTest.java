@@ -38,7 +38,6 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
 
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -121,7 +120,7 @@ class RecipeModifierListTest {
         Recipe source = recipe(-3, 11);
         Recipe adjusted = successful(pipeline(RecipeModification.builder().energy(.5, 0).duration(.5, 0)
                 .itemInputs(.5, 0).fluidInputs(.5, 0).itemOutputs(.5, 0).fluidOutputs(.5, 0).build())
-                        .apply(CONTEXT, source));
+                .apply(CONTEXT, source));
         assertEquals(-2, adjusted.getEUt());
         assertEquals(6, adjusted.getDuration());
         assertEquals(2, adjusted.getInputs().get(0).getAmount());
@@ -199,7 +198,9 @@ class RecipeModifierListTest {
         assertEquals("gregtech.recipe.modifier.invalid_result", failed.reasonKey());
         assertEquals(0, later.get());
         assertThrows(OutOfMemoryError.class, () -> RecipeModifierList.of(
-                RecipeModifier.named("test:fatal", (context, view) -> { throw new OutOfMemoryError("fixture"); }))
+                RecipeModifier.named("test:fatal", (context, view) -> {
+                    throw new OutOfMemoryError("fixture");
+                }))
                 .apply(CONTEXT, recipe(4, 11)));
     }
 
@@ -262,7 +263,7 @@ class RecipeModifierListTest {
         Recipe adjusted = successful(
                 pipeline(RecipeModification.builder().duration(2, 0).build()).apply(CONTEXT, source));
         assertTrue(adjusted.isGroovyRecipe());
-        assertTrue(adjusted.getIsCTRecipe());
+        assertTrue(adjusted.isAuthoredRecipe());
         assertTrue(adjusted.isHidden());
         assertSame(source.getRecipeCategory(), adjusted.getRecipeCategory());
         assertSame(ChancedOutputLogic.AND, adjusted.getChancedOutputs().getChancedOutputLogic());
@@ -334,7 +335,9 @@ class RecipeModifierListTest {
         instances.setAccessible(true);
         Object previous = instances.get(null);
         // Scope only the real cache contents; avoid unrelated persistence/config initialization in enableCache().
-        instances.set(null, new ObjectOpenHashSet<GTRecipeInput>());
+        var createCache = GTRecipeInputCache.class.getDeclaredMethod("createCache", int.class);
+        createCache.setAccessible(true);
+        instances.set(null, createCache.invoke(null, 16));
         try {
             assertTrue(GTRecipeInputCache.isCacheEnabled());
             ItemStack tagged = new ItemStack(Items.IRON_INGOT, 3);

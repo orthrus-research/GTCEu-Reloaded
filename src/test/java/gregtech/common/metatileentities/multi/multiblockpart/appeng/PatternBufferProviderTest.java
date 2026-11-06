@@ -60,7 +60,7 @@ class PatternBufferProviderTest {
         PatternBufferTestPart buffer = attached(new PatternBufferTestWorld(), ledger);
         RecipeMap<SimpleRecipeBuilder> map = new RecipeMapBuilder<>("pattern_provider_" + nextMap++,
                 new SimpleRecipeBuilder())
-                        .itemInputs(2).itemOutputs(1).fluidInputs(1).build();
+                .itemInputs(2).itemOutputs(1).fluidInputs(1).build();
         Recipe forbidden = map.recipeBuilder().inputs(iron).fluidInputs(PatternBufferTokens.fluid(blue, true))
                 .outputs(new ItemStack(Items.DIAMOND)).duration(1).EUt(1).build().getResult();
         List<RecipeInputView> views = buffer.getRecipeInputViews();

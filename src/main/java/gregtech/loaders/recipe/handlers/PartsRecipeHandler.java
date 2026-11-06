@@ -110,7 +110,7 @@ public class PartsRecipeHandler {
                 .buildAndRegister();
 
         if (workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("screw_%s", material),
+            ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("screw_%s", material)),
                     screwStack, "fX", "X ",
                     'X', new UnificationEntry(OrePrefix.bolt, material));
         }
@@ -120,7 +120,7 @@ public class PartsRecipeHandler {
         int workingTier = material.getWorkingTier();
 
         if (!material.hasFlag(NO_SMASHING) && workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("foil_%s", material),
+            ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("foil_%s", material)),
                     OreDictUnifier.get(foilPrefix, material, 2),
                     "hP ", 'P', new UnificationEntry(plate, material));
         }
@@ -164,7 +164,8 @@ public class PartsRecipeHandler {
         int workingTier = material.getWorkingTier();
 
         if (!OreDictUnifier.get(foil, material).isEmpty() && workingTier <= HV)
-            ModHandler.addShapelessRecipe(String.format("fine_wire_%s", material.toString()),
+            ModHandler.addShapelessRecipe(
+                    ModHandler.materialRecipeName(material, String.format("fine_wire_%s", material)),
                     OreDictUnifier.get(fineWirePrefix, material),
                     'x', new UnificationEntry(OrePrefix.foil, material));
 
@@ -235,7 +236,8 @@ public class PartsRecipeHandler {
         if (material.hasFlag(GENERATE_PLATE) && material.hasFlag(GENERATE_ROD)) {
             if (gearPrefix == OrePrefix.gearSmall) {
                 if (workingTier <= HV) {
-                    ModHandler.addShapedRecipe(String.format("small_gear_%s", material),
+                    ModHandler.addShapedRecipe(
+                            ModHandler.materialRecipeName(material, String.format("small_gear_%s", material)),
                             OreDictUnifier.get(gearSmall, material),
                             " R ", "hPx", " R ", 'R', new UnificationEntry(stick, material), 'P',
                             new UnificationEntry(plate, material));
@@ -267,7 +269,8 @@ public class PartsRecipeHandler {
                             .buildAndRegister();
                 }
             } else if (workingTier <= HV) {
-                ModHandler.addShapedRecipe(String.format("gear_%s", material), stack,
+                ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("gear_%s", material)),
+                        stack,
                         "RPR", "PwP", "RPR",
                         'P', new UnificationEntry(OrePrefix.plate, material),
                         'R', new UnificationEntry(OrePrefix.stick, material));
@@ -331,7 +334,8 @@ public class PartsRecipeHandler {
 
         if (material.hasFlag(GENERATE_PLATE)) {
             if (!material.hasFlag(NO_SMASHING) && workingTier <= HV) {
-                ModHandler.addShapedRecipe(String.format("plate_double_%s", material),
+                ModHandler.addShapedRecipe(
+                        ModHandler.materialRecipeName(material, String.format("plate_double_%s", material)),
                         OreDictUnifier.get(doublePrefix, material),
                         "h", "P", "P", 'P', new UnificationEntry(plate, material));
             }
@@ -389,7 +393,7 @@ public class PartsRecipeHandler {
 
         if (!material.hasFlag(NO_SMASHING)) {
             if (workingTier <= HV) {
-                ModHandler.addShapedRecipe(String.format("ring_%s", material),
+                ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("ring_%s", material)),
                         OreDictUnifier.get(ringPrefix, material),
                         "h ", " X",
                         'X', new UnificationEntry(OrePrefix.stick, material));
@@ -419,7 +423,8 @@ public class PartsRecipeHandler {
         int workingTier = material.getWorkingTier();
 
         if (workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("spring_small_%s", material.toString()),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("spring_small_%s", material)),
                     OreDictUnifier.get(springSmall, material),
                     " s ", "fRx", 'R', new UnificationEntry(stick, material));
         }
@@ -445,7 +450,7 @@ public class PartsRecipeHandler {
                 .buildAndRegister();
 
         if (workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("spring_%s", material.toString()),
+            ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("spring_%s", material)),
                     OreDictUnifier.get(spring, material),
                     " s ", "fRx", " R ", 'R', new UnificationEntry(stickLong, material));
         }
@@ -456,7 +461,8 @@ public class PartsRecipeHandler {
         int workingTier = material.getWorkingTier();
 
         if (workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("rotor_%s", material.toString()), stack,
+            ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("rotor_%s", material)),
+                    stack,
                     "ChC", "SRf", "CdC",
                     'C', new UnificationEntry(plate, material),
                     'S', new UnificationEntry(screw, material),
@@ -520,7 +526,8 @@ public class PartsRecipeHandler {
                     .buildAndRegister();
 
             if (workingTier <= HV) {
-                ModHandler.addShapedRecipe(String.format("bolt_saw_%s", material),
+                ModHandler.addShapedRecipe(
+                        ModHandler.materialRecipeName(material, String.format("bolt_saw_%s", material)),
                         GTUtility.copy(2, boltStack),
                         "s ", " X",
                         'X', new UnificationEntry(OrePrefix.stick, material));
@@ -551,25 +558,29 @@ public class PartsRecipeHandler {
                 .buildAndRegister();
 
         if (workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("stick_long_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("stick_long_%s", material)),
                     GTUtility.copy(2, stickStack),
                     "s", "X", 'X', new UnificationEntry(OrePrefix.stickLong, material));
 
             if (material.hasProperty(PropertyKey.GEM)) {
-                ModHandler.addShapedRecipe(String.format("stick_long_gem_flawless_%s", material),
+                ModHandler.addShapedRecipe(
+                        ModHandler.materialRecipeName(material, String.format("stick_long_gem_flawless_%s", material)),
                         stickStack,
                         "sf",
                         "G ",
                         'G', new UnificationEntry(OrePrefix.gemFlawless, material));
 
-                ModHandler.addShapedRecipe(String.format("stick_long_gem_exquisite_%s", material),
+                ModHandler.addShapedRecipe(
+                        ModHandler.materialRecipeName(material, String.format("stick_long_gem_exquisite_%s", material)),
                         GTUtility.copy(2, stickStack),
                         "sf", "G ",
                         'G', new UnificationEntry(OrePrefix.gemExquisite, material));
 
             }
 
-            ModHandler.addShapedRecipe(String.format("stick_long_stick_%s", material), stack,
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("stick_long_stick_%s", material)), stack,
                     "ShS",
                     'S', new UnificationEntry(OrePrefix.stick, material));
         }
@@ -635,7 +646,8 @@ public class PartsRecipeHandler {
                 .buildAndRegister();
 
         if (hasDoublePlate && workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("turbine_blade_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("turbine_blade_%s", material)),
                     OreDictUnifier.get(toolPrefix, material),
                     "PPP", "SPS", "fPd",
                     'P', new UnificationEntry(OrePrefix.plateDouble, material),
@@ -648,11 +660,12 @@ public class PartsRecipeHandler {
 
         if (!material.hasFlag(NO_SMASHING) && workingTier <= HV) {
 
-            ModHandler.addShapedRecipe(String.format("round_%s", material),
+            ModHandler.addShapedRecipe(ModHandler.materialRecipeName(material, String.format("round_%s", material)),
                     OreDictUnifier.get(round, material),
                     "fN", "Nh", 'N', new UnificationEntry(nugget, material));
 
-            ModHandler.addShapedRecipe(String.format("round_from_ingot_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("round_from_ingot_%s", material)),
                     OreDictUnifier.get(round, material, 4),
                     "fIh", 'I', new UnificationEntry(ingot, material));
         }

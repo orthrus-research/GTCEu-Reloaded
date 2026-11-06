@@ -108,7 +108,7 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
         if (shouldRenderOverlay()) {
             (isConfigurable ? Textures.MAINTENANCE_OVERLAY_CONFIGURABLE :
                     isTaped ? Textures.MAINTENANCE_OVERLAY_TAPED : Textures.MAINTENANCE_OVERLAY)
-                            .renderSided(getFrontFacing(), renderState, translation, pipeline);
+                    .renderSided(getFrontFacing(), renderState, translation, pipeline);
         }
     }
 
@@ -428,8 +428,8 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
                     .setTooltipText("gregtech.machine.maintenance_hatch_tape_slot.tooltip"))
                     .widget(new ClickButtonWidget(89 - 10 - 1, 18 * 2 + 3, 20, 20, "",
                             data -> fixMaintenanceProblems(entityPlayer))
-                                    .setButtonTexture(GuiTextures.MAINTENANCE_ICON)
-                                    .setTooltipText("gregtech.machine.maintenance_hatch_tool_slot.tooltip"));
+                            .setButtonTexture(GuiTextures.MAINTENANCE_ICON)
+                            .setTooltipText("gregtech.machine.maintenance_hatch_tool_slot.tooltip"));
         }
         if (isConfigurable) {
             builder.widget(

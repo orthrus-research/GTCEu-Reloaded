@@ -4,6 +4,7 @@ import gregtech.Bootstrap;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.SimpleMachineMetaTileEntity;
+import gregtech.api.recipes.GTRecipeHandler;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMapBuilder;
@@ -13,6 +14,7 @@ import gregtech.api.util.world.DummyWorld;
 import gregtech.common.metatileentities.MetaTileEntities;
 
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AbstractRecipeLogicTest {
 
@@ -113,17 +116,44 @@ public class AbstractRecipeLogicTest {
 
     private static int TEST_ID = 190;
 
+    @Test
+    void prefixSelectionAndRegistryChangesInvalidateTheUnscheduledMachineCache() {
+        var logic = createTestLogic(1, 1);
+        queryTestRecipe(logic);
+        Recipe shorter = logic.previousRecipe;
+        var map = logic.getRecipeMap();
+        var longer = map.recipeBuilder().inputs(new ItemStack(Blocks.COBBLESTONE),
+                new ItemStack(Items.COAL))
+                .outputs(new ItemStack(Items.DIAMOND)).EUt(1).duration(1).build().getResult();
+        assertFalse(logic.supportsIdleRecipeScheduling());
+        assertTrue(map.compileRecipe(longer));
+        logic.getInputInventory().setStackInSlot(1, new ItemStack(Items.COAL, 4));
+        logic.update();
+        assertSame(longer, logic.previousRecipe);
+        assertEquals(3, logic.getInputInventory().getStackInSlot(1).getCount());
+        assertTrue(map.removeRecipe(longer));
+        logic.update();
+        assertSame(shorter, logic.previousRecipe);
+        assertEquals(3, logic.getInputInventory().getStackInSlot(1).getCount());
+        GTRecipeHandler.removeAllRecipes(map);
+        int remaining = logic.getInputInventory().getStackInSlot(0).getCount();
+        logic.update();
+        assertEquals(remaining,
+                logic.getInputInventory().getStackInSlot(0).getCount());
+        assertFalse(logic.isActive());
+    }
+
     private static AbstractRecipeLogic createTestLogic(int testRecipeEUt, int testRecipeDuration) {
         World world = DummyWorld.INSTANCE;
 
         // Create an empty recipe map to work with
         RecipeMap<SimpleRecipeBuilder> map = new RecipeMapBuilder<>("test_reactor_" + TEST_ID,
                 new SimpleRecipeBuilder().EUt(30))
-                        .itemInputs(2)
-                        .itemOutputs(2)
-                        .fluidInputs(3)
-                        .fluidOutputs(2)
-                        .build();
+                .itemInputs(2)
+                .itemOutputs(2)
+                .fluidInputs(3)
+                .fluidOutputs(2)
+                .build();
 
         MetaTileEntity at = MetaTileEntities.registerMetaTileEntity(TEST_ID,
                 new SimpleMachineMetaTileEntity(

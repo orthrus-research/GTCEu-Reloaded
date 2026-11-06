@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.*;
 import net.minecraft.util.text.event.ClickEvent;
 import net.minecraft.util.text.event.HoverEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import com.cleanroommc.groovyscript.command.TextCopyable;
@@ -26,7 +27,11 @@ public class GroovyHandCommand {
         String id = RecipeCompatUtil.getMetaItemId(stackInHand);
         if (id != null) {
             String copyText = "metaitem('" + id + "')";
-            ClipboardUtil.copyToClipboard((EntityPlayerMP) event.player, copyText);
+            if (event.player instanceof EntityPlayerMP player) {
+                ClipboardUtil.copyToClipboard(player, copyText);
+            } else if (event.player != null && FMLCommonHandler.instance().getSide().isClient()) {
+                ClipboardUtil.copyToClipboard(copyText);
+            }
             event.messages
                     .add(TextCopyable.translation(copyText, "gregtech.command.hand.meta_item").build().appendSibling(
                             new TextComponentString(" " + id).setStyle(new Style().setColor(TextFormatting.GREEN))));

@@ -19,7 +19,7 @@ public class GroovyExpansions {
 
     public static <R extends RecipeBuilder<R>> RecipeBuilder<R> property(RecipeBuilder<R> builder, String key,
                                                                          Object value) {
-        if (!builder.applyPropertyCT(key, value)) {
+        if (!builder.applyNamedProperty(key, value)) {
             GroovyLog.get().error("Failed to add property '{}' with '{}' to recipe", key, value);
         }
         return builder;

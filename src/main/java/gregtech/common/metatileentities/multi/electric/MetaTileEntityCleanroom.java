@@ -14,6 +14,7 @@ import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SimpleGeneratorMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.metatileentity.multiblock.CleanroomDimensions;
 import gregtech.api.metatileentity.multiblock.CleanroomType;
 import gregtech.api.metatileentity.multiblock.FuelMultiblockController;
 import gregtech.api.metatileentity.multiblock.ICleanroomProvider;
@@ -105,7 +106,7 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
     private CleanroomType cleanroomType = null;
     private int cleanAmount;
 
-    private IEnergyContainer energyContainer;
+    private IEnergyContainer energyContainer = new EnergyContainerList(List.of());
 
     private ICleanroomFilter cleanroomFilter;
     private final CleanroomLogic cleanroomLogic;
@@ -232,20 +233,42 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
             return false;
         }
 
-        this.lDist = lDist;
-        this.rDist = rDist;
-        this.bDist = bDist;
-        this.fDist = fDist;
-        this.hDist = hDist;
-
-        writeCustomData(GregtechDataCodes.UPDATE_STRUCTURE_SIZE, buf -> {
-            buf.writeInt(this.lDist);
-            buf.writeInt(this.rDist);
-            buf.writeInt(this.bDist);
-            buf.writeInt(this.fDist);
-            buf.writeInt(this.hDist);
-        });
+        setCleanroomDimensions(new CleanroomDimensions(lDist, rDist, bDist, fDist, hDist));
         return true;
+    }
+
+    protected final CleanroomDimensions getCleanroomDimensions() {
+        return new CleanroomDimensions(lDist, rDist, bDist, fDist, hDist);
+    }
+
+    /** Updates the dimensions used by native cleaning, persistence and initial synchronization. */
+    protected final void setCleanroomDimensions(CleanroomDimensions dimensions) {
+        if (dimensions.equals(getCleanroomDimensions())) return;
+        this.lDist = dimensions.left();
+        this.rDist = dimensions.right();
+        this.bDist = dimensions.back();
+        this.fDist = dimensions.front();
+        this.hDist = dimensions.depth();
+        markDirty();
+        if (getWorld() != null && !getWorld().isRemote) {
+            writeCustomData(GregtechDataCodes.UPDATE_STRUCTURE_SIZE, buf -> {
+                buf.writeInt(this.lDist);
+                buf.writeInt(this.rDist);
+                buf.writeInt(this.bDist);
+                buf.writeInt(this.fDist);
+                buf.writeInt(this.hDist);
+            });
+        }
+    }
+
+    public @NotNull IEnergyContainer getEnergyContainer() {
+        return energyContainer;
+    }
+
+    /** Tracks addon receivers in the same invalidation lifecycle as ordinary interior machines. */
+    protected final void registerCleanroomReceiver(ICleanroomReceiver receiver) {
+        if (receiver.getCleanroom() != this) receiver.setCleanroom(this);
+        if (receiver.getCleanroom() == this) cleanroomReceivers.add(receiver);
     }
 
     /**
@@ -410,7 +433,7 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
                 .sorted(Comparator.comparingInt(entry -> entry.getValue().getTier()))
                 .map(entry -> new BlockInfo(entry.getKey(), null))
                 .toArray(BlockInfo[]::new))
-                        .addTooltips("gregtech.multiblock.pattern.error.filters");
+                .addTooltips("gregtech.multiblock.pattern.error.filters");
     }
 
     @SideOnly(Side.CLIENT)
@@ -456,10 +479,7 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
             if (!(metaTileEntity instanceof ICleanroomReceiver cleanroomReceiver)) return true;
 
             // give the machine this cleanroom if it doesn't have this one
-            if (cleanroomReceiver.getCleanroom() != this) {
-                cleanroomReceiver.setCleanroom(this);
-                cleanroomReceivers.add(cleanroomReceiver);
-            }
+            registerCleanroomReceiver(cleanroomReceiver);
             return true;
         });
     }

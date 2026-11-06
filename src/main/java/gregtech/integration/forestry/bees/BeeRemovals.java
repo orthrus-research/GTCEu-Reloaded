@@ -50,7 +50,7 @@ public class BeeRemovals {
             enabledField.setAccessible(true);
 
             for (var o : mbBeeDefinition.getEnumConstants()) {
-                if (o instanceof Enum<?>bee) {
+                if (o instanceof Enum<?> bee) {
                     String name = bee.name();
                     if (MB_REMOVALS.contains(name)) {
                         try {
@@ -109,7 +109,7 @@ public class BeeRemovals {
             modifiersField.setInt(speciesBuilderField, speciesBuilderField.getModifiers() & ~Modifier.FINAL);
 
             for (var o : ebBeeDefinition.getEnumConstants()) {
-                if (o instanceof Enum<?>bee) {
+                if (o instanceof Enum<?> bee) {
                     String name = bee.name();
                     if (EB_REMOVALS.contains(name)) {
                         branchField.set(bee, null);

@@ -26,13 +26,13 @@ builder.conditionTime(23000, 1000)
 
 Time windows are half-open and wrap at 24000 ticks; equal endpoints are invalid. Weather strengths are finite values from 0 to 1 and use the world's global strength. Minecraft's thunder value can depend on rain strength. The optional final boolean inverts a condition.
 
-CraftTweaker exposes explicit methods on `mods.gregtech.recipe.RecipeBuilder`:
+Groovy uses the native builder and its explicit condition methods:
 
-```zenscript
+```groovy
 builder.conditionBiome("minecraft:plains")
        .conditionHeight(40, 100)
        .conditionDaytime(true) // inverted daytime: require night
-       .conditionAdjacentBlocks([["minecraft:stone", "minecraft:cobblestone"]]);
+       .conditionAdjacentBlocks([["minecraft:stone", "minecraft:cobblestone"]] as String[][]);
 ```
 
 Invalid parameters reject the builder. Conditions are immutable; later builder edits do not change an already-built recipe. When recipes are appended, each source's requirements remain an AND clause: `(A OR B) AND (B OR C)` does not become one broad OR group.

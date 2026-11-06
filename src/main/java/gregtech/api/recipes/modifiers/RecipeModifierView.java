@@ -41,8 +41,8 @@ public final class RecipeModifierView {
         return recipe.isHidden();
     }
 
-    public boolean isCraftTweakerRecipe() {
-        return recipe.getIsCTRecipe();
+    public boolean isAuthoredRecipe() {
+        return recipe.isAuthoredRecipe();
     }
 
     public boolean isGroovyRecipe() {

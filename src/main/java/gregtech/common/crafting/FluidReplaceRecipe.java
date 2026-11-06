@@ -7,10 +7,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.common.ForgeModContainer;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.UniversalBucket;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 
@@ -66,36 +65,19 @@ public class FluidReplaceRecipe extends GTShapedOreRecipe {
             FluidStack inputFluid = inputCap.drain(Integer.MAX_VALUE, false);
             if (inputFluid != null && inputFluid.amount != 1000) continue;
 
-            boolean isBucket;
-            ItemStack output;
-            if (isBucket(input.getItem())) {
-                output = new ItemStack(ForgeModContainer.getInstance().universalBucket);
-                isBucket = true;
-            } else {
-                output = input.copy(); // copy the input to preserve its NBT
-                isBucket = false;
-            }
+            FluidStack drained = inputCap.drain(1000, false);
+            if (drained == null || drained.amount != 1000) return ItemStack.EMPTY;
 
+            // Native bucket resolution also handles water, lava and milk without a universal-bucket entry.
+            if (isBucket(input.getItem())) return FluidUtil.getFilledBucket(outputFluid.copy());
+
+            ItemStack output = input.copy(); // copy the input to preserve its NBT
             IFluidHandlerItem outputCap = output.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY,
                     null);
             if (outputCap == null) return ItemStack.EMPTY;
             outputCap.drain(Integer.MAX_VALUE, true); // ensure the output is empty
 
-            FluidStack drained = inputCap.drain(1000, false);
-            if (drained != null && drained.amount == 1000) {
-                if (isBucket) {
-                    // if there is a bucket for the fluid, use the bucket
-                    if (FluidRegistry.hasBucket(outputFluid.getFluid())) {
-                        return FluidUtil.getFilledBucket(outputFluid.copy());
-                    }
-
-                    // otherwise return nothing, as the input container is invalid
-                    return ItemStack.EMPTY;
-                } else if (outputCap.fill(outputFluid.copy(), true) == 1000) {
-                    return output;
-                }
-            }
-            return ItemStack.EMPTY;
+            return outputCap.fill(outputFluid.copy(), true) == 1000 ? output : ItemStack.EMPTY;
         }
 
         return ItemStack.EMPTY;
@@ -103,6 +85,6 @@ public class FluidReplaceRecipe extends GTShapedOreRecipe {
 
     private static boolean isBucket(@NotNull Item item) {
         return item == Items.WATER_BUCKET || item == Items.LAVA_BUCKET || item == Items.MILK_BUCKET ||
-                item == ForgeModContainer.getInstance().universalBucket;
+                item instanceof UniversalBucket;
     }
 }

@@ -12,7 +12,6 @@ import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
 import gregtech.api.pattern.*;
-import gregtech.api.util.Mods;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.TooltipHelper;
@@ -36,7 +35,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -44,23 +42,16 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
-import crafttweaker.annotations.ZenRegister;
-import crafttweaker.api.block.IBlock;
-import crafttweaker.api.minecraft.CraftTweakerMC;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import stanhebben.zenscript.annotations.ZenClass;
-import stanhebben.zenscript.annotations.ZenMethod;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-@ZenClass("mods.gregtech.machines.CharcoalPileIgniter")
-@ZenRegister
 public class MetaTileEntityCharcoalPileIgniter extends MultiblockControllerBase implements IWorkable {
 
     private static final int MIN_RADIUS = 1;
@@ -440,13 +431,6 @@ public class MetaTileEntityCharcoalPileIgniter extends MultiblockControllerBase 
     @SuppressWarnings("unused")
     public static void addWallBlock(@NotNull Block block) {
         WALL_BLOCKS.add(block);
-    }
-
-    @ZenMethod("addWallBlock")
-    @Optional.Method(modid = Mods.Names.CRAFT_TWEAKER)
-    @SuppressWarnings("unused")
-    public static void addWallBlockCT(@NotNull IBlock block) {
-        WALL_BLOCKS.add(CraftTweakerMC.getBlock(block));
     }
 
     @Override

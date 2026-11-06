@@ -139,7 +139,7 @@ public interface ChancedOutputLogic {
      */
     static int getChance(@NotNull ChancedOutput<?> entry, @NotNull ChanceBoostFunction boostFunction, int baseTier,
                          int machineTier) {
-        if (entry instanceof BoostableChanceEntry<?>boostableChanceEntry) {
+        if (entry instanceof BoostableChanceEntry<?> boostableChanceEntry) {
             return boostFunction.getBoostedChance(boostableChanceEntry, baseTier, machineTier);
         }
         return entry.getChance();

@@ -12,6 +12,8 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
@@ -33,6 +35,7 @@ public class MetaTileEntityQuantumExtender extends MetaTileEntityQuantumStorage<
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {
         var newPipeline = ArrayUtils.add(pipeline,
                 new ColourMultiplier(GTUtility.convertRGBtoOpaqueRGBA_CL(getPaintingColorForRendering())));
@@ -44,6 +47,7 @@ public class MetaTileEntityQuantumExtender extends MetaTileEntityQuantumStorage<
     }
 
     @Override
+    @SideOnly(Side.CLIENT)
     public Pair<TextureAtlasSprite, Integer> getParticleTexture() {
         return Pair.of(Textures.QUANTUM_EXTENDER.getParticleSprite(), getPaintingColorForRendering());
     }

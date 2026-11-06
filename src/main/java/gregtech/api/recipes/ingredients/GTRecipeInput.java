@@ -148,6 +148,11 @@ public abstract class GTRecipeInput {
         return !isConsumable;
     }
 
+    /** Whether this consumed input contributes item material to registration-time recycling inference. */
+    public boolean isRecyclingInput() {
+        return !isNonConsumable();
+    }
+
     public ItemStack[] getInputStacks() {
         return null;
     }
@@ -162,6 +167,10 @@ public abstract class GTRecipeInput {
 
     public int getOreDict() {
         return -1;
+    }
+
+    public @Nullable net.minecraft.util.ResourceLocation getMaterialIdentity() {
+        return null;
     }
 
     public boolean acceptsStack(@Nullable ItemStack input) {
@@ -216,7 +225,11 @@ public abstract class GTRecipeInput {
             }
             tag.setTag("stacks", stackList);
         } else if (input instanceof GTRecipeOreInput) {
-            tag.setInteger("ore", input.getOreDict());
+            if (input.getMaterialIdentity() == null) tag.setInteger("ore", input.getOreDict());
+            else {
+                tag.setString("oreName", net.minecraftforge.oredict.OreDictionary.getOreName(input.getOreDict()));
+                tag.setString("material", input.getMaterialIdentity().toString());
+            }
         } else if (input instanceof GTRecipeFluidInput) {
             tag.setTag("fluid", input.getInputFluidStack().writeToNBT(new NBTTagCompound()));
         }
@@ -232,6 +245,9 @@ public abstract class GTRecipeInput {
             Arrays.setAll(stacks, i -> new ItemStack(list.getCompoundTagAt(i)));
             return new GTRecipeItemInput(stacks, amount);
 
+        } else if (tag.hasKey("material") && tag.hasKey("oreName")) {
+            return new GTRecipeOreInput(tag.getString("oreName"),
+                    new net.minecraft.util.ResourceLocation(tag.getString("material")), amount);
         } else if (tag.hasKey("ore")) {
             return new GTRecipeOreInput(tag.getInteger("ore"), amount);
         } else if (tag.hasKey("fluid")) {

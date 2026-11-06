@@ -139,7 +139,7 @@ public abstract class BlockPipe<PipeType extends Enum<PipeType> & IPipeType<Node
     @SuppressWarnings({ "deprecation", "unchecked" })
     public ItemStack getItem(@NotNull World world, @NotNull BlockPos pos, @NotNull IBlockState state) {
         var te = world.getTileEntity(pos);
-        if (!(te instanceof IPipeTile<?, ?>pipeTile)) return ItemStack.EMPTY;
+        if (!(te instanceof IPipeTile<?, ?> pipeTile)) return ItemStack.EMPTY;
         return getDropItem((IPipeTile<PipeType, NodeDataType>) pipeTile);
     }
 
@@ -663,8 +663,16 @@ public abstract class BlockPipe<PipeType extends Enum<PipeType> & IPipeType<Node
             }
         }
         coverHolder.addCoverCollisionBoundingBox(result);
+        addPipeCollisionBoxes(pipeTile, result);
         return result;
     }
+
+    /**
+     * Append pipe-specific geometry used by native collision and ray tracing. Framed pipes use
+     * their full-cube collision without invoking this hook. The list belongs to this query.
+     */
+    protected void addPipeCollisionBoxes(IPipeTile<PipeType, NodeDataType> pipeTile,
+                                         List<IndexedCuboid6> boxes) {}
 
     public boolean hasPipeCollisionChangingItem(IBlockAccess world, BlockPos pos, Entity entity) {
         if (entity instanceof EntityPlayer) {

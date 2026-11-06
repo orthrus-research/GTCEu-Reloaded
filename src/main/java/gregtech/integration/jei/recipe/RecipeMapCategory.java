@@ -181,7 +181,7 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
                             new FluidStackTextRenderer(fluidAmount, false,
                                     tankWidget.getSize().width - (2 * tankWidget.fluidRenderOffset),
                                     tankWidget.getSize().height - (2 * tankWidget.fluidRenderOffset), null)
-                                            .setNotConsumed(recipeWrapper.isNotConsumedFluid(importIndex)),
+                                    .setNotConsumed(recipeWrapper.isNotConsumedFluid(importIndex)),
                             tankWidget.getPosition().x + tankWidget.fluidRenderOffset,
                             tankWidget.getPosition().y + tankWidget.fluidRenderOffset,
                             tankWidget.getSize().width - (2 * tankWidget.fluidRenderOffset),
@@ -242,6 +242,12 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
     @Nullable
     public static RecipeMapCategory getCategoryFor(@NotNull GTRecipeCategory category) {
         return gtCategories.get(category);
+    }
+
+    /** Starts a new viewer registration cycle without retaining categories from the previous runtime. */
+    public static void clearCategories() {
+        gtCategories.clear();
+        recipeMapCategories.clear();
     }
 
     @Nullable

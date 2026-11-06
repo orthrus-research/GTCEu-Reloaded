@@ -55,14 +55,19 @@ public final class MTEDataMigrator extends AbstractMTEMigrator {
      * DataFixer application order is non-deterministic across different mod ids, so we have to ensure other mods only
      * need to interact with the post mte registry migration metadata
      */
-    private final MTERegistriesMigrator registriesMigrator = GregTechAPI.MIGRATIONS.registriesMigrator();
+    private final MTERegistriesMigrator registriesMigrator;
 
     /**
      * @param fixer      the fixer owning the migration
      * @param fixVersion the version this migration will bring the mod data to
      */
     public MTEDataMigrator(@NotNull ModFixs fixer, int fixVersion) {
+        this(fixer, fixVersion, GregTechAPI.MIGRATIONS.registriesMigrator());
+    }
+
+    MTEDataMigrator(@NotNull ModFixs fixer, int fixVersion, @NotNull MTERegistriesMigrator registriesMigrator) {
         super(fixVersion);
+        this.registriesMigrator = registriesMigrator;
         fixer.registerFix(GTFixType.ITEM_STACK_LIKE, new MigrateMTEItems(this));
         fixer.registerFix(FixTypes.CHUNK, new MigrateMTEBlockTE(this));
     }
@@ -117,11 +122,14 @@ public final class MTEDataMigrator extends AbstractMTEMigrator {
 
     @Override
     public short fixItemMeta(@NotNull ResourceLocation itemName, short meta) {
+        ResourceLocation migratedName = registriesMigrator.fixItemName(itemName, meta);
+        ResourceLocation effectiveName = migratedName == null ? itemName : migratedName;
+        if (!"mte".equals(effectiveName.getPath())) return meta;
         meta = registriesMigrator.fixItemMeta(itemName, meta);
-        Short2ShortMap map = itemBlockMeta.get(itemName.getNamespace());
+        Short2ShortMap map = itemBlockMeta.get(effectiveName.getNamespace());
         if (map != null) {
             short newMeta = map.get(meta);
-            if (newMeta > 0) {
+            if (newMeta >= 0) {
                 return newMeta;
             }
         }

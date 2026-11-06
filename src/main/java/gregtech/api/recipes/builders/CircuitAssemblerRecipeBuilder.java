@@ -21,6 +21,9 @@ public class CircuitAssemblerRecipeBuilder extends RecipeBuilder<CircuitAssemble
 
     public CircuitAssemblerRecipeBuilder(RecipeBuilder<CircuitAssemblerRecipeBuilder> recipeBuilder) {
         super(recipeBuilder);
+        if (recipeBuilder instanceof CircuitAssemblerRecipeBuilder circuit) {
+            this.solderMultiplier = circuit.solderMultiplier;
+        }
     }
 
     @Override

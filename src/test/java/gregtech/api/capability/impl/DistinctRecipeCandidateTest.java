@@ -24,6 +24,33 @@ class DistinctRecipeCandidateTest {
     }
 
     @Test
+    void cachedPrefixDoesNotHideAMoreSpecificDistinctBusRecipe() {
+        var map = RecipeCandidateSelectionTest.map();
+        map.setMaxInputs(2);
+        var shorter = RecipeCandidateSelectionTest.add(map, Items.IRON_INGOT);
+        var longer = map.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT), new ItemStack(Items.COAL))
+                .outputs(new ItemStack(Items.EMERALD)).duration(20).EUt(8).build().getResult();
+        assertTrue(map.compileRecipe(longer));
+        var controller = new RecipeCandidateTestController(map);
+        var bus = new ItemStackHandler(2);
+        bus.setStackInSlot(0, new ItemStack(Items.IRON_INGOT, 8));
+        bus.setStackInSlot(1, new ItemStack(Items.COAL, 8));
+        var logic = new RecipeCandidateDistinctLogic(controller, Arrays.asList(bus));
+        logic.previousRecipe = shorter;
+        assertFalse(logic.checkPreviousRecipeDistinct(bus));
+        logic.trySearchNewRecipeDistinct();
+        assertSame(longer, logic.previousRecipe);
+        assertEquals(7, bus.getStackInSlot(0).getCount());
+        assertEquals(7, bus.getStackInSlot(1).getCount());
+        assertTrue(map.removeRecipe(longer));
+        assertFalse(logic.checkPreviousRecipeDistinct(bus));
+        logic.trySearchNewRecipeDistinct();
+        assertSame(shorter, logic.previousRecipe);
+        assertEquals(6, bus.getStackInSlot(0).getCount());
+        assertEquals(7, bus.getStackInSlot(1).getCount());
+    }
+
+    @Test
     void blockedCachedBusFallsBackAndOnlySelectedBusIsConsumed() {
         RecipeMap<SimpleRecipeBuilder> map = RecipeCandidateSelectionTest.map();
         Recipe iron = RecipeCandidateSelectionTest.add(map, Items.IRON_INGOT);

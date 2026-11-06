@@ -4,6 +4,7 @@ import gregtech.api.cover.Cover;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.mui.factory.CoverGuiFactory;
+import gregtech.api.mui.factory.InventoryItemGuiFactory;
 import gregtech.api.mui.factory.MetaItemGuiFactory;
 import gregtech.api.mui.factory.MetaTileEntityGuiFactory;
 
@@ -25,6 +26,7 @@ public class GTGuis {
     public static void registerFactories() {
         GuiManager.registerFactory(MetaTileEntityGuiFactory.INSTANCE);
         GuiManager.registerFactory(MetaItemGuiFactory.INSTANCE);
+        GuiManager.registerFactory(InventoryItemGuiFactory.INSTANCE);
         GuiManager.registerFactory(CoverGuiFactory.INSTANCE);
     }
 
@@ -42,7 +44,7 @@ public class GTGuis {
 
     public static ModularPanel createPanel(ItemStack stack, int width, int height) {
         String locale;
-        if (stack.getItem() instanceof MetaItem<?>metaItem) {
+        if (stack.getItem() instanceof MetaItem<?> metaItem) {
             var valueItem = metaItem.getItem(stack);
             if (valueItem == null) throw new IllegalArgumentException("Item must be a meta item!");
             locale = valueItem.unlocalizedName;

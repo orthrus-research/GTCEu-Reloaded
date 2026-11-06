@@ -31,61 +31,61 @@ public class FluidTankListTest {
     public void testSimpleFills() {
         new FluidHandlerTester(false,
                 new FluidTank(1000))
-                        .beginSimulation()
-                        .fill(WATER, 1000)
-                        .expectContents(new FluidStack(WATER, 1000));
+                .beginSimulation()
+                .fill(WATER, 1000)
+                .expectContents(new FluidStack(WATER, 1000));
 
         new FluidHandlerTester(false,
                 new FluidTank(1000))
-                        .beginSimulation()
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 333))
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 666))
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 999))
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 1000));
+                .beginSimulation()
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 333))
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 666))
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 999))
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 1000));
 
         new FluidHandlerTester(false,
                 new FluidTank(1000),
                 new FluidTank(1000))
-                        .beginSimulation()
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 333), null)
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 666), null)
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 999), null)
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 1000), null);
+                .beginSimulation()
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 333), null)
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 666), null)
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 999), null)
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 1000), null);
 
         new FluidHandlerTester(true,
                 new FluidTank(1000),
                 new FluidTank(1000))
-                        .beginSimulation()
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 333), null)
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 666), null)
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 999), null)
-                        .fill(WATER, 333)
-                        .expectContents(new FluidStack(WATER, 1000), new FluidStack(WATER, 332));
+                .beginSimulation()
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 333), null)
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 666), null)
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 999), null)
+                .fill(WATER, 333)
+                .expectContents(new FluidStack(WATER, 1000), new FluidStack(WATER, 332));
 
         new FluidHandlerTester(false,
                 new FluidTank(1000),
                 new FluidTank(1000))
-                        .beginSimulation()
-                        .fill(WATER, 1500)
-                        .expectContents(new FluidStack(WATER, 1000), null);
+                .beginSimulation()
+                .fill(WATER, 1500)
+                .expectContents(new FluidStack(WATER, 1000), null);
 
         new FluidHandlerTester(true,
                 new FluidTank(1000),
                 new FluidTank(1000))
-                        .beginSimulation()
-                        .fill(WATER, 1500)
-                        .expectContents(new FluidStack(WATER, 1000), new FluidStack(WATER, 500));
+                .beginSimulation()
+                .fill(WATER, 1500)
+                .expectContents(new FluidStack(WATER, 1000), new FluidStack(WATER, 500));
     }
 
     @Test
@@ -94,60 +94,60 @@ public class FluidTankListTest {
                 new FluidTank(1000),
                 new FluidTank(1000),
                 new FluidTank(1000))
-                        .fill(WATER, 800)
-                        .fill(WATER, 800)
-                        .fill(LAVA, 800)
-                        .expectContents(
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(LAVA, 800),
-                                null)
-                        .drain(WATER, 1000)
-                        .expectContents(
-                                null,
-                                new FluidStack(LAVA, 800),
-                                null)
-                        .fill(LAVA, 800)
-                        .expectContents(
-                                null,
-                                new FluidStack(LAVA, 1000),
-                                null)
-                        .fill(LAVA, 800)
-                        .expectContents(
-                                null,
-                                new FluidStack(LAVA, 1000),
-                                null);
+                .fill(WATER, 800)
+                .fill(WATER, 800)
+                .fill(LAVA, 800)
+                .expectContents(
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(LAVA, 800),
+                        null)
+                .drain(WATER, 1000)
+                .expectContents(
+                        null,
+                        new FluidStack(LAVA, 800),
+                        null)
+                .fill(LAVA, 800)
+                .expectContents(
+                        null,
+                        new FluidStack(LAVA, 1000),
+                        null)
+                .fill(LAVA, 800)
+                .expectContents(
+                        null,
+                        new FluidStack(LAVA, 1000),
+                        null);
 
         new FluidHandlerTester(true,
                 new FluidTank(1000),
                 new FluidTank(1000),
                 new FluidTank(1000))
-                        .fill(WATER, 800)
-                        .fill(WATER, 800)
-                        .fill(LAVA, 800)
-                        .expectContents(
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(WATER, 600),
-                                new FluidStack(LAVA, 800))
-                        .drain(WATER, 1600)
-                        .expectContents(
-                                null,
-                                null,
-                                new FluidStack(LAVA, 800))
-                        .fill(LAVA, 800)
-                        .expectContents(
-                                new FluidStack(LAVA, 600),
-                                null,
-                                new FluidStack(LAVA, 1000))
-                        .fill(LAVA, 800)
-                        .expectContents(
-                                new FluidStack(LAVA, 1000),
-                                new FluidStack(LAVA, 400),
-                                new FluidStack(LAVA, 1000))
-                        .fill(WATER, 69420)
-                        .expectContents(
-                                new FluidStack(LAVA, 1000),
-                                new FluidStack(LAVA, 400),
-                                new FluidStack(LAVA, 1000));
+                .fill(WATER, 800)
+                .fill(WATER, 800)
+                .fill(LAVA, 800)
+                .expectContents(
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(WATER, 600),
+                        new FluidStack(LAVA, 800))
+                .drain(WATER, 1600)
+                .expectContents(
+                        null,
+                        null,
+                        new FluidStack(LAVA, 800))
+                .fill(LAVA, 800)
+                .expectContents(
+                        new FluidStack(LAVA, 600),
+                        null,
+                        new FluidStack(LAVA, 1000))
+                .fill(LAVA, 800)
+                .expectContents(
+                        new FluidStack(LAVA, 1000),
+                        new FluidStack(LAVA, 400),
+                        new FluidStack(LAVA, 1000))
+                .fill(WATER, 69420)
+                .expectContents(
+                        new FluidStack(LAVA, 1000),
+                        new FluidStack(LAVA, 400),
+                        new FluidStack(LAVA, 1000));
     }
 
     @Test
@@ -158,15 +158,15 @@ public class FluidTankListTest {
                         new FluidTank(1000)),
                 new FluidTank(1000),
                 new FluidTank(1000))) // distinct slots first
-                        .beginSimulation()
-                        .fill(WATER, 800)
-                        .fill(WATER, 800)
-                        .fill(WATER, 800)
-                        .expectContents(
-                                new FluidStack(WATER, 1000),
-                                null,
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(WATER, 400));
+                .beginSimulation()
+                .fill(WATER, 800)
+                .fill(WATER, 800)
+                .fill(WATER, 800)
+                .expectContents(
+                        new FluidStack(WATER, 1000),
+                        null,
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(WATER, 400));
 
         new FluidHandlerTester(new FluidTankList(false,
                 new FluidTankList(true,
@@ -174,15 +174,15 @@ public class FluidTankListTest {
                         new FluidTank(1000)),
                 new FluidTank(1000),
                 new FluidTank(1000))) // non-distinct slots first
-                        .beginSimulation()
-                        .fill(WATER, 800)
-                        .fill(WATER, 800)
-                        .fill(WATER, 800)
-                        .expectContents(
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(WATER, 400),
-                                null);
+                .beginSimulation()
+                .fill(WATER, 800)
+                .fill(WATER, 800)
+                .fill(WATER, 800)
+                .expectContents(
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(WATER, 400),
+                        null);
     }
 
     @Test
@@ -191,48 +191,48 @@ public class FluidTankListTest {
                 new FluidTank(1000),
                 new FluidTank(1000),
                 new FluidTank(1000))
-                        .fill(WATER, 1500)
-                        .fill(LAVA, 500)
-                        .expectContents(
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(WATER, 500),
-                                new FluidStack(LAVA, 500))
-                        .drain(1000)
-                        .expectContents(
-                                null,
-                                new FluidStack(WATER, 500),
-                                new FluidStack(LAVA, 500))
-                        .drain(1000)
-                        .expectContents(
-                                null,
-                                null,
-                                new FluidStack(LAVA, 500))
-                        .drain(1000)
-                        .expectContents(
-                                null,
-                                null,
-                                null)
-                        .fill(LAVA, 500)
-                        .fill(WATER, 1500)
-                        .expectContents(
-                                new FluidStack(LAVA, 500),
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(WATER, 500))
-                        .drain(1000)
-                        .expectContents(
-                                null,
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(WATER, 500))
-                        .drain(500)
-                        .expectContents(
-                                null,
-                                new FluidStack(WATER, 500),
-                                new FluidStack(WATER, 500))
-                        .drain(1000)
-                        .expectContents(
-                                null,
-                                null,
-                                null);
+                .fill(WATER, 1500)
+                .fill(LAVA, 500)
+                .expectContents(
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(WATER, 500),
+                        new FluidStack(LAVA, 500))
+                .drain(1000)
+                .expectContents(
+                        null,
+                        new FluidStack(WATER, 500),
+                        new FluidStack(LAVA, 500))
+                .drain(1000)
+                .expectContents(
+                        null,
+                        null,
+                        new FluidStack(LAVA, 500))
+                .drain(1000)
+                .expectContents(
+                        null,
+                        null,
+                        null)
+                .fill(LAVA, 500)
+                .fill(WATER, 1500)
+                .expectContents(
+                        new FluidStack(LAVA, 500),
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(WATER, 500))
+                .drain(1000)
+                .expectContents(
+                        null,
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(WATER, 500))
+                .drain(500)
+                .expectContents(
+                        null,
+                        new FluidStack(WATER, 500),
+                        new FluidStack(WATER, 500))
+                .drain(1000)
+                .expectContents(
+                        null,
+                        null,
+                        null);
     }
 
     @Test
@@ -246,67 +246,67 @@ public class FluidTankListTest {
                 new FilteredFluidHandler(1000).setFilter(waterFilter),
                 new FilteredFluidHandler(1000).setFilter(lavaFilter),
                 new FilteredFluidHandler(1000).setFilter(creosoteFilter))
-                        .beginSimulation()
-                        .fill(WATER, 800)
-                        .fill(LAVA, 800)
-                        .fill(WATER, 800)
-                        .expectContents(
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(LAVA, 800),
-                                null);
+                .beginSimulation()
+                .fill(WATER, 800)
+                .fill(LAVA, 800)
+                .fill(WATER, 800)
+                .expectContents(
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(LAVA, 800),
+                        null);
 
         new FluidHandlerTester(true,
                 new FilteredFluidHandler(1000).setFilter(waterFilter),
                 new FilteredFluidHandler(1000).setFilter(lavaFilter),
                 new FilteredFluidHandler(1000).setFilter(creosoteFilter))
-                        .beginSimulation()
-                        .fill(WATER, 800)
-                        .fill(LAVA, 800)
-                        .fill(WATER, 800)
-                        .expectContents(
-                                new FluidStack(WATER, 1000),
-                                new FluidStack(LAVA, 800),
-                                null);
+                .beginSimulation()
+                .fill(WATER, 800)
+                .fill(LAVA, 800)
+                .fill(WATER, 800)
+                .expectContents(
+                        new FluidStack(WATER, 1000),
+                        new FluidStack(LAVA, 800),
+                        null);
 
         new FluidHandlerTester(true,
                 new FilteredFluidHandler(1000).setFilter(waterFilter),
                 new FluidTank(1000))
-                        .beginSimulation()
-                        .fill(WATER, 800)
-                        .fill(LAVA, 800)
-                        .expectContents(
-                                new FluidStack(WATER, 800),
-                                new FluidStack(LAVA, 800));
+                .beginSimulation()
+                .fill(WATER, 800)
+                .fill(LAVA, 800)
+                .expectContents(
+                        new FluidStack(WATER, 800),
+                        new FluidStack(LAVA, 800));
 
         new FluidHandlerTester(true,
                 new FilteredFluidHandler(1000).setFilter(waterFilter),
                 new FluidTank(1000))
-                        .beginSimulation()
-                        .fill(LAVA, 800)
-                        .fill(WATER, 800)
-                        .expectContents(
-                                new FluidStack(WATER, 800),
-                                new FluidStack(LAVA, 800));
+                .beginSimulation()
+                .fill(LAVA, 800)
+                .fill(WATER, 800)
+                .expectContents(
+                        new FluidStack(WATER, 800),
+                        new FluidStack(LAVA, 800));
 
         new FluidHandlerTester(true,
                 new FluidTank(1000),
                 new FilteredFluidHandler(1000).setFilter(waterFilter))
-                        .beginSimulation()
-                        .fill(WATER, 800)
-                        .fill(LAVA, 800)
-                        .expectContents(
-                                new FluidStack(LAVA, 800),
-                                new FluidStack(WATER, 800));
+                .beginSimulation()
+                .fill(WATER, 800)
+                .fill(LAVA, 800)
+                .expectContents(
+                        new FluidStack(LAVA, 800),
+                        new FluidStack(WATER, 800));
 
         new FluidHandlerTester(true,
                 new FluidTank(1000),
                 new FilteredFluidHandler(1000).setFilter(waterFilter))
-                        .beginSimulation()
-                        .fill(LAVA, 800)
-                        .fill(WATER, 800)
-                        .expectContents(
-                                new FluidStack(LAVA, 800),
-                                new FluidStack(WATER, 800));
+                .beginSimulation()
+                .fill(LAVA, 800)
+                .fill(WATER, 800)
+                .expectContents(
+                        new FluidStack(LAVA, 800),
+                        new FluidStack(WATER, 800));
     }
 
     private static final class FluidHandlerTester {

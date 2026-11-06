@@ -69,7 +69,7 @@ public class CommandHand extends CommandBase {
             ClickEvent itemNameEvent = new ClickEvent(Action.OPEN_URL, registryName);
             player.sendMessage(new TextComponentTranslation("gregtech.command.hand.item_id", registryName,
                     stackInHand.getItemDamage())
-                            .setStyle(new Style().setClickEvent(itemNameEvent)));
+                    .setStyle(new Style().setClickEvent(itemNameEvent)));
 
             IElectricItem electricItem = stackInHand.getCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null);
             IFluidHandlerItem fluidHandlerItem = stackInHand

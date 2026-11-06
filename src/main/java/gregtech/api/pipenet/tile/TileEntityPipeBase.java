@@ -325,7 +325,7 @@ public abstract class TileEntityPipeBase<PipeType extends Enum<PipeType> & IPipe
         float selfThickness = getPipeType().getThickness();
         for (EnumFacing facing : EnumFacing.values()) {
             if (isConnected(facing)) {
-                if (world.getTileEntity(pos.offset(facing)) instanceof IPipeTile<?, ?>pipeTile &&
+                if (world.getTileEntity(pos.offset(facing)) instanceof IPipeTile<?, ?> pipeTile &&
                         pipeTile.isConnected(facing.getOpposite()) &&
                         pipeTile.getPipeType().getThickness() < selfThickness) {
                     connections |= 1 << (facing.getIndex() + 6);

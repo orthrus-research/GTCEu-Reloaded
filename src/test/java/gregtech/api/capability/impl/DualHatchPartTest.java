@@ -17,6 +17,7 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.ModularSyncManager;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widget.WidgetTree;
 import io.netty.buffer.Unpooled;
@@ -212,7 +213,7 @@ class DualHatchPartTest {
                     part.getItemFilter().setFilterStack(itemLeaf(new ItemStack(Items.IRON_INGOT)));
                     part.getFluidFilter().setFilterStack(fluidLeaf(water(1)));
                 }
-                PanelSyncManager manager = new PanelSyncManager(false);
+                PanelSyncManager manager = new PanelSyncManager(new ModularSyncManager(false), true);
                 ModularPanel panel = part.buildUI(null, manager, null);
                 assertDoesNotThrow(() -> WidgetTree.collectSyncValues(manager, panel));
                 if (output) {

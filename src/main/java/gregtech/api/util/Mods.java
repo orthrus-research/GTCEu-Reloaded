@@ -27,10 +27,6 @@ public enum Mods {
     AdvancedRocketry(Names.ADVANCED_ROCKETRY),
     AppliedEnergistics2(Names.APPLIED_ENERGISTICS2),
     Baubles(Names.BAUBLES),
-    BetterQuestingUnofficial(Names.BETTER_QUESTING, mod -> {
-        var container = Loader.instance().getIndexedModList().get(Names.BETTER_QUESTING);
-        return container.getVersion().startsWith("4.");
-    }),
     BinnieCore(Names.BINNIE_CORE),
     BiomesOPlenty(Names.BIOMES_O_PLENTY),
     BuildCraftCore(Names.BUILD_CRAFT_CORE),
@@ -38,7 +34,6 @@ public enum Mods {
     CoFHCore(Names.COFH_CORE),
     CTM(Names.CONNECTED_TEXTURES_MOD),
     CubicChunks(Names.CUBIC_CHUNKS),
-    CraftTweaker(Names.CRAFT_TWEAKER),
     EnderCore(Names.ENDER_CORE),
     EnderIO(Names.ENDER_IO),
     ExtraBees(Names.EXTRA_BEES),
@@ -108,7 +103,6 @@ public enum Mods {
         public static final String ADVANCED_ROCKETRY = "advancedrocketry";
         public static final String APPLIED_ENERGISTICS2 = "appliedenergistics2";
         public static final String BAUBLES = "baubles";
-        public static final String BETTER_QUESTING = "betterquesting";
         public static final String BINNIE_CORE = "binniecore";
         public static final String BIOMES_O_PLENTY = "biomesoplenty";
         public static final String BUILD_CRAFT_CORE = "buildcraftcore";
@@ -116,7 +110,6 @@ public enum Mods {
         public static final String COFH_CORE = "cofhcore";
         public static final String CONNECTED_TEXTURES_MOD = "ctm";
         public static final String CUBIC_CHUNKS = "cubicchunks";
-        public static final String CRAFT_TWEAKER = "crafttweaker";
         public static final String ENDER_CORE = "endercore";
         public static final String ENDER_IO = "enderio";
         public static final String EXTRA_BEES = "extrabees";

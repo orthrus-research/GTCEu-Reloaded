@@ -28,7 +28,7 @@ public class ComputationRecipeBuilder extends RecipeBuilder<ComputationRecipeBui
     }
 
     @Override
-    public boolean applyPropertyCT(@NotNull String key, @NotNull Object value) {
+    public boolean applyNamedProperty(@NotNull String key, @NotNull Object value) {
         if (key.equals(ComputationProperty.KEY)) {
             this.CWUt(((Number) value).intValue());
             return true;
@@ -37,7 +37,7 @@ public class ComputationRecipeBuilder extends RecipeBuilder<ComputationRecipeBui
             this.totalCWU(((Number) value).intValue());
             return true;
         }
-        return super.applyPropertyCT(key, value);
+        return super.applyNamedProperty(key, value);
     }
 
     public ComputationRecipeBuilder CWUt(int cwut) {

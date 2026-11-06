@@ -60,7 +60,7 @@ public class SerializableFluidList implements IItemList<IAEFluidStack>, INBTSeri
 
     private IAEFluidStack getOrCreateRecord(@NotNull IAEFluidStack fluid) {
         return this.records.computeIfAbsent(fluid.getFluid(),
-                key -> AEFluidStack.fromFluidStack(new FluidStack(key, 0)));
+                (Fluid key) -> AEFluidStack.fromFluidStack(new FluidStack(key, 0)));
     }
 
     private IAEFluidStack getRecord(@NotNull IAEFluidStack fluid) {

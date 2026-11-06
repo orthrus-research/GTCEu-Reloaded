@@ -284,6 +284,11 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
         return this;
     }
 
+    /** Adds a preparation-safe expansion usable by both native and transactional registration. */
+    public @NotNull RecipeMapBuilder<B> onExpand(@NotNull ResourceLocation name, @NotNull RecipeExpansion<B> action) {
+        return onBuild(name, action);
+    }
+
     /**
      * Have the primary {@link gregtech.api.recipes.category.GTRecipeCategory} for the RecipeMap be sorted to the end
      * of the JEI recipe category list.

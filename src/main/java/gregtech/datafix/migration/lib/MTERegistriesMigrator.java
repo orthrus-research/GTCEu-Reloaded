@@ -96,6 +96,7 @@ public final class MTERegistriesMigrator extends AbstractMTEMigrator {
 
     @Override
     public short fixItemMeta(@NotNull ResourceLocation itemName, short meta) {
+        if (!OLD_BLOCK_ID.equals(itemName) || !metaModidMap.containsKey(meta)) return meta;
         short fixed = metaMetaMap.get(meta);
         return fixed < 0 ? meta : fixed;
     }

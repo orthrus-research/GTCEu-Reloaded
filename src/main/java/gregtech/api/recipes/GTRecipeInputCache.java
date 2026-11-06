@@ -10,7 +10,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
 
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,7 +32,23 @@ public final class GTRecipeInputCache {
     private static final int MINIMUM_CACHE_SIZE = 1 << 13;
     private static final int MAXIMUM_CACHE_SIZE = 1 << 30;
 
-    private static ObjectOpenHashSet<GTRecipeInput> instances;
+    private static ObjectOpenCustomHashSet<GTRecipeInput> instances;
+
+    private static final Hash.Strategy<GTRecipeInput> INPUT_IDENTITY = new Hash.Strategy<>() {
+
+        @Override
+        public int hashCode(GTRecipeInput input) {
+            if (input == null) return 0;
+            return 31 * (31 * input.getClass().hashCode() + input.hashCode()) +
+                    Boolean.hashCode(input.isRecyclingInput());
+        }
+
+        @Override
+        public boolean equals(GTRecipeInput first, GTRecipeInput second) {
+            return first == second || first != null && second != null && first.getClass() == second.getClass() &&
+                    first.isRecyclingInput() == second.isRecyclingInput() && first.equals(second);
+        }
+    };
 
     private static final String DATA_NAME = "expectedIngredientInstances";
 
@@ -46,12 +62,16 @@ public final class GTRecipeInputCache {
     public static void enableCache() {
         if (!isCacheEnabled()) {
             int size = calculateOptimalExpectedSize();
-            instances = new ObjectOpenHashSet<>(size);
+            instances = createCache(size);
 
             if (ConfigHolder.misc.debug || GTValues.isDeobfEnvironment()) {
                 GTLog.logger.info("GTRecipeInput cache enabled with expected size {}", size);
             }
         }
+    }
+
+    static ObjectOpenCustomHashSet<GTRecipeInput> createCache(int expected) {
+        return new ObjectOpenCustomHashSet<>(expected, INPUT_IDENTITY);
     }
 
     @ApiStatus.Internal

@@ -50,7 +50,6 @@ import net.minecraftforge.fml.common.Optional;
 import com.cleanroommc.groovyscript.api.GroovyLog;
 import com.cleanroommc.groovyscript.api.IIngredient;
 import com.cleanroommc.groovyscript.helper.ingredient.OreDictIngredient;
-import crafttweaker.CraftTweakerAPI;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -91,7 +90,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     protected long EUt;
     protected boolean hidden = false;
     protected GTRecipeCategory category;
-    protected boolean isCTRecipe = false;
+    protected boolean authoredRecipe = false;
     protected int parallel = 0;
     protected EnumValidationResult recipeStatus = EnumValidationResult.VALID;
     protected RecipePropertyStorage recipePropertyStorage = RecipePropertyStorage.EMPTY;
@@ -122,6 +121,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         this.duration = recipe.getDuration();
         this.EUt = recipe.getEUt();
         this.hidden = recipe.isHidden();
+        this.authoredRecipe = recipe.isAuthoredRecipe();
         this.category = recipe.getRecipeCategory();
         this.recipePropertyStorage = recipe.propertyStorage().copy();
     }
@@ -140,6 +140,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         this.duration = recipeBuilder.duration;
         this.EUt = recipeBuilder.EUt;
         this.hidden = recipeBuilder.hidden;
+        this.authoredRecipe = recipeBuilder.authoredRecipe;
         this.category = recipeBuilder.category;
         this.recipePropertyStorage = recipeBuilder.recipePropertyStorage.copy();
         this.ignoreAllBuildActions = recipeBuilder.ignoreAllBuildActions;
@@ -185,7 +186,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     }
 
     @MustBeInvokedByOverriders
-    public boolean applyPropertyCT(@NotNull String key, @NotNull Object value) {
+    public boolean applyNamedProperty(@NotNull String key, @NotNull Object value) {
         if (key.equals(ConditionProperty.KEY)) {
             if (!(value instanceof RecipeConditionSet conditions)) return false;
             try {
@@ -935,7 +936,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
 
     public R append(Recipe recipe, int multiplier, boolean multiplyDuration) {
         for (Map.Entry<RecipeProperty<?>, Object> property : recipe.propertyStorage().entrySet()) {
-            this.applyPropertyCT(property.getKey().getKey(), property.getValue());
+            this.applyNamedProperty(property.getKey().getKey(), property.getValue());
         }
 
         // Create holders for the various parts of the new multiplied Recipe
@@ -1034,8 +1035,8 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         return (R) this;
     }
 
-    public R isCTRecipe() {
-        this.isCTRecipe = true;
+    public R authored() {
+        this.authoredRecipe = true;
         return (R) this;
     }
 
@@ -1087,7 +1088,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
                 new ChancedOutputList<>(this.chancedOutputLogic, chancedOutputs),
                 fluidInputs, fluidOutputs,
                 new ChancedOutputList<>(this.chancedFluidOutputLogic, chancedFluidOutputs),
-                duration, EUt, hidden, isCTRecipe, recipePropertyStorage, category));
+                duration, EUt, hidden, authoredRecipe, recipePropertyStorage, category));
     }
 
     protected EnumValidationResult validate() {
@@ -1098,31 +1099,22 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         }
         if (EUt == 0) {
             GTLog.logger.error("EU/t cannot be equal to 0", new Throwable());
-            if (isCTRecipe) {
-                CraftTweakerAPI.logError("EU/t cannot be equal to 0", new Throwable());
-            }
+
             recipeStatus = EnumValidationResult.INVALID;
         }
         if (duration <= 0) {
             GTLog.logger.error("Duration cannot be less or equal to 0", new Throwable());
-            if (isCTRecipe) {
-                CraftTweakerAPI.logError("Duration cannot be less or equal to 0", new Throwable());
-            }
+
             recipeStatus = EnumValidationResult.INVALID;
         }
         if (recipeMap != null) { // recipeMap can be null in tests
             if (category == null) {
                 GTLog.logger.error("Recipes must have a category", new Throwable());
-                if (isCTRecipe) {
-                    CraftTweakerAPI.logError("Recipes must have a category", new Throwable());
-                }
+
                 recipeStatus = EnumValidationResult.INVALID;
             } else if (category.getRecipeMap() != this.recipeMap) {
                 GTLog.logger.error("Cannot apply Category with incompatible RecipeMap", new Throwable());
-                if (isCTRecipe) {
-                    CraftTweakerAPI.logError("Cannot apply Category with incompatible RecipeMap",
-                            new Throwable());
-                }
+
                 recipeStatus = EnumValidationResult.INVALID;
             }
         }
@@ -1179,6 +1171,16 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
      */
     @MustBeInvokedByOverriders
     public void buildAndRegister() {
+        buildAndRegisterWithReceipt();
+    }
+
+    /**
+     * Runs native build actions and returns the exact accepted primary recipe. Validation or lookup conflicts
+     * return an empty result and publish no recycling metadata. Native actions may register derived recipes;
+     * arbitrary callback effects are not a transaction. Use the typed registrar for owned grouped publication.
+     */
+    @MustBeInvokedByOverriders
+    public java.util.Optional<NativeRecipeRegistration> buildAndRegisterWithReceipt() {
         if (!ignoreAllBuildActions) {
             for (Map.Entry<ResourceLocation, RecipeBuildAction<R>> buildAction : recipeMap.getBuildActions()
                     .entrySet()) {
@@ -1188,17 +1190,31 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
                 buildAction.getValue().accept((R) this);
             }
         }
-        if (hasItemRecycling()) {
-            // ignore input fluids for item-only recycling
-            ItemStack outputStack = getOutputs().get(0);
-            RecyclingData data = RecyclingHandler.getRecyclingIngredients(getInputs(), outputStack.getCount());
-            if (data != null) {
-                GregTechAPI.RECYCLING_MANAGER.registerRecyclingData(outputStack, data);
+        ValidationResult<Recipe> validationResult = recipeMap.postValidateRecipe(build());
+        RecyclingData recycling = null;
+        RecyclingContribution contribution = null;
+        Recipe recipe = validationResult.getResult();
+        if (hasItemRecycling() && validationResult.getType() == EnumValidationResult.VALID) {
+            if (recipe.getOutputs().isEmpty()) {
+                GTLog.logger.error("Recycling requires a deterministic item output in {}", recipeMap.unlocalizedName);
+                validationResult = ValidationResult.newResult(EnumValidationResult.INVALID, recipe);
+            } else {
+                if (GregTechAPI.RECYCLING_MANAGER.isNativeCaptureActive()) {
+                    contribution = RecyclingContribution.of(new gregtech.api.definition.SourceOrigin("native",
+                            recipeMap.unlocalizedName, 0, 0, recipeMap.unlocalizedName, "recipes"),
+                            recipe.getOutputs().getFirst(), recipe.getInputs());
+                }
+                recycling = RecyclingHandler.getRecyclingIngredients(recipe.getInputs(),
+                        recipe.getOutputs().getFirst().getCount());
             }
         }
-
-        ValidationResult<Recipe> validationResult = build();
-        recipeMap.addRecipe(validationResult);
+        if (!recipeMap.addValidatedRecipe(validationResult)) return java.util.Optional.empty();
+        if (recycling != null) {
+            GregTechAPI.RECYCLING_MANAGER.registerRecyclingData(recipe.getOutputs().getFirst(), recycling);
+        }
+        var registration = new NativeRecipeRegistration(recipeMap, recipe);
+        if (contribution != null) GregTechAPI.RECYCLING_MANAGER.captureNativeRecipe(registration, contribution);
+        return java.util.Optional.of(registration);
     }
 
     ///////////////////

@@ -204,7 +204,7 @@ class PendingRecipeOutputTest {
     static RecipeMap<SimpleRecipeBuilder> map() {
         RecipeMap<SimpleRecipeBuilder> map = new RecipeMapBuilder<>("pending_output_" + nextMap++,
                 new SimpleRecipeBuilder())
-                        .itemInputs(1).itemOutputs(2).fluidOutputs(1).build();
+                .itemInputs(1).itemOutputs(2).fluidOutputs(1).build();
         Recipe recipe = map.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT))
                 .outputs(new ItemStack(Items.GOLD_INGOT)).chancedOutput(new ItemStack(Items.DIAMOND), 5000, 0)
                 .fluidOutputs(new FluidStack(FluidRegistry.WATER, 100)).duration(3).EUt(1).build().getResult();

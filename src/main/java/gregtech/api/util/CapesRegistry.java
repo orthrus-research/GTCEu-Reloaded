@@ -18,20 +18,13 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-
-import crafttweaker.annotations.ZenRegister;
-import stanhebben.zenscript.annotations.ZenClass;
-import stanhebben.zenscript.annotations.ZenMethod;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-@ZenClass("mods.gregtech.util.CapesRegistry")
-@ZenRegister
 public class CapesRegistry {
 
     private static final Map<UUID, List<ResourceLocation>> UNLOCKED_CAPES = new HashMap<>();
@@ -168,10 +161,10 @@ public class CapesRegistry {
         registerCape(GTUtility.gregtechId("high_voltage/82_large_chemical_reactor"), Textures.YELLOW_CAPE_TEXTURE,
                 world);
         registerCape(GTUtility.gregtechId("ludicrous_voltage/60_fusion"), Textures.GREEN_CAPE_TEXTURE, world);
-        for (Tuple<ResourceLocation, ResourceLocation> tuple : ctRegisterCapes) {
+        for (Tuple<ResourceLocation, ResourceLocation> tuple : pendingCapes) {
             registerCape(tuple.getFirst(), tuple.getSecond(), world);
         }
-        FREE_CAPES.addAll(ctFreeCapes);
+        FREE_CAPES.addAll(pendingFreeCapes);
         FREE_CAPES.add(Textures.ACE_CAPE_TEXTURE);
         FREE_CAPES.add(Textures.AGENDER_CAPE_TEXTURE);
         FREE_CAPES.add(Textures.AROMANTIC_CAPE_TEXTURE);
@@ -224,19 +217,16 @@ public class CapesRegistry {
         FREE_CAPES.add(cape);
     }
 
-    private static final List<Tuple<ResourceLocation, ResourceLocation>> ctRegisterCapes = new ArrayList<>();
-    private static final List<ResourceLocation> ctFreeCapes = new ArrayList<>();
+    private static final List<Tuple<ResourceLocation, ResourceLocation>> pendingCapes = new ArrayList<>();
+    private static final List<ResourceLocation> pendingFreeCapes = new ArrayList<>();
 
-    @Optional.Method(modid = Mods.Names.CRAFT_TWEAKER)
-    @ZenMethod
+    /** Queues registration until advancement/world data exists; callable by every authoring frontend. */
     public static void registerCape(String advancement, String cape) {
-        ctRegisterCapes.add(new Tuple<>(new ResourceLocation(advancement), new ResourceLocation(cape)));
+        pendingCapes.add(new Tuple<>(new ResourceLocation(advancement), new ResourceLocation(cape)));
     }
 
-    @Optional.Method(modid = Mods.Names.CRAFT_TWEAKER)
-    @ZenMethod
     public static void registerFreeCape(String cape) {
-        ctFreeCapes.add(new ResourceLocation(cape));
+        pendingFreeCapes.add(new ResourceLocation(cape));
     }
 
     /**

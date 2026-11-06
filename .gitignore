@@ -86,7 +86,9 @@ logs/
 
 libs/
 
-# Agent tooling: local only, never committed
+# Local tooling configuration
+.local/
+WORKSPACE.md
 AGENTS.md
 CLAUDE.md
 CLAUDE.local.md

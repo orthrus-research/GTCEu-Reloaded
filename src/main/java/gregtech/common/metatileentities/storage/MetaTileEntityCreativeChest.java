@@ -95,12 +95,12 @@ public class MetaTileEntityCreativeChest extends MetaTileEntityQuantumChest {
                 new BoolValue.Dynamic(() -> active, b -> active = b),
                 new IntSyncValue(() -> itemsPerCycle, v -> itemsPerCycle = v),
                 new IntSyncValue(() -> ticksPerCycle, v -> ticksPerCycle = v))
-                        .child(IKey.lang("gregtech.creative.chest.item").asWidget()
-                                .pos(7, 9))
-                        .child(new PhantomItemSlot()
-                                .slot(new ModularSlot(modifiableHandler, 0)
-                                        .changeListener((newItem, onlyAmountChanged, client, init) -> markDirty()))
-                                .pos(36, 6));
+                .child(IKey.lang("gregtech.creative.chest.item").asWidget()
+                        .pos(7, 9))
+                .child(new PhantomItemSlot()
+                        .slot(new ModularSlot(modifiableHandler, 0)
+                                .changeListener((newItem, onlyAmountChanged, client, init) -> markDirty()))
+                        .pos(36, 6));
     }
 
     @Override

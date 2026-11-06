@@ -61,8 +61,8 @@ public class ClipboardBehavior implements IItemBehaviour, ItemUIFactory {
             builder.image(32, 58 + 22 * i, 140, 12, GuiTextures.CLIPBOARD_TEXT_BOX);
             textFields.add(new TextFieldWidget2(34, 60 + 22 * i, 136, 9, () -> getString(holder, finalI),
                     val -> setString(holder, finalI, val))
-                            .setMaxLength(23)
-                            .setTextColor(TEXT_COLOR));
+                    .setMaxLength(23)
+                    .setTextColor(TEXT_COLOR));
         }
 
         for (TextFieldWidget2 textField : textFields) {

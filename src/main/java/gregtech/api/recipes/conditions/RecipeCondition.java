@@ -36,8 +36,8 @@ public final class RecipeCondition<T> {
         String id = unavailable.getString("Type");
         this.description = new ConditionDescription("gregtech.recipe.condition.unavailable",
                 id.length() <= 128 ? id : "invalid")
-                        .withType(id.length() <= 128 && id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+") ? id :
-                                "gregtech:invalid_condition");
+                .withType(id.length() <= 128 && id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+") ? id :
+                        "gregtech:invalid_condition");
     }
 
     public ConditionState test(RecipeConditionContext context) {

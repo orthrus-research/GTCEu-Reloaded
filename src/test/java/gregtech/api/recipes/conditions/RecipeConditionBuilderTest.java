@@ -9,7 +9,6 @@ import gregtech.api.recipes.properties.RecipePropertyStorageImpl;
 import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.recipes.properties.impl.TemperatureProperty;
 import gregtech.api.util.EnumValidationResult;
-import gregtech.integration.crafttweaker.recipe.CTRecipeBuilder;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -19,9 +18,6 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import stanhebben.zenscript.annotations.ZenMethod;
-
-import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -74,10 +70,10 @@ class RecipeConditionBuilderTest {
         context.biome = new ResourceLocation("minecraft", "forest");
         assertFalse(conditions(combined).evaluate(context).isSuccess());
         SimpleRecipeBuilder raw = builder();
-        assertTrue(raw.applyPropertyCT(ConditionProperty.KEY, conditions(first)));
-        assertTrue(raw.applyPropertyCT(ConditionProperty.KEY, conditions(second)));
+        assertTrue(raw.applyNamedProperty(ConditionProperty.KEY, conditions(first)));
+        assertTrue(raw.applyNamedProperty(ConditionProperty.KEY, conditions(second)));
         assertFalse(raw.getRecipeConditions().evaluate(context).isSuccess());
-        assertFalse(raw.applyPropertyCT(ConditionProperty.KEY, "invalid"));
+        assertFalse(raw.applyNamedProperty(ConditionProperty.KEY, "invalid"));
         assertFalse(conditions(first).evaluate(context).isSuccess());
     }
 
@@ -94,19 +90,16 @@ class RecipeConditionBuilderTest {
     }
 
     @Test
-    void craftTweakerMethodsAreActuallyExposedAndUseTheSameValidationPath() throws Exception {
-        CTRecipeBuilder ct = new CTRecipeBuilder(builder());
-        ct.conditionBiome("minecraft:plains").conditionHeight(1, 100).conditionDaytime()
+    void nativeConditionsShareValidationWithoutAFrontendWrapper() {
+        SimpleRecipeBuilder nativeBuilder = builder();
+        nativeBuilder.conditionBiome("minecraft:plains").conditionHeight(1, 100).conditionDaytime()
                 .conditionTime(0, 12000).conditionRain(0).conditionThunder(1, true)
                 .conditionAdjacentBlocks(new String[][] { { "minecraft:air" } });
-        assertEquals(7, ct.backingBuilder.getRecipeConditions().clauseCount());
-        assertTrue(ct.backingBuilder.getRecipeConditions().evaluate(new TestRecipeConditionContext()).isSuccess());
-        for (Method method : CTRecipeBuilder.class.getDeclaredMethods()) {
-            if (method.getName().startsWith("condition")) assertNotNull(method.getAnnotation(ZenMethod.class));
-        }
-        CTRecipeBuilder invalid = new CTRecipeBuilder(builder());
+        assertEquals(7, nativeBuilder.getRecipeConditions().clauseCount());
+        assertTrue(nativeBuilder.getRecipeConditions().evaluate(new TestRecipeConditionContext()).isSuccess());
+        SimpleRecipeBuilder invalid = builder();
         assertThrows(IllegalArgumentException.class, () -> invalid.conditionRain(Float.NaN));
-        assertEquals(EnumValidationResult.INVALID, invalid.backingBuilder.build().getType());
+        assertEquals(EnumValidationResult.INVALID, invalid.build().getType());
         assertThrows(IllegalArgumentException.class, () -> builder().conditionHeight(10, 0));
     }
 

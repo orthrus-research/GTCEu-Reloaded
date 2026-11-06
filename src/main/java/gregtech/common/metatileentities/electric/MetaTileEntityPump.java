@@ -150,8 +150,8 @@ public class MetaTileEntityPump extends TieredMetaTileEntity {
                 .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.OUT_SLOT_OVERLAY));
         tankDisplay.addWidget(new ToggleButtonWidget(7, 64, 18, 18,
                 GuiTextures.BUTTON_LOCK, this::isLocked, this::setLocked)
-                        .setTooltipText("gregtech.gui.fluid_lock.tooltip")
-                        .shouldUseBaseBackground());
+                .setTooltipText("gregtech.gui.fluid_lock.tooltip")
+                .shouldUseBaseBackground());
 
         TankWidget tankWidget = new PhantomTankWidget(exportFluids.getTankAt(0), 67, 41, 18, 18,
                 () -> this.lockedFluid,

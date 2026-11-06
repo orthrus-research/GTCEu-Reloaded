@@ -94,10 +94,9 @@ public class Recipe {
     private final GTRecipeCategory recipeCategory;
 
     /**
-     * If this Recipe is a Crafttweaker recipe. Used for logging purposes
+     * Whether this recipe was authored through the pack configuration API.
      */
-    // TODO YEET
-    private final boolean isCTRecipe;
+    private final boolean authoredRecipe;
     private final boolean groovyRecipe;
     private final RecipePropertyStorage recipePropertyStorage;
 
@@ -112,17 +111,17 @@ public class Recipe {
                   int duration,
                   long EUt,
                   boolean hidden,
-                  boolean isCTRecipe,
+                  boolean authoredRecipe,
                   @NotNull RecipePropertyStorage recipePropertyStorage,
                   @NotNull GTRecipeCategory recipeCategory) {
         this(inputs, outputs, chancedOutputs, fluidInputs, fluidOutputs, chancedFluidOutputs, duration, EUt, hidden,
-                isCTRecipe, recipePropertyStorage, recipeCategory, GroovyScriptModule.isCurrentlyRunning(), true);
+                authoredRecipe, recipePropertyStorage, recipeCategory, GroovyScriptModule.isCurrentlyRunning(), true);
     }
 
     private Recipe(List<GTRecipeInput> inputs, List<ItemStack> outputs,
                    ChancedOutputList<ItemStack, ChancedItemOutput> chancedOutputs, List<GTRecipeInput> fluidInputs,
                    List<FluidStack> fluidOutputs, ChancedOutputList<FluidStack, ChancedFluidOutput> chancedFluidOutputs,
-                   int duration, long EUt, boolean hidden, boolean isCTRecipe,
+                   int duration, long EUt, boolean hidden, boolean authoredRecipe,
                    RecipePropertyStorage recipePropertyStorage,
                    GTRecipeCategory recipeCategory, boolean groovyRecipe, boolean internInputs) {
         this.recipePropertyStorage = recipePropertyStorage;
@@ -141,7 +140,7 @@ public class Recipe {
         this.EUt = EUt;
         this.hidden = hidden;
         this.recipeCategory = recipeCategory;
-        this.isCTRecipe = isCTRecipe;
+        this.authoredRecipe = authoredRecipe;
         this.hashCode = makeHashCode();
         this.groovyRecipe = groovyRecipe;
     }
@@ -158,14 +157,15 @@ public class Recipe {
                                                   int duration, long eut, RecipePropertyStorage properties) {
         return new Recipe(inputs, outputs, chancedOutputs, fluidInputs, fluidOutputs, chancedFluidOutputs, duration,
                 eut,
-                hidden, isCTRecipe, properties, recipeCategory, groovyRecipe, false);
+                hidden, authoredRecipe, properties, recipeCategory, groovyRecipe, false);
     }
 
     @NotNull
     public Recipe copy() {
         return new Recipe(this.inputs, this.outputs, this.chancedOutputs, this.fluidInputs,
                 this.fluidOutputs, this.chancedFluidOutputs, this.duration,
-                this.EUt, this.hidden, this.isCTRecipe, this.recipePropertyStorage, this.recipeCategory);
+                this.EUt, this.hidden, this.authoredRecipe, this.recipePropertyStorage, this.recipeCategory,
+                this.groovyRecipe, true);
     }
 
     /**
@@ -459,7 +459,7 @@ public class Recipe {
                 .append("duration", duration)
                 .append("EUt", EUt)
                 .append("hidden", hidden)
-                .append("CTRecipe", isCTRecipe)
+                .append("AuthoredRecipe", authoredRecipe)
                 .append("GSRecipe", groovyRecipe)
                 .toString();
     }
@@ -725,8 +725,8 @@ public class Recipe {
         return hidden;
     }
 
-    public boolean getIsCTRecipe() {
-        return isCTRecipe;
+    public boolean isAuthoredRecipe() {
+        return authoredRecipe;
     }
 
     public boolean isGroovyRecipe() {

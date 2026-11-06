@@ -31,6 +31,8 @@ import net.minecraftforge.fml.common.eventhandler.EventBus;
 import net.minecraftforge.fml.relauncher.CoreModManager;
 import net.minecraftforge.fml.relauncher.Side;
 
+import com.cleanroommc.common.CleanroomEnvironment;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,6 +53,7 @@ public final class Bootstrap {
         if (bootstrapped) {
             return;
         }
+        CleanroomEnvironment.setSide(Side.SERVER);
         try {
             Field deobfuscatedEnvironment = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
             deobfuscatedEnvironment.setAccessible(true);
@@ -143,7 +146,7 @@ public final class Bootstrap {
 
         @Override
         public MinecraftServer getServer() {
-            throw new UnsupportedOperationException();
+            return null; // Unit fixtures have no live Minecraft server.
         }
 
         @Override

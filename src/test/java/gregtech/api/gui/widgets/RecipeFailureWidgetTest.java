@@ -61,7 +61,9 @@ class RecipeFailureWidgetTest {
     void widgetSynchronizesInitialFailureChangesAndRecoveryOnlyWhenNeeded() {
         AtomicReference<RecipeFailure> serverFailure = new AtomicReference<>(RecipeFailure.NONE);
         RecipeFailureWidget client = new RecipeFailureWidget(0, 0, GuiTextures.INDICATOR_NO_ENERGY,
-                () -> { throw new AssertionError("Client rendering must not query the server recipe logic"); });
+                () -> {
+                    throw new AssertionError("Client rendering must not query the server recipe logic");
+                });
         int[] packets = { 0 };
         boolean[] visible = { false };
         RecipeFailureWidget server = new RecipeFailureWidget(0, 0, GuiTextures.INDICATOR_NO_ENERGY,

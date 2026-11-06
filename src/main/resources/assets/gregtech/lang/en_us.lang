@@ -40,7 +40,7 @@ death.attack.screwdriver_lv=%s had their screws removed by %s
 enchantment.disjunction=Disjunction
 
 gregtech.jei.remove_recipe.tooltip=Copies a %s Snippet to Remove this Recipe
-gregtech.jei.ct_recipe.tooltip=CraftTweaker Recipe
+gregtech.jei.authored_recipe.tooltip=Added by pack configuration
 gregtech.jei.gs_recipe.tooltip=GroovyScript Recipe
 gregtech.jei.overclock.normal=Normal estimate: %s
 gregtech.jei.overclock.perfect=Perfect estimate: %s
@@ -5417,7 +5417,8 @@ gregtech.maintenance.configurable.tooltip_more_info=Hold SHIFT for special inter
 gregtech.maintenance.configurable.tooltip_pss_header=§8Power Substation:
 gregtech.maintenance.configurable.tooltip_pss_info=  §fReduces passive EU drain
 
-gregtech.machine.muffler_hatch.tooltip1=Recovers waste from machines
+gregtech.machine.muffler_hatch.exhaust=Vents exhaust through an unobstructed front face
+gregtech.machine.muffler_hatch.no_recovery=Does not recover items
 gregtech.machine.muffler_hatch.tooltip2=DO NOT OBSTRUCT THE OUTPUT!
 
 gregtech.machine.muffler_hatch.ulv.name=ULV Muffler Hatch
@@ -6061,12 +6062,6 @@ gregtech.command.copy.copied_and_click=copied to clipboard. Click to copy again
 gregtech.command.copy.click_to_copy=Click to copy
 gregtech.command.copy.copied_start=Copied [
 gregtech.command.copy.copied_end=] to the clipboard
-gregtech.command.datafix.usage=Usage: /gregtech datafix <bqu>
-gregtech.command.datafix.bqu.usage=Usage: /gregtech datafix bqu [confirm]
-gregtech.command.datafix.bqu.backup=Backup your save and BQu config dir, then rerun with the 'confirm' arg
-gregtech.command.datafix.bqu.start=Started Migrating BQu Quest Database...
-gregtech.command.datafix.bqu.complete=Finished Migrating BQu Quest Database
-gregtech.command.datafix.bqu.failed=Failed Migrating BQu Quest Database. Restore your backups!
 
 gregtech.chat.cape=§5Congrats: you just unlocked a new cape! See the Cape Selector terminal app to use it.§r
 

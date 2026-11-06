@@ -1,12 +1,12 @@
 {
-  "package" : "gregtech.mixins.littletiles",
-  "refmap" : "mixins.gregtech.refmap.json",
-  "target" : "@env(DEFAULT)",
-  "minVersion" : "0.8",
-  "compatibilityLevel" : "JAVA_8",
-  "mixins" : [
+  "package": "gregtech.mixins.littletiles",
+  "refmap": "mixins.gregtech.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [],
+  "client": [
     "LittleTilesRenderMangerMixin"
   ],
-  "client": [],
-  "server" : []
+  "server": []
 }

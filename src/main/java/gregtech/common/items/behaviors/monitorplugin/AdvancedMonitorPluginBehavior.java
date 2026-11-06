@@ -285,16 +285,16 @@ public class AdvancedMonitorPluginBehavior extends ProxyHolderPluginBehavior {
         return widgetGroup.setSize(260, 170)
                 .widget(new WidgetScrollBar(25, 20, 210, 0.3f, 2, 0.1f,
                         value -> setConfig(value, this.rotationPitch, this.rotationYaw, this.spin, this.connect))
-                                .setTitle("zoom", 0XFFFFFFFF).setInitValue(this.scale))
+                        .setTitle("zoom", 0XFFFFFFFF).setInitValue(this.scale))
                 .widget(new WidgetScrollBar(25, 40, 210, 0, 360, 1,
                         value -> setConfig(this.scale, value.intValue(), this.rotationYaw, this.spin, this.connect))
-                                .setTitle("rotationPitch", 0XFFFFFFFF).setInitValue(this.rotationPitch))
+                        .setTitle("rotationPitch", 0XFFFFFFFF).setInitValue(this.rotationPitch))
                 .widget(new WidgetScrollBar(25, 60, 210, -90, 90, 1,
                         value -> setConfig(this.scale, this.rotationPitch, value.intValue(), this.spin, this.connect))
-                                .setTitle("rotationYaw", 0XFFFFFFFF).setInitValue(this.rotationYaw))
+                        .setTitle("rotationYaw", 0XFFFFFFFF).setInitValue(this.rotationYaw))
                 .widget(new WidgetScrollBar(25, 100, 210, 0, 2, 0.1f,
                         value -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, value, this.connect))
-                                .setTitle("spinDur", 0XFFFFFFFF).setInitValue(this.spin))
+                        .setTitle("spinDur", 0XFFFFFFFF).setInitValue(this.spin))
                 .widget(new LabelWidget(25, 135, "Fake GUI:", 0XFFFFFFFF))
                 .widget(new ToggleButtonWidget(80, 130, 20, 20, () -> this.connect,
                         state -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, this.spin, state)));

@@ -95,7 +95,8 @@ public class WireRecipeHandler {
         }
 
         if (!material.hasFlag(NO_WORKING) && material.hasFlag(GENERATE_PLATE) && workingTier <= HV) {
-            ModHandler.addShapedRecipe(String.format("%s_wire_single", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("%s_wire_single", material)),
                     OreDictUnifier.get(wireGtSingle, material), "Xx",
                     'X', new UnificationEntry(plate, material));
         }
@@ -173,7 +174,8 @@ public class WireRecipeHandler {
         for (int i = 1; i <= insulationAmount; i++) {
             ingredients[i] = OreDictUnifier.get(plate, Rubber);
         }
-        ModHandler.addShapelessRecipe(String.format("%s_cable_%d", material, cableAmount),
+        ModHandler.addShapelessRecipe(
+                ModHandler.materialRecipeName(material, String.format("%s_cable_%d", material, cableAmount)),
                 OreDictUnifier.get(cablePrefix, material),
                 ingredients);
 

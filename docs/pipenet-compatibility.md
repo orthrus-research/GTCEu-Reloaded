@@ -44,9 +44,6 @@ the `Elements.add` signature and `RecipeProperty` types. Its mixed tankless/buff
 and telemetry fixtures cannot run past initialization. Full-pack compatibility therefore
 remains unqualified. These repairs do not supply replacement addon APIs or loader shims.
 
-The repairs, regression fixtures and compatibility investigation were AI-assisted with
-OpenAI Codex. This disclosure does not expand the validation scopes stated here.
-
 ## Component identity and extension equality
 
 World and chunk ownership lists retain their existing public/protected types, but

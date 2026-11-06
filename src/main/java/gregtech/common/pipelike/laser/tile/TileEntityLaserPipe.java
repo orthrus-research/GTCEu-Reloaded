@@ -141,7 +141,7 @@ public class TileEntityLaserPipe extends TileEntityPipeBase<LaserPipeType, Laser
 
             // check the same for the targeted pipe
             TileEntity tile = getWorld().getTileEntity(getPos().offset(side));
-            if (tile instanceof IPipeTile<?, ?>pipeTile &&
+            if (tile instanceof IPipeTile<?, ?> pipeTile &&
                     pipeTile.getPipeType().getClass() == this.getPipeType().getClass()) {
                 connections = pipeTile.getConnections();
                 connections &= ~(1 << side.getIndex());

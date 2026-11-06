@@ -178,10 +178,10 @@ public abstract class WorkableTieredMetaTileEntity extends TieredMetaTileEntity
                 list.add(new TextComponentTranslation("behavior.tricorder.workable_stored_energy",
                         new TextComponentTranslation(
                                 TextFormattingUtil.formatNumbers(energyContainer.getEnergyStored()))
-                                        .setStyle(new Style().setColor(TextFormatting.GREEN)),
+                                .setStyle(new Style().setColor(TextFormatting.GREEN)),
                         new TextComponentTranslation(
                                 TextFormattingUtil.formatNumbers(energyContainer.getEnergyCapacity()))
-                                        .setStyle(new Style().setColor(TextFormatting.YELLOW))));
+                                .setStyle(new Style().setColor(TextFormatting.YELLOW))));
             }
             // multi amp recipes: change 0 ? 0 : 1 to 0 ? 0 : amperage
             if (workable.consumesEnergy()) {
@@ -190,14 +190,14 @@ public abstract class WorkableTieredMetaTileEntity extends TieredMetaTileEntity
                                 .setStyle(new Style().setColor(TextFormatting.RED)),
                         new TextComponentTranslation(
                                 TextFormattingUtil.formatNumbers(workable.getInfoProviderEUt() == 0 ? 0 : 1))
-                                        .setStyle(new Style().setColor(TextFormatting.RED))));
+                                .setStyle(new Style().setColor(TextFormatting.RED))));
             } else {
                 list.add(new TextComponentTranslation("behavior.tricorder.workable_production",
                         new TextComponentTranslation(TextFormattingUtil.formatNumbers(workable.getInfoProviderEUt()))
                                 .setStyle(new Style().setColor(TextFormatting.RED)),
                         new TextComponentTranslation(
                                 TextFormattingUtil.formatNumbers(workable.getInfoProviderEUt() == 0 ? 0 : 1))
-                                        .setStyle(new Style().setColor(TextFormatting.RED))));
+                                .setStyle(new Style().setColor(TextFormatting.RED))));
             }
         }
 

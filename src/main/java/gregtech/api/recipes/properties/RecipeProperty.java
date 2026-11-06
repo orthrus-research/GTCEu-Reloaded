@@ -87,7 +87,7 @@ public abstract class RecipeProperty<T> {
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof RecipeProperty<?>that)) return false;
+        if (!(o instanceof RecipeProperty<?> that)) return false;
 
         return type.equals(that.type) && getKey().equals(that.getKey());
     }

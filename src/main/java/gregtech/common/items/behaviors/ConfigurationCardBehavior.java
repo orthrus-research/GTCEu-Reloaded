@@ -48,7 +48,7 @@ public final class ConfigurationCardBehavior implements IItemBehaviour {
             adapter = machine.getConfigurationAdapter();
             holder = machine;
             kind = "machine";
-        } else if (tile instanceof IPipeTile<?, ?>pipe) {
+        } else if (tile instanceof IPipeTile<?, ?> pipe) {
             adapter = pipe.getConfigurationAdapter();
             holder = pipe.getCoverableImplementation();
             kind = "pipe";

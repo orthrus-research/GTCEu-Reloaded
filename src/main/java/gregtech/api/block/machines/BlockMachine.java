@@ -462,6 +462,45 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
         }
     }
 
+    /**
+     * Replace a retained machine without harvesting it. The caller supplies complete native machine state.
+     * Covers must be removed first, since normal block removal would drop them. This is a server-thread
+     * operation, not a transaction over arbitrary world callbacks.
+     */
+    public static boolean replaceRetainedMachine(MetaTileEntity source, MetaTileEntity target,
+                                                 NBTTagCompound machineData) {
+        World world = source.getWorld();
+        if (world == null || world.isRemote || !source.keepsInventory()) return false;
+        BlockPos pos = source.getPos();
+        if (!(world.getTileEntity(pos) instanceof MetaTileEntityHolder oldHolder) ||
+                oldHolder.getMetaTileEntity() != source)
+            return false;
+        for (EnumFacing side : EnumFacing.VALUES) {
+            if (source.getCoverAtSide(side) != null) return false;
+        }
+        if (target.getRegistry().getObject(target.metaTileEntityId) != target) {
+            throw new IllegalArgumentException("Replacement is not the registered machine " + target.metaTileEntityId);
+        }
+        if (!(world.getBlockState(pos).getBlock() instanceof BlockMachine oldBlock)) return false;
+        NBTTagCompound preparedData = machineData.copy();
+        String customName = oldHolder.getName();
+        BlockMachine targetBlock = target.getBlock();
+        MetaTileEntity previousDrop = oldBlock.tileEntities.get();
+        try {
+            if (oldBlock != targetBlock && !world.setBlockState(pos, targetBlock.getDefaultState(), 3)) return false;
+            if (!(world.getTileEntity(pos) instanceof MetaTileEntityHolder holder)) {
+                throw new IllegalStateException("Replacement block did not create a machine holder");
+            }
+            holder.setCustomName(customName);
+            holder.setMetaTileEntity(target, preparedData);
+            return true;
+        } finally {
+            // breakBlock caches the removed machine for harvesting; this replacement does not harvest it.
+            if (previousDrop == null) oldBlock.tileEntities.remove();
+            else oldBlock.tileEntities.set(previousDrop);
+        }
+    }
+
     protected final ThreadLocal<MetaTileEntity> tileEntities = new ThreadLocal<>();
 
     @Override

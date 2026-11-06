@@ -92,6 +92,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -221,11 +222,13 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
                 level.getLevel(finalToolProperty.getToolHarvestLevel())));
         toolStats.getDefaultEnchantments(stack).forEach((enchantment, level) -> enchantments.put(enchantment,
                 level.getLevel(finalToolProperty.getToolHarvestLevel())));
-        enchantments.forEach((enchantment, level) -> {
-            if (stack.getItem().canApplyAtEnchantingTable(stack, enchantment)) {
-                stack.addEnchantment(enchantment, level);
-            }
-        });
+        enchantments.object2IntEntrySet().stream()
+                .sorted(Comparator.comparing(entry -> entry.getKey().getRegistryName()))
+                .forEach(entry -> {
+                    if (stack.getItem().canApplyAtEnchantingTable(stack, entry.getKey())) {
+                        stack.addEnchantment(entry.getKey(), entry.getIntValue());
+                    }
+                });
 
         // Set behaviours
         NBTTagCompound behaviourTag = getBehaviorsTag(stack);
@@ -265,13 +268,10 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
     }
 
     default Material getToolMaterial(ItemStack stack) {
-        NBTTagCompound toolTag = getToolTag(stack);
+        NBTTagCompound toolTag = readToolTag(stack);
         String string = toolTag.getString(MATERIAL_KEY);
         Material material = GregTechAPI.materialManager.getMaterial(string);
-        if (material == null) {
-            toolTag.setString(MATERIAL_KEY, (material = Materials.Iron).toString());
-        }
-        return material;
+        return material == null ? Materials.Iron : material;
     }
 
     @Nullable
@@ -350,18 +350,16 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
     }
 
     default float getTotalToolSpeed(ItemStack stack) {
-        NBTTagCompound toolTag = getToolTag(stack);
+        NBTTagCompound toolTag = readToolTag(stack);
         if (toolTag.hasKey(TOOL_SPEED_KEY, Constants.NBT.TAG_FLOAT)) {
             return toolTag.getFloat(TOOL_SPEED_KEY);
         }
-        float toolSpeed = getToolStats().getEfficiencyMultiplier(stack) * getMaterialToolSpeed(stack) +
+        return getToolStats().getEfficiencyMultiplier(stack) * getMaterialToolSpeed(stack) +
                 getToolStats().getBaseEfficiency(stack);
-        toolTag.setFloat(TOOL_SPEED_KEY, toolSpeed);
-        return toolSpeed;
     }
 
     default float getTotalAttackDamage(ItemStack stack) {
-        NBTTagCompound toolTag = getToolTag(stack);
+        NBTTagCompound toolTag = readToolTag(stack);
         if (toolTag.hasKey(ATTACK_DAMAGE_KEY, Constants.NBT.TAG_FLOAT)) {
             return toolTag.getFloat(ATTACK_DAMAGE_KEY);
         }
@@ -371,22 +369,19 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
         if (baseDamage != Float.MIN_VALUE) {
             attackDamage = getMaterialAttackDamage(stack) + baseDamage;
         }
-        toolTag.setFloat(ATTACK_DAMAGE_KEY, attackDamage);
         return attackDamage;
     }
 
     default float getTotalAttackSpeed(ItemStack stack) {
-        NBTTagCompound toolTag = getToolTag(stack);
+        NBTTagCompound toolTag = readToolTag(stack);
         if (toolTag.hasKey(ATTACK_SPEED_KEY, Constants.NBT.TAG_FLOAT)) {
             return toolTag.getFloat(ATTACK_SPEED_KEY);
         }
-        float attackSpeed = getMaterialAttackSpeed(stack) + getToolStats().getAttackSpeed(stack);
-        toolTag.setFloat(ATTACK_SPEED_KEY, attackSpeed);
-        return attackSpeed;
+        return getMaterialAttackSpeed(stack) + getToolStats().getAttackSpeed(stack);
     }
 
     default int getTotalMaxDurability(ItemStack stack) {
-        NBTTagCompound toolTag = getToolTag(stack);
+        NBTTagCompound toolTag = readToolTag(stack);
         if (toolTag.hasKey(MAX_DURABILITY_KEY, Constants.NBT.TAG_INT)) {
             return toolTag.getInteger(MAX_DURABILITY_KEY);
         }
@@ -400,36 +395,31 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
         maxDurability = builderDurability == 0 ? (int) (maxDurability * toolStats.getDurabilityMultiplier(stack)) :
                 maxDurability + builderDurability;
 
-        toolTag.setInteger(MAX_DURABILITY_KEY, maxDurability);
         return maxDurability;
     }
 
     default int getTotalEnchantability(ItemStack stack) {
-        NBTTagCompound toolTag = getToolTag(stack);
+        NBTTagCompound toolTag = readToolTag(stack);
         if (toolTag.hasKey(ENCHANTABILITY_KEY, Constants.NBT.TAG_INT)) {
             return toolTag.getInteger(ENCHANTABILITY_KEY);
         }
-        int enchantability = getMaterialEnchantability(stack);
-        toolTag.setInteger(ENCHANTABILITY_KEY, enchantability);
-        return enchantability;
+        return getMaterialEnchantability(stack);
     }
 
     default int getTotalHarvestLevel(ItemStack stack) {
-        NBTTagCompound toolTag = getToolTag(stack);
+        NBTTagCompound toolTag = readToolTag(stack);
         if (toolTag.hasKey(HARVEST_LEVEL_KEY, Constants.NBT.TAG_INT)) {
             return toolTag.getInteger(HARVEST_LEVEL_KEY);
         }
-        int harvestLevel = getMaterialHarvestLevel(stack) + getToolStats().getBaseQuality(stack);
-        toolTag.setInteger(HARVEST_LEVEL_KEY, harvestLevel);
-        return harvestLevel;
+        return getMaterialHarvestLevel(stack) + getToolStats().getBaseQuality(stack);
     }
 
     default AoESymmetrical getMaxAoEDefinition(ItemStack stack) {
-        return AoESymmetrical.readMax(getBehaviorsTag(stack));
+        return ToolHelper.getMaxAoEDefinition(stack);
     }
 
     default AoESymmetrical getAoEDefinition(ItemStack stack) {
-        return AoESymmetrical.read(getToolTag(stack), getMaxAoEDefinition(stack));
+        return AoESymmetrical.read(readBehaviorsTag(stack), getMaxAoEDefinition(stack));
     }
 
     // Item.class methods
@@ -629,12 +619,8 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
             return GTValues.W;
         }
 
-        NBTTagCompound toolTag = getToolTag(stack);
-        if (toolTag.hasKey(DURABILITY_KEY, Constants.NBT.TAG_INT)) {
-            return toolTag.getInteger(DURABILITY_KEY);
-        }
-        toolTag.setInteger(DURABILITY_KEY, 0);
-        return 0;
+        NBTTagCompound toolTag = readToolTag(stack);
+        return toolTag.hasKey(DURABILITY_KEY, Constants.NBT.TAG_INT) ? toolTag.getInteger(DURABILITY_KEY) : 0;
     }
 
     default int definition$getMaxDamage(ItemStack stack) {
@@ -795,7 +781,7 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
                     aoeDefinition.column * 2 + 1, aoeDefinition.row * 2 + 1, aoeDefinition.layer + 1));
         }
 
-        NBTTagCompound behaviorsTag = getBehaviorsTag(stack);
+        NBTTagCompound behaviorsTag = readBehaviorsTag(stack);
         if (behaviorsTag.getBoolean(RELOCATE_MINED_BLOCKS_KEY)) {
             if (!addedBehaviorNewLine) {
                 addedBehaviorNewLine = true;
@@ -865,7 +851,7 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
             case "enchantment.as.smelting": // astral sorcery
                 // block autosmelt enchants from AoE and Tree-Felling tools
                 return getToolStats().getAoEDefinition(stack) == AoESymmetrical.none() &&
-                        !getBehaviorsTag(stack).hasKey(TREE_FELLING_KEY);
+                        !readBehaviorsTag(stack).hasKey(TREE_FELLING_KEY);
         }
 
         // Block Mending and Unbreaking on Electric tools
@@ -920,23 +906,13 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
 
     // Sound Playing
     default void playCraftingSound(EntityPlayer player, ItemStack stack) {
-        stack = toolbeltPassthrough(stack);
-        // player null check for things like auto-crafters
-        if (ConfigHolder.client.toolCraftingSounds && getSound() != null && player != null) {
-            if (canPlaySound(stack)) {
-                setLastCraftingSoundTime(stack);
-                player.getEntityWorld().playSound(null, player.posX, player.posY, player.posZ, getSound(),
-                        SoundCategory.PLAYERS, 1F, 1F);
-            }
+        // Automated crafters may have no player. Client prediction must not mutate the remainder's NBT.
+        if (player == null || player.getEntityWorld().isRemote || !ConfigHolder.client.toolCraftingSounds) return;
+        SoundEvent sound = getSound();
+        if (sound != null && CraftingSoundCooldown.acquire(player, sound, System.nanoTime())) {
+            player.getEntityWorld().playSound(null, player.posX, player.posY, player.posZ, sound,
+                    SoundCategory.PLAYERS, 1F, 1F);
         }
-    }
-
-    default void setLastCraftingSoundTime(ItemStack stack) {
-        getToolTag(stack).setInteger(LAST_CRAFTING_USE_KEY, (int) System.currentTimeMillis());
-    }
-
-    default boolean canPlaySound(ItemStack stack) {
-        return Math.abs((int) System.currentTimeMillis() - getToolTag(stack).getInteger(LAST_CRAFTING_USE_KEY)) > 1000;
     }
 
     default void playSound(EntityPlayer player) {
@@ -949,22 +925,21 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
     @Override
     default ModularPanel buildUI(HandGuiData guiData, PanelSyncManager manager, UISettings settings) {
         final var usedStack = guiData.getUsedItemStack();
-        final var behaviorsTag = getBehaviorsTag(usedStack);
         final var defaultDefinition = getMaxAoEDefinition(usedStack);
 
         var columnValue = new IntSyncValue(
-                () -> AoESymmetrical.getColumn(behaviorsTag, defaultDefinition),
-                i -> AoESymmetrical.setColumn(behaviorsTag, i, defaultDefinition));
+                () -> AoESymmetrical.getColumn(readBehaviorsTag(usedStack), defaultDefinition),
+                i -> AoESymmetrical.setColumn(getBehaviorsTag(usedStack), i, defaultDefinition));
         var rowValue = new IntSyncValue(
-                () -> AoESymmetrical.getRow(behaviorsTag, defaultDefinition),
-                i -> AoESymmetrical.setRow(behaviorsTag, i, defaultDefinition));
+                () -> AoESymmetrical.getRow(readBehaviorsTag(usedStack), defaultDefinition),
+                i -> AoESymmetrical.setRow(getBehaviorsTag(usedStack), i, defaultDefinition));
         var layerValue = new IntSyncValue(
-                () -> AoESymmetrical.getLayer(behaviorsTag, defaultDefinition),
-                i -> AoESymmetrical.setLayer(behaviorsTag, i, defaultDefinition));
+                () -> AoESymmetrical.getLayer(readBehaviorsTag(usedStack), defaultDefinition),
+                i -> AoESymmetrical.setLayer(getBehaviorsTag(usedStack), i, defaultDefinition));
 
-        manager.syncValue("row_value", rowValue);
-        manager.syncValue("column_value", columnValue);
-        manager.syncValue("layer_value", layerValue);
+        manager.syncValue("row_value", 0, rowValue);
+        manager.syncValue("column_value", 0, columnValue);
+        manager.syncValue("layer_value", 0, layerValue);
 
         return GTGuis.createPanel(usedStack.getTranslationKey(), 120, 80)
                 .child(Flow.row()

@@ -248,7 +248,8 @@ public class ToolRecipeHandler {
 
             // drill
             toolPrefix = OrePrefix.toolHeadDrill;
-            ModHandler.addShapedRecipe(String.format("drill_head_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("drill_head_%s", material)),
                     OreDictUnifier.get(toolPrefix, material),
                     "XSX", "XSX", "ShS",
                     'X', plate,
@@ -259,7 +260,8 @@ public class ToolRecipeHandler {
 
             // chainsaw
             toolPrefix = OrePrefix.toolHeadChainsaw;
-            ModHandler.addShapedRecipe(String.format("chainsaw_head_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("chainsaw_head_%s", material)),
                     OreDictUnifier.get(toolPrefix, material),
                     "SRS", "XhX", "SRS",
                     'X', plate,
@@ -273,7 +275,8 @@ public class ToolRecipeHandler {
             addElectricToolRecipe(toolPrefix, material,
                     new IGTTool[] { ToolItems.WRENCH_LV, ToolItems.WRENCH_HV, ToolItems.WRENCH_IV });
 
-            ModHandler.addShapedRecipe(String.format("wrench_head_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("wrench_head_%s", material)),
                     OreDictUnifier.get(toolPrefix, material),
                     "hXW", "XRX", "WXd",
                     'X', plate,
@@ -284,7 +287,8 @@ public class ToolRecipeHandler {
             toolPrefix = OrePrefix.toolHeadBuzzSaw;
             addElectricToolRecipe(toolPrefix, material, new IGTTool[] { ToolItems.BUZZSAW });
 
-            ModHandler.addShapedRecipe(String.format("buzzsaw_blade_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("buzzsaw_blade_%s", material)),
                     OreDictUnifier.get(toolPrefix, material),
                     "sXh", "X X", "fXx",
                     'X', plate);
@@ -308,7 +312,8 @@ public class ToolRecipeHandler {
             toolPrefix = OrePrefix.toolHeadScrewdriver;
             addElectricToolRecipe(toolPrefix, material, new IGTTool[] { ToolItems.SCREWDRIVER_LV });
 
-            ModHandler.addShapedRecipe(String.format("screwdriver_tip_%s", material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("screwdriver_tip_%s", material)),
                     OreDictUnifier.get(toolPrefix, material),
                     "fR", " h",
                     'R', new UnificationEntry(OrePrefix.stickLong, material));
@@ -321,7 +326,8 @@ public class ToolRecipeHandler {
             ItemStack powerUnitStack = powerUnitItems.get(tier).getStackForm();
             IElectricItem powerUnit = powerUnitStack.getCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null);
             ItemStack tool = toolItem.get(material, 0, powerUnit.getMaxCharge());
-            ModHandler.addShapedEnergyTransferRecipe(String.format("%s_%s", toolItem.getToolId(), material),
+            ModHandler.addShapedEnergyTransferRecipe(
+                    ModHandler.materialRecipeName(material, String.format("%s_%s", toolItem.getToolId(), material)),
                     tool,
                     Ingredient.fromStacks(powerUnitStack), true, true,
                     "wHd", " U ",
@@ -336,7 +342,9 @@ public class ToolRecipeHandler {
             ItemStack powerUnitStack = powerUnitItems.get(tier).getStackForm();
             IElectricItem powerUnit = powerUnitStack.getCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM, null);
             ItemStack tool = toolItem.get(material, 0, powerUnit.getMaxCharge());
-            ModHandler.addShapedEnergyTransferRecipe(String.format("%s_%s", toolItem.getToolId(), material), tool,
+            ModHandler.addShapedEnergyTransferRecipe(
+                    ModHandler.materialRecipeName(material, String.format("%s_%s", toolItem.getToolId(), material)),
+                    tool,
                     Ingredient.fromStacks(powerUnitStack), true, true,
                     "PfP", "hPd", "RUR",
                     'P', new UnificationEntry(OrePrefix.plate, material),
@@ -348,10 +356,12 @@ public class ToolRecipeHandler {
     public static void addToolRecipe(@NotNull Material material, @NotNull IGTTool tool, boolean mirrored,
                                      Object... recipe) {
         if (mirrored) {
-            ModHandler.addMirroredShapedRecipe(String.format("%s_%s", tool.getToolId(), material),
+            ModHandler.addMirroredShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("%s_%s", tool.getToolId(), material)),
                     tool.get(material), recipe);
         } else {
-            ModHandler.addShapedRecipe(String.format("%s_%s", tool.getToolId(), material),
+            ModHandler.addShapedRecipe(
+                    ModHandler.materialRecipeName(material, String.format("%s_%s", tool.getToolId(), material)),
                     tool.get(material), recipe);
         }
     }

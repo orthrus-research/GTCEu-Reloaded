@@ -31,11 +31,11 @@ import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
      name = GTInternalTags.MOD_NAME,
      acceptedMinecraftVersions = "[1.12.2,1.13)",
      version = GTInternalTags.VERSION,
-     dependencies = "required:forge@[14.23.5.2847,);" + "required-after:codechickenlib@[3.2.3,);" +
-             "required-after:modularui@[3.0.4,);" + "required-after:mixinbooter@[8.0,);" +
+     dependencies = "required:cleanroom@[0.7.14-alpha,);" + "required-after:codechickenlib@[3.3.10];" +
+             "required-after:modularui@[" + GTInternalTags.MODULAR_UI_VERSION + "];" +
              "after:appliedenergistics2;" +
              "after:forestry;" + "after:extrabees;" + "after:extratrees;" + "after:genetics;" + "after:magicbees;" +
-             "after:jei@[4.15.0,);" + "after:crafttweaker@[4.1.20,);" + "after:groovyscript@[1.2.0,);" +
+             "after:jei@[4.15.0,);" + "after:groovyscript@[1.5.0,);" +
              "after:theoneprobe;" + "after:hwyla;")
 public class GregTechMod {
 

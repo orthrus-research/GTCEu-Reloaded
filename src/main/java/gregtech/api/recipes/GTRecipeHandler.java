@@ -13,6 +13,24 @@ import java.util.List;
 public class GTRecipeHandler {
 
     /**
+     * Removes each visible recipe once when any deterministic output matches the requested native item/fluid values.
+     */
+    public static int removeRecipesByOutputs(RecipeMap<?> map, List<ItemStack> items, List<FluidStack> fluids,
+                                             boolean matchAmounts) {
+        List<Recipe> removed = new ArrayList<>();
+        for (Recipe recipe : map.getRecipeList()) {
+            boolean itemMatch = recipe.getOutputs().stream().anyMatch(output -> items.stream().anyMatch(
+                    wanted -> output.isItemEqual(wanted) && (!matchAmounts || output.getCount() == wanted.getCount())));
+            boolean fluidMatch = recipe.getFluidOutputs().stream().anyMatch(output -> fluids.stream().anyMatch(
+                    wanted -> output.isFluidEqual(wanted) && (!matchAmounts || output.amount == wanted.amount)));
+            if (itemMatch || fluidMatch) removed.add(recipe);
+        }
+        int count = 0;
+        for (Recipe recipe : removed) if (map.removeRecipe(recipe)) count++;
+        return count;
+    }
+
+    /**
      * Removes all Recipes matching given inputs and fluid inputs from a given RecipeMap.
      * An example of how to use it:
      *

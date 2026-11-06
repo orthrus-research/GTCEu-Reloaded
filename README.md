@@ -9,16 +9,19 @@
 GTCEu: Reloaded is a continuation of [GregTech CE Unofficial](https://github.com/GregTechCEu/GregTech)
 (GTCEu) for Minecraft 1.12.2, developed by Orthrus Research. It keeps GTCEu's machines, materials
 and progression, brings selected features from GregTech CEu: Modern and GregTech: New Horizons to
-1.12.2, and keeps existing worlds, addons and packs working.
+1.12.2, with explicit migration paths for changed authoring APIs and saved content identities.
 
 GTCEu: Reloaded is not an official GregTechCEu release and implies no endorsement by its
 maintainers.
 
 ## Status
 
-Preview: public for study and testing, with no releases yet; they will be published on GitHub
-Releases. Worlds, mod IDs and APIs are kept compatible with GTCEu (see below), but no release yet
-promises compatibility guarantees of its own. [CHANGELOG.md](CHANGELOG.md) lists the changes so far.
+The `ct-overhaul` branch prepares the 3.0 alpha line for Java 26 and Cleanroom 0.7.14-alpha.
+It replaces CraftTweaker integration with shared typed Java definitions and GroovyScript 1.5.0
+authoring. This is a breaking API/toolchain migration; existing packs and addons require review.
+Saved content retains its registry identities when declarations preserve their original IDs.
+See [the migration guide](docs/ct-migration.md), [typed definitions](docs/typed-definitions.md)
+and [cache behavior](docs/groovy-cache.md). No release has been published from this branch.
 
 ## Changes from GTCEu
 
@@ -47,24 +50,31 @@ The fork began at upstream commit `52c04cd7b`, after GTCEu 2.8.10. In summary:
 ## For players and pack makers
 
 GTCEu: Reloaded replaces GTCEu: install one or the other, never both. It keeps the `gregtech` mod
-ID, the `gregtech` packages, registry names, configuration and the save format, so worlds and
-addons built for GTCEu find what they expect. New features that change behavior are opt-in or
-default off where the documents say so. Versions carry the GTCEu release they build on plus a
-Reloaded number, such as `2.8.10-reloaded.1`, so addons that require a GTCEu version still load.
+ID and saved registry identities. The 3.0 line changes the authoring API and runtime requirements;
+it is not a drop-in upgrade for every GTCEu addon or pack. Preserve original content IDs, migrate
+scripts, rebuild affected addons and test a copied world before adopting it.
 
 | Component | Version | |
 | --- | --- | --- |
 | Minecraft | 1.12.2 | |
-| Forge | 14.23.5.2847 or later | Required |
-| CodeChickenLib | 3.2.3 or later | Required |
-| ModularUI | 3.0.4 or later | Required |
-| MixinBooter | 8.0 or later | Required |
+| Cleanroom | 0.7.14-alpha | Required on the ct-overhaul branch |
+| Java | 26 | Required; qualified on Temurin 26.0.2.1 |
+| CodeChickenLib | 3.3.10 | Required; build and runtime use the same pinned release |
+| ModularUI | 3.1.6 | Required |
+| CleanMix | Supplied by Cleanroom | No separate MixinBooter installation |
 | Applied Energistics 2 Unofficial Extended Life | Built against 0.56.4 | Optional: ME parts and pattern buffers |
-| JEI, The One Probe, HWYLA, CraftTweaker, GroovyScript, Forestry | | Optional integrations, as in GTCEu |
+| HEI, The One Probe, HWYLA, GroovyScript, Forestry | | Optional integrations; pack configuration uses native Java and Groovy |
+
+Groovy authoring is qualified with GroovyScript 1.5.0. HEI reload requires the exact repaired
+4.36.1 artifact described in [release acceptance](docs/release-readiness.md); upstream 4.36.1
+still has the asynchronous completion stall. The reproducible dependency repair is retained in
+[tools/dependency-patches/hei-async](tools/dependency-patches/hei-async/README.md).
 
 ## For addon and mod developers
 
-The public API is `gregtech.api`, unchanged in its packages. New APIs are additive: recipe
+The public API is `gregtech.api`. The ct-overhaul branch uses typed Java definitions and a thin
+Groovy frontend. CT-specific APIs are removed; see [the migration guide](docs/ct-migration.md)
+for replacements and intentional source changes. Existing recipe
 conditions, recipe modifier providers and the PipeNet extension points are described in their
 documents. [docs/pipenet-compatibility.md](docs/pipenet-compatibility.md) states what pipe
 networks guarantee to addon handlers and where those guarantees end, and
@@ -72,8 +82,10 @@ networks guarantee to addon handlers and where those guarantees end, and
 
 ## Building from source
 
-The build needs JDK 17 and compiles to Java 8 bytecode; tests and the development client run on
-Java 8.
+The ct-overhaul build requires JDK 26 and uses CleanroomGradle. Product code and tests target
+Java 26; Java 8 and the standalone Forge development runtime are no longer supported.
+Qualification is recorded against frozen candidate bytes in
+[release acceptance](docs/release-readiness.md). Publication remains a separate step.
 
 ```sh
 git clone https://github.com/orthrus-research/GTCEu-Reloaded.git
@@ -83,6 +95,8 @@ cd GTCEu-Reloaded
 
 The build writes the mod JAR to `build/libs`. [CONTRIBUTING.md](CONTRIBUTING.md) lists the checks a
 change must pass.
+`check` also writes `build/reports/runtime-baseline.json`, verifying the Java target and the
+ModularUI development/production artifact pair and CodeChickenLib release used for native qualification.
 
 ## Documentation
 

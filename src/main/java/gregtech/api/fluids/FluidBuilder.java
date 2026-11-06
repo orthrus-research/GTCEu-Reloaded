@@ -412,35 +412,45 @@ public class FluidBuilder {
     }
 
     private void determineTemperature(@Nullable Material material) {
-        if (temperature != INFER_TEMPERATURE) return;
+        temperature = previewTemperature(material, null);
+    }
+
+    /**
+     * Resolves the temperature using the same rules as {@link #build}, without changing this builder or
+     * registering content. Explicit temperature and state take precedence over inferred values and the key's
+     * default state. A missing state defaults to liquid. Plasma inference reads currently registered base fluids;
+     * it does not predict fluids that have not yet been registered.
+     *
+     * @param material the material supplying inferred properties, if present
+     * @param key      the fluid storage key supplying a default state, if present
+     * @return the temperature in Kelvin
+     */
+    public int previewTemperature(@Nullable Material material, @Nullable FluidStorageKey key) {
+        if (temperature != INFER_TEMPERATURE) return temperature;
         if (material == null) {
-            temperature = ROOM_TEMPERATURE;
-        } else {
-            BlastProperty property = material.getProperty(PropertyKey.BLAST);
-            if (property == null) {
-                temperature = switch (state) {
-                    case LIQUID -> {
-                        if (material.hasProperty(PropertyKey.DUST)) {
-                            yield SOLID_LIQUID_TEMPERATURE;
-                        }
-                        yield ROOM_TEMPERATURE;
-                    }
-                    case GAS -> ROOM_TEMPERATURE;
-                    case PLASMA -> {
-                        if (material.hasFluid() && material.getFluid() != null) {
-                            yield BASE_PLASMA_TEMPERATURE + material.getFluid().getTemperature();
-                        }
-                        yield BASE_PLASMA_TEMPERATURE;
-                    }
-                };
-            } else {
-                temperature = property.getBlastTemperature() + switch (state) {
-                    case LIQUID -> LIQUID_TEMPERATURE_OFFSET;
-                    case GAS -> GAS_TEMPERATURE_OFFSET;
-                    case PLASMA -> BASE_PLASMA_TEMPERATURE;
-                };
-            }
+            return ROOM_TEMPERATURE;
         }
+        FluidState effectiveState = state;
+        if (effectiveState == null && key != null) effectiveState = key.getDefaultFluidState();
+        if (effectiveState == null) effectiveState = FluidState.LIQUID;
+        BlastProperty property = material.getProperty(PropertyKey.BLAST);
+        if (property != null) {
+            return property.getBlastTemperature() + switch (effectiveState) {
+                case LIQUID -> LIQUID_TEMPERATURE_OFFSET;
+                case GAS -> GAS_TEMPERATURE_OFFSET;
+                case PLASMA -> BASE_PLASMA_TEMPERATURE;
+            };
+        }
+        return switch (effectiveState) {
+            case LIQUID -> material.hasProperty(PropertyKey.DUST) ? SOLID_LIQUID_TEMPERATURE : ROOM_TEMPERATURE;
+            case GAS -> ROOM_TEMPERATURE;
+            case PLASMA -> {
+                if (material.hasFluid() && material.getFluid() != null) {
+                    yield BASE_PLASMA_TEMPERATURE + material.getFluid().getTemperature();
+                }
+                yield BASE_PLASMA_TEMPERATURE;
+            }
+        };
     }
 
     private void determineColor(@Nullable Material material) {

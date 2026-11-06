@@ -47,9 +47,6 @@ public class AoESymmetrical {
         if (column == 0 && row == 0 && layer == 0) {
             return NONE;
         }
-        tag.setInteger(ToolHelper.AOE_COLUMN_KEY, column);
-        tag.setInteger(ToolHelper.AOE_ROW_KEY, row);
-        tag.setInteger(ToolHelper.AOE_LAYER_KEY, layer);
         return new AoESymmetrical(column, row, layer);
     }
 
