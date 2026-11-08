@@ -53,15 +53,24 @@ public class CommandFluidReconcile extends CommandBase {
     public void execute(@NotNull MinecraftServer server, @NotNull ICommandSender sender,
                         @NotNull String[] args) throws CommandException {
         if (args.length < 4 || args.length > 6) throw new CommandException(getUsage(sender));
-        BlockPos pos = parseBlockPos(sender, args, 0, false);
-
         int action = isAction(args[3]) ? 3 : 4;
         int actionWords = args.length - action;
         boolean inspect = actionWords == 1 && INSPECT.equals(args[action]);
         boolean clear = actionWords == 2 && CLEAR.equals(args[action]) && ACKNOWLEDGE.equals(args[action + 1]);
         if (!inspect && !clear) throw new CommandException(getUsage(sender));
 
-        World world = action == 3 ? sender.getEntityWorld() : resolveWorld(server, parseInt(args[3]));
+        boolean explicitDimension = action == 4;
+        if (explicitDimension) {
+            // '~' would resolve against the sender's position in the sender's own dimension, not the named one
+            for (int i = 0; i < 3; i++) {
+                if (args[i].startsWith("~")) {
+                    throw new CommandException("gregtech.command.fluid_reconcile.relative_with_dim");
+                }
+            }
+        }
+        BlockPos pos = parseBlockPos(sender, args, 0, false);
+
+        World world = explicitDimension ? resolveWorld(server, parseInt(args[3])) : sender.getEntityWorld();
         if (!world.isBlockLoaded(pos)) throw new CommandException("gregtech.command.fluid_reconcile.unloaded");
         TileEntity tile = world.getTileEntity(pos);
         if (!(tile instanceof TileEntityFluidPipeTickable pipe)) {

@@ -224,17 +224,26 @@ public class PipeFamilyFluidTest {
     }
 
     @Test
-    void removalWarningReturnsTheRecordOnlyForPipesThatHaveOne() {
-        ConfigurationTestWorld world = new ConfigurationTestWorld();
-        PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
-        assertNull(BlockFluidPipe.warnUnresolvedTransferOnRemoval(world, POS, pipe));
-        assertNull(BlockFluidPipe.warnUnresolvedTransferOnRemoval(world, POS, null));
-        assertNull(BlockFluidPipe.warnUnresolvedTransferOnRemoval(world, POS, new PipeTestEndpoint()));
+    void breakingAPipeWarnsOnlyWhenItHasAnUnresolvedRecord() {
+        ConfigurationTestWorld clean = new ConfigurationTestWorld();
+        PipeFamilyTestSupport.fluid(clean, POS);
+        ConfigurationTestWorld blocked = new ConfigurationTestWorld();
+        PipeTestFluidPipe blockedPipe = PipeFamilyTestSupport.fluid(blocked, POS);
+        NBTTagCompound record = attachRecord(blockedPipe);
 
-        NBTTagCompound record = attachRecord(pipe);
+        try (CapturedWarnings warnings = new CapturedWarnings()) {
+            breakBlock(clean);
+            assertEquals(Collections.emptyList(), warnings.matching(REMOVAL_WARNING));
+            assertNull(clean.getTileEntity(POS), "breakBlock must run through to tile removal");
 
-        assertEquals(record, BlockFluidPipe.warnUnresolvedTransferOnRemoval(world, POS, pipe));
-        assertEquals(record, pipe.getUncertainFluidTransfer(), "warning must not consume the record");
+            breakBlock(blocked);
+            List<String> removal = warnings.matching(REMOVAL_WARNING);
+            assertEquals(1, removal.size(), removal.toString());
+            assertTrue(removal.get(0).contains(record.toString()), removal.get(0));
+        }
+        assertEquals(record, blockedPipe.getUncertainFluidTransfer(), "warning must not consume the record");
+        assertNull(BlockFluidPipe.warnUnresolvedTransferOnRemoval(clean, POS, null));
+        assertNull(BlockFluidPipe.warnUnresolvedTransferOnRemoval(clean, POS, new PipeTestEndpoint()));
     }
 
     @Test

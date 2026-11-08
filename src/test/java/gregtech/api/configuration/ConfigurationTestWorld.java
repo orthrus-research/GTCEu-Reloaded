@@ -40,6 +40,11 @@ final class ConfigurationTestWorld extends DummyWorld {
     }
 
     @Override
+    public void removeTileEntity(BlockPos pos) {
+        tiles.remove(pos);
+    }
+
+    @Override
     public boolean isBlockLoaded(BlockPos pos) {
         return unloaded == null || !unloaded.contains(pos);
     }

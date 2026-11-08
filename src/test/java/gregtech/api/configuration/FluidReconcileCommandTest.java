@@ -173,7 +173,12 @@ public class FluidReconcileCommandTest {
                 { "0", "64", "0", "inspect", "inspect" },
                 { "0", "64", "0", "0", "clear" },
                 { "0", "64", "0", "0", "inspect", "extra" },
-                { "0", "64", "0", "0", "clear", "acknowledge", "extra" } }) {
+                { "0", "64", "0", "0", "clear", "acknowledge", "extra" },
+                // the shape is checked before coordinates are parsed
+                { "x", "64", "0" },
+                { "x", "y", "z", "bogus" },
+                { "0", "64.5.1", "0", "clear" },
+                { "x", "64", "0", "0", "inspect", "extra" } }) {
             CommandException usage = assertThrows(CommandException.class,
                     () -> command.execute(null, sender, args), Arrays.toString(args));
             assertEquals(USAGE, usage.getMessage(), Arrays.toString(args));
@@ -207,6 +212,39 @@ public class FluidReconcileCommandTest {
                 () -> command.execute(null, sender, new String[] { "0", "64", "0", "3", "inspect" }));
         assertEquals("gregtech.command.fluid_reconcile.dim_unloaded", unloaded.getMessage());
         assertArrayEquals(new Object[] { 3 }, unloaded.getErrorObjects());
+    }
+
+    @Test
+    void relativeCoordinatesAreRejectedWithAnExplicitDimension() throws Exception {
+        ConfigurationTestWorld home = new ConfigurationTestWorld();
+        ConfigurationTestWorld remote = new ConfigurationTestWorld();
+        PipeTestFluidPipe homePipe = PipeFamilyTestSupport.fluid(home, POS);
+        attachRecord(homePipe, 100);
+        PipeTestFluidPipe remotePipe = PipeFamilyTestSupport.fluid(remote, POS);
+        NBTTagCompound remoteRecord = attachRecord(remotePipe, 250);
+        Map<Integer, World> loaded = new TreeMap<>();
+        loaded.put(0, home);
+        loaded.put(7, remote);
+        CommandFluidReconcile command = command(loaded);
+        List<ITextComponent> messages = new ArrayList<>();
+        ICommandSender sender = sender(home, 4, messages);
+
+        for (String[] args : new String[][] {
+                { "~", "~", "~", "7", "clear", "acknowledge" },
+                { "0", "~", "0", "7", "inspect" },
+                { "0", "64", "~1", "0", "inspect" } }) {
+            CommandException relative = assertThrows(CommandException.class,
+                    () -> command.execute(null, sender, args), Arrays.toString(args));
+            assertEquals("gregtech.command.fluid_reconcile.relative_with_dim", relative.getMessage(),
+                    Arrays.toString(args));
+        }
+        assertEquals(remoteRecord, remotePipe.getUncertainFluidTransfer());
+        assertTrue(messages.isEmpty());
+
+        // without a dimension '~' still resolves from the sender, in the sender's world
+        command.execute(null, sender, new String[] { "~", "~", "~", "clear", "acknowledge" });
+        assertNull(homePipe.getUncertainFluidTransfer());
+        assertEquals(remoteRecord, remotePipe.getUncertainFluidTransfer());
     }
 
     @Test
