@@ -448,11 +448,23 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
     }
 
     private void quarantineUncertainFluid(int channel, EnumFacing facing, FluidStack withdrawn, Throwable failure) {
-        NBTTagCompound record = new NBTTagCompound();
-        record.setTag("Fluid", withdrawn.writeToNBT(new NBTTagCompound()));
-        record.setInteger("Channel", channel);
-        record.setInteger("Side", facing.getIndex());
-        record.setString("Failure", failure.getClass().getName());
+        NBTTagCompound record;
+        try {
+            record = new NBTTagCompound();
+            record.setTag("Fluid", withdrawn.writeToNBT(new NBTTagCompound()));
+            record.setInteger("Channel", channel);
+            record.setInteger("Side", facing.getIndex());
+            record.setString("Failure", failure.getClass().getName());
+        } catch (RuntimeException | Error recordFailure) {
+            if (recordFailure != failure) failure.addSuppressed(recordFailure);
+            // The fluid could not be serialized, but distribution must still pause until an operator reconciles
+            record = new NBTTagCompound();
+            record.setInteger("Amount", withdrawn.amount);
+            record.setInteger("Channel", channel);
+            record.setInteger("Side", facing.getIndex());
+            record.setString("Failure", failure.getClass().getName());
+            record.setBoolean("FluidUnrecorded", true);
+        }
         this.uncertainFluidTransfer = record;
         try {
             markDirty();

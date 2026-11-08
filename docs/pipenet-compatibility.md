@@ -80,7 +80,11 @@ Use a tricorder to identify the paused pipe. A permission-level 4 server operato
 destination and server log, then run `/gt fluid-reconcile <x> <y> <z> [dim] clear acknowledge`
 at the same coordinates after deciding how to reconcile the discrepancy. `dim` is the
 integer dimension id; without it the command targets the sender's own dimension. The
-command never loads a dimension: naming one that is not loaded is an error.
+command never loads a dimension: naming one that is not loaded is an error. It looks worlds
+up with `DimensionManager.getWorld` deliberately, because `MinecraftServer.getWorld`
+initializes an unloaded dimension as a side effect. Relative `~` coordinates resolve from
+the sender's position in the sender's own dimension, so they are rejected when an explicit
+`dim` is given; use absolute coordinates there.
 Acknowledgement logs the old record
 and lifts this pipe's distribution pause; it never creates or restores fluid. A
 destination can remain unavailable after an exception, including when a P2P handler

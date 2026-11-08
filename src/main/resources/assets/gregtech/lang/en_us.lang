@@ -6758,6 +6758,7 @@ gregtech.pipe.uncertain_fluid_transfer=Fluid transfer outcome unknown; automatic
 gregtech.command.fluid_reconcile.usage=/gt fluid-reconcile <x> <y> <z> [dim] inspect | clear acknowledge
 gregtech.command.fluid_reconcile.unloaded=The target chunk must be loaded.
 gregtech.command.fluid_reconcile.dim_unloaded=Dimension %s is not loaded.
+gregtech.command.fluid_reconcile.relative_with_dim=Relative (~) coordinates cannot be combined with an explicit dimension; use absolute coordinates.
 gregtech.command.fluid_reconcile.no_pipe=No tickable fluid pipe at the target position.
 gregtech.command.fluid_reconcile.no_record=This pipe has no uncertain fluid transfer.
 gregtech.command.fluid_reconcile.inspect=The record is an uncertain maximum, not confirmed recoverable fluid. Reconcile the destination before clearing it.
