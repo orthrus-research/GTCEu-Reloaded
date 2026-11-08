@@ -110,6 +110,7 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
                         this.distributingFluid = false;
                     }
                     lastReceivedFrom = 0;
+                    if (uncertainFluidTransfer != null) break; // quarantined: stay blocked
                 }
             }
             oldLastReceivedFrom = lastReceivedFrom;
@@ -212,9 +213,12 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
                 try {
                     accepted = transaction.target.fill(withdrawn.copy(), true);
                 } catch (Throwable failure) {
-                    // Throwable also covers undeclared checked exceptions; precise rethrow keeps the signature
+                    // Throwable also covers undeclared checked exceptions
                     quarantineUncertainFluid(channel, transaction.facing, withdrawn, failure);
-                    throw failure;
+                    if (failure instanceof Error error) throw error; // never swallow Errors
+                    // Exceptions are swallowed once the record is stored: the pipe stays blocked until an
+                    // operator resolves it with the fluid-reconcile command
+                    return;
                 }
                 try {
                     accepted = Math.max(0, Math.min(accepted, withdrawn.amount));
