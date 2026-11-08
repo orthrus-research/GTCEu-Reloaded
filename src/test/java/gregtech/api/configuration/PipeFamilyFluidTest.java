@@ -1,8 +1,10 @@
 package gregtech.api.configuration;
 
+import gregtech.api.util.GTLog;
 import gregtech.common.pipelike.fluidpipe.BlockFluidPipe;
 import gregtech.common.pipelike.fluidpipe.net.PipeTankList;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -22,19 +24,27 @@ import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.common.discovery.ASMDataTable;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.objectweb.asm.Type;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PipeFamilyFluidTest {
 
     private static final BlockPos POS = new BlockPos(0, 64, 0);
+    /** Distinctive prefix of the warning {@link BlockFluidPipe#breakBlock} logs for an unresolved record. */
+    private static final String REMOVAL_WARNING = "Removing fluid pipe with an unresolved transfer";
 
     @BeforeAll
     static void bootstrap() {
@@ -104,6 +114,53 @@ public class PipeFamilyFluidTest {
         read(pipe, saved);
         assertEquals(water.writeToNBT(new NBTTagCompound()),
                 saved(pipe).getCompoundTag("UncertainFluidTransfer").getCompoundTag("Fluid"));
+    }
+
+    @Test
+    void unserializableWithdrawnFluidStillQuarantinesAndPausesDistribution() {
+        ConfigurationTestWorld world = new ConfigurationTestWorld();
+        PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
+        IllegalStateException serializationFailure = new IllegalStateException("Injected serialization failure");
+        // The pipe's own drain hands out a stack that cannot be written, forcing the record fallback
+        FluidTank source = new FluidTank(pipe.getCapacityPerTank()) {
+
+            @Override
+            public FluidStack drain(FluidStack resource, boolean doDrain) {
+                FluidStack drained = super.drain(resource, doDrain);
+                if (!doDrain || drained == null) return drained;
+                return new FluidStack(drained.getFluid(), drained.amount, drained.tag) {
+
+                    @Override
+                    public NBTTagCompound writeToNBT(NBTTagCompound nbt) {
+                        throw serializationFailure;
+                    }
+                };
+            }
+        };
+        pipe.tanksOverride = new FluidTank[] { source };
+        PipeDistributionFailureTarget target = new PipeDistributionFailureTarget(() -> {});
+        connect(world, pipe, target);
+        assertEquals(100, source.fill(new FluidStack(FluidRegistry.WATER, 100), true));
+
+        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> distribute(pipe));
+
+        assertSame(target.failure, failure);
+        assertEquals(1, target.actualFills);
+        assertTrue(List.of(failure.getSuppressed()).contains(serializationFailure));
+        NBTTagCompound record = (NBTTagCompound) pipe.getUncertainFluidTransfer();
+        assertNotNull(record);
+        assertFalse(record.hasKey("Fluid"));
+        assertTrue(record.getBoolean("FluidUnrecorded"));
+        assertEquals(100, record.getInteger("Amount"));
+        assertEquals(0, record.getInteger("Channel"));
+        assertEquals(EnumFacing.EAST.getIndex(), record.getInteger("Side"));
+
+        // The target throws on every real fill, so a resumed distribution would fail here instead of no-op
+        assertEquals(50, source.fill(new FluidStack(FluidRegistry.WATER, 50), true));
+        distribute(pipe);
+        assertEquals(1, target.actualFills);
+        assertEquals(0, target.getFluidAmount());
+        assertEquals(50, source.getFluidAmount());
     }
 
     @Test
@@ -396,6 +453,11 @@ public class PipeFamilyFluidTest {
         for (int tick = 0; tick < 5; tick++) pipe.update();
     }
 
+    private static void breakBlock(ConfigurationTestWorld world) {
+        IBlockState state = world.getBlockState(POS);
+        ((BlockFluidPipe) state.getBlock()).breakBlock(world, POS, state);
+    }
+
     private static NBTTagCompound saved(PipeTestFluidPipe pipe) {
         return pipe.writeToNBT(new NBTTagCompound());
     }
@@ -435,5 +497,45 @@ public class PipeFamilyFluidTest {
         metadata.setString("provenance", "preserve this payload");
         unknown.setTag("Tag", metadata);
         return unknown;
+    }
+
+    /** Records the formatted WARN messages logged through {@link GTLog#logger} while open. */
+    private static final class CapturedWarnings implements AutoCloseable {
+
+        private final Logger logger = (Logger) GTLog.logger;
+        private final List<String> messages = new CopyOnWriteArrayList<>();
+        private final AbstractAppender appender;
+        private final Level previousLevel;
+
+        @SuppressWarnings("deprecation")
+        CapturedWarnings() {
+            this.appender = new AbstractAppender("PipeFamilyFluidTestWarnings", null, null, false) {
+
+                @Override
+                public void append(LogEvent event) {
+                    if (event.getLevel() == Level.WARN) messages.add(event.getMessage().getFormattedMessage());
+                }
+            };
+            this.appender.start();
+            // Without a test configuration log4j falls back to ERROR, which would drop the warning before appenders
+            this.previousLevel = logger.isEnabled(Level.WARN) ? null : logger.getLevel();
+            if (previousLevel != null) logger.setLevel(Level.WARN);
+            logger.addAppender(appender);
+        }
+
+        List<String> matching(String substring) {
+            List<String> matches = new ArrayList<>();
+            for (String message : messages) {
+                if (message.contains(substring)) matches.add(message);
+            }
+            return matches;
+        }
+
+        @Override
+        public void close() {
+            logger.removeAppender(appender);
+            if (previousLevel != null) logger.setLevel(previousLevel);
+            appender.stop();
+        }
     }
 }
