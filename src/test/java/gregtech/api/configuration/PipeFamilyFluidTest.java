@@ -62,7 +62,7 @@ public class PipeFamilyFluidTest {
     }
 
     @Test
-    void failedRealDistributionQuarantinesUncertainFluidAndPropagatesTheOriginalException() {
+    void failedRealDistributionQuarantinesUncertainFluidAndSwallowsTheException() {
         ConfigurationTestWorld world = new ConfigurationTestWorld();
         PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
         PipeDistributionFailureTarget target = new PipeDistributionFailureTarget(() -> {});
@@ -70,9 +70,9 @@ public class PipeFamilyFluidTest {
         assertEquals(100, pipe.getFluidTanks()[0].fill(new FluidStack(FluidRegistry.WATER, 100), true));
         pipe.dirtyNotifications = 0;
 
-        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> distribute(pipe));
+        distribute(pipe);
+        IllegalStateException failure = target.failure;
 
-        assertSame(target.failure, failure);
         assertEquals(1, target.actualFills);
         assertEquals(0, target.getFluidAmount());
         assertNull(pipe.getContainedFluid(0));
@@ -99,9 +99,9 @@ public class PipeFamilyFluidTest {
         assertEquals(100, pipe.getFluidTanks()[0].fill(water, true));
         pipe.dirtyNotifications = 0;
 
-        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> distribute(pipe));
+        distribute(pipe);
+        IllegalStateException failure = target.failure;
 
-        assertSame(target.failure, failure);
         assertEquals(1, target.actualFills);
         assertEquals(0, target.getFluidAmount());
         assertEquals(FluidRegistry.LAVA, pipe.getContainedFluid(0).getFluid());
@@ -142,9 +142,9 @@ public class PipeFamilyFluidTest {
         connect(world, pipe, target);
         assertEquals(100, source.fill(new FluidStack(FluidRegistry.WATER, 100), true));
 
-        IllegalStateException failure = assertThrows(IllegalStateException.class, () -> distribute(pipe));
+        distribute(pipe);
+        IllegalStateException failure = target.failure;
 
-        assertSame(target.failure, failure);
         assertEquals(1, target.actualFills);
         assertTrue(List.of(failure.getSuppressed()).contains(serializationFailure));
         NBTTagCompound record = (NBTTagCompound) pipe.getUncertainFluidTransfer();
@@ -170,7 +170,7 @@ public class PipeFamilyFluidTest {
         PipeDistributionFailureTarget badTarget = new PipeDistributionFailureTarget(() -> {});
         connect(world, pipe, badTarget);
         pipe.getFluidTanks()[0].fill(new FluidStack(FluidRegistry.WATER, 100), true);
-        assertThrows(IllegalStateException.class, () -> distribute(pipe));
+        distribute(pipe);
         NBTTagCompound record = (NBTTagCompound) pipe.getUncertainFluidTransfer();
         NBTTagCompound snapshot = saved(pipe);
         read(pipe, snapshot);
@@ -182,12 +182,31 @@ public class PipeFamilyFluidTest {
         pipe.acknowledgeUncertainFluidTransfer();
         assertNull(pipe.getUncertainFluidTransfer());
         assertFalse(saved(pipe).hasKey("UncertainFluidTransfer"));
-        assertThrows(IllegalStateException.class, () -> distribute(pipe));
+        distribute(pipe);
         assertEquals(2, badTarget.actualFills);
     }
 
     @Test
-    void undeclaredCheckedFailureQuarantinesUncertainFluidAndPropagates() {
+    void errorFromTargetStillPropagatesAfterQuarantine() {
+        ConfigurationTestWorld world = new ConfigurationTestWorld();
+        PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
+        AssertionError error = new AssertionError("Injected error");
+        connect(world, pipe, new FluidTank(1000) {
+
+            @Override
+            public int fill(FluidStack resource, boolean doFill) {
+                if (!doFill) return super.fill(resource, false);
+                throw error;
+            }
+        });
+        assertEquals(100, pipe.getFluidTanks()[0].fill(new FluidStack(FluidRegistry.WATER, 100), true));
+
+        assertSame(error, assertThrows(AssertionError.class, () -> distribute(pipe)));
+        assertNotNull(pipe.getUncertainFluidTransfer());
+    }
+
+    @Test
+    void undeclaredCheckedFailureQuarantinesUncertainFluidAndSwallows() {
         ConfigurationTestWorld world = new ConfigurationTestWorld();
         PipeTestFluidPipe pipe = PipeFamilyTestSupport.fluid(world, POS);
         IOException checked = new IOException("Injected undeclared checked failure");
@@ -203,9 +222,8 @@ public class PipeFamilyFluidTest {
         });
         assertEquals(100, pipe.getFluidTanks()[0].fill(new FluidStack(FluidRegistry.WATER, 100), true));
 
-        IOException failure = assertThrows(IOException.class, () -> distribute(pipe));
+        distribute(pipe);
 
-        assertSame(checked, failure);
         assertEquals(1, actualFills[0]);
         assertNull(pipe.getContainedFluid(0));
         NBTTagCompound record = (NBTTagCompound) pipe.getUncertainFluidTransfer();
