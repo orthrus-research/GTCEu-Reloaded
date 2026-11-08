@@ -76,9 +76,12 @@ Exceptions before a successful source drain returns and arbitrary simulation sid
 are outside this transaction boundary.
 
 Use a tricorder to identify the paused pipe. A permission-level 4 server operator can run
-`/gt fluid-reconcile <x> <y> <z> inspect` in that dimension, compare the record with
-the destination and server log, then use `clear acknowledge` at the same coordinates
-after deciding how to reconcile the discrepancy. Acknowledgement logs the old record
+`/gt fluid-reconcile <x> <y> <z> [dim] inspect`, compare the record with the
+destination and server log, then run `/gt fluid-reconcile <x> <y> <z> [dim] clear acknowledge`
+at the same coordinates after deciding how to reconcile the discrepancy. `dim` is the
+integer dimension id; without it the command targets the sender's own dimension. The
+command never loads a dimension: naming one that is not loaded is an error.
+Acknowledgement logs the old record
 and lifts this pipe's distribution pause; it never creates or restores fluid. A
 destination can remain unavailable after an exception, including when a P2P handler
 retains a recursion guard. Repair or reset the affected destination before expecting
