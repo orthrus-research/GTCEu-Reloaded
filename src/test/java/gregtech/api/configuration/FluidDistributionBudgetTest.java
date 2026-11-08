@@ -141,8 +141,6 @@ public class FluidDistributionBudgetTest {
             Fixture f = new Fixture(1, new int[] { 1, 1, 1, 1, 1, 120 }, 120);
             int budget = f.pipe.getCapacityPerTank() / 2;
             int transferred = f.distribute(start);
-            System.out.println("start=" + start + " capacity=" + f.pipe.getCapacityPerTank() + " budget=" + budget +
-                    " actual=" + transferred);
             assertTrue(transferred <= budget,
                     "rotation " + start + " transferred " + transferred + " over budget " + budget);
         }

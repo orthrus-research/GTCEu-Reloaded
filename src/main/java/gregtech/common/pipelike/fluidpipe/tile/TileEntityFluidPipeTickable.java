@@ -211,7 +211,8 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
                 int accepted;
                 try {
                     accepted = transaction.target.fill(withdrawn.copy(), true);
-                } catch (RuntimeException | Error failure) {
+                } catch (Throwable failure) {
+                    // Throwable also covers undeclared checked exceptions; precise rethrow keeps the signature
                     quarantineUncertainFluid(channel, transaction.facing, withdrawn, failure);
                     throw failure;
                 }
