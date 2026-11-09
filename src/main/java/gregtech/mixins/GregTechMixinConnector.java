@@ -17,6 +17,7 @@ public final class GregTechMixinConnector implements IMixinConnector {
         ConditionalMixin.of("mixins.gregtech.groovy.json").requires("groovyscript")
                 .version(GroovyScriptCompatibility.TESTED_RANGE)
                 .because("GTCEu script caching and typed definitions are verified only for these versions")
+                .orWarn()
                 .register();
         ConditionalMixin.of("mixins.gregtech.theoneprobe.json").requires("theoneprobe").register();
         ConditionalMixin.of("mixins.gregtech.jei.json").requires("jei").register();
