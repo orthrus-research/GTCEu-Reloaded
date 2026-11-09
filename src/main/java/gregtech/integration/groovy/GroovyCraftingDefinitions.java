@@ -4,6 +4,7 @@ import gregtech.api.definition.SourceOrigin;
 import gregtech.api.recipes.definition.*;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
 import gregtech.api.recipes.ingredients.GTRecipeItemInput;
+import gregtech.api.util.GTLog;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -31,13 +32,21 @@ public final class GroovyCraftingDefinitions {
     private static final VarHandle TRANSFORMER;
 
     static {
+        VarHandle condition = null;
+        VarHandle transformer = null;
         try {
             var lookup = MethodHandles.privateLookupIn(IngredientBase.class, MethodHandles.lookup());
-            CONDITION = lookup.findVarHandle(IngredientBase.class, "matchCondition", Predicate.class);
-            TRANSFORMER = lookup.findVarHandle(IngredientBase.class, "transformer", ItemStackTransformer.class);
-        } catch (ReflectiveOperationException failure) {
-            throw new ExceptionInInitializerError(failure);
+            condition = lookup.findVarHandle(IngredientBase.class, "matchCondition", Predicate.class);
+            transformer = lookup.findVarHandle(IngredientBase.class, "transformer", ItemStackTransformer.class);
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError unavailable) {
+            // A GroovyScript that renamed these fields still works: ore inputs keep GroovyScript's own matching.
+            GTLog.logger.warn("GroovyScript ingredient internals changed; ore inputs use GroovyScript matching",
+                    unavailable);
+            condition = null;
+            transformer = null;
         }
+        CONDITION = condition;
+        TRANSFORMER = transformer;
     }
 
     private GroovyCraftingDefinitions() {}
@@ -141,12 +150,15 @@ public final class GroovyCraftingDefinitions {
                     (expansion.grs$getMatcher() == null && expansion.grs$getNbtMatcher() == null &&
                             expansion.grs$getTransformer() == null);
         }
-        return input.getClass() == OreDictIngredient.class && CONDITION.get(input) == null &&
-                TRANSFORMER.get(input) == null;
+        // Without verified access to the condition and transformer, an ore input is treated as custom.
+        return CONDITION != null && TRANSFORMER != null && input.getClass() == OreDictIngredient.class &&
+                CONDITION.get(input) == null && TRANSFORMER.get(input) == null;
     }
 
     private static ItemInput nativeInput(Object input) {
         if (empty(input)) return null;
+        // Parity with GroovyScript 1.5.0 ItemStackMixinExpansion.test: without an NBT matcher the stack's own tag is
+        // ignored and wildcard metadata matches any damage. withNbt/withNbtExact set a matcher and stay custom.
         if (input instanceof ItemStack stack)
             return new ItemIngredient(List.of(ItemValue.of(stack)), 1, true, NbtPolicy.any(), CapabilityPolicy.IGNORE);
         return new OreIngredient(((OreDictIngredient) input).getOreDict(), 1, true, NbtPolicy.any());
