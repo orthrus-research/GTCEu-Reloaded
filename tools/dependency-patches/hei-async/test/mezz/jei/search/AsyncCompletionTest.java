@@ -1,13 +1,22 @@
 package mezz.jei.search;
 
+import mezz.jei.util.Log;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Appender;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Property;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -96,6 +105,36 @@ class AsyncCompletionTest {
             assertTrue(completedWithoutReleasingQueue,
                     "Search termination waited for a callback needing the held client queue lock");
             assertTrue(callbacksDone.await(3, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
+    void throwingCompletionIsLoggedRatherThanSwallowed() throws Exception {
+        Logger logger = (Logger) Log.get();
+        CountDownLatch logged = new CountDownLatch(1);
+        AtomicReference<Throwable> reported = new AtomicReference<>();
+        Appender capture = new AbstractAppender("hei-after-build-capture", null, null, true, Property.EMPTY_ARRAY) {
+            @Override
+            public void append(LogEvent event) {
+                if (event.getLevel() == Level.ERROR &&
+                        "HEI afterBuild callback failed".equals(event.getMessage().getFormattedMessage())) {
+                    reported.set(event.getThrown());
+                    logged.countDown();
+                }
+            }
+        };
+        capture.start();
+        logger.addAppender(capture);
+        try {
+            AsyncPrefixedSearchable.startService();
+            RuntimeException failure = new RuntimeException("callback failure");
+            AsyncPrefixedSearchable.afterBuild(() -> { throw failure; });
+            assertTrue(logged.await(3, TimeUnit.SECONDS), "afterBuild callback failure was not logged");
+            Throwable thrown = reported.get();
+            assertSame(failure, thrown instanceof CompletionException ? thrown.getCause() : thrown);
+        } finally {
+            logger.removeAppender(capture);
+            capture.stop();
         }
     }
 

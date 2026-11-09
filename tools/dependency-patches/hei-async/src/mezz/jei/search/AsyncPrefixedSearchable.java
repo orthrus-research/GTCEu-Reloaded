@@ -35,7 +35,11 @@ public class AsyncPrefixedSearchable extends PrefixedSearchable {
         } else {
             // Completion may enqueue a client task while the client is waiting in endService().
             // Keep that callback outside the executor whose termination the client awaits.
-            service.submit(() -> CompletableFuture.runAsync(task));
+            // The common pool drops callback failures unless they are observed here.
+            service.submit(() -> CompletableFuture.runAsync(task).exceptionally(t -> {
+                Log.get().error("HEI afterBuild callback failed", t);
+                return null;
+            }));
         }
     }
 

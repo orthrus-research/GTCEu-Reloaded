@@ -30,7 +30,7 @@ with zipfile.ZipFile(a.original) as original, zipfile.ZipFile(target) as output:
     changed = [n for n in original.namelist() if original.read(n) != output.read(n)]
     if original.namelist() != output.namelist() or changed != [entry]:
         raise ValueError('Repair changed unrelated entries')
-if digest(target) != 'f75d36d8d0050c7a8b275aed85440b8e94bbdd34a8aed9547b08cbbaf63aeaf4':
+if digest(target) != 'af38fd9a883f629a4be16a3eac14b95ec5d9b3bb91802b994b8cc7ae19361d6d':
     raise ValueError('Rebuilt repair differs from qualified bytes; preserve output and requalify')
 (a.output/'receipt.json').write_text(json.dumps({'original':record(a.original),'adapted':record(target),
     'changed_entries':changed,'sources':[record(f) for f in sorted(root.rglob('*')) if f.is_file() and 'build' not in f.relative_to(root).parts]},indent=2))
