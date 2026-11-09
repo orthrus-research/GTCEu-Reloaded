@@ -15,7 +15,7 @@ record = lambda path: {'path': str(path.resolve()), 'sha256': digest(path), 'byt
 if digest(a.original) != 'c9b812ac3396f3628ca314f10dd775e0f0098cdbaec56be13b4a4f57b70c4443':
     raise ValueError('Unrecognized upstream HEI bytes')
 a.output.mkdir(parents=True, exist_ok=False)
-target = a.output/'jei-4.36.1-async-completion.1.jar'
+target = a.output/'jei-4.36.1-async-completion.2.jar'
 entry = 'mezz/jei/search/AsyncPrefixedSearchable.class'
 with zipfile.ZipFile(root/'build/hei-async-repair.jar') as repair:
     if [n for n in repair.namelist() if n.endswith('.class')] != [entry]:
