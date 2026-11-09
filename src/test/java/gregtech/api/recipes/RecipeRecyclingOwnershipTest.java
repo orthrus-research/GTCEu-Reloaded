@@ -114,12 +114,18 @@ class RecipeRecyclingOwnershipTest {
             var owned = manager.getRecyclingData(stack(Items.DIAMOND, 1));
             var external = new RecyclingData(new MaterialStack(Materials.Copper, 333));
             manager.registerRecyclingData(stack(Items.DIAMOND, 1), external);
-            assertTrue(registrar.clear().value().isEmpty());
+            // Replacing over an externally edited entry is still refused and leaves every table untouched.
+            assertTrue(registrar.replace("owned", List.of()).value().isEmpty());
             assertEquals(revision, map.getRecipeRevision());
             assertEquals(1, map.getRecipeList().size());
             assertSame(external, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
-            manager.registerRecyclingData(stack(Items.DIAMOND, 1), owned);
+            // Clear releases the edited entry instead of wedging: the outside value stays, the owned recipe goes.
             assertTrue(registrar.clear().value().isPresent());
+            assertTrue(map.getRecipeList().isEmpty());
+            assertSame(external, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
+            assertNotSame(owned, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
+            assertTrue(registrar.clear().value().isPresent());
+            assertSame(external, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
         } finally {
             restore(before);
         }

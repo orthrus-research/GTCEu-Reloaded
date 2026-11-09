@@ -149,6 +149,28 @@ class SharedRecyclingOwnershipTest {
         assertEquals(data(400), manager.getRecyclingData(key(Items.DIAMOND)));
     }
 
+    @Test
+    void clearReleasesMetadataEditedOutsideItsGroupInsteadOfWedging() {
+        var manager = new RecyclingManager();
+        var owner = new RecyclingOwner();
+        var other = new RecyclingOwner();
+        manager.registerRecyclingData(key(Items.APPLE), data(100));
+        manager.ownership().prepare(owner, "first",
+                List.of(contribution("first", Items.APPLE, 2, Items.DIAMOND)), false).publish();
+        assertEquals(data(200), manager.getRecyclingData(key(Items.DIAMOND)));
+        manager.registerRecyclingData(key(Items.DIAMOND), data(999));
+        // Changes by another owner still refuse to resolve over an owned entry that was edited outside.
+        assertThrows(IllegalStateException.class, () -> manager.ownership().prepare(other, "other",
+                List.of(contribution("other", Items.APPLE, 1, Items.EMERALD)), false));
+        manager.ownership().prepare(owner, "all", List.of(), true).publish();
+        assertEquals(data(999), manager.getRecyclingData(key(Items.DIAMOND)));
+        manager.ownership().prepare(owner, "all", List.of(), true).publish();
+        manager.ownership().prepare(other, "other",
+                List.of(contribution("other", Items.APPLE, 1, Items.EMERALD)), false).publish();
+        assertEquals(data(100), manager.getRecyclingData(key(Items.EMERALD)));
+        assertEquals(data(999), manager.getRecyclingData(key(Items.DIAMOND)));
+    }
+
     private static RecyclingContribution contribution(String name, Item input, int count, Item output) {
         return new RecyclingContribution(origin(name), key(output), 1, Map.of(key(input), (long) count));
     }

@@ -5,6 +5,9 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+-reloaded.[0-9]+' # e.g. v2.8.10-reloaded.1; upstream's own tags never match
+      # Pre-releases such as v3.0.0-reloaded.1-alpha.1 (gradle.properties modVersion). Filter patterns must match the
+      # whole tag, so the line above alone never matches a suffixed tag; '*' matches any suffix without '/'.
+      - 'v[0-9]+.[0-9]+.[0-9]+-reloaded.[0-9]+-*'
 
 concurrency:
   group: publish-${{ github.head_ref || github.ref }}

@@ -47,16 +47,25 @@ final class RecyclingRecoveryOwnership {
         }
         List<OwnedRecipeDefinition> toRemove = new ArrayList<>(previousGenerated);
         List<OwnedRecipeDefinition> toAdd = new ArrayList<>();
-        for (var baseline : baselines.values().stream().flatMap(List::stream).toList()) {
-            if (present.get(baseline.map()).contains(baseline.recipe()))
+        Set<Recipe> released = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (var entry : baselines.entrySet()) {
+            for (var baseline : entry.getValue()) {
+                if (!present.get(baseline.map()).contains(baseline.recipe())) continue;
+                // Clearing releases a baseline that something outside already restored, instead of wedging every
+                // later clear. Other changes still refuse to run while the shared graph disagrees with ownership.
+                if (clear && entry.getKey().owner() == addressed.owner()) {
+                    released.add(baseline.recipe());
+                    continue;
+                }
                 throw new RecipeRegistrationException("recipe.baseline.changed", baseline.origin(),
                         "A displaced recovery baseline was registered outside its owning group");
+            }
         }
         if (clear) {
             nextDefinitions.keySet().removeIf(key -> key.owner() == addressed.owner());
             nextBaselines.entrySet().removeIf(entry -> {
                 if (entry.getKey().owner() != addressed.owner()) return false;
-                toAdd.addAll(entry.getValue());
+                entry.getValue().stream().filter(recipe -> !released.contains(recipe.recipe())).forEach(toAdd::add);
                 return true;
             });
         } else if (requested != null) {

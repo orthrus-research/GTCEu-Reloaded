@@ -220,13 +220,24 @@ class RecipeFurnaceOwnershipTest {
         recipes.remove(foreign);
         success(owner.replace("baking", List.of(definition(map))));
         recipes.put(foreign, new ItemStack(Items.BREAD));
-        var before = new FurnaceRegistrySnapshot(recipes, experience);
-        failed(owner.clear(), "recipe.furnace.conflict");
-        assertTrue(before.isCurrent());
-        assertEquals(1, map.getRecipeList().size());
+        ItemStack xpKey = experience.keySet().iterator().next();
+        // A foreign recipe now relies on the owned XP. Clear must not wedge: it releases the claim and keeps the value.
+        success(owner.clear());
+        assertTrue(map.getRecipeList().isEmpty());
+        assertEquals(1, recipes.size());
+        assertTrue(recipes.containsKey(foreign));
+        assertEquals(.5f, experience.get(xpKey));
+        assertEquals(.5f, FurnaceRecipes.instance().getSmeltingExperience(new ItemStack(Items.BREAD)));
+        // The released entry is no longer owned, so later clears neither fail nor remove it.
+        success(owner.clear());
         recipes.remove(foreign);
         success(owner.clear());
-        assertTrue(experience.isEmpty());
+        assertEquals(.5f, experience.get(xpKey));
+        // A replacement that disagrees with the retained value still conflicts instead of rewriting foreign XP.
+        recipes.put(foreign, new ItemStack(Items.BREAD));
+        var different = map(effect(new ItemStack(Items.APPLE), new ItemStack(Items.BREAD), .75f));
+        failed(owner.replace("baking", List.of(definition(different))), "recipe.furnace.conflict");
+        assertEquals(.5f, experience.get(xpKey));
     }
 
     @Test

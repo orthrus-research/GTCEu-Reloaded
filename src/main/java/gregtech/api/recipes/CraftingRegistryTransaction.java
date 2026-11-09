@@ -51,6 +51,16 @@ public final class CraftingRegistryTransaction {
 
     static CraftingRegistryTransaction prepare(List<ForgeRegistry<IRecipe>> registries,
                                                Map<ResourceLocation, IRecipe> replacements) {
+        var vanilla = RegistryManager.VANILLA.getRegistry(IRecipe.class);
+        // VANILLA is the vanilla-only snapshot: it may receive replacements of names it already holds, never new ones.
+        return prepare(registries, replacements,
+                vanilla instanceof ForgeRegistry<IRecipe> mirror && registries.indexOf(mirror) > 0 ? mirror : null);
+    }
+
+    /** {@code existingOnly} is a mirror that only receives names it already contains (null for none). */
+    static CraftingRegistryTransaction prepare(List<ForgeRegistry<IRecipe>> registries,
+                                               Map<ResourceLocation, IRecipe> replacements,
+                                               ForgeRegistry<IRecipe> existingOnly) {
         registries = List.copyOf(registries);
         if (registries.isEmpty()) throw new IllegalArgumentException("An active crafting registry is required");
         replacements = Collections.unmodifiableMap(new LinkedHashMap<>(replacements));
@@ -79,7 +89,11 @@ public final class CraftingRegistryTransaction {
             int id = previous == null ? occupied.nextClearBit(minimum) :
                     CraftingRegistryAccess.ids(drafts.getFirst()).inverse().get(previous);
             if (id > maximum) throw new IllegalStateException("Crafting registry has no available shared recipe ID");
-            for (var draft : drafts) {
+            for (int index = 0; index < drafts.size(); index++) {
+                var draft = drafts.get(index);
+                if (index > 0 && registries.get(index) == existingOnly &&
+                        !CraftingRegistryAccess.names(draft).containsKey(name))
+                    continue;
                 if (CraftingRegistryAccess.aliases(draft).containsKey(name))
                     throw new IllegalStateException("Use a crafting recipe's canonical name, not an alias: " + name);
                 var existing = CraftingRegistryAccess.names(draft).get(name);

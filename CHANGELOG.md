@@ -18,6 +18,12 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 | Pipes | Preserve named fluid-containment attributes through pipe sizing and graph saves; restore loaded pipes' derived decisions without replacing tanks or changing saved geometry and connections |
 | Storage | Expose native crate layouts and retention behavior; support retained machine replacement across namespaces without stale harvest state |
 | Runtime | Require Java 26 and Cleanroom 0.7.14-alpha; remove the Java 8 and standalone Forge lanes |
+| Breaking | Remove the BetterQuesting quest-database migration (`BQuDataFixer`, run at server start) and the `/gregtech datafix` command. Upgrade quest databases on a 2.x release before moving to 3.0; native world and item saved-state migration is unchanged |
+| Authoring | Apply the GroovyScript mixins only on the tested GroovyScript 1.5.0; other versions keep stock script caching and report typed Groovy definitions as unavailable instead of failing at startup |
+| Authoring | Degrade script-cache persistence failures (locked or unreadable `cache/groovy`, link loops) to a session-only cache with a warning; unverified bytecode is still never reused |
+| Recipes | Let `clear()` and `/gs reload` release furnace XP, recycling metadata and recovery baselines that outside code now relies on, instead of failing every later reload |
+| Recipes | Restore every published participant when a later registration step fails, and keep new crafting names out of the vanilla registry snapshot |
+| Build | Publish pre-release tags such as `v3.0.0-reloaded.1-alpha.1` |
 | Dependencies | Align CodeChickenLib compilation, tests and runtime on the pinned 3.3.10 release; verify its production artifact hash during the build |
 | Inventory | Reject out-of-range slots in combined item handlers before dispatch, preserving input stacks and avoiding missing-handler exceptions |
 | Authoring | Replace CT/Zen adapters with shared typed Java definitions, source diagnostics and GroovyScript 1.5.0 authoring |

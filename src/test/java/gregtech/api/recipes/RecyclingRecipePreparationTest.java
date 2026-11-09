@@ -265,12 +265,14 @@ class RecyclingRecipePreparationTest {
         try {
             assertTrue(registrar.replaceRecycling("recovery", List.of(), baselines).value().isPresent());
             baseline.map().compileRecipe(baseline.recipe());
-            assertEquals("recipe.baseline.changed", registrar.clear().diagnostics().getFirst().code());
+            // An outside restore conflicts with ownership changes, but clear releases it instead of wedging.
+            assertEquals("recipe.baseline.changed",
+                    registrar.replaceRecycling("other", List.of(), List.of()).diagnostics().getFirst().code());
+            assertTrue(registrar.clear().value().isPresent());
             assertEquals(1, baseline.map().getRecipesByCategory().values().stream().flatMap(List::stream)
                     .filter(recipe -> recipe == baseline.recipe()).count());
-            baseline.map().removeRecipe(baseline.recipe());
-            assertTrue(registrar.clear().value().isPresent());
             baselines.forEach(value -> assertSame(value.recipe(), find(value.map(), value.recipe())));
+            assertTrue(registrar.clear().value().isPresent());
         } finally {
             assertTrue(registrar.clear().value().isPresent());
             baselines.forEach(value -> value.map().removeRecipe(value.recipe()));

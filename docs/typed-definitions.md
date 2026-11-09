@@ -299,6 +299,11 @@ group's contributions/generated recovery while keeping adopted recovery recipes 
 restores their baselines. A group cannot switch between direct, recovery-only and crafting ownership
 without clearing its owner first.
 
+Replacements refuse to run while outside code has changed owned state. `clear()` does not refuse, so
+`/gs reload` can never wedge: furnace XP that an outside smelting recipe now uses, recycling metadata
+edited outside its group, and recovery baselines that something else already re-registered are released
+and keep their current values. Clear then stops owning them.
+
 `craftingGroup(group)` on either the Java registrar or the Groovy frontend returns an optional,
 immutable `CraftingGroupDefinition` containing the last accepted declarations, contributions and
 recovery policies. Helpers can copy and revise these lists before resubmitting the full group,
@@ -662,6 +667,13 @@ contents; it does not modify shared property objects or infer properties for unl
 Ordinary fluid handling remains native and does not invoke the authoring script.
 
 ## Content registration and runtime support
+
+The GTCEu script cache in `cache/groovy` is applied only on the tested GroovyScript version (1.5.0).
+Other versions keep GroovyScript's own caching, and typed Groovy definitions report that they are
+unavailable. The cache key covers script sources, dependency JARs and GroovyScript's compiler
+settings. It does not cover config of other mods that toggles their class transformers, so delete
+`cache/groovy` after changing such config. If the cache cannot be read, written or verified, scripts
+are recompiled for that session and a warning is logged.
 
 Content becomes available through its native registration, including declarations authored in Groovy.
 Consumers resolve registered identities after the relevant content phase. Reloaded does not parse,

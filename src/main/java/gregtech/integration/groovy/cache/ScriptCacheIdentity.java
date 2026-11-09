@@ -81,6 +81,9 @@ public final class ScriptCacheIdentity {
     private static String tree(Path root) throws IOException {
         MessageDigest digest = digest();
         if (!Files.exists(root)) return HexFormat.of().formatHex(digest.digest());
+        // Follow links on purpose: GroovyScript loads scripts through linked directories, so their contents must
+        // invalidate the cache. A link loop throws FileSystemLoopException; ScriptCacheGuard treats that as an
+        // unverifiable tree and falls back to a session-only identity rather than failing script loading.
         try (var walk = Files.walk(root, java.nio.file.FileVisitOption.FOLLOW_LINKS)) {
             for (Path path : walk.filter(Files::isRegularFile).sorted().toList()) {
                 String relative = root.relativize(path).toString().replace('\\', '/');

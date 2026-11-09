@@ -96,6 +96,38 @@ class CraftingRegistryTransactionTest {
     }
 
     @Test
+    void vanillaMirrorOnlyReceivesNamesItAlreadyContains() {
+        var registries = mirrors();
+        var vanilla = registries.get(2);
+        var shared = name();
+        var original = recipe(shared, Items.COAL);
+        registries.forEach(registry -> registry.register(original));
+        var vanillaBefore = new CraftingRegistryImage(vanilla);
+        var added = name();
+        var addedValue = recipe(added, Items.DIAMOND);
+        var transaction = CraftingRegistryTransaction.prepare(registries, Map.of(added, addedValue), vanilla);
+        transaction.publish();
+        assertSame(addedValue, registries.get(0).getValue(added));
+        assertSame(addedValue, registries.get(1).getValue(added));
+        assertFalse(vanilla.containsKey(added));
+        assertTrue(vanillaBefore.matches(vanilla));
+        var removal = new LinkedHashMap<ResourceLocation, IRecipe>();
+        removal.put(added, null);
+        var disabled = CraftingRegistryTransaction.prepare(registries, removal, vanilla);
+        disabled.publish();
+        assertInstanceOf(DisabledCraftingRecipe.class, registries.get(0).getValue(added));
+        assertTrue(vanillaBefore.matches(vanilla));
+        disabled.restore();
+        transaction.restore();
+        var replacement = recipe(shared, Items.DIAMOND);
+        var replaced = CraftingRegistryTransaction.prepare(registries, Map.of(shared, replacement), vanilla);
+        replaced.publish();
+        registries.forEach(registry -> assertSame(replacement, registry.getValue(shared)));
+        replaced.restore();
+        assertTrue(vanillaBefore.matches(vanilla));
+    }
+
+    @Test
     void removingAnAbsentNameIsANoopAndDoesNotCreateADummy() {
         var registries = mirrors();
         var before = registries.stream().map(CraftingRegistryImage::new).toList();

@@ -11,7 +11,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Detached native tables. Registry objects and their live collection views survive publication. */
+/**
+ * Detached native tables. Registry objects and their live collection views survive publication.
+ * <p>
+ * {@link #apply} replaces whole tables, so a concurrent reader can observe an intermediate state. Publication is
+ * therefore only supported while every reader is quiescent: registration runs on the owning thread during load,
+ * and {@code /gs reload} runs on the server thread while the integrated client waits for the reload to finish and
+ * HEI rebuilds its lookups afterwards. A per-name diff would not make concurrent reads safe either, because the
+ * underlying Forge maps are not thread-safe. Callers that publish while another thread may read must synchronize
+ * with that reader first.
+ */
 final class CraftingRegistryImage {
 
     private final Map<ResourceLocation, IRecipe> names;

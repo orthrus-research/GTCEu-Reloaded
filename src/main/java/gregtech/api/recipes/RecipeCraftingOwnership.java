@@ -8,7 +8,14 @@ import net.minecraft.util.ResourceLocation;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** Shared name claims and per-owner baselines; accessed only during quiescent registration. */
+/**
+ * Shared name claims and per-owner baselines; accessed only during quiescent registration.
+ * <p>
+ * Claims are released only by the owner's {@code clear()}. A registrar dropped without clearing leaves its recipes
+ * published, and its claim keeps another owner from overwriting recipes whose baseline only the dropped owner
+ * holds. Releasing claims on garbage collection would make ownership nondeterministic. Owners are long-lived
+ * (one per frontend, for example Groovy's registrar) and must call {@code clear()} before they are discarded.
+ */
 final class RecipeCraftingOwnership {
 
     private static Map<ResourceLocation, CraftingClaim> claims = new LinkedHashMap<>();

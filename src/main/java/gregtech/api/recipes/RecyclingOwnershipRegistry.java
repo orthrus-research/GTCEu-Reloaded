@@ -9,6 +9,7 @@ import gregtech.api.util.GTUtility;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -103,14 +104,26 @@ public final class RecyclingOwnershipRegistry {
         // Restore the whole owned view before resolving it again. Otherwise retained groups can read stale
         // compositions from an upstream group that was replaced or removed during this transaction.
         groups.values().forEach(removed::putAll);
+        Set<ItemAndMetadata> cleared = new HashSet<>();
+        if (clear) groups.forEach((key, values) -> {
+            if (key.owner() == owner) cleared.addAll(values.keySet());
+        });
+        Set<ItemAndMetadata> released = new HashSet<>();
         removed.forEach((key, data) -> {
             if (!Objects.equals(original.get(key), data)) {
+                // Clearing releases an entry edited outside its group: the outside value stays and ownership ends.
+                // Refusing would fail every later clear, and every reload, until restart.
+                if (cleared.contains(key)) {
+                    released.add(key);
+                    return;
+                }
                 throw new IllegalStateException("Owned recycling metadata changed outside its group: " + key);
             }
             RecyclingData baseline = baselines.get(key);
             if (baseline == null) working.remove(key);
             else working.put(key, baseline);
         });
+        removed.keySet().removeAll(released);
 
         Map<ItemAndMetadata, List<RecyclingContribution>> pending = new LinkedHashMap<>();
         Map<ItemAndMetadata, RecyclingGroup> owners = new HashMap<>();

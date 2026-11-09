@@ -12,6 +12,7 @@ import gregtech.api.recipes.definition.RecipeDefinition;
 import gregtech.api.recipes.definition.RecoveryDefinition;
 import gregtech.api.recipes.definition.RecyclingRecipeDefinition;
 import gregtech.api.recipes.definition.RegistrationReceipt;
+import gregtech.api.util.GTLog;
 
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
@@ -175,7 +176,14 @@ public final class RecipeDefinitionRegistrar {
         var publicationErrors = publishFurnace(group, prepared,
                 recyclingChange.value().orElseThrow(), furnaceChange.value().orElseThrow());
         if (!publicationErrors.isEmpty()) return DefinitionResult.failure(publicationErrors);
-        recyclingChange.value().orElseThrow().publish();
+        // Recycling publication only swaps prevalidated state, but a failure must still not strand furnace tables.
+        var publication = new RecipePublication();
+        publication.published(furnaceChange.value().orElseThrow()::restore);
+        try {
+            recyclingChange.value().orElseThrow().publish();
+        } catch (RuntimeException failure) {
+            return DefinitionResult.failure(List.of(rolledBack(origin(group, prepared), publication, failure)));
+        }
         furnaceChange.value().orElseThrow().commitOwnership();
         if (!displaced.isEmpty()) recyclingBaselines.put(group, displaced);
         if (prepared.isEmpty() && !recyclingBaselines.containsKey(group)) groups.remove(group);
@@ -331,9 +339,12 @@ public final class RecipeDefinitionRegistrar {
     public DefinitionResult<Integer> clear() {
         requireOwner();
         List<OwnedRecipeDefinition> previous = groups.values().stream().flatMap(List::stream).toList();
-        var restored = recyclingBaselines.values().stream().flatMap(List::stream).toList();
-        var baselineErrors = verifyBaselines();
-        if (!baselineErrors.isEmpty()) return DefinitionResult.failure(baselineErrors);
+        // A displaced baseline that something outside already re-registered is released, not restored twice; refusing
+        // would fail this clear, and every reload after it, until restart.
+        var restored = recyclingBaselines.values().stream().flatMap(List::stream)
+                .filter(baseline -> baseline.map().getRecipesByCategory().values().stream().flatMap(List::stream)
+                        .noneMatch(recipe -> recipe == baseline.recipe()))
+                .toList();
         var recyclingChange = prepareRecycling("<all groups>", List.of(), true, previous, restored);
         if (recyclingChange.value().isEmpty()) return DefinitionResult.failure(recyclingChange.diagnostics());
         int removedRecovery = recyclingChange.value().orElseThrow().previousRecoveryRecipes();
@@ -458,17 +469,12 @@ public final class RecipeDefinitionRegistrar {
         if (!recyclingChange.isCurrent() || !craftingChange.isCurrent())
             return List.of(error("recipe.registry.changed", source,
                     "A recipe, crafting or composition registry changed during preparation"));
-        boolean furnacePublished = false;
-        boolean craftingPublished = false;
+        var publication = new RecipePublication();
         try {
-            if (furnaceChange != null) {
-                furnaceChange.publish();
-                furnacePublished = true;
-            }
+            if (furnaceChange != null) publication.publish(furnaceChange::publish, furnaceChange::restore);
             if (!recyclingChange.isCurrent() || !craftingChange.isCurrent())
                 throw new IllegalStateException("A registry changed while publishing furnace tables");
-            craftingChange.publish();
-            craftingPublished = true;
+            publication.publish(craftingChange::publish, craftingChange::restore);
             if (!recyclingChange.isCurrent())
                 throw new IllegalStateException("A registry changed while publishing crafting tables");
             // Remaining publications only swap prevalidated native state; they do not invoke author callbacks.
@@ -476,11 +482,20 @@ public final class RecipeDefinitionRegistrar {
             craftingChange.commitOwnership();
             if (furnaceChange != null) furnaceChange.commitOwnership();
             return List.of();
-        } catch (IllegalStateException failure) {
-            if (craftingPublished) craftingChange.restore();
-            if (furnacePublished) furnaceChange.restore();
-            return List.of(error("recipe.registry.changed", source, failure.getMessage()));
+        } catch (RuntimeException failure) {
+            return List.of(rolledBack(source, publication, failure));
         }
+    }
+
+    private static DefinitionDiagnostic rolledBack(SourceOrigin source, RecipePublication publication,
+                                                   RuntimeException failure) {
+        publication.rollback(failure);
+        if (failure.getSuppressed().length > 0) {
+            GTLog.logger.error("Recipe publication failed and could not be fully restored", failure);
+            return error("recipe.registry.restore", source, failure.getMessage() +
+                    "; restoring published registries also failed, see the log");
+        }
+        return error("recipe.registry.changed", source, failure.getMessage());
     }
 
     private SourceOrigin origin(String group, List<OwnedRecipeDefinition> prepared) {

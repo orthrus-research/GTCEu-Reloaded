@@ -65,6 +65,11 @@ numbers; do not restart allocation in a new script order.
 
 ## Intentional source/API changes
 
+- Breaking: the BetterQuesting quest-database migration (`BQuDataFixer`, which ran at server start) and
+  the `/gregtech datafix` command are removed. Reloaded no longer rewrites external quest databases.
+  To upgrade a pack's quests, load the world once on a 2.x release, which still runs the migration, and
+  then move to 3.0. Native world and item saved-state migration is unchanged.
+
 - Recipe-map `addRecipe`, `compileRecipe`, `removeRecipe` and `removeAllRecipes` are final so all
   registration paths maintain the same indexes. Move subclass registration side effects to declared
   immutable `RecipeRegistrationState` values; return a detached value from preparation. Existing
