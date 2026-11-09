@@ -24,9 +24,7 @@ repair is identified by its hash, not merely by HEI's embedded 4.36.1 version.
 Its SHA-256 is `af38fd9a883f629a4be16a3eac14b95ec5d9b3bb91802b994b8cc7ae19361d6d`,
 written as `jei-4.36.1-async-completion.2.jar`. The `.1` name belongs only to the
 earlier `f75d36d8...` bytes; give any future byte change a new suffix.
-This revision logs completion-callback failures instead of dropping them. Native validation
-recorded `f75d36d8d0050c7a8b275aed85440b8e94bbdd34a8aed9547b08cbbaf63aeaf4`, the revision
-without that logging; the current bytes still need native requalification.
+This revision logs completion-callback failures instead of dropping them.
 The replacement class retains upstream Java 8 bytecode compatibility so the Java 26
 toolchain reproduces the qualified dependency exactly. This does not add a Java 8
 lane to Reloaded's Java 26 product.

@@ -17,7 +17,7 @@ it does not establish compatibility with every GTCEu addon, existing pack or leg
 | CodeChickenLib | 3.3.10, Modrinth release `CBqIvJQ2`; SHA-256 `bd27374119e728569d6b8e7f493db70869cf8f915f10089b421df76b6a349b34` |
 | ModularUI | 3.1.6; SHA-256 `4c16829c70b322aab735e73f53608fcabbf1d14956d5365c0c2b911c4d4dca54` |
 | Groovy authoring | GroovyScript 1.5.0; SHA-256 `9f7edb9f4b668059b7517afc0cd872a65ea9014772862d9110347331e25b63c4`; optional for Java-only consumers |
-| HEI reload | Repaired 4.36.1; SHA-256 `f75d36d8d0050c7a8b275aed85440b8e94bbdd34a8aed9547b08cbbaf63aeaf4` |
+| HEI reload | Repaired 4.36.1; SHA-256 `af38fd9a883f629a4be16a3eac14b95ec5d9b3bb91802b994b8cc7ae19361d6d` |
 | Client support | Fugue 0.25.5 and Scalar Legacy artifact 1.0.1 |
 
 Unpatched HEI 4.36.1 can stall during asynchronous Groovy reload. Use the exact repaired
