@@ -81,6 +81,8 @@ public class RecyclingHandler {
                 stack = new ItemStack((Block) ingredient, 1);
             } else if (ingredient instanceof String) {
                 stack = OreDictUnifier.get((String) ingredient);
+            } else if (ingredient instanceof NativeCraftingIngredient compiled) {
+                stack = compiled.recyclingStack();
             } else if (ingredient instanceof Ingredient matching) {
                 ItemStack[] alternatives = matching.getMatchingStacks();
                 stack = alternatives.length == 0 ? ItemStack.EMPTY : alternatives[0];

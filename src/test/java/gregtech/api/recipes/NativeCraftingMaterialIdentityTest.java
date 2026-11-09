@@ -1,6 +1,7 @@
 package gregtech.api.recipes;
 
 import gregtech.Bootstrap;
+import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.recipes.fixtures.RecyclingUnificationFixture;
 import gregtech.api.recipes.ingredients.GTRecipeOreInput;
@@ -8,6 +9,9 @@ import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.registry.IMaterialRegistryManager;
 import gregtech.api.unification.ore.OrePrefix;
+import gregtech.api.unification.stack.ItemAndMetadata;
+import gregtech.api.unification.stack.MaterialStack;
+import gregtech.api.unification.stack.RecyclingData;
 import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.core.unification.material.internal.MaterialRegistryManager;
 
@@ -19,6 +23,7 @@ import net.minecraft.init.Items;
 import net.minecraft.inventory.ContainerDispenser;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.InventoryCrafting;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
@@ -36,6 +41,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -223,6 +229,37 @@ class NativeCraftingMaterialIdentityTest {
         OreDictionary.getOres(ore).removeIf(stack -> stack.getItem() == Items.DYE);
         assertEquals(List.of(RecipeItemHelper.pack(new ItemStack(Items.COAL))),
                 ingredient.getValidItemStacksPacked());
+    }
+
+    @Test
+    void recyclingUsesCanonicalStackWhenForeignMemberRegistersFirst() {
+        // Forge ore membership is keyed by item id, so both fixture items need real registry ids.
+        var foreign = new ItemStack(registered(new ResourceLocation("zz_foreign", "canonical_dust")));
+        var canonical = new ItemStack(registered(new ResourceLocation("gregtech", "recycling_canonical_dust")));
+        register(foreign, core);
+        register(canonical, core);
+        var ingredient = (Ingredient) ModHandler.finalizeIngredient(new UnificationEntry(OrePrefix.dust, core));
+        // Native membership keeps registration order, so the first alternative is the foreign item.
+        ItemStack[] members = ingredient.getMatchingStacks();
+        assertEquals(2, members.length);
+        assertSame(foreign.getItem(), members[0].getItem());
+        assertSame(canonical.getItem(), OreDictUnifier.get(OrePrefix.dust, core).getItem());
+
+        var inputs = RecyclingHandler.shapedInputs("AA", 'A', ingredient);
+        assertEquals(Map.of(new ItemAndMetadata(canonical), 2L), inputs);
+        var data = RecyclingHandler.getRecyclingIngredients(inputs, 1,
+                stack -> new RecyclingData(new MaterialStack(stack.getItem() == canonical.getItem() ? core : pack,
+                        GTValues.M)));
+        assertNotNull(data);
+        assertEquals(List.of(new MaterialStack(core, 2 * GTValues.M)), data.getMaterials());
+    }
+
+    private static Item registered(ResourceLocation name) {
+        Item existing = ForgeRegistries.ITEMS.getValue(name);
+        if (existing != null && name.equals(existing.getRegistryName())) return existing;
+        Item item = new Item().setRegistryName(name);
+        ForgeRegistries.ITEMS.register(item);
+        return item;
     }
 
     private void register(ItemStack stack, Material material) {

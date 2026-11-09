@@ -12,6 +12,7 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 | --- | --- |
 | Build | Normalize packaged text line endings so Windows checkouts and clean source exports produce identical mod JARs |
 | Recipes | Clear old recipe-viewer category lookups when HEI rebuilds, preventing duplicate machine recipe links and retained obsolete category objects after reload |
+| Recipes | Shaped crafting recycling resolves material ore inputs to the unified GregTech stack, so another mod's item registered first under the same ore name no longer sets the recycling composition |
 | Authoring | Let native and typed recipe operations maintain addon-declared registration state and secondary indexes through one shared API |
 | Authoring | Keep quantum controller, proxy and extender rendering methods and the clipboard GUI cache client-only so dedicated-server Groovy inspection does not resolve client types |
 | Authoring | Remove the remaining CT-specific material-component array accessor; use the native material-component list |

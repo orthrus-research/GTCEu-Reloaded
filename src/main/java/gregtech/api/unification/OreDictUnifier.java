@@ -209,10 +209,16 @@ public class OreDictUnifier {
 
     /** Exact registered member identity. Wildcard membership is queried separately by the native index. */
     public static @Nullable ResourceLocation getOreMaterial(String oreName, Item item, int metadata) {
+        UnificationEntry entry = getOreEntry(oreName, item, metadata);
+        Material material = entry == null ? null : entry.material;
+        return material == null ? null : material.getResourceLocation();
+    }
+
+    /** Exact registered prefix and material bound to one ore-name member, or null when the name is unparsed. */
+    public static @Nullable UnificationEntry getOreEntry(String oreName, Item item, int metadata) {
         var bindings = registrations(item, metadata);
         var binding = bindings == null ? null : bindings.get(oreName);
-        Material material = binding == null ? null : binding.entry().material;
-        return material == null ? null : material.getResourceLocation();
+        return binding == null ? null : binding.entry();
     }
 
     @NotNull

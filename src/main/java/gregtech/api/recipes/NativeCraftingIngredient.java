@@ -1,6 +1,8 @@
 package gregtech.api.recipes;
 
 import gregtech.api.recipes.ingredients.GTRecipeInput;
+import gregtech.api.unification.OreDictUnifier;
+import gregtech.api.unification.stack.UnificationEntry;
 
 import net.minecraft.client.util.RecipeItemHelper;
 import net.minecraft.creativetab.CreativeTabs;
@@ -67,6 +69,27 @@ final class NativeCraftingIngredient extends Ingredient {
             } else result.add(stack.copy());
         }
         return result.toArray(ItemStack[]::new);
+    }
+
+    /**
+     * Recycling stack: the canonical unified form of an ore entry when it is still a member, so native member order
+     * cannot select a foreign item; otherwise the first matching stack.
+     */
+    ItemStack recyclingStack() {
+        if (input.isOreDict()) {
+            String oreName = OreDictionary.getOreName(input.getOreDict());
+            for (ItemStack member : input.getInputStacks()) {
+                UnificationEntry entry = OreDictUnifier.getOreEntry(oreName, member.getItem(),
+                        member.getItemDamage());
+                if (entry == null) continue;
+                ItemStack canonical = OreDictUnifier.get(entry);
+                if (!canonical.isEmpty() && canonical.getMetadata() != OreDictionary.WILDCARD_VALUE &&
+                        input.acceptsStack(canonical))
+                    return canonical;
+            }
+        }
+        ItemStack[] alternatives = getMatchingStacks();
+        return alternatives.length == 0 ? ItemStack.EMPTY : alternatives[0];
     }
 
     boolean retained() {
