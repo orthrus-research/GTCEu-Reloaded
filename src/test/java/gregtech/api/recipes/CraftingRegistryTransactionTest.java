@@ -11,6 +11,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistry;
+import net.minecraftforge.registries.RegistryManager;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -124,6 +125,30 @@ class CraftingRegistryTransactionTest {
         replaced.publish();
         registries.forEach(registry -> assertSame(replacement, registry.getValue(shared)));
         replaced.restore();
+        assertTrue(vanillaBefore.matches(vanilla));
+    }
+
+    @Test
+    void productionPreparationTreatsTheRealVanillaRegistryAsExistingOnly() {
+        var vanilla = (ForgeRegistry<IRecipe>) RegistryManager.VANILLA.getRegistry(IRecipe.class);
+        assertNotNull(vanilla, "the test bootstrap must provide a VANILLA crafting registry");
+        var registries = new ArrayList<>(mirrors().subList(0, 2));
+        assertFalse(registries.contains(vanilla));
+        registries.add(vanilla);
+        var vanillaBefore = new CraftingRegistryImage(vanilla);
+        var added = name();
+        var addedValue = recipe(added, Items.DIAMOND);
+        // The 2-arg overload must detect the VANILLA mirror itself; the explicit 3-arg form is not used here.
+        var transaction = CraftingRegistryTransaction.prepare(registries, Map.of(added, addedValue));
+        transaction.publish();
+        try {
+            assertSame(addedValue, registries.get(0).getValue(added));
+            assertSame(addedValue, registries.get(1).getValue(added));
+            assertFalse(vanilla.containsKey(added));
+            assertTrue(vanillaBefore.matches(vanilla));
+        } finally {
+            transaction.restore();
+        }
         assertTrue(vanillaBefore.matches(vanilla));
     }
 

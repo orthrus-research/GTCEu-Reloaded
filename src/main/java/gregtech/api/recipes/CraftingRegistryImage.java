@@ -14,12 +14,17 @@ import java.util.Set;
 /**
  * Detached native tables. Registry objects and their live collection views survive publication.
  * <p>
- * {@link #apply} replaces whole tables, so a concurrent reader can observe an intermediate state. Publication is
- * therefore only supported while every reader is quiescent: registration runs on the owning thread during load,
- * and {@code /gs reload} runs on the server thread while the integrated client waits for the reload to finish and
- * HEI rebuilds its lookups afterwards. A per-name diff would not make concurrent reads safe either, because the
- * underlying Forge maps are not thread-safe. Callers that publish while another thread may read must synchronize
- * with that reader first.
+ * {@link #apply} replaces whole tables, so a concurrent reader can observe an intermediate state. During load,
+ * registration runs on the owning thread and no other thread reads the recipe registry, so publication is safe.
+ * <p>
+ * {@code /gs reload} is not quiescent. GroovyScript 1.5.0 runs it synchronously on the server thread, and on an
+ * integrated server the client thread keeps ticking and rendering against the same shared registry; HEI is only
+ * reloaded afterwards. A client-thread read (recipe book, HEI lookup) that overlaps {@link #apply} can see an
+ * empty or partial table or fail with a {@code ConcurrentModificationException}. This is an accepted residual
+ * risk: the exposure is limited to the {@code apply} call itself, not the whole reload; {@code /gs reload} is a
+ * development command; and a per-name diff would not remove the race, because the underlying Forge maps are not
+ * thread-safe for any concurrent write. Blocking the client thread from the server thread was rejected because the
+ * client can itself be waiting on the integrated server, which would deadlock. Dedicated servers are unaffected.
  */
 final class CraftingRegistryImage {
 

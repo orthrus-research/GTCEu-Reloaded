@@ -241,6 +241,27 @@ class RecipeFurnaceOwnershipTest {
     }
 
     @Test
+    void replacementNeverReleasesExperienceAForeignProducerRelies() {
+        var map = map(effect(new ItemStack(Items.APPLE), new ItemStack(Items.BREAD), .5f));
+        success(owner.replace("baking", List.of(definition(map))));
+        ItemStack xpKey = experience.keySet().iterator().next();
+        ItemStack foreign = new ItemStack(Items.CARROT);
+        recipes.put(foreign, new ItemStack(Items.BREAD));
+        // Only clear() releases a relied-on claim. An empty replacement would change the foreign XP, so it refuses.
+        failed(owner.replace("baking", List.of()), "recipe.furnace.conflict");
+        assertEquals(2, recipes.size());
+        assertEquals(.5f, experience.get(xpKey));
+        // Re-declaring the same XP keeps it owned rather than silently adopting the entry as foreign.
+        var same = map(effect(new ItemStack(Items.APPLE), new ItemStack(Items.BREAD), .5f));
+        success(owner.replace("baking", List.of(definition(same))));
+        assertEquals(.5f, experience.get(xpKey));
+        recipes.remove(foreign);
+        success(owner.clear());
+        assertTrue(recipes.isEmpty());
+        assertTrue(experience.isEmpty(), "the re-declared XP must still be owned and removed by clear()");
+    }
+
+    @Test
     void outsideEditsToOwnedStacksAndExperienceAreNeverOverwritten() {
         var map = map(effect(new ItemStack(Items.APPLE), new ItemStack(Items.BREAD), .5f));
         success(owner.replace("baking", List.of(definition(map))));
@@ -349,6 +370,52 @@ class RecipeFurnaceOwnershipTest {
         assertTrue(snapshot.isCurrent());
         assertSame(output, recipes.get(input));
         assertEquals(.25f, throwingExperience.get(output));
+    }
+
+    @Test
+    void replacementRollsBackPublishedFurnaceTablesOnAnyRuntimeFailure() {
+        var map = map(effect(new ItemStack(Items.APPLE), new ItemStack(Items.BREAD), .5f));
+        owner.publicationProbe(stage -> {
+            if (stage.equals("furnace.published")) throw new UnsupportedOperationException("injected");
+        });
+        failed(owner.replace("baking", List.of(definition(map))), "recipe.registry.changed");
+        assertTrue(recipes.isEmpty());
+        assertTrue(experience.isEmpty());
+        assertTrue(map.getRecipeList().isEmpty());
+        assertTrue(owner.groups().isEmpty());
+        owner.publicationProbe(stage -> {});
+        success(owner.replace("baking", List.of(definition(map))));
+        assertEquals(1, recipes.size());
+    }
+
+    @Test
+    void clearRestoresEveryPublishedParticipantEvenWhenOneRestoreFails() {
+        var map = map(effect(new ItemStack(Items.APPLE), new ItemStack(Items.BREAD), .5f));
+        success(owner.replace("baking", List.of(definition(map))));
+        ItemStack input = recipes.keySet().iterator().next();
+        ItemStack xpKey = experience.keySet().iterator().next();
+        // A non-IllegalStateException failure after the furnace published must restore it, not escape.
+        owner.publicationProbe(stage -> {
+            if (stage.equals("furnace.published")) throw new ArithmeticException("injected");
+        });
+        failed(owner.clear(), "recipe.registry.changed");
+        assertSame(input, recipes.keySet().iterator().next());
+        assertEquals(.5f, experience.get(xpKey));
+        assertEquals(1, map.getRecipeList().size());
+        // When the crafting restore itself fails, the furnace restore still runs and the diagnostic says so.
+        owner.publicationProbe(stage -> {
+            if (stage.equals("crafting.published")) throw new UnsupportedOperationException("injected publish");
+            if (stage.equals("crafting.restore")) throw new ArithmeticException("injected restore");
+        });
+        failed(owner.clear(), "recipe.registry.restore");
+        assertEquals(1, recipes.size());
+        assertSame(input, recipes.keySet().iterator().next());
+        assertEquals(.5f, experience.get(xpKey));
+        assertEquals(1, map.getRecipeList().size());
+        owner.publicationProbe(stage -> {});
+        success(owner.clear());
+        assertTrue(recipes.isEmpty());
+        assertTrue(experience.isEmpty());
     }
 
     @Test

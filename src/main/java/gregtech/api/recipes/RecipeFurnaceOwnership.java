@@ -53,12 +53,28 @@ final class RecipeFurnaceOwnership {
                 .map(effect -> new OwnedFurnaceRecipe(effect, recipe.origin()))).toList();
         if (!added.isEmpty()) nextGroups.put(group, added);
         var pending = nextGroups.values().stream().flatMap(List::stream).toList();
-        // Foreign recipes may have started using our XP entry after registration. Removing it would change their XP,
-        // and refusing the removal would wedge clear() until restart. Release the claim instead: the entry stays at
-        // its value, unowned, and a pending recipe that needs a different value conflicts below as usual.
-        for (var xp : ownedExperience) {
-            if (nextRecipes.values().stream().anyMatch(output -> overlaps(output, xp.key()))) {
-                nextExperience.put(xp.key(), xp.amount());
+        // Foreign recipes may have started using our XP entry after registration. A replacement must not change their
+        // XP, so it refuses. clear() must not wedge until restart, so it releases the claim instead: the entry stays at
+        // its value, unowned. Clearing leaves nothing pending, so no owned value can be re-claimed below.
+        for (ItemStack output : nextRecipes.values()) {
+            for (var xp : ownedExperience) {
+                if (!overlaps(output, xp.key())) continue;
+                if (clear) {
+                    nextExperience.put(xp.key(), xp.amount());
+                    continue;
+                }
+                float before = effectiveExperience(output, snapshot.experience);
+                var replacement = pending.stream().filter(recipe -> overlaps(output, recipe.output())).findFirst();
+                float after = replacement.isPresent() ? replacement.orElseThrow().definition().experience() :
+                        effectiveExperience(output, nextExperience);
+                if (Float.compare(before, after) != 0) {
+                    var source = previous.stream().filter(recipe -> overlaps(recipe.output(), xp.key())).findFirst();
+                    throw new FurnaceOwnershipException(source.orElseThrow().origin(), new IllegalStateException(
+                            "Removing furnace ownership would change an outside recipe's XP"));
+                }
+                // A replacement re-declares the same value: keep our entry in place so the foreign producer never
+                // sees it disappear. The pending loop below re-claims it.
+                if (replacement.isPresent()) nextExperience.put(xp.key(), xp.amount());
             }
         }
 
@@ -79,7 +95,12 @@ final class RecipeFurnaceOwnership {
                     }
                 }
                 boolean hasEntry = verifyExperience(recipe.output(), desired, nextExperience, false);
-                if (!hasEntry) {
+                if (hasEntry) {
+                    // An owned entry that is still in the next table was kept for this replacement; stay its owner.
+                    ownedExperience.stream().filter(value -> nextExperience.containsKey(value.key()) &&
+                            overlaps(value.key(), recipe.output()) && Float.compare(value.amount(), desired) == 0 &&
+                            !nextOwnedExperience.contains(value)).findFirst().ifPresent(nextOwnedExperience::add);
+                } else {
                     var xp = ownedExperience.stream().filter(value -> overlaps(value.key(), recipe.output()) &&
                             Float.compare(value.amount(), desired) == 0).findFirst()
                             .orElseGet(() -> new OwnedFurnaceExperience(recipe.output().copy(), desired));

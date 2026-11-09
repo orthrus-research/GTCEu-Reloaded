@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 
 /**
  * Owns replaceable groups of typed recipes. Call on the creating registration thread while machine ticks and other
@@ -46,6 +47,8 @@ public final class RecipeDefinitionRegistrar {
     private final RecipeRecyclingOwnership recycling = new RecipeRecyclingOwnership();
     private final RecipeFurnaceOwnership furnace = new RecipeFurnaceOwnership();
     private final RecipeCraftingOwnership crafting = new RecipeCraftingOwnership();
+    /** Test seam: sees each publication stage and may throw to simulate a failing participant. */
+    private Consumer<String> publicationProbe = stage -> {};
     private long generation;
 
     /** Default native authoring is confined to the creating thread. */
@@ -180,6 +183,7 @@ public final class RecipeDefinitionRegistrar {
         var publication = new RecipePublication();
         publication.published(furnaceChange.value().orElseThrow()::restore);
         try {
+            publicationProbe.accept("furnace.published");
             recyclingChange.value().orElseThrow().publish();
         } catch (RuntimeException failure) {
             return DefinitionResult.failure(List.of(rolledBack(origin(group, prepared), publication, failure)));
@@ -471,10 +475,17 @@ public final class RecipeDefinitionRegistrar {
                     "A recipe, crafting or composition registry changed during preparation"));
         var publication = new RecipePublication();
         try {
-            if (furnaceChange != null) publication.publish(furnaceChange::publish, furnaceChange::restore);
+            if (furnaceChange != null) {
+                publication.publish(furnaceChange::publish, furnaceChange::restore);
+                publicationProbe.accept("furnace.published");
+            }
             if (!recyclingChange.isCurrent() || !craftingChange.isCurrent())
                 throw new IllegalStateException("A registry changed while publishing furnace tables");
-            publication.publish(craftingChange::publish, craftingChange::restore);
+            publication.publish(craftingChange::publish, () -> {
+                publicationProbe.accept("crafting.restore");
+                craftingChange.restore();
+            });
+            publicationProbe.accept("crafting.published");
             if (!recyclingChange.isCurrent())
                 throw new IllegalStateException("A registry changed while publishing crafting tables");
             // Remaining publications only swap prevalidated native state; they do not invoke author callbacks.
@@ -496,6 +507,11 @@ public final class RecipeDefinitionRegistrar {
                     "; restoring published registries also failed, see the log");
         }
         return error("recipe.registry.changed", source, failure.getMessage());
+    }
+
+    /** Test seam only; production code never installs a probe. */
+    void publicationProbe(Consumer<String> probe) {
+        this.publicationProbe = Objects.requireNonNull(probe, "probe");
     }
 
     private SourceOrigin origin(String group, List<OwnedRecipeDefinition> prepared) {

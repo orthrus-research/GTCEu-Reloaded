@@ -34,6 +34,21 @@ class GroovyDefinitionsTest {
     }
 
     @Test
+    void untestedGroovyScriptRefusesTypedDefinitionsWithAClearError() {
+        var errors = new ArrayList<DefinitionDiagnostic>();
+        var frontend = new GroovyDefinitions(() -> LoadStage.POST_INIT, errors::add, () -> false);
+        var failure = assertThrows(IllegalStateException.class, () -> frontend.replace("unsupported", List.of()));
+        assertTrue(failure.getMessage().contains("GroovyScript " + GroovyScriptCompatibility.TESTED_RANGE),
+                failure.getMessage());
+        assertTrue(failure.getMessage().contains("imperative GroovyScript recipes still work"), failure.getMessage());
+        assertTrue(errors.isEmpty());
+        // The supported check runs before the stage check, so the version error is what an author sees.
+        var early = new GroovyDefinitions(() -> LoadStage.PRE_INIT, errors::add, () -> false);
+        var earlyFailure = assertThrows(IllegalStateException.class, () -> early.replace("unsupported", List.of()));
+        assertTrue(earlyFailure.getMessage().contains(GroovyScriptCompatibility.TESTED_RANGE));
+    }
+
+    @Test
     void groovyCanReplaceDisableAndReloadPreparedRecyclingRecipes() throws Exception {
         try (var unification = new RecyclingUnificationFixture()) {
             var errors = new ArrayList<DefinitionDiagnostic>();
