@@ -1,0 +1,13 @@
+{
+  "package": "gregtech.mixins.minecraft",
+  "refmap": "mixins.gregtech.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_25",
+  "required": true,
+  "mixins": [],
+  "client": [
+    "EntityRendererMixin"
+  ],
+  "server": []
+}

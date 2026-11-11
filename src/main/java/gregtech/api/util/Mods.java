@@ -30,6 +30,7 @@ public enum Mods {
     BinnieCore(Names.BINNIE_CORE),
     BiomesOPlenty(Names.BIOMES_O_PLENTY),
     BuildCraftCore(Names.BUILD_CRAFT_CORE),
+    Celeritas(Names.CELERITAS),
     Chisel(Names.CHISEL),
     CoFHCore(Names.COFH_CORE),
     CTM(Names.CONNECTED_TEXTURES_MOD),
@@ -106,6 +107,7 @@ public enum Mods {
         public static final String BINNIE_CORE = "binniecore";
         public static final String BIOMES_O_PLENTY = "biomesoplenty";
         public static final String BUILD_CRAFT_CORE = "buildcraftcore";
+        public static final String CELERITAS = "celeritas";
         public static final String CHISEL = "chisel";
         public static final String COFH_CORE = "cofhcore";
         public static final String CONNECTED_TEXTURES_MOD = "ctm";

@@ -11,6 +11,12 @@ public final class GregTechMixinConnector implements IMixinConnector {
     @Override
     public void connect() {
         ConditionalMixin.of("mixins.gregtech.forge.json", "mixins.gregtech.minecraft.json").register();
+        // The bloom pass wraps the translucent renderBlockLayer call in renderWorldPass. Celeritas-based renderers
+        // (Demonica bundles Celeritas) redirect that call and draw the bloom layer in their own terrain passes; with
+        // the wrapper in place their terrain never builds. BloomEffectUtil falls back to plain layers for them.
+        ConditionalMixin.of("mixins.gregtech.bloom.json").conflicts("celeritas").conflicts("demonica")
+                .because("Celeritas draws the bloom layer itself and owns renderWorldPass's terrain layer calls")
+                .register();
         ConditionalMixin.of("mixins.gregtech.ccl.json").requires("codechickenlib").register();
         ConditionalMixin.of("mixins.gregtech.mui2.json").requires("modularui").register();
         // These mixins target GroovyScript internals; an untested version keeps stock caching instead of crashing.

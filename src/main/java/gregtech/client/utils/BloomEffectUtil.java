@@ -82,7 +82,7 @@ public class BloomEffectUtil {
      */
     @Contract("null -> _; !null -> !null")
     public static BlockRenderLayer getEffectiveBloomLayer(BlockRenderLayer fallback) {
-        return Mods.ShadersMod.isModLoaded() ? fallback : bloom;
+        return externalTerrainPipeline() ? fallback : bloom;
     }
 
     /**
@@ -114,7 +114,7 @@ public class BloomEffectUtil {
      */
     @Contract("_, null -> _; _, !null -> !null")
     public static BlockRenderLayer getEffectiveBloomLayer(boolean isBloomActive, BlockRenderLayer fallback) {
-        return Mods.ShadersMod.isModLoaded() || !isBloomActive ? fallback : bloom;
+        return externalTerrainPipeline() || !isBloomActive ? fallback : bloom;
     }
 
     /**
@@ -252,7 +252,7 @@ public class BloomEffectUtil {
                                                         @NotNull IBloomEffect render,
                                                         @Nullable Predicate<BloomRenderTicket> validityChecker,
                                                         @Nullable Supplier<World> worldContext) {
-        if (Mods.ShadersMod.isModLoaded()) return BloomRenderTicket.INVALID;
+        if (externalTerrainPipeline()) return BloomRenderTicket.INVALID;
         BloomRenderTicket ticket = new BloomRenderTicket(setup, bloomType, render, validityChecker, worldContext);
         BLOOM_RENDER_LOCK.lock();
         try {
@@ -290,6 +290,16 @@ public class BloomEffectUtil {
         }
     }
 
+    /**
+     * Whether another pipeline draws terrain without GregTech's bloom pass: an OptiFine shader pack, or Celeritas
+     * (also bundled in Demonica). Celeritas draws the bloom layer in its own terrain passes, and the bloom pass
+     * mixin is not applied with it (see {@code GregTechMixinConnector}), so emissive textures use their fallback
+     * layers and bloom renders are not queued for a pass that never runs.
+     */
+    private static boolean externalTerrainPipeline() {
+        return Mods.ShadersMod.isModLoaded() || Mods.Celeritas.isModLoaded();
+    }
+
     public static void init() {
         bloom = BlockRenderLayer.valueOf("BLOOM");
     }
@@ -301,7 +311,7 @@ public class BloomEffectUtil {
                                             @NotNull Entity entity) {
         Minecraft.getMinecraft().profiler.endStartSection("BTLayer");
 
-        if (Mods.ShadersMod.isModLoaded()) {
+        if (externalTerrainPipeline()) {
             return renderGlobal.renderBlockLayer(blockRenderLayer, partialTicks, pass, entity);
         }
 

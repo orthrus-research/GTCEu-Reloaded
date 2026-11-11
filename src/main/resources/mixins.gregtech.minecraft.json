@@ -18,7 +18,6 @@
   "client": [
     "BlockRenderLayerMixin",
     "BlockMixin",
-    "EntityRendererMixin",
     "LayerArmorBaseMixin",
     "LayerCustomHeadMixin",
     "RegionRenderCacheBuilderMixin",
