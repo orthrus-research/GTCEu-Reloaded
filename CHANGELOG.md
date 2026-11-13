@@ -132,6 +132,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Energy | An energy container list no longer accepts more amperes from a network than were offered; each container now sees only the amperage still unclaimed. |
 | Fluids | `MultiFluidFilter` now tests the fluid it is given and honours its blacklist flag; it used to accept every fluid. |
 | Fluids | `IFilteredFluidContainer.COMPARATOR` no longer throws on a container without a filter; such containers sort last. |
+| Networking | `NetworkUtil.writeFluidStack` no longer writes a tag after a null stack, which misaligned every value read after it. |
 
 ### Earlier fork changes
 
