@@ -73,6 +73,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | Recipe NBT equality conditions on byte, int and long array tags match equal arrays; before, they compared array identity and never matched |
 | Recipes | Numeric recipe NBT equality conditions accept any number type; before, a value that was not a `long` failed the recipe check with an exception |
 | Machines | The Power Substation prints its stored energy and capacity with the right decimals (12,345,678 EU reads 12.3456M); before, the digits after the point were taken from the wrong position |
+| API | `SmallDigits.toSmallUpNumbers` produces superscript digits; before, it produced subscripts |
 
 ### Earlier fork changes
 
