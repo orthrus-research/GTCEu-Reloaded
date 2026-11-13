@@ -328,6 +328,8 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
     }
 
     public final void setVoidingMode(int mode) {
+        // the mode can come from a client through the UI sync
+        if (mode < 0 || mode >= VoidingMode.VALUES.length) return;
         this.voidingMode = VoidingMode.VALUES[mode];
 
         this.voidingFluids = mode >= 2;

@@ -78,6 +78,8 @@ public abstract class MultiMapMultiblockController extends RecipeMapMultiblockCo
 
     @Override
     public void setRecipeMapIndex(int index) {
+        // the index can come from a client through the UI sync
+        if (index < 0 || index >= getAvailableRecipeMaps().length) return;
         this.recipeMapIndex = index;
         if (!getWorld().isRemote) {
             writeCustomData(GregtechDataCodes.RECIPE_MAP_INDEX, buf -> buf.writeByte(index));
@@ -197,10 +199,14 @@ public abstract class MultiMapMultiblockController extends RecipeMapMultiblockCo
         return data;
     }
 
+    private int validRecipeMapIndex(int index) {
+        return index >= 0 && index < getAvailableRecipeMaps().length ? index : 0;
+    }
+
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
-        recipeMapIndex = data.getInteger("RecipeMapIndex");
+        recipeMapIndex = validRecipeMapIndex(data.getInteger("RecipeMapIndex"));
     }
 
     @Override
@@ -212,14 +218,14 @@ public abstract class MultiMapMultiblockController extends RecipeMapMultiblockCo
     @Override
     public void receiveInitialSyncData(PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
-        recipeMapIndex = buf.readByte();
+        recipeMapIndex = validRecipeMapIndex(buf.readByte());
     }
 
     @Override
     public void receiveCustomData(int dataId, PacketBuffer buf) {
         super.receiveCustomData(dataId, buf);
         if (dataId == GregtechDataCodes.RECIPE_MAP_INDEX) {
-            recipeMapIndex = buf.readByte();
+            recipeMapIndex = validRecipeMapIndex(buf.readByte());
             scheduleRenderUpdate();
         }
     }
