@@ -318,25 +318,25 @@ public class FluidBuilder {
             attributes.forEach(attrFluid::addAttribute);
         } else if (!attributes.isEmpty()) {
             GTLog.logger
-                    .warn("Unable to set Fluid Attributes for Fluid {}, as it is owned by another mod! Skipping...");
+                    .warn("Unable to set Fluid Attributes for Fluid {}, as it is owned by another mod! Skipping...",
+                            fluid.getName());
         }
 
         determineTemperature(material);
-        fluid.setTemperature(temperature);
-
         determineColor(material);
-        if (isColorEnabled) {
-            fluid.setColor(color);
-        }
-
         determineDensity();
-        fluid.setDensity(density);
-
         determineLuminosity(material);
-        fluid.setLuminosity(luminosity);
-
         determineViscosity(material);
-        fluid.setViscosity(viscosity);
+        // a fluid another mod registered keeps its owner's physical values; every mod reads those
+        if (needsRegistration) {
+            fluid.setTemperature(temperature);
+            if (isColorEnabled) {
+                fluid.setColor(color);
+            }
+            fluid.setDensity(density);
+            fluid.setLuminosity(luminosity);
+            fluid.setViscosity(viscosity);
+        }
 
         if (needsRegistration) {
             GTFluidRegistration.INSTANCE.registerFluid(fluid, modid, hasBucket);
