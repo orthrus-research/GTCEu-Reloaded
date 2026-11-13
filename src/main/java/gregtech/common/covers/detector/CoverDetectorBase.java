@@ -70,6 +70,8 @@ public abstract class CoverDetectorBase extends CoverBase {
     }
 
     public final void setRedstoneSignalOutput(int redstoneSignalOutput) {
+        // detectors call this every second; neighbours only need to hear about a change
+        if (this.redstoneSignalOutput == redstoneSignalOutput) return;
         this.redstoneSignalOutput = redstoneSignalOutput;
         getCoverableView().notifyBlockUpdate();
         getCoverableView().markDirty();
