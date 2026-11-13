@@ -447,6 +447,8 @@ public abstract class PipeRenderer implements ICCBlockRenderer, IItemRenderer {
         private final IVertexOperation[] blockedOverlay;
         private final float pipeThickness;
         private int color;
+        // per pipe being meshed, so renderers that share one instance across meshing threads can carry state
+        private boolean active;
         private final int connections;
         private final int blockedConnections;
 
@@ -507,6 +509,18 @@ public abstract class PipeRenderer implements ICCBlockRenderer, IItemRenderer {
             }
             return lightMatrix == null ? new IVertexOperation[] { new Translation(pos) } :
                     new IVertexOperation[] { new Translation(pos), lightMatrix };
+        }
+
+        /**
+         * @return whether the pipe being rendered is active, for pipes that render differently while active
+         */
+        public boolean isActive() {
+            return active;
+        }
+
+        public PipeRenderContext setActive(boolean active) {
+            this.active = active;
+            return this;
         }
 
         public int getConnections() {
