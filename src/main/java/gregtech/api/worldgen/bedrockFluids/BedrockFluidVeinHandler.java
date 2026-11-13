@@ -125,8 +125,8 @@ public class BedrockFluidVeinHandler {
         int totalWeight = 0;
         for (Map.Entry<BedrockFluidDepositDefinition, Integer> entry : veinList.entrySet()) {
             if (entry.getKey().getDimensionFilter().test(provider)) {
-                totalWeight += entry.getKey().getBiomeWeightModifier().apply(biome);
-                totalWeight += entry.getKey().getWeight();
+                // the same weight selection uses; veins that cannot be picked here add nothing
+                totalWeight += Math.max(0, entry.getValue() + entry.getKey().getBiomeWeightModifier().apply(biome));
             }
         }
 

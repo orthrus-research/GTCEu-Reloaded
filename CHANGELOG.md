@@ -142,6 +142,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Modules | A module skipped for a missing dependency now also skips the modules that depend on it, each with a log line; modules left out by a dependency cycle are logged. |
 | Armor | GregTech armour no longer leaves blending enabled after it renders, which could tint entities drawn after it. |
 | Tools | Repairing GregTech tools through automated crafting no longer posts a tool-destroyed event without a player. |
+| World generation | Gameplay change, custom configs only: bedrock fluid veins with a negative biome modifier no longer change the odds of other veins or of no vein. Bundled veins roll as before |
 
 ### Earlier fork changes
 
