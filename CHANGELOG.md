@@ -122,6 +122,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Armor | Gameplay change: night-vision goggles configured above LV get four times the capacity per tier, like the other electric armour; before, their capacity stayed 80,000 EU at every tier |
 | Recipes | Gameplay change: chanced outputs roll at exactly their stated chance; before, each was 0.01 percentage points more likely |
 | Machines | Gameplay change: bedrock fluid veins deplete at their configured chance; before, each operation was one percentage point more likely to deplete them |
+| Recipes | Gameplay change: fluid-solidifier pipe recipes use the material's working tier for their voltage like every other generated pipe recipe; before, they ignored it |
 
 ### Earlier fork changes
 
