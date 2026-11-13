@@ -195,6 +195,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Multiblocks | The large boiler throttle stays within 0 to 100% whatever a client sends, and an empty throttle field no longer throws on the server. |
 | AE2 | ME bus and hatch config slots ignore a zero or negative amount sent by a client. |
 | Monitors | Monitor picture plugins load only http and https images, give up after 10 seconds, and refuse images over 16 MiB. Cached pictures are reused when the server reports them unchanged. |
+| Ender links | Only players allowed to use an ender link cover can delete its entries, and only from that cover's own list. |
 
 ### Earlier fork changes
 

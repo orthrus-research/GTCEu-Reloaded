@@ -442,10 +442,13 @@ public abstract class CoverAbstractEnderLink<T extends VirtualEntry> extends Cov
         @Override
         public void readOnServer(int i, PacketBuffer packetBuffer) {
             if (i == DELETE_ENTRY) {
-                var s = NetworkUtils.readStringSafe(packetBuffer);
-                UUID uuid = "null".equals(s) ? null : UUID.fromString(s);
+                // the client names an owner, but the cover decides whose entries it shows: use its own owner,
+                // and only for a player the cover lets in
+                NetworkUtils.readStringSafe(packetBuffer);
                 String name = NetworkUtils.readStringSafe(packetBuffer);
-                deleteEntry(uuid, name);
+                if (canAccess(getSyncManager().getPlayer().getUniqueID())) {
+                    deleteEntry(getOwner(), name);
+                }
             }
         }
     }
