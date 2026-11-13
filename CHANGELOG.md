@@ -209,6 +209,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Ender links | Ender link covers in single-player no longer add entries to the shared registry from the client thread. |
 | Covers | The digital interface cover's energy chart shows the recent history as soon as it loads instead of starting flat. |
 | Machines | Gameplay change: machines on a chunk border stop sending items and energy into an unloaded neighbour, where they were lost, and resume when that chunk loads |
+| API | `DimensionPropertyList.EMPTY_LIST` is final and immutable; adding to the lists `RecipeBuilder.getDimensionIDs` returns for a recipe without dimensions now throws instead of changing every recipe's default. |
 
 ### Earlier fork changes
 
