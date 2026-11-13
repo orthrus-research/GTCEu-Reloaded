@@ -81,6 +81,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | Viewing the Large Miner's screen no longer consumes drilling fluid; before, the status check drained it while the screen was open |
 | Tools | The tricorder reports the bedrock fluid of the chunk you stand in at negative coordinates; before, it read the neighbouring chunk |
 | World generation | A worldgen definition file that fails to parse is skipped with its error; before, it also silently dropped every vein file that sorted after it |
+| World generation | Chunk generation heights saved with a world are read back correctly; before, the saved bottom height was ignored after a reload, so later ore generation used the wrong height in those chunks |
 
 ### Earlier fork changes
 
