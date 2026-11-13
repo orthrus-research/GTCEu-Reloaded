@@ -21,7 +21,6 @@ public class SurfaceBlockPopulator implements VeinChunkPopulator {
     private IBlockState blockState;
     private int minIndicatorAmount;
     private int maxIndicatorAmount;
-    private int failedGenerationCounter = 0;
 
     public SurfaceBlockPopulator() {}
 
@@ -57,6 +56,8 @@ public class SurfaceBlockPopulator implements VeinChunkPopulator {
                               GridEntryInfo gridEntryInfo) {
         int stonesCount = minIndicatorAmount + (minIndicatorAmount >= maxIndicatorAmount ? 0 :
                 random.nextInt(maxIndicatorAmount - minIndicatorAmount));
+        // a local: the populator lives as long as its vein, so a field would count every chunk's failures
+        int failedGenerationCounter = 0;
         if (stonesCount > 0 && world.getWorldType() != WorldType.FLAT) {
             for (int i = 0; i < stonesCount; i++) {
                 int randomX = chunkX * 16 + random.nextInt(8);
