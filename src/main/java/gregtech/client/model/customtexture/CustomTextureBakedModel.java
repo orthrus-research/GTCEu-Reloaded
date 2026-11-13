@@ -30,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -59,6 +60,8 @@ public class CustomTextureBakedModel implements IBakedModel {
             .newCustomTable(Maps.newEnumMap(BlockRenderLayer.class), () -> Maps.newEnumMap(EnumFacing.class));
     /** The quads of textures in GTCEu's emissive layer, by face. */
     protected final EnumMap<EnumFacing, List<BakedQuad>> emissiveFaceQuads = new EnumMap<>(EnumFacing.class);
+    /** The quads of textures in GTCEu's emissive layer that have no cull face. */
+    protected final List<BakedQuad> emissiveGenQuads = new ArrayList<>();
 
     private final EnumMap<EnumFacing, ImmutableList<BakedQuad>> noLayerCache = new EnumMap<>(EnumFacing.class);
     private ImmutableList<BakedQuad> noSideNoLayerCache;
@@ -99,6 +102,10 @@ public class CustomTextureBakedModel implements IBakedModel {
         return null;
     }
 
+    /** The six faces and {@code null}, under which a model returns its quads without a cull face. */
+    private static final EnumFacing[] FACES_AND_UNCULLED = { EnumFacing.DOWN, EnumFacing.UP, EnumFacing.NORTH,
+            EnumFacing.SOUTH, EnumFacing.WEST, EnumFacing.EAST, null };
+
     protected CustomTextureBakedModel createModel(@Nullable IBlockState state, CustomTextureModel model, long rand) {
         IBakedModel parent = getParent(rand);
         while (parent instanceof CustomTextureBakedModel) {
@@ -106,7 +113,7 @@ public class CustomTextureBakedModel implements IBakedModel {
         }
 
         CustomTextureBakedModel ret = new CustomTextureBakedModel(model, parent);
-        for (EnumFacing facing : EnumFacing.VALUES) {
+        for (EnumFacing facing : FACES_AND_UNCULLED) {
             // Linked to maintain the order of quads
             Map<BakedQuad, CustomTexture> textureMap = new LinkedHashMap<>();
             // Gather all quads and map them to their textures
@@ -122,30 +129,40 @@ public class CustomTextureBakedModel implements IBakedModel {
                 }
             }
 
-            BlockHooks.ENABLE = false;
-            for (BlockRenderLayer layer : BlockRenderLayer.values()) {
-                List<BakedQuad> quads = new LinkedList<>();
-                ret.faceQuads.put(layer, facing, quads);
-                for (Map.Entry<BakedQuad, CustomTexture> e : textureMap.entrySet()) {
-                    // If the layer is null, this is a wrapped vanilla texture, so passthrough the layer check to the
-                    // block
-                    CustomTexture tex = e.getValue();
-                    if (!tex.isEmissive() && (tex.getLayer() == layer || (tex.getLayer() == null &&
-                            (state == null || state.getBlock().canRenderInLayer(state, layer))))) {
-                        quads.add(tex.transformQuad(e.getKey()));
+            // only this thread bypasses the hook: chunk meshing runs on several threads at once
+            BlockHooks.setBypass(true);
+            try {
+                for (BlockRenderLayer layer : BlockRenderLayer.values()) {
+                    List<BakedQuad> quads;
+                    if (facing != null) {
+                        ret.faceQuads.put(layer, facing, quads = new LinkedList<>());
+                    } else {
+                        quads = ret.genQuads.get(layer);
+                    }
+                    for (Map.Entry<BakedQuad, CustomTexture> e : textureMap.entrySet()) {
+                        // If the layer is null, this is a wrapped vanilla texture, so passthrough the layer check to
+                        // the block
+                        CustomTexture tex = e.getValue();
+                        if (!tex.isEmissive() && (tex.getLayer() == layer || (tex.getLayer() == null &&
+                                (state == null || state.getBlock().canRenderInLayer(state, layer))))) {
+                            quads.add(tex.transformQuad(e.getKey()));
+                        }
                     }
                 }
+            } finally {
+                BlockHooks.setBypass(false);
             }
-            BlockHooks.ENABLE = true;
 
             // Textures in the emissive layer are in no game layer; a renderer meshes them, or the fallback layer does
-            List<BakedQuad> emissive = new LinkedList<>();
+            List<BakedQuad> emissive = facing != null ? new LinkedList<>() : ret.emissiveGenQuads;
             for (Map.Entry<BakedQuad, CustomTexture> e : textureMap.entrySet()) {
                 if (e.getValue().isEmissive()) {
                     emissive.add(e.getValue().transformQuad(e.getKey()));
                 }
             }
-            ret.emissiveFaceQuads.put(facing, emissive);
+            if (facing != null) {
+                ret.emissiveFaceQuads.put(facing, emissive);
+            }
         }
         return ret;
     }
@@ -168,7 +185,7 @@ public class CustomTextureBakedModel implements IBakedModel {
     }
 
     private List<BakedQuad> emissiveQuads(@Nullable EnumFacing side) {
-        return side == null ? Collections.emptyList() :
+        return side == null ? this.emissiveGenQuads :
                 this.emissiveFaceQuads.getOrDefault(side, Collections.emptyList());
     }
 
@@ -183,8 +200,8 @@ public class CustomTextureBakedModel implements IBakedModel {
         }
         ImmutableList<BakedQuad> ret = this.noSideNoLayerCache;
         if (ret == null) {
-            ret = this.noSideNoLayerCache = ImmutableList.copyOf(this.genQuads.values()
-                    .stream()
+            ret = this.noSideNoLayerCache = ImmutableList.copyOf(Stream.concat(this.genQuads.values()
+                    .stream(), this.emissiveGenQuads.stream())
                     .distinct()
                     .collect(Collectors.toList()));
         }
