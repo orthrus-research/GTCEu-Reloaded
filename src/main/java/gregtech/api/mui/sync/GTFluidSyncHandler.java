@@ -315,9 +315,15 @@ public class GTFluidSyncHandler extends SyncHandler {
             }
         } else if (id == UPDATE_TANK) {
             var fluid = NetworkUtils.readFluidStack(buf);
-            setFluid(fluid);
+            // a legitimate client sends this only for phantom slots; a real tank must not take a client's fluid
+            if (isPhantom()) setFluid(fluid);
         } else if (id == PHANTOM_SCROLL) {
-            tryScrollPhantom(MouseData.readPacket(buf));
+            var data = MouseData.readPacket(buf);
+            if (!isPhantom()) return;
+            // a scroll step is +1 or -1; take only the sign of what the client sent
+            int step = Integer.signum(data.mouseButton);
+            if ((step > 0 && !canFillSlot()) || (step < 0 && !canDrainSlot())) return;
+            tryScrollPhantom(new MouseData(data.side, step, data.shift, data.ctrl, data.alt));
         }
     }
 
