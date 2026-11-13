@@ -74,11 +74,16 @@ public class TextFormattingUtil {
             c++;
         }
 
-        return stb.append(value.divide(metricBigSuffixValues[c - 1]))
-                .append('.')
-                .append(value.toString(), 4, precision + 1)
-                .append(metricSuffixChars[c - 1])
-                .toString();
+        BigInteger[] parts = value.divideAndRemainder(metricBigSuffixValues[c - 1]);
+        stb.append(parts[0]);
+        int fractionDigits = precision - 3;
+        if (fractionDigits > 0) {
+            // the remainder has 3 * c digits once its leading zeros are restored
+            String remainder = parts[1].toString();
+            String fraction = "0".repeat(3 * c - remainder.length()) + remainder;
+            stb.append('.').append(fraction, 0, Math.min(fractionDigits, fraction.length()));
+        }
+        return stb.append(metricSuffixChars[c - 1]).toString();
     }
 
     public static String formatLongToCompactString(long value) {
