@@ -77,11 +77,14 @@ public abstract class NeighborCacheTileEntityBase extends SyncedTileEntityBase i
         WeakReference<TileEntity> ref = getRef(facing);
         if (ref == INVALID) return true;
         TileEntity te = ref.get();
-        return te != null && te.isInvalid();
+        // a chunk unload neither invalidates its tiles nor notifies neighbours, so check it here
+        return te != null && (te.isInvalid() || !te.getWorld().isBlockLoaded(te.getPos()));
     }
 
     @NotNull
     private WeakReference<TileEntity> computeNeighbor(EnumFacing facing) {
+        // an unloaded neighbour is neither loaded for this nor cached as absent: look again once it loads
+        if (!world.isBlockLoaded(pos.offset(facing))) return NULL;
         TileEntity te = super.getNeighbor(facing);
         // avoid making new references to null TEs
         WeakReference<TileEntity> ref = te == null ? NULL : new WeakReference<>(te);

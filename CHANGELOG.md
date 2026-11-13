@@ -208,6 +208,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Monitors | Monitor pictures with long URLs can be cached, and concurrent downloads no longer corrupt cache times. |
 | Ender links | Ender link covers in single-player no longer add entries to the shared registry from the client thread. |
 | Covers | The digital interface cover's energy chart shows the recent history as soon as it loads instead of starting flat. |
+| Machines | Gameplay change: machines on a chunk border stop sending items and energy into an unloaded neighbour, where they were lost, and resume when that chunk loads |
 
 ### Earlier fork changes
 
