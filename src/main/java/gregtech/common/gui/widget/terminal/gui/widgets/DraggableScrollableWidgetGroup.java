@@ -92,8 +92,7 @@ public class DraggableScrollableWidgetGroup extends WidgetGroup {
         maxHeight = Math.max(maxHeight, widget.getSize().height + widget.getSelfPosition().y);
         maxWidth = Math.max(maxWidth, widget.getSize().width + widget.getSelfPosition().x);
         Position newPos = widget.addSelfPosition(-scrollXOffset, -scrollYOffset);
-        widget.setVisible(newPos.x < getSize().width - yBarWidth && newPos.x + widget.getSize().width > 0);
-        widget.setVisible(newPos.y < getSize().height - xBarHeight && newPos.y + widget.getSize().height > 0);
+        widget.setVisible(isInView(widget, newPos));
         super.addWidget(widget);
     }
 
@@ -120,8 +119,7 @@ public class DraggableScrollableWidgetGroup extends WidgetGroup {
         // computeMax();
         for (Widget widget : widgets) {
             Position newPos = widget.getSelfPosition();
-            widget.setVisible(newPos.x < getSize().width - yBarWidth && newPos.x + widget.getSize().width > 0);
-            widget.setVisible(newPos.y < getSize().height - xBarHeight && newPos.y + widget.getSize().height > 0);
+            widget.setVisible(isInView(widget, newPos));
         }
     }
 
@@ -167,8 +165,7 @@ public class DraggableScrollableWidgetGroup extends WidgetGroup {
         if (offsetX != 0 || offsetY != 0) {
             for (Widget widget : widgets) {
                 Position newPos = widget.addSelfPosition(offsetX, offsetY);
-                widget.setVisible(newPos.x < getSize().width - yBarWidth && newPos.x + widget.getSize().width > 0);
-                widget.setVisible(newPos.y < getSize().height - xBarHeight && newPos.y + widget.getSize().height > 0);
+                widget.setVisible(isInView(widget, newPos));
             }
         }
     }
@@ -189,13 +186,19 @@ public class DraggableScrollableWidgetGroup extends WidgetGroup {
         return y;
     }
 
+    /** Whether a child at {@code pos} overlaps the viewport on both axes. */
+    private boolean isInView(Widget widget, Position pos) {
+        return pos.x < getSize().width - yBarWidth && pos.x + widget.getSize().width > 0 &&
+                pos.y < getSize().height - xBarHeight && pos.y + widget.getSize().height > 0;
+    }
+
     protected void setScrollXOffset(int scrollXOffset) {
         if (scrollXOffset == this.scrollXOffset) return;
         int offset = scrollXOffset - this.scrollXOffset;
         this.scrollXOffset = scrollXOffset;
         for (Widget widget : widgets) {
             Position newPos = widget.addSelfPosition(-offset, 0);
-            widget.setVisible(newPos.x < getSize().width - yBarWidth && newPos.x + widget.getSize().width > 0);
+            widget.setVisible(isInView(widget, newPos));
         }
     }
 
@@ -206,7 +209,7 @@ public class DraggableScrollableWidgetGroup extends WidgetGroup {
         this.scrollYOffset = scrollYOffset;
         for (Widget widget : widgets) {
             Position newPos = widget.addSelfPosition(0, -offset);
-            widget.setVisible(newPos.y < getSize().height - xBarHeight && newPos.y + widget.getSize().height > 0);
+            widget.setVisible(isInView(widget, newPos));
         }
     }
 
@@ -338,7 +341,7 @@ public class DraggableScrollableWidgetGroup extends WidgetGroup {
         lastMouseX = mouseX;
         lastMouseY = mouseY;
         if (draggedOnXScrollBar &&
-                (getMaxWidth() - getSize().width > 0 || scrollYOffset > getMaxWidth() - getSize().width)) {
+                (getMaxWidth() - getSize().width > 0 || scrollXOffset > getMaxWidth() - getSize().width)) {
             setScrollXOffset(MathHelper.clamp(scrollXOffset + deltaX * getMaxWidth() / getSize().width, 0,
                     getMaxWidth() - getSize().width));
             return true;
