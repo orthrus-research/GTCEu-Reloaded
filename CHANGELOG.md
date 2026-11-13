@@ -194,6 +194,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Networking | Machine recovery, clipboard and monitor plugin packets only act on positions in the sender's dimension and in chunks the sender can see, and clipboard edits only within reach. They no longer load chunks. |
 | Multiblocks | The large boiler throttle stays within 0 to 100% whatever a client sends, and an empty throttle field no longer throws on the server. |
 | AE2 | ME bus and hatch config slots ignore a zero or negative amount sent by a client. |
+| Monitors | Monitor picture plugins load only http and https images, give up after 10 seconds, and refuse images over 16 MiB. Cached pictures are reused when the server reports them unchanged. |
 
 ### Earlier fork changes
 

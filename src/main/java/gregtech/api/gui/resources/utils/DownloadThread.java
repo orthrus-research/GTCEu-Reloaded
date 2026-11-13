@@ -137,7 +137,15 @@ public class DownloadThread extends Thread {
     public static byte[] load(String url) throws IOException, FoundVideoException {
         TextureCache.CacheEntry entry = TEXTURE_CACHE.getEntry(url);
         long requestTime = System.currentTimeMillis();
-        URLConnection connection = new URL(url).openConnection();
+        // the address comes from another player's monitor: web images only, bounded in time and size
+        URL address = new URL(url);
+        String protocol = address.getProtocol();
+        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
+            throw new IOException("Only http and https images can be loaded: " + url);
+        }
+        URLConnection connection = address.openConnection();
+        connection.setConnectTimeout(TIMEOUT_MILLIS);
+        connection.setReadTimeout(TIMEOUT_MILLIS);
         connection.addRequestProperty("User-Agent",
                 "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
         int responseCode = -1;
@@ -155,16 +163,36 @@ public class DownloadThread extends Thread {
         InputStream in = null;
         try {
             in = connection.getInputStream();
-            if (!connection.getContentType().startsWith("image"))
+            // a 304 carries no body and often no content type: serve the cached copy first
+            if (entry != null && responseCode == HttpURLConnection.HTTP_NOT_MODIFIED) {
+                File file = entry.getFile();
+                if (file.exists()) {
+                    try (FileInputStream fileStream = new FileInputStream(file)) {
+                        return IOUtils.toByteArray(fileStream);
+                    }
+                }
+            }
+            String contentType = connection.getContentType();
+            if (contentType == null) throw new IOException("No content type for " + url);
+            if (!contentType.startsWith("image"))
                 throw new FoundVideoException();
+            if (connection.getContentLengthLong() > MAX_DOWNLOAD_BYTES) {
+                throw new IOException("Image larger than " + MAX_DOWNLOAD_BYTES + " bytes: " + url);
+            }
             String etag = connection.getHeaderField("ETag");
             long lastModifiedTimestamp;
             long expireTimestamp = -1;
-            String maxAge = connection.getHeaderField("max-age");
-            if (maxAge != null && !maxAge.isEmpty()) {
-                try {
-                    expireTimestamp = requestTime + Long.parseLong(maxAge) * 1000;
-                } catch (NumberFormatException ignored) {}
+            // max-age is a Cache-Control directive, not a header of its own
+            String cacheControl = connection.getHeaderField("Cache-Control");
+            if (cacheControl != null) {
+                for (String directive : cacheControl.split(",")) {
+                    directive = directive.trim();
+                    if (directive.regionMatches(true, 0, "max-age=", 0, 8)) {
+                        try {
+                            expireTimestamp = requestTime + Long.parseLong(directive.substring(8).trim()) * 1000;
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
             }
             String expires = connection.getHeaderField("Expires");
             if (expires != null && !expires.isEmpty()) {
@@ -187,22 +215,30 @@ public class DownloadThread extends Thread {
                     entry.setEtag(etag);
                 }
                 entry.setTime(lastModifiedTimestamp);
-                if (responseCode == HttpURLConnection.HTTP_NOT_MODIFIED) {
-                    File file = entry.getFile();
-                    if (file.exists()) {
-                        try (FileInputStream fileStream = new FileInputStream(file)) {
-                            return IOUtils.toByteArray(fileStream);
-                        }
-
-                    }
-                }
             }
-            byte[] data = IOUtils.toByteArray(in);
+            byte[] data = readBounded(in, url);
             TEXTURE_CACHE.save(url, etag, lastModifiedTimestamp, expireTimestamp, data);
             return data;
         } finally {
             IOUtils.closeQuietly(in);
         }
+    }
+
+    private static final int TIMEOUT_MILLIS = 10_000;
+    private static final int MAX_DOWNLOAD_BYTES = 16 * 1024 * 1024;
+
+    /** Read the whole stream, failing once it passes {@link #MAX_DOWNLOAD_BYTES}. */
+    private static byte[] readBounded(InputStream in, String url) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            if (out.size() + read > MAX_DOWNLOAD_BYTES) {
+                throw new IOException("Image larger than " + MAX_DOWNLOAD_BYTES + " bytes: " + url);
+            }
+            out.write(buffer, 0, read);
+        }
+        return out.toByteArray();
     }
 
     public static PictureTexture loadImage(DownloadThread thread) {
