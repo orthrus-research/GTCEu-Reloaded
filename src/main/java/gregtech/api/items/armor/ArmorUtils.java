@@ -4,6 +4,7 @@ import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
 import gregtech.api.util.ItemStackHashStrategy;
 import gregtech.common.ConfigHolder;
+import gregtech.core.sound.GTSoundEvents;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
@@ -34,7 +35,6 @@ import java.util.List;
 public class ArmorUtils {
 
     public static final Side SIDE = FMLCommonHandler.instance().getSide();
-    public static final SoundEvent JET_ENGINE = new SoundEvent(new ResourceLocation("gregtech:jet_engine"));
 
     /**
      * Check is possible to charge item
@@ -126,7 +126,7 @@ public class ArmorUtils {
                 cons -= 0.4F;
             }
 
-            player.playSound(JET_ENGINE, 0.3F, cons);
+            player.playSound(GTSoundEvents.JET_ENGINE, 0.3F, cons);
         }
     }
 

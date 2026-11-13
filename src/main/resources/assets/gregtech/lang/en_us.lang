@@ -6373,6 +6373,7 @@ gregtech.subtitle.maintenance.electrical=Electrical breakdown
 gregtech.subtitle.maintenance.mechanical=Mechanical breakdown
 gregtech.subtitle.alarm=Alarm Whines
 gregtech.subtitle.click=Something Clicks
+gregtech.subtitle.jet_engine=Jetpack Roars
 
 
 # Debug messaging

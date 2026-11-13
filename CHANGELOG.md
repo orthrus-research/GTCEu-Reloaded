@@ -173,6 +173,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | A recipe with a rejected input, such as a null fluid or a negative count, is now refused instead of registering without that input. |
 | Recipes | Two mods can create recipe categories with the same name without one taking over the other. |
 | Tools | Tree felling stops when the player changes dimension and no longer breaks blocks placed where a felled log used to be. |
+| Armor | Equipping electric armour and flying a jetpack play their sounds for nearby players. `ArmorUtils.JET_ENGINE` moved to `GTSoundEvents.JET_ENGINE`. |
 
 ### Earlier fork changes
 
