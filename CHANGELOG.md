@@ -246,6 +246,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Saved data | Legacy ender tank data is migrated once instead of on every start, so it no longer overwrites newer ender entries |
 | Storage | Gameplay change: a quantum chest refuses other items in its input slot, and with voiding on no longer deletes matching items while its output slot is empty |
 | Machines | Gameplay change: the alarm uses its stated 4 EU/t; before, it drained up to three times that, and probes reading it drained energy too |
+| Machines | Miners scan an ore-free area over several ticks instead of walking all of it at once |
 
 ### Earlier fork changes
 

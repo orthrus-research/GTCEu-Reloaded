@@ -73,6 +73,10 @@ public class MinerLogic {
     private int pipeLength = 0;
     private int currentRadius;
     private boolean isDone;
+    /** The last scan reached the bottom of the area; a scan stopped by its budget leaves this false. */
+    private boolean scanComplete;
+    /** The area was scanned to the bottom and is now scanned once more from the last mined block. */
+    private boolean finalPass;
     private boolean isActive = false;
     private boolean isWorkingEnabled = true;
     protected boolean wasActiveAndNeedsUpdate;
@@ -198,15 +202,18 @@ public class MinerLogic {
 
         }
 
-        if (blocksToMine.isEmpty()) {
-            // there were no blocks to mine, so the current position is the previous position
-            x.set(mineX.get());
-            y.set(mineY.get());
-            z.set(mineZ.get());
-
-            // attempt to get more blocks to mine, if there are none, the miner is done mining
-            blocksToMine.addAll(getBlocksToMine());
-            if (blocksToMine.isEmpty()) {
+        // a scan that ran out of budget continues on the next tick; only a scan that reached the bottom without
+        // finding anything can end the mining
+        if (blocksToMine.isEmpty() && scanComplete) {
+            if (!finalPass) {
+                // look once more from the last mined block before declaring the area done
+                finalPass = true;
+                x.set(mineX.get());
+                y.set(mineY.get());
+                z.set(mineZ.get());
+                blocksToMine.addAll(getBlocksToMine());
+            }
+            if (blocksToMine.isEmpty() && scanComplete) {
                 this.isDone = true;
                 this.wasActiveAndNeedsUpdate = true;
                 this.setActive(false);
@@ -326,6 +333,8 @@ public class MinerLogic {
         mineX.set(pos.getX() - currentRadius);
         mineZ.set(pos.getZ() - currentRadius);
         mineY.set(pos.getY() - 1);
+        scanComplete = false;
+        finalPass = false;
     }
 
     /**
@@ -372,9 +381,11 @@ public class MinerLogic {
         // determine how many blocks to retrieve this time
         double quotient = getQuotient(getMeanTickTime(metaTileEntity.getWorld()));
         int calcAmount = quotient < 1 ? 1 : (int) (Math.min(quotient, Short.MAX_VALUE));
+        // the budget counts positions visited, not ores found: an area without ores must not be walked to the
+        // bottom in one tick, loading every chunk on the way
         int calculated = 0;
+        scanComplete = false;
 
-        // keep getting blocks until the target amount is reached
         while (calculated < calcAmount) {
             // moving down the y-axis
             if (y.get() > 0) {
@@ -401,13 +412,13 @@ public class MinerLogic {
                     z.set(startZ.get());
                     y.decrementAndGet();
                 }
-            } else
-                return blocks;
-
-            // only count iterations where blocks were found
-            if (!blocks.isEmpty())
-                calculated++;
+            } else {
+                scanComplete = true;
+                break;
+            }
+            calculated++;
         }
+        if (!blocks.isEmpty()) finalPass = false;
         return blocks;
     }
 
