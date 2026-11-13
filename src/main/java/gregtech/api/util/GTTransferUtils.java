@@ -41,8 +41,10 @@ public class GTTransferUtils {
                 continue;
             }
 
-            currentFluid.amount = fluidLeftToTransfer;
-            FluidStack fluidStack = sourceHandler.drain(currentFluid, false);
+            // getContents may be the tank's live stack: ask for the amount on a copy
+            FluidStack request = currentFluid.copy();
+            request.amount = fluidLeftToTransfer;
+            FluidStack fluidStack = sourceHandler.drain(request, false);
             if (GTUtility.isEmpty(fluidStack)) {
                 continue;
             }

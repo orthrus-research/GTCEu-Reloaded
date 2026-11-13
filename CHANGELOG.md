@@ -226,6 +226,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Rendering | Active and idle laser pipes meshed at the same time no longer swap their glow. |
 | JEI | JEI pages that show several ore vein, fluid vein, material tree or by-product recipes at once draw each recipe's own details. |
 | JEI | Looking up a block hovered in a JEI multiblock preview works when the game renders below 10 frames per second. |
+| Fluids | Moving fluid out of tanks that expose their live contents, such as some other mods' tanks, no longer changes the amount stored in them. |
 
 ### Earlier fork changes
 
