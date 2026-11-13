@@ -2,6 +2,7 @@ package gregtech.common.items.armor;
 
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
+import gregtech.api.items.armor.ArmorUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.input.KeyBind;
 
@@ -50,7 +51,7 @@ public class AdvancedJetpack extends Jetpack {
 
         data.setBoolean("hover", hoverMode);
         data.setByte("toggleTimer", toggleTimer);
-        player.inventoryContainer.detectAndSendChanges();
+        ArmorUtils.syncInventoryContainer(player);
     }
 
     @Override

@@ -49,6 +49,16 @@ public class ArmorUtils {
         }
     }
 
+    /**
+     * Sync the player's inventory container after armour changed a stack. The server already syncs the open
+     * container every tick, which is this one unless another GUI is open, and the client has nothing to send.
+     */
+    public static void syncInventoryContainer(@NotNull EntityPlayer player) {
+        if (!player.world.isRemote && player.openContainer != player.inventoryContainer) {
+            player.inventoryContainer.detectAndSendChanges();
+        }
+    }
+
     /** Eight minutes, the longest night vision a brewed potion gives. */
     private static final int LONGEST_POTION_DURATION = 9600;
 

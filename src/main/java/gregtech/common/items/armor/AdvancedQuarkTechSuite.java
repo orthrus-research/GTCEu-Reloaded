@@ -139,7 +139,7 @@ public class AdvancedQuarkTechSuite extends QuarkTechSuite implements IJetpack {
                             if (chargable.getCharge() == chargable.getMaxCharge()) {
                                 inventoryIterator.remove();
                             }
-                            player.inventoryContainer.detectAndSendChanges();
+                            ArmorUtils.syncInventoryContainer(player);
                         }
                     }
 
@@ -155,7 +155,7 @@ public class AdvancedQuarkTechSuite extends QuarkTechSuite implements IJetpack {
         data.setBoolean("cancelInertia", cancelInertiaMode);
         data.setBoolean("hover", hoverMode);
         data.setByte("toggleTimer", toggleTimer);
-        player.inventoryContainer.detectAndSendChanges();
+        ArmorUtils.syncInventoryContainer(player);
 
         state.timer++;
         if (state.timer == Long.MAX_VALUE)

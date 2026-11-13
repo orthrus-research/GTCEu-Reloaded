@@ -94,7 +94,7 @@ public class PowerlessJetpack implements ISpecialArmorLogic, IJetpack, IItemHUDP
 
         data.setBoolean("hover", hover);
         data.setByte("toggleTimer", toggleTimer);
-        player.inventoryContainer.detectAndSendChanges();
+        ArmorUtils.syncInventoryContainer(player);
     }
 
     @Override
