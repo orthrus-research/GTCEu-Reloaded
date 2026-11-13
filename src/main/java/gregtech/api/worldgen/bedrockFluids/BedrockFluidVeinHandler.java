@@ -64,7 +64,7 @@ public class BedrockFluidVeinHandler {
         if (worldEntry == null) {
             BedrockFluidDepositDefinition definition = null;
 
-            int query = world.getChunk(getVeinCoord(chunkX), getVeinCoord(chunkZ)).getRandomWithSeed(90210).nextInt();
+            int query = chunkRandom(world.getSeed(), getVeinCoord(chunkX), getVeinCoord(chunkZ), 90210).nextInt();
 
             Biome biome = world.getBiomeForCoordsBody(new BlockPos(chunkX << 4, 64, chunkZ << 4));
             int totalWeight = getTotalWeight(world.provider, biome);
@@ -100,6 +100,16 @@ public class BedrockFluidVeinHandler {
             veinCache.put(coords, worldEntry);
         }
         return worldEntry;
+    }
+
+    /**
+     * The random {@code Chunk.getRandomWithSeed} would return for the chunk at the given coordinates, computed without
+     * loading or generating that chunk.
+     */
+    @NotNull
+    static Random chunkRandom(long worldSeed, int x, int z, long seed) {
+        return new Random(worldSeed + (long) (x * x * 4987142) + (long) (x * 5947611) + (long) (z * z) * 4392871L +
+                (long) (z * 389711) ^ seed);
     }
 
     /**
