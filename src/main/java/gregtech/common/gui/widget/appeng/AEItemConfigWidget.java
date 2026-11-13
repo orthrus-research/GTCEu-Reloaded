@@ -23,16 +23,14 @@ public class AEItemConfigWidget extends AEConfigWidget<IAEItemStack> {
     @Override
     @SuppressWarnings("unchecked")
     void init() {
-        final int size = (int) Math.sqrt(this.config.length);
+        // rows of ceil(sqrt(n)) slots, so a count that is not a square still gets every slot
+        final int rowLength = (int) Math.ceil(Math.sqrt(this.config.length));
         this.displayList = new IConfigurableSlot[this.config.length];
         this.cached = new IConfigurableSlot[this.config.length];
-        for (int h = 0; h < size; h++) {
-            for (int w = 0; w < size; w++) {
-                final int index = h * size + w;
-                this.displayList[index] = new ExportOnlyAEItemSlot();
-                this.cached[index] = new ExportOnlyAEItemSlot();
-                this.addWidget(new AEItemConfigSlot(w * 18, h * 18, this, index));
-            }
+        for (int index = 0; index < this.config.length; index++) {
+            this.displayList[index] = new ExportOnlyAEItemSlot();
+            this.cached[index] = new ExportOnlyAEItemSlot();
+            this.addWidget(new AEItemConfigSlot(index % rowLength * 18, index / rowLength * 18, this, index));
         }
     }
 
