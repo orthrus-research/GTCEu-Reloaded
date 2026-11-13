@@ -255,6 +255,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Tools | Gameplay change: industrial TNT and similar GT explosives respect claim and protection mods, which can now cancel each block they break |
 | API | Custom loot entries no longer depend on reflection that current JDKs refuse |
 | API | Two vanilla hooks now combine with other mods that hook the same code instead of failing to apply |
+| Rendering | The bloom pass no longer stops other mods from hooking the translucent block layer |
 
 ### Earlier fork changes
 

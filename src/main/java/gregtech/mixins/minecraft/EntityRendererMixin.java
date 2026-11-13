@@ -21,6 +21,7 @@ public class EntityRendererMixin {
                             ordinal = 3))
     public int renderBloomBlockLayer(RenderGlobal instance, BlockRenderLayer layer, double partialTicks, int pass,
                                      Entity entity, Operation<Integer> original) {
-        return BloomEffectUtil.renderBloomBlockLayer(instance, layer, partialTicks, pass, entity);
+        return BloomEffectUtil.renderBloomBlockLayer(instance, layer, partialTicks, pass, entity,
+                () -> original.call(instance, layer, partialTicks, pass, entity));
     }
 }

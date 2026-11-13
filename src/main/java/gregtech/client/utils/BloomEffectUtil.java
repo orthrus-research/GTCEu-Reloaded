@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -309,25 +310,39 @@ public class BloomEffectUtil {
                                             double partialTicks,
                                             int pass,
                                             @NotNull Entity entity) {
+        return renderBloomBlockLayer(renderGlobal, blockRenderLayer, partialTicks, pass, entity,
+                () -> renderGlobal.renderBlockLayer(blockRenderLayer, partialTicks, pass, entity));
+    }
+
+    /**
+     * @param renderLayer renders the wrapped layer itself; the mixin passes the original operation here, so other
+     *                    mods wrapping the same call still run
+     */
+    public static int renderBloomBlockLayer(RenderGlobal renderGlobal,
+                                            BlockRenderLayer blockRenderLayer,
+                                            double partialTicks,
+                                            int pass,
+                                            @NotNull Entity entity,
+                                            @NotNull IntSupplier renderLayer) {
         Minecraft.getMinecraft().profiler.endStartSection("BTLayer");
 
         if (externalTerrainPipeline()) {
-            return renderGlobal.renderBlockLayer(blockRenderLayer, partialTicks, pass, entity);
+            return renderLayer.getAsInt();
         }
 
         BLOOM_RENDER_LOCK.lock();
         try {
-            return renderBloomInternal(renderGlobal, blockRenderLayer, partialTicks, pass, entity);
+            return renderBloomInternal(renderGlobal, partialTicks, pass, entity, renderLayer);
         } finally {
             BLOOM_RENDER_LOCK.unlock();
         }
     }
 
     private static int renderBloomInternal(RenderGlobal renderGlobal,
-                                           BlockRenderLayer blockRenderLayer,
                                            double partialTicks,
                                            int pass,
-                                           @NotNull Entity entity) {
+                                           @NotNull Entity entity,
+                                           @NotNull IntSupplier renderLayer) {
         preDraw();
 
         EffectRenderContext context = EffectRenderContext.getInstance().update(entity, (float) partialTicks);
@@ -345,7 +360,7 @@ public class BloomEffectUtil {
             postDraw();
             GlStateManager.depthMask(false);
 
-            return renderGlobal.renderBlockLayer(blockRenderLayer, partialTicks, pass, entity);
+            return renderLayer.getAsInt();
         }
 
         Framebuffer fbo = Minecraft.getMinecraft().getFramebuffer();
@@ -402,7 +417,7 @@ public class BloomEffectUtil {
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.shadeModel(GL11.GL_SMOOTH);
 
-        int result = renderGlobal.renderBlockLayer(blockRenderLayer, partialTicks, pass, entity);
+        int result = renderLayer.getAsInt();
 
         Minecraft.getMinecraft().profiler.endStartSection("bloom");
 
