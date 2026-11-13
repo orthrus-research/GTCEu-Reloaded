@@ -97,6 +97,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | `PositionedRect.intersects(PositionedRect)` detects every overlap; before, it missed a rectangle inside the other one and cross-shaped overlaps |
 | API | `GTUtility.safeCastLongToInt` clamps values below `Integer.MIN_VALUE` too, and the generator tank-size functions give tier 0 the tier 1 size instead of zero |
 | Recipes | The sifter recipe for purified gem ores without the high sifter output adds the chipped gem only when one exists; before, it checked the exquisite gem and could add an empty output when chipped gems were disabled |
+| Tools | Tools with torch placing remember a torch in the first hotbar slot, and an edited cached slot number no longer throws |
 
 ### Earlier fork changes
 
