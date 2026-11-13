@@ -266,12 +266,12 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
     @Override
     public void onBlockPlacedBy(World worldIn, @NotNull BlockPos pos, @NotNull IBlockState state,
                                 @NotNull EntityLivingBase placer, ItemStack stack) {
-        IGregTechTileEntity holder = (IGregTechTileEntity) worldIn.getTileEntity(pos);
+        if (!(worldIn.getTileEntity(pos) instanceof IGregTechTileEntity holder)) return;
         MTERegistry registry = GregTechAPI.mteManager.getRegistry(
                 Objects.requireNonNull(stack.getItem().getRegistryName()).getNamespace());
 
         MetaTileEntity sampleMetaTileEntity = registry.getObjectById(stack.getItemDamage());
-        if (holder == null || sampleMetaTileEntity == null)
+        if (sampleMetaTileEntity == null)
             return;
 
         // TODO Fix this
@@ -284,10 +284,11 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
             if (stackTag.hasKey(GregtechDataCodes.BLOCK_ENTITY_TAG)) {
                 var blockTag = stackTag.getCompoundTag(GregtechDataCodes.BLOCK_ENTITY_TAG);
                 String customName = blockTag.getString(GregtechDataCodes.CUSTOM_NAME);
-                if (!customName.isEmpty())
-                    ((MetaTileEntityHolder) holder).setCustomName(customName);
+                if (!customName.isEmpty() && holder instanceof MetaTileEntityHolder mteHolder)
+                    mteHolder.setCustomName(customName);
 
-                mteTag = blockTag.getCompoundTag(GregtechDataCodes.TAG_KEY_MTE);
+                // a copy: getCompoundTag returns the stack's own tag, and a creative stack keeps its data
+                mteTag = blockTag.getCompoundTag(GregtechDataCodes.TAG_KEY_MTE).copy();
                 List<String> removed = new ArrayList<>();
                 for (var key : mteTag.getKeySet()) {
                     var trait = sampleMetaTileEntity.getMTETrait(key);
