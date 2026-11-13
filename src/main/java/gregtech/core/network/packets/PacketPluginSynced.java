@@ -48,7 +48,7 @@ public class PacketPluginSynced implements IPacket, IServerExecutor {
     // TODO This could be cleaned up still
     @Override
     public void executeServer(NetHandlerPlayServer handler) {
-        TileEntity te = NetworkUtils.getTileEntityServer(dimension, pos);
+        TileEntity te = NetworkUtils.getTileEntityWatchedBy(handler.player, dimension, pos);
         if (te instanceof IGregTechTileEntity &&
                 ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MetaTileEntityMonitorScreen) {
             MonitorPluginBaseBehavior plugin = ((MetaTileEntityMonitorScreen) ((IGregTechTileEntity) te)
