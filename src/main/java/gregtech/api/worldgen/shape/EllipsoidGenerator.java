@@ -36,18 +36,19 @@ public class EllipsoidGenerator extends ShapeGenerator {
         int a = radiusMin == radiusMax ? radiusMax : (gridRandom.nextInt(radiusMax - radiusMin) + radiusMin);
         int b = radiusMin == radiusMax ? radiusMax / 2 : (gridRandom.nextInt(radiusMax - radiusMin) + radiusMin) / 2;
         int c = radiusMin == radiusMax ? radiusMax : (gridRandom.nextInt(radiusMax - radiusMin) + radiusMin);
-        int ab2 = a * a * b * b, ac2 = a * a * c * c, bc2 = b * b * c * c, abc2 = ab2 * c * c;
+        // a^2 b^2 c^2 passes Integer.MAX_VALUE from radii of about 46, so the products are long
+        long ab2 = (long) a * a * b * b, ac2 = (long) a * a * c * c, bc2 = (long) b * b * c * c, abc2 = ab2 * c * c;
 
         int max = Math.max(a, Math.max(b, c));
         int yMax = Math.min(max, getYRadius());
         for (int x = -max; x <= max; x++) {
-            int xr = bc2 * x * x;
+            long xr = bc2 * x * x;
             if (xr > abc2) continue;
             for (int y = -yMax; y <= yMax; y++) {
-                int yr = xr + ac2 * y * y + ab2;
+                long yr = xr + ac2 * y * y + ab2;
                 if (yr > abc2) continue;
                 for (int z = -max; z <= max; z++) {
-                    int zr = yr + ab2 * z * z;
+                    long zr = yr + ab2 * z * z;
                     if (zr > abc2) continue;
                     generateBlock(x, y, z, blockAccess);
                 }
