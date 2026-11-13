@@ -332,7 +332,7 @@ public class EventHandlers {
     public static void onWorldUnloadEvent(WorldEvent.Unload event) {
         BedrockFluidVeinSaveData.setDirty();
         if (!event.getWorld().isRemote) {
-            LongDistanceNetwork.WorldData.get(event.getWorld()).markDirty();
+            LongDistanceNetwork.WorldData.unload(event.getWorld());
         }
     }
 

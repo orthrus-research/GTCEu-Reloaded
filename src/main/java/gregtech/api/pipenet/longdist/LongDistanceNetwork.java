@@ -336,10 +336,19 @@ public class LongDistanceNetwork {
             if (netWorldData == null) {
                 netWorldData = new WorldData(DATA_ID);
                 world.setData(DATA_ID, netWorldData);
-                WORLD_DATA_MAP.put(world, netWorldData);
             }
+            // cache loaded data too, not only new data; unload removes it again
+            WORLD_DATA_MAP.put(world, netWorldData);
             netWorldData.setWorldAndInit(world);
             return netWorldData;
+        }
+
+        /**
+         * Mark the world's data for saving and stop caching it, so the unloaded world can be collected.
+         */
+        public static void unload(World world) {
+            WorldData worldData = WORLD_DATA_MAP.remove(world);
+            if (worldData != null) worldData.markDirty();
         }
 
         private static long getChunkPos(BlockPos pos) {
