@@ -21,14 +21,12 @@ public class NetworkUtil {
      * @param stack the stack to write
      */
     public static void writeFluidStack(@NotNull PacketBuffer to, @Nullable FluidStack stack) {
-        NBTTagCompound tag = new NBTTagCompound();
         if (stack == null) {
             to.writeBoolean(false);
         } else {
             to.writeBoolean(true);
-            stack.writeToNBT(tag);
+            to.writeCompoundTag(stack.writeToNBT(new NBTTagCompound()));
         }
-        to.writeCompoundTag(tag);
     }
 
     /**
