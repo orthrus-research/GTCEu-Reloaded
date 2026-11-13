@@ -123,22 +123,24 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
         return selectedSound;
     }
 
+    /**
+     * A query only: the energy is drained once per tick in {@link #update()}, which also decides this state.
+     */
     @Override
     public boolean isActive() {
-        if (this.getWorld().isRemote) {
-            return isActive;
-        }
-        return this.isBlockRedstonePowered() &&
-                this.energyContainer.changeEnergy(-BASE_EU_CONSUMPTION) == -BASE_EU_CONSUMPTION;
+        return isActive;
     }
 
     @Override
     public void update() {
         super.update();
         if (!this.getWorld().isRemote) {
-            if (this.isActive != this.isActive()) {
-                this.writeCustomData(GregtechDataCodes.UPDATE_ACTIVE, (writer) -> writer.writeBoolean(this.isActive()));
-                this.isActive = this.isActive();
+            boolean active = this.isBlockRedstonePowered() &&
+                    this.energyContainer.getEnergyStored() >= BASE_EU_CONSUMPTION &&
+                    this.energyContainer.changeEnergy(-BASE_EU_CONSUMPTION) == -BASE_EU_CONSUMPTION;
+            if (this.isActive != active) {
+                this.isActive = active;
+                this.writeCustomData(GregtechDataCodes.UPDATE_ACTIVE, (writer) -> writer.writeBoolean(active));
             }
         }
     }
