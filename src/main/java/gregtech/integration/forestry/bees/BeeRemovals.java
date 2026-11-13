@@ -4,7 +4,6 @@ import gregtech.api.util.Mods;
 import gregtech.integration.IntegrationModule;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,11 +101,8 @@ public class BeeRemovals {
             Field branchField = ebBeeDefinition.getDeclaredField("branch");
             Field speciesBuilderField = ebBeeDefinition.getDeclaredField("speciesBuilder");
             branchField.setAccessible(true);
+            // final instance fields are writable once accessible; Field.modifiers no longer exists to clear
             speciesBuilderField.setAccessible(true);
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(branchField, branchField.getModifiers() & ~Modifier.FINAL);
-            modifiersField.setInt(speciesBuilderField, speciesBuilderField.getModifiers() & ~Modifier.FINAL);
 
             for (var o : ebBeeDefinition.getEnumConstants()) {
                 if (o instanceof Enum<?> bee) {

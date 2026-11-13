@@ -13,6 +13,7 @@
     "ContainerMixin",
     "DamageSourceMixin",
     "EnchantmentCanApplyMixin",
+    "LootEntrySerializerMixin",
     "RecipeRepairItemMixin"
   ],
   "client": [

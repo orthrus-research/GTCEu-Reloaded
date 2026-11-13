@@ -253,6 +253,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Pipes | Long distance pipe networks are rebuilt on the server thread instead of a separate thread |
 | World generation | Gameplay change: a vein's guaranteed surface indicator is placed only from the chunk holding its center, ending cascading chunk generation; a vein with no ore in that chunk has no guaranteed indicator |
 | Tools | Gameplay change: industrial TNT and similar GT explosives respect claim and protection mods, which can now cancel each block they break |
+| API | Custom loot entries no longer depend on reflection that current JDKs refuse |
 
 ### Earlier fork changes
 
