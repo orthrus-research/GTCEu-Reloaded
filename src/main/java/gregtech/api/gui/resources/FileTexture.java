@@ -27,10 +27,11 @@ public class FileTexture implements IGuiTexture {
     public final File file;
     @SideOnly(Side.CLIENT)
     private PictureTexture texture;
+    // written by the loading thread, read by the render thread
     @SideOnly(Side.CLIENT)
-    private ProcessedImageData imageData;
+    private volatile ProcessedImageData imageData;
     private Thread downloadThread;
-    private boolean failed;
+    private volatile boolean failed;
 
     public FileTexture(File file) {
         this.file = file;
@@ -75,11 +76,12 @@ public class FileTexture implements IGuiTexture {
                     }
                 } catch (IOException e) {
                     failed = true;
-                    texture = null;
                 } finally {
                     IOUtils.closeQuietly(inputStream);
                 }
-            });
+            }, "GregTech file texture " + file.getName());
+            // reading a picture must not keep the game from exiting
+            downloadThread.setDaemon(true);
             downloadThread.start();
         }
     }
