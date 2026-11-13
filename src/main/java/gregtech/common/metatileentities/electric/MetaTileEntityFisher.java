@@ -128,7 +128,8 @@ public class MetaTileEntityFisher extends TieredMetaTileEntity {
                 if (GTTransferUtils.addItemsToItemHandler(exportItems, true, itemStacks)) {
                     GTTransferUtils.addItemsToItemHandler(exportItems, false, itemStacks);
                     energyContainer.removeEnergy(energyAmountPerFish);
-                    baitStack.shrink(1);
+                    // through the handler, so it is told and marks the tile for saving
+                    importItems.extractItem(0, 1, false);
                 }
             }
         }

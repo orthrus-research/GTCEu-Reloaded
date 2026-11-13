@@ -156,6 +156,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | `TextFieldWidget` accepts text without a validator and keeps its configured maximum length on dedicated servers. |
 | Machines | The World Accelerator stops ticking a neighbouring tile entity as soon as that tile removes itself. |
 | Machines | The pump returns to a fluid block it skipped because its tank was full, instead of ignoring the block until its next full rescan. |
+| Machines | The fisher's bait use is saved even when nothing else changes in the machine. |
 
 ### Earlier fork changes
 
