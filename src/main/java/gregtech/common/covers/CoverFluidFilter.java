@@ -211,7 +211,8 @@ public class CoverFluidFilter extends CoverBase implements CoverWithUI {
     @Override
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
-        this.filterMode = FluidFilterMode.values()[tagCompound.getInteger("FilterMode")];
+        this.filterMode = GTUtility.enumByOrdinal(FluidFilterMode.values(), tagCompound.getInteger("FilterMode"),
+                FluidFilterMode.FILTER_FILL);
         if (tagCompound.hasKey("IsBlacklist")) {
             this.fluidFilterContainer.setFilterStack(getDefinition().getDropItemStack());
             this.fluidFilterContainer.handleLegacyNBT(tagCompound);

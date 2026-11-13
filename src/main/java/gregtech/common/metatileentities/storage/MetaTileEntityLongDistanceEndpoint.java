@@ -5,6 +5,7 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.pipenet.longdist.ILDEndpoint;
 import gregtech.api.pipenet.longdist.LongDistanceNetwork;
 import gregtech.api.pipenet.longdist.LongDistancePipeType;
+import gregtech.api.util.GTUtility;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -150,7 +151,7 @@ public abstract class MetaTileEntityLongDistanceEndpoint extends MetaTileEntity
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
-        this.ioType = IOType.values()[data.getByte("Type")];
+        this.ioType = GTUtility.enumByOrdinal(IOType.values(), data.getByte("Type"), IOType.NONE);
     }
 
     @Override

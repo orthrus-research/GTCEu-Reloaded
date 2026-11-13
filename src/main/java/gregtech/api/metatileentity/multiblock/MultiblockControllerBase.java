@@ -432,7 +432,8 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
         if (data.hasKey("UpwardsFacing")) {
-            this.upwardsFacing = EnumFacing.VALUES[data.getByte("UpwardsFacing")];
+            this.upwardsFacing = GTUtility.enumByOrdinal(EnumFacing.VALUES, data.getByte("UpwardsFacing"),
+                    EnumFacing.NORTH);
         }
         if (data.hasKey("IsFlipped")) {
             this.isFlipped = data.getBoolean("IsFlipped");
