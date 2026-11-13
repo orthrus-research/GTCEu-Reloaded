@@ -125,9 +125,9 @@ public class MetaTileEntityQuantumChest extends MetaTileEntityQuantumStorage<IIt
         if (!getWorld().isRemote) {
             if (shouldTransferImport()) {
                 ItemStack inputStack = importItems.getStackInSlot(0);
-                ItemStack outputStack = exportItems.getStackInSlot(0);
+                ItemStack storedType = getStoredType();
                 if (!inputStack.isEmpty() &&
-                        (virtualItemStack.isEmpty() || areItemStackIdentical(outputStack, inputStack))) {
+                        (storedType.isEmpty() || areItemStackIdentical(storedType, inputStack))) {
                     GTTransferUtils.moveInventoryItems(importItems, combinedInventory);
 
                     markDirty();
@@ -164,6 +164,14 @@ public class MetaTileEntityQuantumChest extends MetaTileEntityQuantumStorage<IIt
                 previousStackSize = itemsStoredInside;
             }
         }
+    }
+
+    /**
+     * @return the kind of item this chest holds, in its storage or its output slot, or {@link ItemStack#EMPTY}
+     */
+    @NotNull
+    protected ItemStack getStoredType() {
+        return !virtualItemStack.isEmpty() ? virtualItemStack : exportItems.getStackInSlot(0);
     }
 
     protected static boolean areItemStackIdentical(ItemStack first, ItemStack second) {
@@ -235,14 +243,12 @@ public class MetaTileEntityQuantumChest extends MetaTileEntityQuantumStorage<IIt
 
             @Override
             public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+                // with voiding on, an item left in the input slot is deleted, so refuse items of another kind
+                ItemStack storedType = getStoredType();
+                if (!storedType.isEmpty() && !areItemStackIdentical(stack, storedType)) return false;
                 NBTTagCompound compound = stack.getTagCompound();
-                ItemStack outStack = getExportItems().getStackInSlot(0);
-                boolean outStackMatch = true;
-                if (!outStack.isEmpty()) {
-                    outStackMatch = areItemStackIdentical(stack, outStack);
-                }
                 if (compound == null) return true;
-                return outStackMatch && !(compound.hasKey(NBT_ITEMSTACK, NBT.TAG_COMPOUND) ||
+                return !(compound.hasKey(NBT_ITEMSTACK, NBT.TAG_COMPOUND) ||
                         compound.hasKey("Fluid", NBT.TAG_COMPOUND)); // prevents inserting items with NBT to the Quantum
                                                                      // Chest
             }
