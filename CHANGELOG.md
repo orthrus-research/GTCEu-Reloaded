@@ -231,6 +231,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | `MultiblockControllerBase.getStructureRevision()` changes whenever a structure forms or breaks, for caching what is built from its parts. |
 | Recipes | Gameplay change: recipes that use no energy and output only fluids run at most their requested number of parallels; before, they could run far more when the output tanks had room |
 | GUI | Multiblock screens update when a line gets shorter but otherwise matches what was shown before. |
+| API | `TraceabilityPredicate.ANY`, `AIR` and `HEATING_COILS` are `final`, and limiting a predicate no longer changes others that share its entries. |
 
 ### Earlier fork changes
 
