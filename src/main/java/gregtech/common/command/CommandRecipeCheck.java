@@ -54,7 +54,7 @@ public class CommandRecipeCheck extends CommandBase {
     @NotNull
     @Override
     public String getUsage(@NotNull ICommandSender sender) {
-        return "gregtech.command.util.recipecheck.usage";
+        return "gregtech.command.recipecheck.usage";
     }
 
     @Override
