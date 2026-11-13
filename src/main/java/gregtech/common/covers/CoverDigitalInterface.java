@@ -349,11 +349,16 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
             lastClickUUID = playerIn.getPersistentID();
             if (playerIn.isSneaking() && playerIn.getHeldItemMainhand().isEmpty()) {
                 if (rayTraceResult.typeOfHit == RayTraceResult.Type.BLOCK) {
-                    int maxSlotLimit = Integer.MAX_VALUE;
-                    if (this.getCoverableView() instanceof MetaTileEntity metaTileEntity) {
-                        maxSlotLimit = this.mode == MODE.ITEM ? metaTileEntity.getImportItems().getSlots() :
-                                metaTileEntity.getImportFluids().getTanks();
+                    // cycle over the slots of the handler the screen shows, not the holder's import inventory
+                    int maxSlotLimit;
+                    if (this.mode == MODE.ITEM) {
+                        IItemHandler itemHandler = getItemCapability();
+                        maxSlotLimit = itemHandler == null ? 1 : itemHandler.getSlots();
+                    } else {
+                        IFluidHandler fluidHandler = getFluidCapability();
+                        maxSlotLimit = fluidHandler == null ? 1 : fluidHandler.getTankProperties().length;
                     }
+                    maxSlotLimit = Math.max(1, maxSlotLimit);
                     double x = 0;
                     double y = 1 - rayTraceResult.hitVec.y + rayTraceResult.getBlockPos().getY();
                     if (rayTraceResult.sideHit == EnumFacing.EAST) {
@@ -366,7 +371,7 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
                         x = 1 - rayTraceResult.hitVec.x + rayTraceResult.getBlockPos().getX();
                     }
                     if (1f / 16 < x && x < 4f / 16 && 1f / 16 < y && y < 4f / 16) {
-                        this.setMode(this.slot - 1 >= 0 ? this.slot - 1 : maxSlotLimit);
+                        this.setMode(this.slot - 1 >= 0 ? this.slot - 1 : maxSlotLimit - 1);
                         return EnumActionResult.SUCCESS;
                     } else if (12f / 16 < x && x < 15f / 16 && 1f / 16 < y && y < 4f / 16) {
                         this.setMode(this.slot + 1 >= maxSlotLimit ? 0 : this.slot + 1);
