@@ -151,6 +151,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | AE2 | Breaking an ME output hatch that is not on a working network now unforms its multiblock like any other hatch. |
 | Multiblocks | Gameplay change: touching a spinning turbine rotor below 1000 rpm does damage in proportion to its speed; before, it did none |
 | AE2 | An ME input bus slot reconfigured to an item that differs only in NBT no longer keeps counting stock of the previous item. |
+| Cables | A cable overloaded within its own voltage tier, possible only with custom cable limits, now heats up instead of cooling down. |
 
 ### Earlier fork changes
 

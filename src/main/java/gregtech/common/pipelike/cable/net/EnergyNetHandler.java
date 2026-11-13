@@ -5,12 +5,7 @@ import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.common.pipelike.cable.tile.TileEntityCable;
 
-import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 
 import java.util.Objects;
 
@@ -80,9 +75,10 @@ public class EnergyNetHandler implements IEnergyContainer {
             boolean cableBroken = false;
             for (TileEntityCable cable : path.getPath()) {
                 if (cable.getMaxVoltage() < voltage) {
-                    int heat = (int) (Math.log(
-                            GTUtility.getTierByVoltage(voltage) - GTUtility.getTierByVoltage(cable.getMaxVoltage())) *
-                            45 + 36.5);
+                    // a custom cable limit can sit in the same tier as the voltage; log(0) would cool it
+                    int tierDifference = Math.max(1,
+                            GTUtility.getTierByVoltage(voltage) - GTUtility.getTierByVoltage(cable.getMaxVoltage()));
+                    int heat = (int) (Math.log(tierDifference) * 45 + 36.5);
                     cable.applyHeat(heat);
 
                     cableBroken = cable.isInvalid();
@@ -136,15 +132,6 @@ public class EnergyNetHandler implements IEnergyContainer {
         return net != null && net.isValid() && net.containsNode(cable.getPos());
     }
 
-    private void burnCable(World world, BlockPos pos) {
-        world.setBlockState(pos, Blocks.FIRE.getDefaultState());
-        if (!world.isRemote) {
-            ((WorldServer) world).spawnParticle(EnumParticleTypes.SMOKE_LARGE,
-                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                    5 + world.rand.nextInt(3), 0.0, 0.0, 0.0, 0.1);
-        }
-    }
-
     @Override
     public long getInputAmperage() {
         return cable.getNodeData().getAmperage();
@@ -163,6 +150,7 @@ public class EnergyNetHandler implements IEnergyContainer {
     @Override
     public long changeEnergy(long energyToAdd) {
         GTLog.logger.fatal("Do not use changeEnergy() for cables! Use acceptEnergyFromNetwork()");
+        if (getInputAmperage() <= 0 || getInputVoltage() <= 0) return 0;
         return acceptEnergyFromNetwork(facing == null ? EnumFacing.UP : facing,
                 energyToAdd / getInputAmperage(),
                 energyToAdd / getInputVoltage()) * getInputVoltage();
