@@ -29,8 +29,9 @@ public final class PhantomSlotUtil {
             } else {
                 if (areItemsEqual(stackSlot, stackHeld)) {
                     adjustPhantomSlot(slot, mouseButton, clickTypeIn);
+                } else {
+                    fillPhantomSlot(slot, stackHeld, mouseButton);
                 }
-                fillPhantomSlot(slot, stackHeld, mouseButton);
             }
         } else if (mouseButton == 5 || mouseButton == -1) {
             if (!slot.getHasStack()) {
@@ -75,7 +76,7 @@ public final class PhantomSlotUtil {
     }
 
     public static boolean areItemsEqual(ItemStack itemStack1, ItemStack itemStack2) {
-        return !ItemStack.areItemsEqual(itemStack1, itemStack2) ||
-                !ItemStack.areItemStackTagsEqual(itemStack1, itemStack2);
+        return ItemStack.areItemsEqual(itemStack1, itemStack2) &&
+                ItemStack.areItemStackTagsEqual(itemStack1, itemStack2);
     }
 }
