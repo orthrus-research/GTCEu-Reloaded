@@ -202,6 +202,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | The alarm's radius stays within 0 to 128 blocks whatever a client sends, and non-numeric input to the alarm or the creative energy source no longer throws on the server. |
 | World generation | A new single-player world no longer inherits the bedrock fluid veins of the world played before it. |
 | Pipes | Worlds with long-distance pipes are released when they unload instead of being kept in memory until the game exits. |
+| Cables | Gameplay change: a hot cable cools at the normal rate after its chunk loads instead of twice as fast, and a broken hot cable no longer sets fire to what replaces it |
 
 ### Earlier fork changes
 
