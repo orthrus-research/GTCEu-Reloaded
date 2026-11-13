@@ -259,6 +259,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | In ModularUI text, /n becomes a line break only in GregTech's own translations; other mods' text keeps it as written |
 | API | GregTech's ModularUI tweaks apply only to the tested ModularUI release; other releases log a warning and run unmodified |
 | Monitors | Animated GIFs on monitors no longer carry one frame's delay and transparency into the next, and malformed GIFs fail cleanly |
+| Rendering | The invar and platinum lighters show their own textures again |
 
 ### Earlier fork changes
 
