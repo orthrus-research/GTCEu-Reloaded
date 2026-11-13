@@ -31,4 +31,10 @@ public class SmallDigitsTest {
 
         MatcherAssert.assertThat(SmallDigits.toSmallDownNumbers("(U-238)2"), is("(U-238)₂"));
     }
+
+    @Test
+    public void testSuperscript() {
+        MatcherAssert.assertThat(SmallDigits.toSmallUpNumbers("x0123456789"), is("x⁰¹²³⁴⁵⁶⁷⁸⁹"));
+        MatcherAssert.assertThat(SmallDigits.toSmallUpNumbers("m2"), is("m²"));
+    }
 }
