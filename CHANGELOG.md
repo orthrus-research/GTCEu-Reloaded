@@ -172,6 +172,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | Machines with more than 64 different inputs find recipes whose ingredients sit more than 64 slots apart. |
 | Recipes | A recipe with a rejected input, such as a null fluid or a negative count, is now refused instead of registering without that input. |
 | Recipes | Two mods can create recipe categories with the same name without one taking over the other. |
+| Tools | Tree felling stops when the player changes dimension and no longer breaks blocks placed where a felled log used to be. |
 
 ### Earlier fork changes
 
