@@ -677,10 +677,10 @@ public class GTUtility {
      * This function is meant for use with generators
      */
     public static final Function<Integer, Integer> steamGeneratorTankSizeFunction = tier -> Math
-            .min(16000 * (1 << (tier - 1)), 64000);
+            .min(16000 * (1 << Math.max(0, tier - 1)), 64000);
 
     public static final Function<Integer, Integer> genericGeneratorTankSizeFunction = tier -> Math
-            .min(4000 * (1 << (tier - 1)), 16000);
+            .min(4000 * (1 << Math.max(0, tier - 1)), 16000);
 
     public static ItemStack toItem(IBlockState state) {
         return toItem(state, 1);
@@ -957,10 +957,10 @@ public class GTUtility {
      * Safely cast a Long to an Int without overflow.
      *
      * @param v The Long value to cast to an Int.
-     * @return v, cast to Int, or Integer.MAX_VALUE if it would overflow.
+     * @return v, cast to Int, or Integer.MAX_VALUE or Integer.MIN_VALUE if it would overflow.
      */
     public static int safeCastLongToInt(long v) {
-        return v > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) v;
+        return (int) Math.clamp(v, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
     /**

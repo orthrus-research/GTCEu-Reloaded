@@ -95,6 +95,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Tools | The prospector map places the player marker correctly on the north-south axis at positive Z, and clicking just left of or above the map no longer adds a waypoint in its first row or column |
 | Covers | Energy, fluid, item and activity detectors give the right signal for stored amounts above about 6×10¹⁷; before, the scaled amount overflowed and the signal went wrong or negative |
 | API | `PositionedRect.intersects(PositionedRect)` detects every overlap; before, it missed a rectangle inside the other one and cross-shaped overlaps |
+| API | `GTUtility.safeCastLongToInt` clamps values below `Integer.MIN_VALUE` too, and the generator tank-size functions give tier 0 the tier 1 size instead of zero |
 
 ### Earlier fork changes
 
