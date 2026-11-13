@@ -507,8 +507,11 @@ public abstract class BlockPipe<PipeType extends Enum<PipeType> & IPipeType<Node
     @Override
     public void getDrops(@NotNull NonNullList<ItemStack> drops, @NotNull IBlockAccess world, @NotNull BlockPos pos,
                          @NotNull IBlockState state, int fortune) {
-        IPipeTile<PipeType, NodeDataType> pipeTile = tileEntities.get() == null ? getPipeTileEntity(world, pos) :
-                tileEntities.get();
+        // breakBlock parks the removed tile for harvestBlock; a break without a harvest (explosion, another
+        // mod's breaker) leaves it behind, so use it only for this position and clear it once read
+        IPipeTile<PipeType, NodeDataType> pipeTile = tileEntities.get();
+        tileEntities.remove();
+        if (pipeTile == null || !pos.equals(pipeTile.getPipePos())) pipeTile = getPipeTileEntity(world, pos);
         if (pipeTile == null) return;
         if (pipeTile.getFrameMaterial() != null) {
             BlockFrame blockFrame = MetaBlocks.FRAMES.get(pipeTile.getFrameMaterial());

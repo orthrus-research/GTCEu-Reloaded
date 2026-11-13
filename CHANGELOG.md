@@ -210,6 +210,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | The digital interface cover's energy chart shows the recent history as soon as it loads instead of starting flat. |
 | Machines | Gameplay change: machines on a chunk border stop sending items and energy into an unloaded neighbour, where they were lost, and resume when that chunk loads |
 | API | `DimensionPropertyList.EMPTY_LIST` is final and immutable; adding to the lists `RecipeBuilder.getDimensionIDs` returns for a recipe without dimensions now throws instead of changing every recipe's default. |
+| Pipes | A pipe destroyed without a player, by an explosion or another mod, drops its own item, not the item of a pipe broken before it. |
 
 ### Earlier fork changes
 
