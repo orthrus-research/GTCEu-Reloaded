@@ -32,6 +32,8 @@ public class ForestryScannerLogic implements IScannerRecipeMap.ICustomScannerLog
     @Override
     public Recipe createCustomRecipe(long voltage, List<ItemStack> inputs, List<FluidStack> fluidInputs,
                                      boolean exactVoltage) {
+        // the scanner asks for every lookup, also with no fluid inputs at all
+        if (fluidInputs.isEmpty()) return null;
         FluidStack fluidStack = fluidInputs.get(0);
         if (fluidStack != null && fluidStack.containsFluid(Fluids.FOR_HONEY.getFluid(HONEY_AMOUNT))) {
             for (ItemStack stack : inputs) {
