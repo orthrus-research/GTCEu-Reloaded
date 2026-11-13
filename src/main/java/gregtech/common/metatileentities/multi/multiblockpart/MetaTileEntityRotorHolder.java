@@ -135,9 +135,7 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
             }
         }
 
-        MetaTileEntityLargeTurbine controller = (MetaTileEntityLargeTurbine) getController();
-
-        if (controller != null && controller.isActive()) {
+        if (getController() instanceof MetaTileEntityLargeTurbine controller && controller.isActive()) {
             if (currentSpeed < maxSpeed) {
                 setCurrentSpeed(currentSpeed + SPEED_INCREMENT);
             }
