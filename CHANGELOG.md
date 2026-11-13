@@ -236,6 +236,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Saved data | An asymmetric cleanroom keeps its front and back depth across a reload. |
 | Multiblocks | Multiblocks whose pattern names an ability with no registered part, such as one from an absent add-on, no longer fail to build their structure. |
 | Recipes | Gameplay change: generated material recipes register in a fixed order that add-ons cannot shuffle; where two generated recipes conflict, which one is kept can differ from before |
+| GUI | Multiblock screens display correctly on a client whose maintenance setting differs from the server's. |
 
 ### Earlier fork changes
 

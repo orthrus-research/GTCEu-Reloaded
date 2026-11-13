@@ -501,7 +501,9 @@ public class MultiblockUIBuilder {
      * setting for if maintenance is enabled automatically.
      */
     public MultiblockUIBuilder addMaintenanceProblemLines(byte maintenanceProblems, boolean warning) {
-        if (!isStructureFormed || !ConfigHolder.machines.enableMaintenance) return this;
+        if (!isStructureFormed) return this;
+        // a local config: sync the server's value, or a client configured otherwise reads the stream misaligned
+        if (!getSyncer().syncBoolean(ConfigHolder.machines.enableMaintenance)) return this;
         maintenanceProblems = getSyncer().syncByte(maintenanceProblems);
 
         if (warning && maintenanceProblems < 0b111111 && maintenanceProblems > 0b000000 ||
@@ -827,7 +829,13 @@ public class MultiblockUIBuilder {
         return this;
     }
 
-    /** Add custom text dynamically, allowing for custom application logic. */
+    /**
+     * Add custom text dynamically, allowing for custom application logic.
+     * <p>
+     * The server runs the consumer and writes each {@code syncX} value; the client runs it again and reads them back
+     * in order, with no tags or lengths. Every branch between two {@code syncX} calls must depend only on values
+     * that were themselves synced, never on client-local state such as a config option.
+     */
     public MultiblockUIBuilder addCustom(BiConsumer<KeyManager, UISyncer> customConsumer) {
         customConsumer.accept(this::addOperation, getSyncer());
         return this;
