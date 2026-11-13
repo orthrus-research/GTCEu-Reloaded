@@ -115,8 +115,7 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
         FluidStack inputFluid = getInputTank().drain(
                 new FluidStack(recipeFluidStack.getFluid(), Integer.MAX_VALUE),
                 false);
-        return inputFluid != null && inputFluid.amount >= (hasRecipeModifierAttempt() ?
-                (long) recipeFluidStack.amount * parallel : recipeFluidStack.amount * parallel);
+        return inputFluid != null && inputFluid.amount >= (long) recipeFluidStack.amount * parallel;
     }
 
     @Override
@@ -196,8 +195,7 @@ public class LargeTurbineWorkableHandler extends MultiblockFuelRecipeLogic {
             // Null check fluid here, since it can return null on first join into world or first form
             FluidStack inputFluid = hasRecipeModifierAttempt() ? getModifierInputTank().drain(
                     new FluidStack(recipeFluidStack.getFluid(), Integer.MAX_VALUE), false) : getInputFluidStack();
-            if (inputFluid == null || inputFluid.amount < (hasRecipeModifierAttempt() ?
-                    (long) recipeFluidStack.amount * parallel : recipeFluidStack.amount * parallel)) {
+            if (inputFluid == null || inputFluid.amount < (long) recipeFluidStack.amount * parallel) {
                 return false;
             }
 
