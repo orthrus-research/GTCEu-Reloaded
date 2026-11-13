@@ -11,7 +11,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.common.DimensionManager;
 
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
@@ -41,7 +41,9 @@ public class ValueCoverBehavior extends AbstractValue {
     }
 
     protected Cover getCover() {
-        World world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dim);
+        // a script can keep this value after the machine's dimension or chunk unloads: never load either for it
+        World world = DimensionManager.getWorld(dim);
+        if (world == null || !world.isBlockLoaded(pos)) return null;
         TileEntity te = world.getTileEntity(pos);
         if (te instanceof IGregTechTileEntity) {
             CoverableView coverable = te.getCapability(GregtechTileCapabilities.CAPABILITY_COVER_HOLDER, null);

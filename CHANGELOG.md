@@ -232,6 +232,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | Gameplay change: recipes that use no energy and output only fluids run at most their requested number of parallels; before, they could run far more when the output tanks had room |
 | GUI | Multiblock screens update when a line gets shorter but otherwise matches what was shown before. |
 | API | `TraceabilityPredicate.ANY`, `AIR` and `HEATING_COILS` are `final`, and limiting a predicate no longer changes others that share its entries. |
+| OpenComputers | OpenComputers cover values kept by a script no longer load their machine's dimension or chunk when called. |
 
 ### Earlier fork changes
 
