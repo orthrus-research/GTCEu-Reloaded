@@ -107,8 +107,9 @@ public abstract class ParallelLogic {
             if (voidFluids) {
                 modifiedFluidParallelAmount = parallelAmount;
             } else {
+                // never search above the requested parallel; the item limit is Integer.MAX_VALUE without items
                 modifiedFluidParallelAmount = limitParallelByFluids(recipe, new OverlayedFluidHandler(fluidOutputs),
-                        modifiedItemParallelAmount);
+                        Math.min(parallelAmount, modifiedItemParallelAmount));
             }
 
             // If we are not voiding, and cannot fit any fluids, return 0
