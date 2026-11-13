@@ -39,6 +39,7 @@ import com.cleanroommc.modularui.utils.serialization.IByteBufSerializer;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import org.jetbrains.annotations.NotNull;
@@ -632,6 +633,12 @@ public class MultiblockUIBuilder {
      * @param arl      an instance of an {@link AbstractRecipeLogic} to gather the outputs from.
      * @param maxLines the maximum number of lines to print until truncating with {@code ...}
      */
+    private Recipe trimSource;
+    private RecipeMap<?> trimMap;
+    private int trimItemLimit;
+    private int trimFluidLimit;
+    private Recipe trimResult;
+
     public MultiblockUIBuilder addRecipeOutputLine(AbstractRecipeLogic arl, int maxLines) {
         // todo recipe is null on first load, fix in the future
         Recipe recipe = arl.getPreviousRecipe();
@@ -643,7 +650,17 @@ public class MultiblockUIBuilder {
         Recipe trimmed = null;
         if (isServer()) {
             MetaTileEntity mte = arl.getMetaTileEntity();
-            trimmed = Recipe.trimRecipeOutputs(recipe, map, mte.getItemOutputLimit(), mte.getFluidOutputLimit());
+            int itemLimit = mte.getItemOutputLimit(), fluidLimit = mte.getFluidOutputLimit();
+            // the display rebuilds every tick; trim again only when the recipe or the limits change
+            if (recipe != trimSource || map != trimMap || itemLimit != trimItemLimit ||
+                    fluidLimit != trimFluidLimit) {
+                trimSource = recipe;
+                trimMap = map;
+                trimItemLimit = itemLimit;
+                trimFluidLimit = fluidLimit;
+                trimResult = Recipe.trimRecipeOutputs(recipe, map, itemLimit, fluidLimit);
+            }
+            trimmed = trimResult;
         }
 
         int p = getSyncer().syncInt(arl.getParallelRecipesPerformed());
@@ -1034,12 +1051,14 @@ public class MultiblockUIBuilder {
         }
 
         public boolean hasChanged() {
-            byte[] old = internal.array().clone();
+            // compare the written bytes only: the backing array is larger, and after a shorter rewrite its stale
+            // tail could make different content compare equal
+            ByteBuf old = internal.copy();
             this.internal.clear();
             clear();
             onRebuild();
             runAction();
-            return !Arrays.equals(old, internal.array());
+            return !ByteBufUtil.equals(old, internal);
         }
     }
 
