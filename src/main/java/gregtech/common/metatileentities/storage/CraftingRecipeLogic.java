@@ -158,7 +158,10 @@ public class CraftingRecipeLogic extends SyncHandler {
             var slotList = stackLookupMap.get(stack);
 
             for (int slot : slotList) {
+                // stop once the request is met, so other slots holding the item are left alone
+                if (requestedAmount <= 0) break;
                 var extracted = availableHandlers.extractItem(slot, requestedAmount, true);
+                if (extracted.isEmpty()) continue;
                 gatheredItems.put(slot, extracted.getCount());
                 requestedAmount -= extracted.getCount();
             }
@@ -174,14 +177,21 @@ public class CraftingRecipeLogic extends SyncHandler {
             if (!hasContainer) {
                 // not a transmutable item (damagable tool, etc), extract normally
                 availableHandlers.extractItem(slot, amount, false);
-            } else if (stack.getCount() > 1) {
-                // only some stacks are transmuted, try insert non-empty stacks
-                ItemStack newStack = ForgeHooks.getContainerItem(stack.splitStack(1));
-                if (!newStack.isEmpty())
-                    GTTransferUtils.insertItem(this.availableHandlers, newStack, false);
-            } else {
-                // all stacks are transmuted, just replace
-                availableHandlers.setStackInSlot(slot, ForgeHooks.getContainerItem(stack));
+                continue;
+            }
+            // transmute exactly the items this recipe uses, one at a time
+            for (int i = 0; i < amount; i++) {
+                stack = availableHandlers.getStackInSlot(slot);
+                if (stack.getCount() > 1) {
+                    // part of the stack is transmuted, try insert non-empty containers
+                    ItemStack newStack = ForgeHooks.getContainerItem(stack.splitStack(1));
+                    if (!newStack.isEmpty())
+                        GTTransferUtils.insertItem(this.availableHandlers, newStack, false);
+                } else {
+                    // the last item in the slot is transmuted, just replace
+                    availableHandlers.setStackInSlot(slot, ForgeHooks.getContainerItem(stack));
+                    break;
+                }
             }
         }
         // we've checked everything, return true
