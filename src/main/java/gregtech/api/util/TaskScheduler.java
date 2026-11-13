@@ -67,8 +67,11 @@ public class TaskScheduler {
                     scheduler.scheduledTasks.clear();
                 }
                 scheduler.running = true;
-                scheduler.tasks.removeIf(task -> !task.run());
-                scheduler.running = false;
+                try {
+                    scheduler.tasks.removeIf(task -> !task.run());
+                } finally {
+                    scheduler.running = false;
+                }
             }
         }
     }
