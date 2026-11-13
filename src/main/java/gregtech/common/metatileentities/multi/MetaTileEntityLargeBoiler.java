@@ -31,6 +31,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.IFluidTank;
@@ -204,15 +205,13 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
 
     private ModularPanel makeThrottlePanel(PanelSyncManager syncManager, IPanelHandler syncHandler) {
         StringSyncValue throttleValue = new StringSyncValue(() -> throttlePercentage + "%", str -> {
-            try {
-                if (str.charAt(str.length() - 1) == '%') {
-                    str = str.substring(0, str.length() - 1);
-                }
-
-                this.throttlePercentage = Integer.parseInt(str);
-            } catch (NumberFormatException ignored) {
-
+            // the text comes from the client; only its own validator kept it in range
+            if (str.endsWith("%")) {
+                str = str.substring(0, str.length() - 1);
             }
+            try {
+                setThrottlePercentage(Integer.parseInt(str.trim()));
+            } catch (NumberFormatException ignored) {}
         });
         DoubleSyncValue sliderValue = new DoubleSyncValue(
                 () -> (double) getThrottlePercentage() / 100,
@@ -267,7 +266,8 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
     }
 
     private void setThrottlePercentage(int amount) {
-        this.throttlePercentage = amount;
+        // the same 0 to 100 range the throttle field allows on the client
+        this.throttlePercentage = MathHelper.clamp(amount, 0, 100);
     }
 
     private int getThrottlePercentage() {
