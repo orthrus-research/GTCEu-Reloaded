@@ -24,6 +24,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 import codechicken.lib.render.CCRenderState;
@@ -92,13 +93,17 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
                 .widget(new ImageWidget(10, 54, 220, 20, GuiTextures.DISPLAY))
                 .label(10, 44, "gregtech.gui.alarm.radius")
                 .widget(new TextFieldWidget2(12, 60, 216, 16, () -> String.valueOf(radius), value -> {
-                    if (!value.isEmpty()) {
-                        int newRadius = Integer.parseInt(value);
-                        if (newRadius != radius) {
-                            this.writeCustomData(GregtechDataCodes.UPDATE_RADIUS,
-                                    (writer) -> writer.writeInt(newRadius));
-                            radius = newRadius;
-                        }
+                    // the text comes from the client; its range and number checks ran only there
+                    int newRadius;
+                    try {
+                        newRadius = MathHelper.clamp(Integer.parseInt(value.trim()), 0, 128);
+                    } catch (NumberFormatException e) {
+                        return;
+                    }
+                    if (newRadius != radius) {
+                        this.writeCustomData(GregtechDataCodes.UPDATE_RADIUS,
+                                (writer) -> writer.writeInt(newRadius));
+                        radius = newRadius;
                     }
                 }).setMaxLength(10).setNumbersOnly(0, 128))
                 .build(this.getHolder(), entityPlayer);

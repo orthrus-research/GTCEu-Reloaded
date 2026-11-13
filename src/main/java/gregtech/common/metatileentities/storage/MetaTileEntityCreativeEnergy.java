@@ -113,19 +113,20 @@ public class MetaTileEntityCreativeEnergy extends MetaTileEntity implements ILas
         builder.label(7, 32, "gregtech.creative.energy.voltage");
         builder.widget(new ImageWidget(7, 44, 156, 20, GuiTextures.DISPLAY));
         builder.widget(new TextFieldWidget2(9, 50, 152, 16, () -> String.valueOf(voltage), value -> {
-            if (!value.isEmpty()) {
-                voltage = Long.parseLong(value);
+            // the text comes from the client; its number checks ran only there
+            try {
+                voltage = Math.max(0, Long.parseLong(value.trim()));
                 setTier = GTUtility.getTierByVoltage(voltage);
-            }
+            } catch (NumberFormatException ignored) {}
         }).setAllowedChars(TextFieldWidget2.NATURAL_NUMS).setMaxLength(19).setValidator(getTextFieldValidator()));
 
         builder.label(7, 74, "gregtech.creative.energy.amperage");
         builder.widget(new ClickButtonWidget(7, 87, 20, 20, "-", data -> amps = --amps == -1 ? 0 : amps));
         builder.widget(new ImageWidget(29, 87, 118, 20, GuiTextures.DISPLAY));
         builder.widget(new TextFieldWidget2(31, 93, 114, 16, () -> String.valueOf(amps), value -> {
-            if (!value.isEmpty()) {
-                amps = Integer.parseInt(value);
-            }
+            try {
+                amps = Math.max(0, Integer.parseInt(value.trim()));
+            } catch (NumberFormatException ignored) {}
         }).setMaxLength(10).setNumbersOnly(0, Integer.MAX_VALUE));
         builder.widget(new ClickButtonWidget(149, 87, 20, 20, "+", data -> {
             if (amps < Integer.MAX_VALUE) {
