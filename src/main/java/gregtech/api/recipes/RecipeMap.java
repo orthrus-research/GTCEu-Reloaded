@@ -58,6 +58,7 @@ import org.jetbrains.annotations.UnmodifiableView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -773,9 +774,10 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private Recipe recurseIngredientTreeFindRecipe(@NotNull List<List<AbstractMapIngredient>> ingredients,
                                                    @NotNull Branch branchRoot, @NotNull Predicate<Recipe> canHandle) {
         // Try each ingredient as a starting point, adding it to the skip-list.
-        // The skip-list is a packed long, where each 1 bit represents an index to skip
+        // The skip-list is a bit set, where each set bit represents an index to skip; a long would alias
+        // index 64 to index 0 once a machine offers more than 64 distinct inputs
         for (int i = 0; i < ingredients.size(); i++) {
-            Recipe r = recurseIngredientTreeFindRecipe(ingredients, branchRoot, canHandle, i, 0, (1L << i));
+            Recipe r = recurseIngredientTreeFindRecipe(ingredients, branchRoot, canHandle, i, 0, skipOnly(i));
             if (r != null) {
                 return r;
             }
@@ -797,7 +799,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     @Nullable
     private Recipe recurseIngredientTreeFindRecipe(@NotNull List<List<AbstractMapIngredient>> ingredients,
                                                    @NotNull Branch branchMap, @NotNull Predicate<Recipe> canHandle,
-                                                   int index, int count, long skip) {
+                                                   int index, int count, @NotNull BitSet skip) {
         // exhausted all the ingredients, and didn't find anything
         if (count == ingredients.size()) return null;
 
@@ -836,18 +838,19 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private Recipe diveIngredientTreeFindRecipe(@NotNull List<List<AbstractMapIngredient>> ingredients,
                                                 @NotNull Branch map,
                                                 @NotNull Predicate<Recipe> canHandle, int currentIndex, int count,
-                                                long skip) {
+                                                @NotNull BitSet skip) {
         // We loop around ingredients.size() if we reach the end.
         // only end when all ingredients are exhausted, or a recipe is found
         int i = (currentIndex + 1) % ingredients.size();
         while (i != currentIndex) {
             // Have we already used this ingredient? If so, skip this one.
-            if (((skip & (1L << i)) == 0)) {
+            if (!skip.get(i)) {
                 // Recursive call
                 // Increase the count, so the recursion can terminate if needed (ingredients is exhausted)
                 // Append the current index to the skip list
-                Recipe found = recurseIngredientTreeFindRecipe(ingredients, map, canHandle, i, count + 1,
-                        skip | (1L << i));
+                skip.set(i);
+                Recipe found = recurseIngredientTreeFindRecipe(ingredients, map, canHandle, i, count + 1, skip);
+                skip.clear(i);
                 if (found != null) {
                     return found;
                 }
@@ -880,13 +883,19 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      * @param branchRoot       the root branch to start searching from
      * @param collidingRecipes the list to store recipe collisions
      */
+    private static @NotNull BitSet skipOnly(int index) {
+        BitSet skip = new BitSet(index + 1);
+        skip.set(index);
+        return skip;
+    }
+
     private void recurseIngredientTreeFindRecipeCollisions(@NotNull List<List<AbstractMapIngredient>> ingredients,
                                                            @NotNull Branch branchRoot,
                                                            @NotNull Set<Recipe> collidingRecipes) {
         // Try each ingredient as a starting point, adding it to the skip-list.
-        // The skip-list is a packed long, where each 1 bit represents an index to skip
+        // The skip-list is a bit set, where each set bit represents an index to skip
         for (int i = 0; i < ingredients.size(); i++) {
-            recurseIngredientTreeFindRecipeCollisions(ingredients, branchRoot, i, 0, (1L << i), collidingRecipes);
+            recurseIngredientTreeFindRecipeCollisions(ingredients, branchRoot, i, 0, skipOnly(i), collidingRecipes);
         }
     }
 
@@ -902,7 +911,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      */
     @Nullable
     private Recipe recurseIngredientTreeFindRecipeCollisions(@NotNull List<List<AbstractMapIngredient>> ingredients,
-                                                             @NotNull Branch branchMap, int index, int count, long skip,
+                                                             @NotNull Branch branchMap, int index, int count,
+                                                             @NotNull BitSet skip,
                                                              @NotNull Set<Recipe> collidingRecipes) {
         // exhausted all the ingredients, and didn't find anything
         if (count == ingredients.size()) return null;
@@ -941,7 +951,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      */
     @Nullable
     private Recipe diveIngredientTreeFindRecipeCollisions(@NotNull List<List<AbstractMapIngredient>> ingredients,
-                                                          @NotNull Branch map, int currentIndex, int count, long skip,
+                                                          @NotNull Branch map, int currentIndex, int count,
+                                                          @NotNull BitSet skip,
                                                           @NotNull Set<Recipe> collidingRecipes) {
         if (map.getTerminalRecipe() != null) collidingRecipes.add(map.getTerminalRecipe());
         // We loop around ingredients.size() if we reach the end.
@@ -949,12 +960,14 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         int i = (currentIndex + 1) % ingredients.size();
         while (i != currentIndex) {
             // Have we already used this ingredient? If so, skip this one.
-            if (((skip & (1L << i)) == 0)) {
+            if (!skip.get(i)) {
                 // Recursive call
                 // Increase the count, so the recursion can terminate if needed (ingredients is exhausted)
                 // Append the current index to the skip list
-                Recipe r = recurseIngredientTreeFindRecipeCollisions(ingredients, map, i, count + 1, skip | (1L << i),
+                skip.set(i);
+                Recipe r = recurseIngredientTreeFindRecipeCollisions(ingredients, map, i, count + 1, skip,
                         collidingRecipes);
+                skip.clear(i);
                 if (r != null) {
                     return r;
                 }

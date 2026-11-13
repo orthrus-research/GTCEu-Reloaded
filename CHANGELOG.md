@@ -169,6 +169,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Config | A miner replacement block configured as a bare name or with a non-numeric meta no longer stops every miner from being created. |
 | Saved data | A machine saved mid-recipe with a fluid output from a removed mod finishes the recipe without that fluid instead of failing. |
 | API | `MTEManager.getRegistry(int)` returns null for an unknown network id instead of the GregTech registry. |
+| Recipes | Machines with more than 64 different inputs find recipes whose ingredients sit more than 64 slots apart. |
 
 ### Earlier fork changes
 
