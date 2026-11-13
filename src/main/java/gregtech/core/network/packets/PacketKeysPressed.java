@@ -37,7 +37,12 @@ public class PacketKeysPressed implements IPacket, IServerExecutor {
 
     @Override
     public void decode(@NotNull PacketBuffer buf) {
-        final int size = buf.readVarInt();
+        int size = buf.readVarInt();
+        // the size comes from the client: no more entries than there are key binds
+        if (size < 0 || size > KeyBind.VALUES.length) {
+            buf.skipBytes(buf.readableBytes());
+            size = 0;
+        }
         this.serverKeysUpdated = new int[size];
         this.serverKeysPressed = new boolean[size];
         this.serverKeysDown = new boolean[size];
@@ -55,8 +60,9 @@ public class PacketKeysPressed implements IPacket, IServerExecutor {
         }
 
         for (int i = 0; i < serverKeysUpdated.length; i++) {
-            KeyBind.VALUES[serverKeysUpdated[i]].updateServerState(handler.player, serverKeysPressed[i],
-                    serverKeysDown[i]);
+            int ordinal = serverKeysUpdated[i];
+            if (ordinal < 0 || ordinal >= KeyBind.VALUES.length) continue;
+            KeyBind.VALUES[ordinal].updateServerState(handler.player, serverKeysPressed[i], serverKeysDown[i]);
         }
     }
 }
