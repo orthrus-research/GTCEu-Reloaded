@@ -42,7 +42,9 @@ public class SingleBlockGenerator extends ShapeGenerator {
                 minBlocksCount + gridRandom.nextInt(maxBlocksCount - minBlocksCount);
         EnumFacing prevDirection = null;
         for (int i = 0; i < blocksCount; i++) {
-            EnumFacing[] allowedFacings = ArrayUtils.removeElement(EnumFacing.VALUES, prevDirection);
+            // never step back onto the block just placed
+            EnumFacing[] allowedFacings = prevDirection == null ? EnumFacing.VALUES :
+                    ArrayUtils.removeElement(EnumFacing.VALUES, prevDirection.getOpposite());
             prevDirection = allowedFacings[gridRandom.nextInt(allowedFacings.length)];
             relativePos.move(prevDirection);
             relativeBlockAccess.generateBlock(relativePos.getX(), relativePos.getY(), relativePos.getZ());
