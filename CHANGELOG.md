@@ -216,6 +216,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Damage | Gameplay change: armour keeps protecting against heat and frost damage after a player has carried a hot or cryogenic item; before, all such damage ignored armour for the rest of the session |
 | Armor | Gameplay change: advanced NanoMuscle and QuarkTech chestplates charge only their wearer's items, at the same rate however many players wear them, and fuel jetpacks and QuarkTech boots no longer share state between wearers |
 | Armor | Equipping a fuel jetpack by right-click plays its sound for nearby players. |
+| World generation | Gameplay change, new chunks only: surface block vein indicators are placed with the same eight-block population offset as surface rocks |
 
 ### Earlier fork changes
 

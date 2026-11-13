@@ -60,8 +60,10 @@ public class SurfaceBlockPopulator implements VeinChunkPopulator {
         int failedGenerationCounter = 0;
         if (stonesCount > 0 && world.getWorldType() != WorldType.FLAT) {
             for (int i = 0; i < stonesCount; i++) {
-                int randomX = chunkX * 16 + random.nextInt(8);
-                int randomZ = chunkZ * 16 + random.nextInt(8);
+                // the +8 population offset, as the surface rock populator uses, keeps indicators in the
+                // chunks being populated instead of the corner of the one whose population triggered this
+                int randomX = chunkX * 16 + 8 + random.nextInt(8);
+                int randomZ = chunkZ * 16 + 8 + random.nextInt(8);
 
                 boolean successful = generateSurfaceBlock(world, new BlockPos(randomX, 0, randomZ));
 
