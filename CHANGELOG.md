@@ -121,6 +121,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | World generation | Gameplay change: the `single` vein shape's walk can continue straight and never steps back onto the block it just placed; before, it was the other way round, so veins often had fewer blocks than configured |
 | Armor | Gameplay change: night-vision goggles configured above LV get four times the capacity per tier, like the other electric armour; before, their capacity stayed 80,000 EU at every tier |
 | Recipes | Gameplay change: chanced outputs roll at exactly their stated chance; before, each was 0.01 percentage points more likely |
+| Machines | Gameplay change: bedrock fluid veins deplete at their configured chance; before, each operation was one percentage point more likely to deplete them |
 
 ### Earlier fork changes
 
