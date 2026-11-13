@@ -212,18 +212,23 @@ public class WrappedItemStack implements IAEItemStack {
 
     @Override
     public boolean equals(ItemStack itemStack) {
-        return this.delegate.isItemEqual(itemStack);
+        return sameItemAndTag(itemStack);
     }
 
     @Override
     public boolean equals(Object other) {
         if (other instanceof IAEItemStack) {
-            return this.delegate.isItemEqual(((IAEItemStack) other).createItemStack());
+            return sameItemAndTag(((IAEItemStack) other).createItemStack());
         }
         if (other instanceof ItemStack) {
-            return this.delegate.isItemEqual((ItemStack) other);
+            return sameItemAndTag((ItemStack) other);
         }
         return false;
+    }
+
+    /** Item, metadata and NBT, the same parts {@link #hashCode()} uses. */
+    private boolean sameItemAndTag(ItemStack other) {
+        return this.delegate.isItemEqual(other) && ItemStack.areItemStackTagsEqual(this.delegate, other);
     }
 
     @Override
