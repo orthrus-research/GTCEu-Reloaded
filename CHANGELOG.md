@@ -212,6 +212,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | `DimensionPropertyList.EMPTY_LIST` is final and immutable; adding to the lists `RecipeBuilder.getDimensionIDs` returns for a recipe without dimensions now throws instead of changing every recipe's default. |
 | Pipes | A pipe destroyed without a player, by an explosion or another mod, drops its own item, not the item of a pipe broken before it. |
 | Machines | Gameplay change: several machines destroyed by one explosion each drop their own item and contents; before, the first machine's item and contents were duplicated for every other machine in the blast and the others were lost |
+| Pipes | Laser pipes no longer switch off early when several players load them, and a laser pipe saved while active turns off after loading. |
 
 ### Earlier fork changes
 
