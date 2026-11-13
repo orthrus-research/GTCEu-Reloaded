@@ -1,5 +1,7 @@
 package gregtech.api.recipes.conditions;
 
+import gregtech.api.recipes.IdentifierPatterns;
+
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -36,7 +38,7 @@ public final class RecipeCondition<T> {
         String id = unavailable.getString("Type");
         this.description = new ConditionDescription("gregtech.recipe.condition.unavailable",
                 id.length() <= 128 ? id : "invalid")
-                .withType(id.length() <= 128 && id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+") ? id :
+                .withType(id.length() <= 128 && IdentifierPatterns.isResourceId(id) ? id :
                         "gregtech:invalid_condition");
     }
 
@@ -76,7 +78,7 @@ public final class RecipeCondition<T> {
             ConditionPayloads.requireTag(tag, "Inverted", 1);
             ConditionPayloads.requireTag(tag, "Data", 10);
             if (tag.getInteger("Version") != 1 || (tag.getByte("Inverted") != 0 && tag.getByte("Inverted") != 1) ||
-                    !tag.getString("Type").matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) {
+                    !IdentifierPatterns.isResourceId(tag.getString("Type"))) {
                 return new RecipeCondition<>(tag);
             }
             RecipeConditionType<?> type = RecipeConditions.type(new ResourceLocation(tag.getString("Type")));
