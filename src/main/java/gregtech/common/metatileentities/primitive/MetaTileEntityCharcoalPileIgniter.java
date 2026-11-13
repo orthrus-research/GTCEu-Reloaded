@@ -96,6 +96,7 @@ public class MetaTileEntityCharcoalPileIgniter extends MultiblockControllerBase 
     @Override
     public void invalidateStructure() {
         super.invalidateStructure();
+        logPositions.clear();
         setActive(false);
         this.progressTime = 0;
         this.maxProgress = 0;
@@ -111,6 +112,8 @@ public class MetaTileEntityCharcoalPileIgniter extends MultiblockControllerBase 
     @NotNull
     @Override
     protected BlockPattern createStructurePattern() {
+        // logs found by checks against the previous pattern do not belong to this one
+        logPositions.clear();
         // update the structure's dimensions just before we create it
         // return the default structure, even if there is no valid size found
         // this means auto-build will still work, and prevents terminal crashes.
@@ -315,7 +318,10 @@ public class MetaTileEntityCharcoalPileIgniter extends MultiblockControllerBase 
     private void convertLogBlocks() {
         World world = getWorld();
         for (BlockPos pos : logPositions) {
-            world.setBlockState(pos, MetaBlocks.BRITTLE_CHARCOAL.getDefaultState());
+            // the pile burns for minutes; only convert what is still wood
+            if (world.getBlockState(pos).getBlock().isWood(world, pos)) {
+                world.setBlockState(pos, MetaBlocks.BRITTLE_CHARCOAL.getDefaultState());
+            }
         }
         logPositions.clear();
     }
