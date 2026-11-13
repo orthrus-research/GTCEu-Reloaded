@@ -325,6 +325,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     public R input(GTRecipeInput input) {
         if (input.getAmount() < 0) {
             GTLog.logger.error("Count cannot be less than 0. Actual: {}.", input.getAmount(), new Throwable());
+            recipeStatus = EnumValidationResult.INVALID;
         } else {
             this.inputs.add(input);
         }
@@ -398,14 +399,17 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     public R inputNBT(GTRecipeInput input, NBTMatcher matcher, NBTCondition condition) {
         if (input.getAmount() < 0) {
             GTLog.logger.error("Count cannot be less than 0. Actual: {}.", input.getAmount(), new Throwable());
+            recipeStatus = EnumValidationResult.INVALID;
             return (R) this;
         }
         if (matcher == null) {
             GTLog.logger.error("NBTMatcher must not be null", new Throwable());
+            recipeStatus = EnumValidationResult.INVALID;
             return (R) this;
         }
         if (condition == null) {
             GTLog.logger.error("NBTCondition must not be null", new Throwable());
+            recipeStatus = EnumValidationResult.INVALID;
             return (R) this;
         }
         this.inputs.add(input.setNBTMatchingCondition(matcher, condition));
@@ -698,8 +702,10 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         } else if (input != null) {
             GTLog.logger.error("Fluid Input count cannot be less than 1. Actual: {}.", input.amount,
                     new IllegalArgumentException());
+            recipeStatus = EnumValidationResult.INVALID;
         } else {
             GTLog.logger.error("FluidStack cannot be null.");
+            recipeStatus = EnumValidationResult.INVALID;
         }
         return (R) this;
     }
@@ -720,8 +726,10 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
             } else if (fluidStack != null) {
                 GTLog.logger.error("Fluid Input count cannot be less than 1. Actual: {}.", fluidStack.amount,
                         new Throwable());
+                recipeStatus = EnumValidationResult.INVALID;
             } else {
                 GTLog.logger.error("FluidStack cannot be null.");
+                recipeStatus = EnumValidationResult.INVALID;
             }
         }
         this.fluidInputs.addAll(fluidIngredients);
@@ -1059,12 +1067,13 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     }
 
     public R ignoreBuildAction(ResourceLocation buildActionName) {
-        if (ignoredBuildActions == null) {
-            ignoredBuildActions = new Object2ObjectOpenHashMap<>();
-        } else if (!recipeMap.getBuildActions().containsKey(buildActionName)) {
+        if (!recipeMap.getBuildActions().containsKey(buildActionName)) {
             GTLog.logger.error("Recipe map {} does not contain build action {}!", recipeMap, buildActionName,
                     new Throwable());
             return (R) this;
+        }
+        if (ignoredBuildActions == null) {
+            ignoredBuildActions = new Object2ObjectOpenHashMap<>();
         } else if (ignoredBuildActions.containsKey(buildActionName)) {
             return (R) this;
         }
