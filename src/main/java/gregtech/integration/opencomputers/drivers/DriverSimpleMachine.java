@@ -2,6 +2,7 @@ package gregtech.integration.opencomputers.drivers;
 
 import gregtech.api.metatileentity.SimpleMachineMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.integration.opencomputers.InputValidator;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -115,7 +116,12 @@ public class DriverSimpleMachine extends DriverSidedTileEntity {
 
         @Callback(doc = "function(side:number) -- Sets outputFacing.")
         public Object[] setOutputFacing(final Context context, final Arguments args) {
-            tileEntity.setOutputFacing(EnumFacing.values()[args.checkInteger(0)]);
+            EnumFacing facing = InputValidator.getEnumArrayIndex(args, 0, EnumFacing.VALUES);
+            // the wrench refuses the front face as an output; so does the computer
+            if (tileEntity.hasFrontFacing() && facing == tileEntity.getFrontFacing()) {
+                throw new IllegalArgumentException("The output cannot face the machine's front");
+            }
+            tileEntity.setOutputFacing(facing);
             return new Object[] {};
         }
     }
