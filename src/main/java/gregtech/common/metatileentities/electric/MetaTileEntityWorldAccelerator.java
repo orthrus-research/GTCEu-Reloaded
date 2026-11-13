@@ -323,9 +323,13 @@ public class MetaTileEntityWorldAccelerator extends TieredMetaTileEntity impleme
 
     @Override
     public void setWorkingEnabled(boolean isWorkingEnabled) {
-        if (this.isPaused != isWorkingEnabled) {
-            this.isPaused = isWorkingEnabled;
-            notifyBlockUpdate();
+        if (this.isPaused == isWorkingEnabled) {
+            this.isPaused = !isWorkingEnabled;
+            World world = getWorld();
+            if (world != null && !world.isRemote) {
+                notifyBlockUpdate();
+                markDirty();
+            }
         }
     }
 
