@@ -48,7 +48,6 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.FluidTankProperties;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -464,8 +463,7 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
                     itemStack = itemHandler.extractItem(slot, 1, false);
                 }
                 if (itemStack.isEmpty() && itemHandler instanceof ItemHandlerProxy) {
-                    IItemHandler insertHandler = ObfuscationReflectionHelper.getPrivateValue(ItemHandlerProxy.class,
-                            (ItemHandlerProxy) itemHandler, "insertHandler");
+                    IItemHandler insertHandler = ((ItemHandlerProxy) itemHandler).getInsertHandler();
                     if (slot < insertHandler.getSlots()) {
                         if (entityPlayer.isSneaking()) {
                             itemStack = insertHandler.extractItem(slot, 64, false);
