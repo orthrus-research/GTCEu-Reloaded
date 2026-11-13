@@ -14,6 +14,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
 import org.jetbrains.annotations.NotNull;
 
 public final class DimensionProperty extends RecipeProperty<DimensionProperty.DimensionPropertyList> {
@@ -90,10 +91,21 @@ public final class DimensionProperty extends RecipeProperty<DimensionProperty.Di
     // a bit awkward to apply to the property in practice.
     public static class DimensionPropertyList {
 
-        public static DimensionPropertyList EMPTY_LIST = new DimensionPropertyList();
+        /** Shared default; its lists cannot be changed, so one caller cannot alter it for every builder. */
+        public static final DimensionPropertyList EMPTY_LIST = new DimensionPropertyList(IntLists.EMPTY_LIST,
+                IntLists.EMPTY_LIST);
 
-        public final IntList whiteListDimensions = new IntArrayList();
-        public final IntList blackListDimensions = new IntArrayList();
+        public final IntList whiteListDimensions;
+        public final IntList blackListDimensions;
+
+        public DimensionPropertyList() {
+            this(new IntArrayList(), new IntArrayList());
+        }
+
+        private DimensionPropertyList(IntList whiteListDimensions, IntList blackListDimensions) {
+            this.whiteListDimensions = whiteListDimensions;
+            this.blackListDimensions = blackListDimensions;
+        }
 
         public void add(int key, boolean toBlacklist) {
             if (toBlacklist) {
