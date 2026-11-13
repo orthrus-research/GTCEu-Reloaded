@@ -73,6 +73,8 @@ public class OpticalNetHandler implements IDataAccessHatch, IOpticalComputationP
     }
 
     private void setPipesActive() {
+        // every computation request arrives here; walking the whole line once a second keeps it lit
+        if (!net.shouldMarkActive(world.getTotalWorldTime())) return;
         for (BlockPos pos : net.getAllNodes().keySet()) {
             if (world.isBlockLoaded(pos) && world.getTileEntity(pos) instanceof TileEntityOpticalPipe opticalPipe) {
                 opticalPipe.setActive(true, 100);
