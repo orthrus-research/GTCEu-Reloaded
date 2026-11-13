@@ -152,6 +152,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Multiblocks | Gameplay change: touching a spinning turbine rotor below 1000 rpm does damage in proportion to its speed; before, it did none |
 | AE2 | An ME input bus slot reconfigured to an item that differs only in NBT no longer keeps counting stock of the previous item. |
 | Cables | A cable overloaded within its own voltage tier, possible only with custom cable limits, now heats up instead of cooling down. |
+| GUI | Scrolling a list that fits in its window no longer pushes the content down. |
 
 ### Earlier fork changes
 
