@@ -29,9 +29,7 @@ public class GTWorldGenCapability {
 
     public void readFromNBT(NBTTagCompound tagCompound) {
         this.maxHeight = tagCompound.getInteger("H");
-        if (tagCompound.hasKey("BH")) {
-            this.maxBottomHeight = maxHeight;
-        } else this.maxBottomHeight = maxHeight;
+        this.maxBottomHeight = tagCompound.hasKey("BH") ? tagCompound.getInteger("BH") : maxHeight;
     }
 
     public NBTTagCompound writeToNBT() {
