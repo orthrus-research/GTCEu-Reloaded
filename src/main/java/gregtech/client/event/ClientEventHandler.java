@@ -36,6 +36,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
@@ -89,7 +90,10 @@ public class ClientEventHandler {
         }
     }
 
-    private static final Map<UUID, ResourceLocation> DEFAULT_CAPES = new Object2ObjectOpenHashMap<>();
+    /** For each player wearing a GregTech cape: the cape it replaced, and the GregTech cape put in its place. */
+    private record ReplacedCape(@Nullable ResourceLocation original, ResourceLocation applied) {}
+
+    private static final Map<UUID, ReplacedCape> REPLACED_CAPES = new Object2ObjectOpenHashMap<>();
 
     @SubscribeEvent
     public static void onPlayerRender(RenderPlayerEvent.Pre event) {
@@ -97,15 +101,22 @@ public class ClientEventHandler {
         if (clientPlayer.hasPlayerInfo() && clientPlayer.playerInfo != null) {
             Map<MinecraftProfileTexture.Type, ResourceLocation> playerTextures = clientPlayer.playerInfo.playerTextures;
             UUID uuid = clientPlayer.getPersistentID();
-            ResourceLocation defaultPlayerCape;
-            if (!DEFAULT_CAPES.containsKey(uuid)) {
-                defaultPlayerCape = playerTextures.get(MinecraftProfileTexture.Type.CAPE);
-                DEFAULT_CAPES.put(uuid, defaultPlayerCape);
-            } else {
-                defaultPlayerCape = DEFAULT_CAPES.get(uuid);
-            }
+            ResourceLocation current = playerTextures.get(MinecraftProfileTexture.Type.CAPE);
             ResourceLocation cape = CapesRegistry.getPlayerCape(uuid);
-            playerTextures.put(MinecraftProfileTexture.Type.CAPE, cape == null ? defaultPlayerCape : cape);
+            ReplacedCape replaced = REPLACED_CAPES.get(uuid);
+            if (cape != null) {
+                // profile textures load asynchronously: if the profile set a cape since, that is the one to keep
+                if (current != cape) {
+                    REPLACED_CAPES.put(uuid, new ReplacedCape(current, cape));
+                    playerTextures.put(MinecraftProfileTexture.Type.CAPE, cape);
+                }
+            } else if (replaced != null) {
+                // the GregTech cape was taken off: give back what it replaced, unless the profile changed it
+                REPLACED_CAPES.remove(uuid);
+                if (current == replaced.applied()) {
+                    playerTextures.put(MinecraftProfileTexture.Type.CAPE, replaced.original());
+                }
+            }
         }
     }
 
@@ -154,5 +165,7 @@ public class ClientEventHandler {
     @SubscribeEvent
     public static void onWorldUnload(WorldEvent.Unload event) {
         BloomEffectUtil.invalidateWorldTickets(event.getWorld());
+        // player infos belong to the connection being left
+        if (event.getWorld().isRemote) REPLACED_CAPES.clear();
     }
 }
