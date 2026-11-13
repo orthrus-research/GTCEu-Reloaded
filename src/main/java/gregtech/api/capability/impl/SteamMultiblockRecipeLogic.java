@@ -65,6 +65,27 @@ public class SteamMultiblockRecipeLogic extends AbstractRecipeLogic {
         return controller.getSteamFluidTank();
     }
 
+    /** Steam in the hatches, read straight from them; the combined tank is only built for the UI. */
+    private long getSteamAmount() {
+        IMultipleTankHandler tanks = steamFluidTank;
+        if (tanks == null) return 0;
+        long amount = 0;
+        for (IMultipleTankHandler.ITankEntry tank : tanks.getFluidTanks()) {
+            amount += tank.getFluidAmount();
+        }
+        return amount;
+    }
+
+    private long getSteamCapacity() {
+        IMultipleTankHandler tanks = steamFluidTank;
+        if (tanks == null) return 0;
+        long capacity = 0;
+        for (IMultipleTankHandler.ITankEntry tank : tanks.getFluidTanks()) {
+            capacity += tank.getCapacity();
+        }
+        return capacity;
+    }
+
     private void combineSteamTanks() {
         steamFluidTank = getSteamFluidTank();
         if (steamFluidTank == null)
@@ -85,7 +106,7 @@ public class SteamMultiblockRecipeLogic extends AbstractRecipeLogic {
             wasActiveAndNeedsUpdate = true;
         }
 
-        combineSteamTanks();
+        steamFluidTank = getSteamFluidTank();
         super.update();
     }
 
@@ -96,21 +117,20 @@ public class SteamMultiblockRecipeLogic extends AbstractRecipeLogic {
 
     @Override
     protected long getEnergyStored() {
-        combineSteamTanks();
-        return (long) Math.ceil(steamFluidTankCombined.getFluidAmount() * conversionRate);
+        return (long) Math.ceil(getSteamAmount() * conversionRate);
     }
 
     @Override
     protected long getEnergyCapacity() {
-        combineSteamTanks();
-        return (long) Math.floor(steamFluidTankCombined.getCapacity() * conversionRate);
+        return (long) Math.floor(getSteamCapacity() * conversionRate);
     }
 
     @Override
     protected boolean drawEnergy(long recipeEUt, boolean simulate) {
-        combineSteamTanks();
+        steamFluidTank = getSteamFluidTank();
+        if (steamFluidTank == null) return false;
         int resultDraw = GTUtility.safeCastLongToInt((long) Math.ceil(recipeEUt / conversionRate));
-        return resultDraw >= 0 && steamFluidTankCombined.getFluidAmount() >= resultDraw &&
+        return resultDraw >= 0 && getSteamAmount() >= resultDraw &&
                 steamFluidTank.drain(resultDraw, !simulate) != null;
     }
 
