@@ -100,6 +100,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Tools | Tools with torch placing remember a torch in the first hotbar slot, and an edited cached slot number no longer throws |
 | Multiblocks | Fluid passthrough hatches no longer allocate two unused 16,000-slot item inventories each, which every save and inventory clear walked |
 | World generation | Rubber trees check the whole canopy footprint for free space; before, the row on the positive Z side was skipped, so a canopy could replace a block there |
+| Machines | The pump moves past positions in unloaded chunks while scanning; before, one unloaded position at the head of its queue stalled the scan for that tick |
 
 ### Earlier fork changes
 
