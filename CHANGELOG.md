@@ -228,6 +228,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | JEI | Looking up a block hovered in a JEI multiblock preview works when the game renders below 10 frames per second. |
 | Fluids | Moving fluid out of tanks that expose their live contents, such as some other mods' tanks, no longer changes the amount stored in them. |
 | Covers | Gameplay change: solar panel covers check for sunlight once a second instead of every tick, so they react to a change up to a second later |
+| API | `MultiblockControllerBase.getStructureRevision()` changes whenever a structure forms or breaks, for caching what is built from its parts. |
 
 ### Earlier fork changes
 

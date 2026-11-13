@@ -83,6 +83,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
     private final Map<MultiblockAbility<Object>, AbilityInstances> multiblockAbilities = new HashMap<>();
     private final List<IMultiblockPart> multiblockParts = new ArrayList<>();
     private boolean structureFormed;
+    private int structureRevision;
 
     protected EnumFacing upwardsFacing = EnumFacing.NORTH;
     protected boolean isFlipped;
@@ -377,6 +378,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
             }
             this.multiblockParts.addAll(parts);
             this.multiblockAbilities.putAll(abilities);
+            this.structureRevision++;
             parts.forEach(part -> part.addToMultiBlock(this));
             this.structureFormed = true;
             writeCustomData(STRUCTURE_FORMED, buf -> buf.writeBoolean(true));
@@ -402,10 +404,19 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
 
     protected void formStructure(PatternMatchContext context) {}
 
+    /**
+     * @return a number that changes whenever the structure's parts or abilities change, for caching what is built
+     *         from them
+     */
+    public int getStructureRevision() {
+        return structureRevision;
+    }
+
     public void invalidateStructure() {
         this.multiblockParts.forEach(part -> part.removeFromMultiBlock(this));
         this.multiblockAbilities.clear();
         this.multiblockParts.clear();
+        this.structureRevision++;
         this.structureFormed = false;
         this.setFlipped(false);
         writeCustomData(STRUCTURE_FORMED, buf -> buf.writeBoolean(false));
