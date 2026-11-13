@@ -389,6 +389,21 @@ public class PowerSubstationTest {
         return is(retVal);
     }
 
+    @Test
+    public void Test_Has_Energy() {
+        PowerStationEnergyBank storage = createStorage(1_000_000L);
+        MatcherAssert.assertThat(storage.hasEnergy(), is(false));
+
+        storage.fill(1);
+        MatcherAssert.assertThat(storage.hasEnergy(), is(true));
+
+        storage.fill(599_999L);
+        MatcherAssert.assertThat(storage.hasEnergy(), is(true));
+
+        storage.drain(600_000L);
+        MatcherAssert.assertThat(storage.hasEnergy(), is(false));
+    }
+
     private static PowerStationEnergyBank createStorage(long... storageValues) {
         List<IBatteryData> batteries = new ArrayList<>();
         for (long value : storageValues) {
