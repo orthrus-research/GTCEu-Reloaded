@@ -25,6 +25,7 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.IFluidBlock;
 
 import com.google.gson.JsonObject;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Random;
@@ -107,8 +108,12 @@ public class SurfaceRockPopulator implements VeinChunkPopulator {
                 generateSurfaceRock(world, new BlockPos(randomX, 0, randomZ));
 
             }
-            // guarantee a surface rock in the center of the vein
-            generateSurfaceRock(world, gridEntryInfo.getCenterPos(definition));
+            // guarantee a surface rock in the center of the vein, from the center's own chunk only: placing it
+            // from every chunk of the vein loaded or generated a chunk up to two away during population
+            BlockPos center = gridEntryInfo.getCenterPos(definition);
+            if (isInChunk(center, chunkX, chunkZ)) {
+                generateSurfaceRock(world, center);
+            }
         }
 
         // Log if all Surface Rock generation attempts were failed
@@ -116,6 +121,13 @@ public class SurfaceRockPopulator implements VeinChunkPopulator {
             GTLog.logger.debug("Failed to generate surface rocks for vein {} at chunk with position: x: {}, z: {}",
                     definition.getDepositName(), chunkX, chunkZ);
         }
+    }
+
+    /**
+     * @return whether the position lies in the given chunk, which is loaded while that chunk is populated
+     */
+    static boolean isInChunk(@Nullable BlockPos pos, int chunkX, int chunkZ) {
+        return pos != null && pos.getX() >> 4 == chunkX && pos.getZ() >> 4 == chunkZ;
     }
 
     public void generateSurfaceRock(World world, BlockPos pos) {
