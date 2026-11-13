@@ -143,6 +143,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Armor | GregTech armour no longer leaves blending enabled after it renders, which could tint entities drawn after it. |
 | Tools | Repairing GregTech tools through automated crafting no longer posts a tool-destroyed event without a player. |
 | World generation | Gameplay change, custom configs only: bedrock fluid veins with a negative biome modifier no longer change the odds of other veins or of no vein. Bundled veins roll as before |
+| Utilities | `GTUtility.nearestLesserOrEqual` and `nearestLesser` terminate for every input, and `formatLongToCompactString` rejects a precision below 3 instead of dividing by zero. |
 
 ### Earlier fork changes
 

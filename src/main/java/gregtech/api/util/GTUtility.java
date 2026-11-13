@@ -218,17 +218,17 @@ public class GTUtility {
      *         or {@code -1} if there's no entry matching the condition
      */
     public static int nearestLesserOrEqual(@NotNull long[] array, long value) {
-        int low = 0, high = array.length - 1;
-        while (true) {
-            int median = (low + high) / 2;
+        // find the first index whose entry fails the condition; the one before it is the answer
+        int low = 0, high = array.length;
+        while (low < high) {
+            int median = (low + high) >>> 1;
             if (array[median] <= value) {
-                if (low == high) return low;
                 low = median + 1;
             } else {
-                if (low == high) return low - 1;
-                high = median - 1;
+                high = median;
             }
         }
+        return low - 1;
     }
 
     /**
@@ -238,17 +238,17 @@ public class GTUtility {
      *         or {@code -1} if there's no entry matching the condition
      */
     public static int nearestLesser(@NotNull long[] array, long value) {
-        int low = 0, high = array.length - 1;
-        while (true) {
-            int median = (low + high) / 2;
+        // find the first index whose entry fails the condition; the one before it is the answer
+        int low = 0, high = array.length;
+        while (low < high) {
+            int median = (low + high) >>> 1;
             if (array[median] < value) {
-                if (low == high) return low;
                 low = median + 1;
             } else {
-                if (low == high) return low - 1;
-                high = median - 1;
+                high = median;
             }
         }
+        return low - 1;
     }
 
     /**
