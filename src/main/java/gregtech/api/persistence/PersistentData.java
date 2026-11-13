@@ -14,8 +14,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public final class PersistentData {
 
@@ -99,8 +101,17 @@ public final class PersistentData {
             }
         }
 
-        try (OutputStream outputStream = Files.newOutputStream(path)) {
-            CompressedStreamTools.writeCompressed(tagCompound, outputStream);
+        // write beside the file and move it into place, so a failed write leaves the old data intact
+        Path temporary = path.resolveSibling(path.getFileName() + ".tmp");
+        try {
+            try (OutputStream outputStream = Files.newOutputStream(temporary)) {
+                CompressedStreamTools.writeCompressed(tagCompound, outputStream);
+            }
+            try {
+                Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException e) {
             GTLog.logger.error("Failed to write persistent data", e);
         }
