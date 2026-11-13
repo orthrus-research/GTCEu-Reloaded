@@ -2,10 +2,11 @@ package gregtech.api.gui.resources.utils;
 
 import net.minecraft.client.Minecraft;
 
-import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -26,7 +27,8 @@ public class TextureCache {
         loadIndex();
     }
 
-    public void save(String url, String etag, long time, long expireTime, byte[] data) {
+    // download threads call these concurrently
+    public synchronized void save(String url, String etag, long time, long expireTime, byte[] data) {
         CacheEntry entry = new CacheEntry(url, etag, time, expireTime);
         boolean saved = false;
         OutputStream out = null;
@@ -45,7 +47,7 @@ public class TextureCache {
         }
     }
 
-    public CacheEntry getEntry(String url) {
+    public synchronized CacheEntry getEntry(String url) {
         return entries.get(url);
     }
 
@@ -93,7 +95,7 @@ public class TextureCache {
         }
     }
 
-    public void deleteEntry(String url) {
+    public synchronized void deleteEntry(String url) {
         entries.remove(url);
         File file = getFile(url);
         if (file.exists()) {
@@ -102,7 +104,9 @@ public class TextureCache {
     }
 
     private static File getFile(String url) {
-        return new File(DownloadThread.TEXTURE_CACHE.cacheDirectory, Base64.encodeBase64String(url.getBytes()));
+        // a hash: Base64 of the URL can contain '/' and passes file name length limits for long URLs
+        return new File(DownloadThread.TEXTURE_CACHE.cacheDirectory,
+                DigestUtils.sha256Hex(url.getBytes(StandardCharsets.UTF_8)));
     }
 
     public static class CacheEntry {

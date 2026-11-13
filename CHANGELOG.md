@@ -205,6 +205,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Cables | Gameplay change: a hot cable cools at the normal rate after its chunk loads instead of twice as fast, and a broken hot cable no longer sets fire to what replaces it |
 | Pipes | A fluid pipe that saved an unknown fluid keeps new fluid in that channel across saves. |
 | Pipes | Gameplay change: fluid in quadruple and nonuple pipes no longer flows back toward the pipe it just came from; before, every channel after the first could |
+| Monitors | Monitor pictures with long URLs can be cached, and concurrent downloads no longer corrupt cache times. |
 
 ### Earlier fork changes
 

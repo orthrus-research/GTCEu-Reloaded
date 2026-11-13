@@ -17,10 +17,11 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,7 +34,8 @@ public class DownloadThread extends Thread {
     public static final Logger LOGGER = GTLog.logger;
 
     public static final TextureCache TEXTURE_CACHE = new TextureCache();
-    public static final DateFormat FORMAT = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z");
+    /** HTTP dates; immutable, so the download threads can share it. */
+    private static final DateTimeFormatter HTTP_DATE = DateTimeFormatter.RFC_1123_DATE_TIME;
     public static final Object LOCK = new Object();
     public static final int MAXIMUM_ACTIVE_DOWNLOADS = 5;
 
@@ -44,10 +46,11 @@ public class DownloadThread extends Thread {
 
     private final String url;
 
-    private ProcessedImageData processedImage;
-    private String error;
-    private boolean complete;
-    private boolean isVideo;
+    // written by the download thread, read by the render thread
+    private volatile ProcessedImageData processedImage;
+    private volatile String error;
+    private volatile boolean complete;
+    private volatile boolean isVideo;
 
     public DownloadThread(String url) {
         this.url = url;
@@ -155,7 +158,8 @@ public class DownloadThread extends Thread {
                 if (entry.getEtag() != null) {
                     httpConnection.setRequestProperty("If-None-Match", entry.getEtag());
                 } else if (entry.getTime() != -1) {
-                    httpConnection.setRequestProperty("If-Modified-Since", FORMAT.format(new Date(entry.getTime())));
+                    httpConnection.setRequestProperty("If-Modified-Since",
+                            HTTP_DATE.format(Instant.ofEpochMilli(entry.getTime()).atZone(ZoneOffset.UTC)));
                 }
             }
             responseCode = httpConnection.getResponseCode();
@@ -197,14 +201,14 @@ public class DownloadThread extends Thread {
             String expires = connection.getHeaderField("Expires");
             if (expires != null && !expires.isEmpty()) {
                 try {
-                    expireTimestamp = FORMAT.parse(expires).getTime();
-                } catch (ParseException ignored) {}
+                    expireTimestamp = parseHttpDate(expires);
+                } catch (DateTimeParseException ignored) {}
             }
             String lastModified = connection.getHeaderField("Last-Modified");
             if (lastModified != null && !lastModified.isEmpty()) {
                 try {
-                    lastModifiedTimestamp = FORMAT.parse(lastModified).getTime();
-                } catch (ParseException e) {
+                    lastModifiedTimestamp = parseHttpDate(lastModified);
+                } catch (DateTimeParseException e) {
                     lastModifiedTimestamp = requestTime;
                 }
             } else {
@@ -222,6 +226,10 @@ public class DownloadThread extends Thread {
         } finally {
             IOUtils.closeQuietly(in);
         }
+    }
+
+    private static long parseHttpDate(String date) {
+        return ZonedDateTime.parse(date.trim(), HTTP_DATE).toInstant().toEpochMilli();
     }
 
     private static final int TIMEOUT_MILLIS = 10_000;
