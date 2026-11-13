@@ -90,6 +90,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Tools | The foam sprayer updates the neighbours of every block it foams; before, it updated only the neighbours of the block it was aimed at |
 | Armor | A jetpack that breaks a fall takes the damage as chest armour; before, the hit was reported for the boots slot |
 | Monitors | The text monitor plugin accepts all 16 lines and loads saved colours of any length; before, line 16 threw and a short saved colour list made rendering throw |
+| GUI | Crafting station: taking a craft into an empty slot respects that slot's limit, and shift-crafting fills a whole stack; before, a limited slot was overfilled and shift-crafting stopped one craft short |
 
 ### Earlier fork changes
 
