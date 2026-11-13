@@ -126,6 +126,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | Parallel recipe checks reject at once when a non-consumable input with a stack size is short; before, some shortages passed this check and were caught only later, after the parallel amount had been computed |
 | Tools | Gameplay change: Fortune on a hard hammer adds crushed ore when it hammers ore blocks, as its code intended; before, Fortune never applied |
 | API | `GTValues.VAOC` holds 15/16 of each `VOC` entry; before, eight hand-typed entries were wrong |
+| Multiblocks | Large turbine screens show the fuel need reduced by the rotor's efficiency bonus; before, a bonus below 200 % was ignored and higher ones were rounded down to whole multiples |
 
 ### Earlier fork changes
 

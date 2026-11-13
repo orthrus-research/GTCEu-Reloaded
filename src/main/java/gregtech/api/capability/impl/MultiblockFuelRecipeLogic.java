@@ -132,9 +132,11 @@ public class MultiblockFuelRecipeLogic extends MultiblockRecipeLogic {
         FluidStack requiredFluidInput = recipe.getFluidInputs().get(0).getInputFluidStack();
 
         int ocAmount = GTUtility.safeCastLongToInt(getMaxVoltage() / recipe.getEUt());
-        int neededAmount = ocAmount * requiredFluidInput.amount;
+        long neededAmount = (long) ocAmount * requiredFluidInput.amount;
         if (rotorHolder != null && rotorHolder.hasRotor()) {
-            neededAmount /= (int) (rotorHolder.getTotalEfficiency() / 100.0);
+            // divide by the efficiency as a fraction; truncating it first turned 190 % into 1
+            double efficiency = rotorHolder.getTotalEfficiency() / 100.0;
+            if (efficiency > 0) neededAmount = (long) Math.ceil(neededAmount / efficiency);
         } else if (rotorHolder != null && !rotorHolder.hasRotor()) {
             return null;
         }
