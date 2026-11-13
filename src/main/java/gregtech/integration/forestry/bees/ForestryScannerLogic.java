@@ -35,7 +35,7 @@ public class ForestryScannerLogic implements IScannerRecipeMap.ICustomScannerLog
         FluidStack fluidStack = fluidInputs.get(0);
         if (fluidStack != null && fluidStack.containsFluid(Fluids.FOR_HONEY.getFluid(HONEY_AMOUNT))) {
             for (ItemStack stack : inputs) {
-                if (stack != ItemStack.EMPTY) {
+                if (!stack.isEmpty()) {
                     IIndividual individual = AlleleManager.alleleRegistry.getIndividual(stack);
                     if (individual != null && individual.analyze()) {
                         NBTTagCompound outputNBT = new NBTTagCompound();

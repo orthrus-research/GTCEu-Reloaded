@@ -373,7 +373,7 @@ public class ForestryModule extends IntegrationSubmodule {
     private static void registerAlvearyMutator(Method method, Material material, float chance) {
         try {
             ItemStack stack = OreDictUnifier.get(OrePrefix.dust, material);
-            if (stack != ItemStack.EMPTY) {
+            if (!stack.isEmpty()) {
                 method.invoke(null, stack, chance);
             }
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {

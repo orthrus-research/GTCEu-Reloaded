@@ -124,7 +124,7 @@ public class BlockCable extends BlockMaterialPipe<Insulation, WireProperties, Wo
             return false;
         }
         ItemStack stack = player.getHeldItemMainhand();
-        return stack != ItemStack.EMPTY && stack.getItem() instanceof ItemBlockCable;
+        return !stack.isEmpty() && stack.getItem() instanceof ItemBlockCable;
     }
 
     @Override

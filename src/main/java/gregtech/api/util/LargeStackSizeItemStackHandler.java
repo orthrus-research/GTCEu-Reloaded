@@ -32,7 +32,7 @@ public class LargeStackSizeItemStackHandler extends ItemStackHandler {
             for (int i = 0; i < stacks.size(); i++) {
                 ItemStack itemStack = stacks.get(i);
 
-                if (itemStack != ItemStack.EMPTY && itemStack.getCount() > Byte.MAX_VALUE) {
+                if (!itemStack.isEmpty() && itemStack.getCount() > Byte.MAX_VALUE) {
                     stackSizes.setInteger(String.valueOf(i), itemStack.getCount());
                 }
             }

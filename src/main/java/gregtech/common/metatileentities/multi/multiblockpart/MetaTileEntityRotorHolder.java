@@ -469,7 +469,7 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
         @Override
         public ItemStack extractItem(int slot, int amount, boolean simulate) {
             ItemStack itemStack = super.extractItem(slot, amount, simulate);
-            if (!simulate && itemStack != ItemStack.EMPTY) setRotorColor(-1);
+            if (!simulate && !itemStack.isEmpty()) setRotorColor(-1);
             return itemStack;
         }
     }

@@ -84,7 +84,7 @@ public class BlockItemPipe extends BlockMaterialPipe<ItemPipeType, ItemPipePrope
             return false;
         }
         ItemStack stack = player.getHeldItemMainhand();
-        return stack != ItemStack.EMPTY && stack.getItem() instanceof ItemBlockItemPipe;
+        return !stack.isEmpty() && stack.getItem() instanceof ItemBlockItemPipe;
     }
 
     @Override

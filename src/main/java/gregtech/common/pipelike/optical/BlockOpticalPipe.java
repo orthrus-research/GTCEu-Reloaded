@@ -131,7 +131,7 @@ public class BlockOpticalPipe extends BlockPipe<OpticalPipeType, OpticalPipeProp
             return false;
         }
         ItemStack stack = player.getHeldItemMainhand();
-        return stack != ItemStack.EMPTY && stack.getItem() instanceof ItemBlockOpticalPipe;
+        return !stack.isEmpty() && stack.getItem() instanceof ItemBlockOpticalPipe;
     }
 
     @Override

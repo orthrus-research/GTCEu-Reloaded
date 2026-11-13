@@ -154,7 +154,7 @@ public class ForestryExtractorRecipes {
                 .inputs(inputStack)
                 .fluidOutputs(outputFluid);
 
-        if (extraOutput != ItemStack.EMPTY) {
+        if (!extraOutput.isEmpty()) {
             if (chance > 0) {
                 builder.chancedOutput(extraOutput, chance, 0);
             } else {

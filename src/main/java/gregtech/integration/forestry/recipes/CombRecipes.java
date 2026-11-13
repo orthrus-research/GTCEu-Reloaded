@@ -290,10 +290,10 @@ public class CombRecipes {
 
         if (Mods.AppliedEnergistics2.isModLoaded()) {
             ItemStack fluixDust = OreDictUnifier.get("dustFluix");
-            if (fluixDust == ItemStack.EMPTY) {
+            if (fluixDust.isEmpty()) {
                 fluixDust = Api.INSTANCE.definitions().materials().fluixDust().maybeStack(1).orElse(ItemStack.EMPTY);
             }
-            if (fluixDust != ItemStack.EMPTY) {
+            if (!fluixDust.isEmpty()) {
                 addCentrifugeToItemStack(GTCombType.FLUIX,
                         new ItemStack[] { fluixDust, ModuleCore.getItems().beeswax.getItemStack() },
                         new int[] { 25 * 100, 30 * 100 }, Voltage.ULV);
@@ -418,7 +418,7 @@ public class CombRecipes {
                 output[i] = OreDictUnifier.get(OrePrefix.dustTiny, material[i], Math.max(1, stackSize[i]));
             }
         }
-        if (beeWax != ItemStack.EMPTY) {
+        if (!beeWax.isEmpty()) {
             output[output.length - 1] = beeWax;
         } else {
             output[output.length - 1] = ModuleCore.getItems().beeswax.getItemStack();
@@ -449,7 +449,7 @@ public class CombRecipes {
 
         int numGTOutputs = 0;
         for (int i = 0; i < item.length; i++) {
-            if (item[i] == null || item[i] == ItemStack.EMPTY) continue;
+            if (item[i] == null || item[i].isEmpty()) continue;
             // Add to Forestry Map
             product.put(item[i], chance[i] / 10000.0f);
             // Add to GregTech Map

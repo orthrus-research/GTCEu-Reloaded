@@ -39,7 +39,7 @@ public class RecipeMapFluidCanner extends RecipeMap<SimpleRecipeBuilder> {
         if (recipe != null) return recipe;
 
         for (ItemStack input : inputs) {
-            if (input != null && input != ItemStack.EMPTY &&
+            if (input != null && !input.isEmpty() &&
                     input.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null)) {
 
                 // Make a copy to use for creating recipes

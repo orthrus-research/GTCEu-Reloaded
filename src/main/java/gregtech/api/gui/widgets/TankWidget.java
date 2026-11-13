@@ -285,7 +285,7 @@ public class TankWidget extends Widget implements IIngredientSlot {
         super.handleClientAction(id, buffer);
         if (id == 1) {
             ItemStack clickResult = tryClickContainer(buffer.readBoolean());
-            if (clickResult != ItemStack.EMPTY) {
+            if (!clickResult.isEmpty()) {
                 ((EntityPlayerMP) gui.entityPlayer).updateHeldItem();
             }
         }
@@ -294,7 +294,7 @@ public class TankWidget extends Widget implements IIngredientSlot {
     private ItemStack tryClickContainer(boolean tryFillAll) {
         EntityPlayer player = gui.entityPlayer;
         ItemStack currentStack = player.inventory.getItemStack();
-        if (currentStack == ItemStack.EMPTY || currentStack.getCount() == 0) return ItemStack.EMPTY;
+        if (currentStack.isEmpty() || currentStack.getCount() == 0) return ItemStack.EMPTY;
 
         ItemStack heldItemSizedOne = currentStack.copy();
         heldItemSizedOne.setCount(1);
@@ -350,7 +350,7 @@ public class TankWidget extends Widget implements IIngredientSlot {
     private ItemStack fillTankFromStack(@NotNull FluidStack heldFluid, boolean tryFillAll) {
         EntityPlayer player = gui.entityPlayer;
         ItemStack heldItem = player.inventory.getItemStack();
-        if (heldItem == ItemStack.EMPTY || heldItem.getCount() == 0) return ItemStack.EMPTY;
+        if (heldItem.isEmpty() || heldItem.getCount() == 0) return ItemStack.EMPTY;
 
         ItemStack heldItemSizedOne = heldItem.copy();
         heldItemSizedOne.setCount(1);
@@ -373,7 +373,7 @@ public class TankWidget extends Widget implements IIngredientSlot {
             itemStackEmptied = fluidHandler.getContainer();
             fluidAmountTaken = drained.amount;
         }
-        if (itemStackEmptied == ItemStack.EMPTY) {
+        if (itemStackEmptied.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
@@ -393,7 +393,7 @@ public class TankWidget extends Widget implements IIngredientSlot {
     private ItemStack drainTankFromStack(boolean tryFillAll) {
         EntityPlayer player = gui.entityPlayer;
         ItemStack heldItem = player.inventory.getItemStack();
-        if (heldItem == ItemStack.EMPTY || heldItem.getCount() == 0) return ItemStack.EMPTY;
+        if (heldItem.isEmpty() || heldItem.getCount() == 0) return ItemStack.EMPTY;
 
         ItemStack heldItemSizedOne = heldItem.copy();
         heldItemSizedOne.setCount(1);
@@ -406,7 +406,7 @@ public class TankWidget extends Widget implements IIngredientSlot {
                 null);
         if (handler == null) return ItemStack.EMPTY;
         ItemStack filledContainer = fillFluidContainer(currentFluid, heldItemSizedOne);
-        if (filledContainer != ItemStack.EMPTY) {
+        if (!filledContainer.isEmpty()) {
             int filledAmount = originalFluidAmount - currentFluid.amount;
             if (filledAmount <= 0) {
                 return ItemStack.EMPTY;
