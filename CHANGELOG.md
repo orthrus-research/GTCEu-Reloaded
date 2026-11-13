@@ -167,6 +167,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Multiblocks | Gameplay change: a large boiler that runs short of water uses its distilled water or configured boiler fluids for the rest instead of exploding |
 | Multiblocks | Fuel a large boiler burns from an input bus is saved with that bus, so it is not returned after a reload. |
 | Config | A miner replacement block configured as a bare name or with a non-numeric meta no longer stops every miner from being created. |
+| Saved data | A machine saved mid-recipe with a fluid output from a removed mod finishes the recipe without that fluid instead of failing. |
 
 ### Earlier fork changes
 
