@@ -716,24 +716,10 @@ public class ConfigHolder {
         @Config.SlidingOption
         public int rngDamageElectricTools = 10;
 
-        @Config.Comment("Armor HUD Location")
-        public ArmorHud armorHud = new ArmorHud();
-
         @Config.Comment({ "How often items should be moved by a magnet", "Default: 10 ticks" })
         @Config.RangeInt(min = 1, max = 100)
         @Config.SlidingOption
         public int magnetDelay = 10;
-    }
-
-    public static class ArmorHud {
-
-        @Config.Comment({ "Sets HUD location", "1 - left-upper corner", "2 - right-upper corner",
-                "3 - left-bottom corner", "4 - right-bottom corner" })
-        public byte hudLocation = 1;
-        @Config.Comment("Horizontal offset of HUD [0 ~ 100)")
-        public byte hudOffsetX = 0;
-        @Config.Comment("Vertical offset of HUD [0 ~ 100)")
-        public byte hudOffsetY = 0;
     }
 
     public static class NanoSaber {

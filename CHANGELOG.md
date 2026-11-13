@@ -128,6 +128,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | `GTValues.VAOC` holds 15/16 of each `VOC` entry; before, eight hand-typed entries were wrong |
 | Multiblocks | Large turbine screens show the fuel need reduced by the rotor's efficiency bonus; before, a bonus below 200 % was ignored and higher ones were rounded down to whole multiples |
 | Localisation | The low rotor durability warning, the inertia-cancel key bind, recipe modifier failure details and the `/gregtech recipecheck` usage show text instead of their raw translation keys |
+| Config | The tools section no longer shows a second Armor HUD Location block that had no effect; the HUD position is set under client options as before |
 
 ### Earlier fork changes
 
