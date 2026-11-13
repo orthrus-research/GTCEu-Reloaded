@@ -27,9 +27,15 @@ import java.util.List;
 
 public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack {
 
-    // A replacement for checking the current world time, to get around the gamerule that stops it
-    private long timer = 0L;
-    private List<Pair<NonNullList<ItemStack>, List<Integer>>> inventoryIndexMap;
+    /** Per wearer: one logic object serves every suit of this type. */
+    private static final class ChargeState {
+
+        // A replacement for checking the current world time, to get around the gamerule that stops it
+        long timer = 0L;
+        List<Pair<NonNullList<ItemStack>, List<Integer>>> inventoryIndexMap;
+    }
+
+    private final PerPlayerState<ChargeState> chargeStates = new PerPlayerState<>(ChargeState::new);
 
     public AdvancedNanoMuscleSuite(int energyPerUse, long capacity, int tier) {
         super(EntityEquipmentSlot.CHEST, energyPerUse, capacity, tier);
@@ -79,15 +85,16 @@ public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack
         performFlying(player, hoverMode, false, item);
 
         // Charging mechanics
+        ChargeState state = chargeStates.get(player);
         if (canShare && !world.isRemote) {
             // Check for new things to charge every 5 seconds
-            if (timer % 100 == 0)
-                inventoryIndexMap = ArmorUtils.getChargeableItem(player, cont.getTier());
+            if (state.timer % 100 == 0)
+                state.inventoryIndexMap = ArmorUtils.getChargeableItem(player, cont.getTier());
 
-            if (inventoryIndexMap != null && !inventoryIndexMap.isEmpty()) {
+            if (state.inventoryIndexMap != null && !state.inventoryIndexMap.isEmpty()) {
                 // Charge all inventory slots
-                for (int i = 0; i < inventoryIndexMap.size(); i++) {
-                    Pair<NonNullList<ItemStack>, List<Integer>> inventoryMap = inventoryIndexMap.get(i);
+                for (int i = 0; i < state.inventoryIndexMap.size(); i++) {
+                    Pair<NonNullList<ItemStack>, List<Integer>> inventoryMap = state.inventoryIndexMap.get(i);
                     Iterator<Integer> inventoryIterator = inventoryMap.getValue().iterator();
                     while (inventoryIterator.hasNext()) {
                         int slot = inventoryIterator.next();
@@ -104,7 +111,7 @@ public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack
 
                         // Accounts for tick differences when charging items
                         if (chargable.getCharge() < chargable.getMaxCharge() && cont.canUse(attemptedChargeAmount) &&
-                                timer % 10 == 0) {
+                                state.timer % 10 == 0) {
                             long delta = chargable.charge(attemptedChargeAmount, cont.getTier(), true, false);
                             if (delta > 0) {
                                 cont.discharge(delta, cont.getTier(), true, false, false);
@@ -117,7 +124,7 @@ public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack
                     }
 
                     if (inventoryMap.getValue().isEmpty())
-                        inventoryIndexMap.remove(inventoryMap);
+                        state.inventoryIndexMap.remove(inventoryMap);
                 }
             }
         }
@@ -129,9 +136,9 @@ public class AdvancedNanoMuscleSuite extends NanoMuscleSuite implements IJetpack
         data.setByte("toggleTimer", toggleTimer);
         player.inventoryContainer.detectAndSendChanges();
 
-        timer++;
-        if (timer == Long.MAX_VALUE)
-            timer = 0;
+        state.timer++;
+        if (state.timer == Long.MAX_VALUE)
+            state.timer = 0;
     }
 
     @Override

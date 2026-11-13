@@ -47,9 +47,9 @@ public class PowerlessJetpack implements ISpecialArmorLogic, IJetpack, IItemHUDP
 
     public static final int tankCapacity = 16000;
 
-    private Recipe previousRecipe = null;
-    private Recipe currentRecipe = null;
-    private int burnTimer = 0;
+    // one logic object serves every jetpack, so per-wearer state lives in the stack; this only caches the
+    // last fuel recipe found, and is checked against each stack's fluid before use
+    private volatile Recipe cachedRecipe = null;
 
     @SideOnly(Side.CLIENT)
     private ArmorUtils.ModularHUD HUD;
@@ -71,7 +71,6 @@ public class PowerlessJetpack implements ISpecialArmorLogic, IJetpack, IItemHUDP
         byte toggleTimer = 0;
         boolean hover = false;
 
-        if (data.hasKey("burnTimer")) burnTimer = data.getShort("burnTimer");
         if (data.hasKey("toggleTimer")) toggleTimer = data.getByte("toggleTimer");
         if (data.hasKey("hover")) hover = data.getBoolean("hover");
 
@@ -87,18 +86,12 @@ public class PowerlessJetpack implements ISpecialArmorLogic, IJetpack, IItemHUDP
             }
         }
 
-        // This causes a caching issue. currentRecipe is only set to null in findNewRecipe, so the fuel is never updated
-        // Rewrite in Armor Rework
-        if (currentRecipe == null)
-            findNewRecipe(stack);
-
         performFlying(player, hover, false, stack);
 
         if (toggleTimer > 0)
             toggleTimer--;
 
         data.setBoolean("hover", hover);
-        data.setShort("burnTimer", (short) burnTimer);
         data.setByte("toggleTimer", toggleTimer);
         player.inventoryContainer.detectAndSendChanges();
     }
@@ -154,7 +147,7 @@ public class PowerlessJetpack implements ISpecialArmorLogic, IJetpack, IItemHUDP
 
     @Override
     public boolean canUseEnergy(ItemStack stack, int amount) {
-        FluidStack fuel = getFuel();
+        FluidStack fuel = getFuel(stack);
         if (fuel == null) {
             return false;
         }
@@ -172,57 +165,62 @@ public class PowerlessJetpack implements ISpecialArmorLogic, IJetpack, IItemHUDP
 
     @Override
     public void drainEnergy(ItemStack stack, int amount) {
-        if (this.burnTimer == 0) {
-            FluidStack fuel = getFuel();
-            if (fuel == null) return;
-            getIFluidHandlerItem(stack).drain(fuel, true);
-            burnTimer = currentRecipe.getDuration();
+        int burnTimer = getBurnTimer(stack);
+        if (burnTimer == 0) {
+            Recipe recipe = findRecipe(stack);
+            if (recipe == null) return;
+            getIFluidHandlerItem(stack).drain(recipe.getFluidInputs().get(0).getInputFluidStack(), true);
+            burnTimer = recipe.getDuration();
         }
-        this.burnTimer--;
+        setBurnTimer(stack, burnTimer - 1);
     }
 
     @Override
     public boolean hasEnergy(ItemStack stack) {
-        return burnTimer > 0 || currentRecipe != null;
+        return getBurnTimer(stack) > 0 || findRecipe(stack) != null;
+    }
+
+    private static int getBurnTimer(@NotNull ItemStack stack) {
+        NBTTagCompound data = stack.getTagCompound();
+        return data == null ? 0 : data.getShort("burnTimer");
+    }
+
+    private static void setBurnTimer(@NotNull ItemStack stack, int burnTimer) {
+        GTUtility.getOrCreateNbtCompound(stack).setShort("burnTimer", (short) burnTimer);
     }
 
     private static IFluidHandlerItem getIFluidHandlerItem(@NotNull ItemStack stack) {
         return stack.getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
     }
 
-    public void findNewRecipe(@NotNull ItemStack stack) {
+    /**
+     * @return the fuel recipe for the fluid in this jetpack, or {@code null} if it holds no usable fuel
+     */
+    private @Nullable Recipe findRecipe(@NotNull ItemStack stack) {
         IFluidHandlerItem internalTank = getIFluidHandlerItem(stack);
-        if (internalTank != null) {
-            FluidStack fluidStack = internalTank.drain(1, false);
-            if (previousRecipe != null && fluidStack != null &&
-                    fluidStack.isFluidEqual(previousRecipe.getFluidInputs().get(0).getInputFluidStack()) &&
-                    fluidStack.amount > 0) {
-                currentRecipe = previousRecipe;
-                return;
-            } else if (fluidStack != null) {
-                Recipe recipe = RecipeMaps.COMBUSTION_GENERATOR_FUELS.find(Collections.emptyList(),
-                        Collections.singletonList(fluidStack), (Objects::nonNull));
-                if (recipe != null) {
-                    previousRecipe = recipe;
-                    currentRecipe = previousRecipe;
-                    return;
-                }
-            }
+        if (internalTank == null) return null;
+        FluidStack fluidStack = internalTank.drain(1, false);
+        if (fluidStack == null || fluidStack.amount <= 0) return null;
+        Recipe cached = cachedRecipe;
+        if (cached != null && fluidStack.isFluidEqual(cached.getFluidInputs().get(0).getInputFluidStack())) {
+            return cached;
         }
-        currentRecipe = null;
+        Recipe recipe = RecipeMaps.COMBUSTION_GENERATOR_FUELS.find(Collections.emptyList(),
+                Collections.singletonList(fluidStack), (Objects::nonNull));
+        if (recipe != null) cachedRecipe = recipe;
+        return recipe;
     }
 
     public void resetRecipe() {
-        currentRecipe = null;
-        previousRecipe = null;
+        cachedRecipe = null;
     }
 
-    public FluidStack getFuel() {
-        if (currentRecipe != null) {
-            return currentRecipe.getFluidInputs().get(0).getInputFluidStack();
-        }
-
-        return null;
+    /**
+     * @return the fuel one burn of this jetpack consumes, or {@code null} if it holds no usable fuel
+     */
+    public @Nullable FluidStack getFuel(@NotNull ItemStack stack) {
+        Recipe recipe = findRecipe(stack);
+        return recipe == null ? null : recipe.getFluidInputs().get(0).getInputFluidStack();
     }
 
     public ActionResult<ItemStack> onRightClick(World world, EntityPlayer player, EnumHand hand) {
@@ -245,7 +243,7 @@ public class PowerlessJetpack implements ISpecialArmorLogic, IJetpack, IItemHUDP
     public ISpecialArmor.ArmorProperties getProperties(EntityLivingBase player, @NotNull ItemStack armor,
                                                        @NotNull DamageSource source, double damage,
                                                        EntityEquipmentSlot equipmentSlot) {
-        int damageLimit = (int) Math.min(Integer.MAX_VALUE, burnTimer * 1.0 / 32 * 25.0);
+        int damageLimit = (int) Math.min(Integer.MAX_VALUE, getBurnTimer(armor) * 1.0 / 32 * 25.0);
         if (source.isUnblockable()) return new ISpecialArmor.ArmorProperties(0, 0.0, 0);
         return new ISpecialArmor.ArmorProperties(0, 0, damageLimit);
     }

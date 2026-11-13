@@ -38,7 +38,8 @@ import java.util.Map;
 public class QuarkTechSuite extends ArmorLogicSuite implements IStepAssist {
 
     protected static final Map<Potion, Integer> potionRemovalCost = new IdentityHashMap<>();
-    private float charge = 0.0F;
+    /** Per wearer: one logic object serves every pair of boots. */
+    private final PerPlayerState<float[]> jumpCharge = new PerPlayerState<>(() -> new float[1]);
 
     @SideOnly(Side.CLIENT)
     protected ArmorUtils.ModularHUD HUD;
@@ -202,20 +203,20 @@ public class QuarkTechSuite extends ArmorLogicSuite implements IStepAssist {
                 }
             } else {
                 if (item.canUse(energyPerUse / 100) && player.onGround) {
-                    this.charge = 1.0F;
+                    jumpCharge.get(player)[0] = 1.0F;
                 }
 
-                if (player.motionY >= 0.0D && this.charge > 0.0F && !player.isInWater()) {
+                if (player.motionY >= 0.0D && jumpCharge.get(player)[0] > 0.0F && !player.isInWater()) {
                     if (KeyBind.VANILLA_JUMP.isKeyDown(player)) {
-                        if (this.charge == 1.0F) {
+                        if (jumpCharge.get(player)[0] == 1.0F) {
                             player.motionX *= 3.6D;
                             player.motionZ *= 3.6D;
                         }
 
-                        player.motionY += this.charge * 0.32F;
-                        this.charge = (float) (this.charge * 0.7D);
-                    } else if (this.charge < 1.0F) {
-                        this.charge = 0.0F;
+                        player.motionY += jumpCharge.get(player)[0] * 0.32F;
+                        jumpCharge.get(player)[0] = (float) (jumpCharge.get(player)[0] * 0.7D);
+                    } else if (jumpCharge.get(player)[0] < 1.0F) {
+                        jumpCharge.get(player)[0] = 0.0F;
                     }
                 }
             }
