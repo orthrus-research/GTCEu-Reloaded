@@ -1,15 +1,17 @@
 package gregtech.core.network;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class NetworkUtils {
 
@@ -25,12 +27,37 @@ public class NetworkUtils {
         return new PacketBuffer(copiedDataBuffer);
     }
 
-    public static TileEntity getTileEntityServer(int dimension, BlockPos pos) {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dimension).getTileEntity(pos);
+    /** Squared distance within which vanilla accepts a player's block interaction. */
+    private static final double MAX_REACH_SQ = 64.0;
+
+    /**
+     * Look up a tile entity a client packet names, without loading chunks or other dimensions.
+     *
+     * @return the tile entity at {@code pos} if it is in the player's own dimension and in a loaded chunk the
+     *         player watches, otherwise {@code null}
+     */
+    public static @Nullable TileEntity getTileEntityWatchedBy(@NotNull EntityPlayerMP player, int dimension,
+                                                              @NotNull BlockPos pos) {
+        return isWatchedBy(player, dimension, pos) ? player.getServerWorld().getTileEntity(pos) : null;
     }
 
-    public static IBlockState getIBlockStateServer(int dimension, BlockPos pos) {
-        return FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dimension).getBlockState(pos);
+    /**
+     * @return whether {@code pos} is in the player's own dimension and in a loaded chunk the player watches
+     */
+    public static boolean isWatchedBy(@NotNull EntityPlayerMP player, int dimension, @NotNull BlockPos pos) {
+        if (player.dimension != dimension) return false;
+        WorldServer world = player.getServerWorld();
+        return world.isBlockLoaded(pos) &&
+                world.getPlayerChunkMap().isPlayerWatchingChunk(player, pos.getX() >> 4, pos.getZ() >> 4);
+    }
+
+    /**
+     * @return as {@link #getTileEntityWatchedBy}, and only if the position is also within the player's reach
+     */
+    public static @Nullable TileEntity getTileEntityInReach(@NotNull EntityPlayerMP player, int dimension,
+                                                            @NotNull BlockPos pos) {
+        if (player.getDistanceSq(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > MAX_REACH_SQ) return null;
+        return getTileEntityWatchedBy(player, dimension, pos);
     }
 
     public static NetworkRegistry.TargetPoint blockPoint(World world, BlockPos blockPos) {

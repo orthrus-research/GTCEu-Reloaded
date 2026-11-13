@@ -6,6 +6,7 @@ import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.network.IPacket;
 import gregtech.api.network.IServerExecutor;
+import gregtech.core.network.NetworkUtils;
 
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.PacketBuffer;
@@ -13,7 +14,6 @@ import net.minecraft.network.play.server.SPacketBlockChange;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 
 import static gregtech.api.capability.GregtechDataCodes.INITIALIZE_MTE;
 
@@ -44,7 +44,9 @@ public class PacketRecoverMTE implements IPacket, IServerExecutor {
 
     @Override
     public void executeServer(NetHandlerPlayServer handler) {
-        World world = FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(dimension);
+        // only a position the client can actually see: never load chunks or other dimensions for it
+        if (!NetworkUtils.isWatchedBy(handler.player, dimension, pos)) return;
+        World world = handler.player.getServerWorld();
         TileEntity te = world.getTileEntity(pos);
         if (te instanceof IGregTechTileEntity holder && holder.isValid()) {
             holder.writeCustomData(INITIALIZE_MTE, buffer -> {

@@ -191,6 +191,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | Blocks of a material with neither a gem nor an ingot get arc furnace recycling recipes instead of stopping recipe loading. |
 | Tools | Using the multiblock builder on a controller that has not built its structure pattern yet no longer throws. |
 | Networking | The server rejects key binding packets with more entries than there are key binds, or with unknown keys, instead of allocating or throwing. |
+| Networking | Machine recovery, clipboard and monitor plugin packets only act on positions in the sender's dimension and in chunks the sender can see, and clipboard edits only within reach. They no longer load chunks. |
 
 ### Earlier fork changes
 

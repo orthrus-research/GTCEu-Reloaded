@@ -47,7 +47,7 @@ public class PacketClipboardNBTUpdate implements IPacket, IServerExecutor {
     // TODO This could still be cleaned up
     @Override
     public void executeServer(NetHandlerPlayServer handler) {
-        TileEntity te = NetworkUtils.getTileEntityServer(dimension, pos);
+        TileEntity te = NetworkUtils.getTileEntityInReach(handler.player, dimension, pos);
         if (te instanceof IGregTechTileEntity &&
                 ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MetaTileEntityClipboard) {
             try {
