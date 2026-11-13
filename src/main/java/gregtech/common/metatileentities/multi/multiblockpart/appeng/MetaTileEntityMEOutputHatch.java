@@ -83,10 +83,10 @@ public class MetaTileEntityMEOutputHatch extends MetaTileEntityAEHostablePart<IA
     @Override
     public void onRemoval() {
         IMEMonitor<IAEFluidStack> monitor = getMonitor();
-        if (monitor == null) return;
-
-        for (IAEFluidStack fluid : this.internalBuffer) {
-            monitor.injectItems(fluid.copy(), Actionable.MODULATE, this.getActionSource());
+        if (monitor != null) {
+            for (IAEFluidStack fluid : this.internalBuffer) {
+                monitor.injectItems(fluid.copy(), Actionable.MODULATE, this.getActionSource());
+            }
         }
         super.onRemoval();
     }

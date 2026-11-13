@@ -148,6 +148,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Multiblocks | The Power Substation's passive drain after a battery change no longer includes a remainder left from the previous batteries, which could add 1 EU/t. |
 | Saved data | Machines and covers whose saved mode is out of range load with their default mode instead of failing to load. |
 | Multiblocks | The multi smelter accepts coils with no energy discount, the HPCA's computation bar shows empty instead of NaN when it has no capacity, and the central monitor follows its EU-cost config without a restart. |
+| AE2 | Breaking an ME output hatch that is not on a working network now unforms its multiblock like any other hatch. |
 
 ### Earlier fork changes
 
