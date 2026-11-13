@@ -224,6 +224,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | JEI | The integrated circuit page in JEI always labels each slot with its own number. |
 | Rendering | Players' own capes no longer vanish when their profile loads after they are first drawn. |
 | Rendering | Active and idle laser pipes meshed at the same time no longer swap their glow. |
+| JEI | JEI pages that show several ore vein, fluid vein, material tree or by-product recipes at once draw each recipe's own details. |
 
 ### Earlier fork changes
 

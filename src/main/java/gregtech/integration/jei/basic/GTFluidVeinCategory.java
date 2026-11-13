@@ -29,19 +29,6 @@ public class GTFluidVeinCategory extends BasicRecipeCategory<GTFluidVeinInfo, GT
     private static final int START_POS_Y = 40;
 
     protected final IDrawable slot;
-    private String veinName;
-    private int weight;
-    private int[] yields; // the [minimum, maximum) yields
-    private int depletionAmount; // amount of fluid the vein gets drained by
-    private int depletionChance; // the chance [0, 100] that the vein will deplete by 1
-    private int depletedYield; // yield after the vein is depleted
-    private int[] dimensions;
-    private int weightLength;
-    private int minYieldLength;
-    private int maxYieldLength;
-    private int depletionChanceLength;
-    private int depletionAmountLength;
-    private int depletedYieldLength;
 
     public GTFluidVeinCategory(IGuiHelper guiHelper) {
         super("fluid_spawn_location",
@@ -62,16 +49,8 @@ public class GTFluidVeinCategory extends BasicRecipeCategory<GTFluidVeinInfo, GT
 
         fluidStackGroup.addTooltipCallback(gtFluidVeinInfo::addTooltip);
         fluidStackGroup.set(ingredients);
-
-        this.veinName = gtFluidVeinInfo.getName();
-        this.weight = gtFluidVeinInfo.getWeight();
-        this.yields = gtFluidVeinInfo.getYields();
-        this.depletionAmount = gtFluidVeinInfo.getDepletionAmount();
-        this.depletionChance = gtFluidVeinInfo.getDepletionChance();
-        this.depletedYield = gtFluidVeinInfo.getDepletedYield();
-
-        this.dimensions = JEIResourceDepositCategoryUtils.getAllRegisteredDimensions(
-                gtFluidVeinInfo.getDefinition().getDimensionFilter());
+        // JEI lays out every recipe of a page before drawing any: the text is drawn per recipe from its wrapper
+        gtFluidVeinInfo.setCategory(this);
     }
 
     @NotNull
@@ -80,42 +59,53 @@ public class GTFluidVeinCategory extends BasicRecipeCategory<GTFluidVeinInfo, GT
         return gtFluidVeinInfo;
     }
 
-    @Override
-    public void drawExtras(@NotNull Minecraft minecraft) {
+    /**
+     * Draw the text of one recipe and record its line widths for the tooltips; called from
+     * {@link GTFluidVeinInfo#drawInfo}.
+     */
+    void drawRecipeExtras(@NotNull Minecraft minecraft, @NotNull GTFluidVeinInfo info) {
+        String veinName = info.getName();
+        int weight = info.getWeight();
+        int[] yields = info.getYields();
+        int depletionAmount = info.getDepletionAmount();
+        int depletionChance = info.getDepletionChance();
+        int depletedYield = info.getDepletedYield();
+        int[] dimensions = info.getDimensions();
+        int[] widths = info.textWidths;
         GTStringUtils.drawCenteredStringWithCutoff(veinName, minecraft.fontRenderer, 176);
 
         this.slot.draw(minecraft, SLOT_CENTER - 1, 18);
 
         // Vein Weight information
         String veinWeight = I18n.format("gregtech.jei.fluid.vein_weight", weight);
-        weightLength = minecraft.fontRenderer.getStringWidth(veinWeight);
+        widths[0] = minecraft.fontRenderer.getStringWidth(veinWeight);
         minecraft.fontRenderer.drawString(veinWeight, TEXT_START_X, START_POS_Y, 0x111111);
 
         // Vein Minimum Yield information
         String veinMinYield = I18n.format("gregtech.jei.fluid.min_yield", yields[0]);
-        minYieldLength = minecraft.fontRenderer.getStringWidth(veinMinYield);
+        widths[1] = minecraft.fontRenderer.getStringWidth(veinMinYield);
         minecraft.fontRenderer.drawString(veinMinYield, TEXT_START_X, START_POS_Y + FONT_HEIGHT + 1, 0x111111);
 
         // Vein Maximum Yield information
         String veinMaxYield = I18n.format("gregtech.jei.fluid.max_yield", yields[1]);
-        maxYieldLength = minecraft.fontRenderer.getStringWidth(veinMaxYield);
+        widths[2] = minecraft.fontRenderer.getStringWidth(veinMaxYield);
         minecraft.fontRenderer.drawString(veinMaxYield, TEXT_START_X, START_POS_Y + 2 * FONT_HEIGHT + 1, 0x111111);
 
         // Vein Depletion Chance information
         String veinDepletionChance = I18n.format("gregtech.jei.fluid.depletion_chance", depletionChance);
-        depletionChanceLength = minecraft.fontRenderer.getStringWidth(veinDepletionChance);
+        widths[3] = minecraft.fontRenderer.getStringWidth(veinDepletionChance);
         minecraft.fontRenderer.drawString(veinDepletionChance, TEXT_START_X, START_POS_Y + 3 * FONT_HEIGHT + 1,
                 0x111111);
 
         // Vein Depletion Amount information
         String veinDepletionAmount = I18n.format("gregtech.jei.fluid.depletion_amount", depletionAmount);
-        depletionAmountLength = minecraft.fontRenderer.getStringWidth(veinDepletionAmount);
+        widths[4] = minecraft.fontRenderer.getStringWidth(veinDepletionAmount);
         minecraft.fontRenderer.drawString(veinDepletionAmount, TEXT_START_X, START_POS_Y + 4 * FONT_HEIGHT + 1,
                 0x111111);
 
         // Vein Depleted Yield information
         String veinDepletedYield = I18n.format("gregtech.jei.fluid.depleted_rate", depletedYield);
-        depletedYieldLength = minecraft.fontRenderer.getStringWidth(veinDepletedYield);
+        widths[5] = minecraft.fontRenderer.getStringWidth(veinDepletedYield);
         minecraft.fontRenderer.drawString(veinDepletedYield, TEXT_START_X, START_POS_Y + 5 * FONT_HEIGHT + 1, 0x111111);
 
         // Vein Dimensions information
@@ -131,9 +121,14 @@ public class GTFluidVeinCategory extends BasicRecipeCategory<GTFluidVeinInfo, GT
                 TEXT_START_X + dimensionLength);
     }
 
+    /**
+     * @return the hover text for one recipe's lines; called from {@link GTFluidVeinInfo#getTooltipStrings}
+     */
     @NotNull
-    @Override
-    public List<String> getTooltipStrings(int mouseX, int mouseY) {
+    List<String> getRecipeTooltip(@NotNull GTFluidVeinInfo info, int mouseX, int mouseY) {
+        int[] widths = info.textWidths;
+        int weightLength = widths[0], minYieldLength = widths[1], maxYieldLength = widths[2];
+        int depletionChanceLength = widths[3], depletionAmountLength = widths[4], depletedYieldLength = widths[5];
         if (isPointWithinRange(TEXT_START_X, START_POS_Y, weightLength, FONT_HEIGHT, mouseX, mouseY)) {
             return Collections.singletonList(I18n.format("gregtech.jei.fluid.weight_hover"));
         } else if (isPointWithinRange(TEXT_START_X, START_POS_Y + FONT_HEIGHT + 1, minYieldLength, FONT_HEIGHT + 1,

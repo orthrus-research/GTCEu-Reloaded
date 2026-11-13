@@ -19,6 +19,7 @@ import gregtech.integration.jei.utils.JEIResourceDepositCategoryUtils;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -33,6 +34,8 @@ import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -355,5 +358,26 @@ public class GTOreInfo implements IRecipeWrapper {
 
     public int getOreWeight(int index) {
         return oreWeights.size() > index ? oreWeights.get(index) : -1;
+    }
+
+    // per-recipe drawing; the category is shared by every recipe on a page
+    private @Nullable GTOreCategory category;
+    private int @Nullable [] dimensions;
+
+    void setCategory(@NotNull GTOreCategory category) {
+        this.category = category;
+    }
+
+    int @NotNull [] getDimensions() {
+        if (dimensions == null) {
+            dimensions = JEIResourceDepositCategoryUtils.getAllRegisteredDimensions(
+                    getDefinition().getDimensionFilter());
+        }
+        return dimensions;
+    }
+
+    @Override
+    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
+        if (category != null) category.drawRecipeExtras(minecraft, this);
     }
 }

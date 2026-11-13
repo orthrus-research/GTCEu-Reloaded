@@ -4,6 +4,7 @@ import gregtech.api.util.FileUtility;
 import gregtech.api.worldgen.config.BedrockFluidDepositDefinition;
 import gregtech.integration.jei.utils.JEIResourceDepositCategoryUtils;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.fluids.FluidStack;
@@ -12,6 +13,8 @@ import net.minecraftforge.fluids.FluidUtil;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -122,5 +125,34 @@ public class GTFluidVeinInfo implements IRecipeWrapper {
 
     public FluidStack getFluid() {
         return fluid;
+    }
+
+    // per-recipe drawing; the category is shared by every recipe on a page
+    private @Nullable GTFluidVeinCategory category;
+    private int @Nullable [] dimensions;
+    /** Widths of the six hoverable lines, as last drawn for this recipe. */
+    final int[] textWidths = new int[6];
+
+    void setCategory(@NotNull GTFluidVeinCategory category) {
+        this.category = category;
+    }
+
+    int @NotNull [] getDimensions() {
+        if (dimensions == null) {
+            dimensions = JEIResourceDepositCategoryUtils.getAllRegisteredDimensions(
+                    getDefinition().getDimensionFilter());
+        }
+        return dimensions;
+    }
+
+    @Override
+    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
+        if (category != null) category.drawRecipeExtras(minecraft, this);
+    }
+
+    @NotNull
+    @Override
+    public List<String> getTooltipStrings(int mouseX, int mouseY) {
+        return category == null ? Collections.emptyList() : category.getRecipeTooltip(this, mouseX, mouseY);
     }
 }

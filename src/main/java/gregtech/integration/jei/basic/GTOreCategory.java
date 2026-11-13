@@ -3,7 +3,6 @@ package gregtech.integration.jei.basic;
 import gregtech.api.GTValues;
 import gregtech.api.gui.GuiTextures;
 import gregtech.api.util.GTStringUtils;
-import gregtech.api.worldgen.config.OreDepositDefinition;
 import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.integration.jei.utils.JEIResourceDepositCategoryUtils;
 import gregtech.integration.jei.utils.render.ItemStackTextRenderer;
@@ -28,13 +27,6 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
     private static final int SLOT_HEIGHT = 18;
 
     protected final IDrawable slot;
-    protected OreDepositDefinition definition;
-    protected String veinName;
-    protected int minHeight;
-    protected int maxHeight;
-    protected int outputCount;
-    protected int weight;
-    private int[] dimension;
 
     public GTOreCategory(IGuiHelper guiHelper) {
         super("ore_spawn_location",
@@ -67,14 +59,8 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
 
         itemStackGroup.addTooltipCallback(recipeWrapper::addTooltip);
         itemStackGroup.set(ingredients);
-        this.veinName = recipeWrapper.getVeinName();
-        this.minHeight = recipeWrapper.getMinHeight();
-        this.maxHeight = recipeWrapper.getMaxHeight();
-        this.outputCount = recipeWrapper.getOutputCount();
-        this.weight = recipeWrapper.getWeight();
-        this.definition = recipeWrapper.getDefinition();
-
-        this.dimension = JEIResourceDepositCategoryUtils.getAllRegisteredDimensions(definition.getDimensionFilter());
+        // JEI lays out every recipe of a page before drawing any: the text is drawn per recipe from its wrapper
+        recipeWrapper.setCategory(this);
     }
 
     @NotNull
@@ -83,8 +69,16 @@ public class GTOreCategory extends BasicRecipeCategory<GTOreInfo, GTOreInfo> {
         return recipe;
     }
 
-    @Override
-    public void drawExtras(@NotNull Minecraft minecraft) {
+    /**
+     * Draw the slots and text of one recipe; called from {@link GTOreInfo#drawInfo}.
+     */
+    void drawRecipeExtras(@NotNull Minecraft minecraft, @NotNull GTOreInfo info) {
+        String veinName = info.getVeinName();
+        int minHeight = info.getMinHeight();
+        int maxHeight = info.getMaxHeight();
+        int outputCount = info.getOutputCount();
+        int weight = info.getWeight();
+        int[] dimension = info.getDimensions();
         int baseXPos = 70;
         int baseYPos = 19;
         int dimDisplayPos = 70;

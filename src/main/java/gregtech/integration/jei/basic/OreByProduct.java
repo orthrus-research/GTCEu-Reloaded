@@ -11,6 +11,7 @@ import gregtech.api.unification.ore.OrePrefix;
 import gregtech.client.utils.TooltipHelper;
 import gregtech.common.metatileentities.MetaTileEntities;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -25,6 +26,8 @@ import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -351,5 +354,19 @@ public class OreByProduct implements IRecipeWrapper {
         } else {
             addChance(baseLow, tierLow);
         }
+    }
+
+    // per-recipe drawing; the category is shared by every recipe on a page
+    private @Nullable OreByProductCategory category;
+    private OreByProductCategory.@Nullable RecipeState state;
+
+    void setDrawing(@NotNull OreByProductCategory category, OreByProductCategory.@NotNull RecipeState state) {
+        this.category = category;
+        this.state = state;
+    }
+
+    @Override
+    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
+        if (category != null && state != null) category.drawRecipeExtras(minecraft, state);
     }
 }
