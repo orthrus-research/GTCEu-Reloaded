@@ -1,5 +1,7 @@
 package gregtech.api.pipenet.longdist;
 
+import gregtech.api.util.function.Task;
+
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
@@ -19,9 +21,15 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This bad boy is responsible for building the network
+ * Walks long distance pipes from the given starting points and builds their networks.
+ * <p>
+ * It runs as a {@link Task} on the server thread, a bounded number of positions per tick: the walk reads block
+ * states, loads chunks and writes the world's network maps, none of which may be touched from another thread.
  */
-public class NetworkBuilder extends Thread {
+public class NetworkBuilder implements Task {
+
+    /** Positions walked per tick; most networks finish within their first tick. */
+    private static final int POSITIONS_PER_TICK = 16384;
 
     private final ObjectList<BlockPos> starts = new ObjectArrayList<>();
     private final LongDistanceNetwork.WorldData worldData;
@@ -34,6 +42,9 @@ public class NetworkBuilder extends Thread {
     private final List<ILDEndpoint> endpoints = new ArrayList<>();
     private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
     private final ObjectOpenHashSet<Chunk> loadedChunks = new ObjectOpenHashSet<>();
+    private boolean started;
+    private boolean walking;
+    private boolean cancelled;
 
     public NetworkBuilder(LongDistanceNetwork.WorldData worldData, LongDistanceNetwork network,
                           Collection<BlockPos> starts) {
@@ -44,38 +55,49 @@ public class NetworkBuilder extends Thread {
         this.starts.addAll(starts);
     }
 
-    @Override
-    public void run() {
-        if (this.starts.isEmpty()) return;
-        BlockPos start = this.starts.remove(0);
-        checkNetwork(start);
-        // iterate over each given starting point and try to build a network
-        while (!this.starts.isEmpty()) {
-            start = this.starts.remove(0);
-            LongDistanceNetwork ldn = this.worldData.getNetwork(start);
-            if (ldn == this.originalNetwork) {
-                // this starting point was caught during a previous iteration, so we don't need to create another
-                // network here
-                continue;
-            }
-            // create a new network, since the current was already calculated
-            this.network = this.network.getPipeType().createNetwork(this.worldData);
-            this.currentPoints.clear();
-            this.walked.clear();
-            this.pipes.clear();
-            this.endpoints.clear();
-            checkNetwork(start);
-        }
-        IChunkProvider chunkProvider = this.world.getChunkProvider();
-        if (chunkProvider instanceof ChunkProviderServer chunkProviderServer) {
-            this.loadedChunks.forEach(chunkProviderServer::queueUnload);
-        }
+    /** Stops this builder before its next step; a newer build of the same network replaces it. */
+    void cancel() {
+        this.cancelled = true;
     }
 
-    private void checkNetwork(BlockPos start) {
-        // current points stores all current branches of the network
-        checkPos(this.world.getBlockState(start), start);
-        while (!this.currentPoints.isEmpty()) {
+    @Override
+    public boolean run() {
+        if (this.cancelled) {
+            finish();
+            return false;
+        }
+        int budget = POSITIONS_PER_TICK;
+        while (budget > 0) {
+            if (!this.walking) {
+                if (this.starts.isEmpty()) {
+                    finish();
+                    return false;
+                }
+                BlockPos start = this.starts.remove(0);
+                if (this.started) {
+                    if (this.worldData.getNetwork(start) == this.originalNetwork) {
+                        // this starting point was caught during a previous walk, so it needs no other network
+                        continue;
+                    }
+                    // create a new network, since the current was already calculated
+                    this.network = this.network.getPipeType().createNetwork(this.worldData);
+                    this.currentPoints.clear();
+                    this.walked.clear();
+                    this.pipes.clear();
+                    this.endpoints.clear();
+                }
+                this.started = true;
+                this.walking = true;
+                checkPos(getBlockState(start), start);
+                budget--;
+                continue;
+            }
+            if (this.currentPoints.isEmpty()) {
+                // the whole net was checked, now send the data to the network
+                this.network.setData(this.pipes, this.endpoints);
+                this.walking = false;
+                continue;
+            }
             // get and remove the first stored branch
             BlockPos current = this.currentPoints.remove(0);
             for (EnumFacing facing : EnumFacing.VALUES) {
@@ -83,6 +105,7 @@ public class NetworkBuilder extends Thread {
                 if (this.walked.contains(this.pos)) {
                     continue;
                 }
+                budget--;
                 IBlockState blockState = getBlockState(this.pos);
                 if (blockState.getBlock().isAir(blockState, this.world, this.pos)) {
                     continue;
@@ -90,9 +113,16 @@ public class NetworkBuilder extends Thread {
                 checkPos(blockState, this.pos);
             }
         }
-        // the whole net was checked
-        // now send the data to the given network
-        this.network.setData(this.pipes, this.endpoints);
+        return true;
+    }
+
+    private void finish() {
+        IChunkProvider chunkProvider = this.world.getChunkProvider();
+        if (chunkProvider instanceof ChunkProviderServer chunkProviderServer) {
+            this.loadedChunks.forEach(chunkProviderServer::queueUnload);
+        }
+        this.loadedChunks.clear();
+        this.originalNetwork.onBuilderFinished(this);
     }
 
     /**
