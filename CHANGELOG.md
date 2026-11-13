@@ -207,6 +207,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Pipes | Gameplay change: fluid in quadruple and nonuple pipes no longer flows back toward the pipe it just came from; before, every channel after the first could |
 | Monitors | Monitor pictures with long URLs can be cached, and concurrent downloads no longer corrupt cache times. |
 | Ender links | Ender link covers in single-player no longer add entries to the shared registry from the client thread. |
+| Covers | The digital interface cover's energy chart shows the recent history as soon as it loads instead of starting flat. |
 
 ### Earlier fork changes
 

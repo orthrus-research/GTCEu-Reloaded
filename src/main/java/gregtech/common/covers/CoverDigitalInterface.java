@@ -135,6 +135,17 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
     private long energyOutputPerDur = 0;
     private final List<Long> inputEnergyList = new LinkedList<>();
     private final List<Long> outputEnergyList = new LinkedList<>();
+
+    /** Append the current per-second rates to the 13-sample chart history. */
+    private void recordEnergyHistory() {
+        inputEnergyList.add(energyInputPerDur);
+        outputEnergyList.add(energyOutputPerDur);
+        if (inputEnergyList.size() > 13) {
+            inputEnergyList.remove(0);
+            outputEnergyList.remove(0);
+        }
+    }
+
     private int progress = 0;
     private int maxProgress = 0;
     private boolean isActive = true;
@@ -661,15 +672,13 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
                     });
                 }
                 if (this.getOffsetTimer() % 20 == 0) {
+                    // sample on the server, so its history, which the initial sync sends, is not all zeros
+                    energyInputPerDur = pss.getAverageInLastSec() * 20L;
+                    energyOutputPerDur = pss.getAverageOutLastSec() * 20L;
+                    recordEnergyHistory();
                     writeCustomData(GregtechDataCodes.UPDATE_ENERGY_PER, packetBuffer -> {
-                        packetBuffer.writeLong(pss.getAverageInLastSec() * 20L);
-                        packetBuffer.writeLong(pss.getAverageOutLastSec() * 20L);
-                        inputEnergyList.add(energyInputPerDur);
-                        outputEnergyList.add(energyOutputPerDur);
-                        if (inputEnergyList.size() > 13) {
-                            inputEnergyList.remove(0);
-                            outputEnergyList.remove(0);
-                        }
+                        packetBuffer.writeLong(energyInputPerDur);
+                        packetBuffer.writeLong(energyOutputPerDur);
                     });
                 }
             } else {
@@ -687,15 +696,13 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
                         });
                     }
                     if (this.getOffsetTimer() % 20 == 0) { // per second
+                        // sample on the server, so its history, which the initial sync sends, is not all zeros
+                        energyInputPerDur = energyContainer.getInputPerSec();
+                        energyOutputPerDur = energyContainer.getOutputPerSec();
+                        recordEnergyHistory();
                         writeCustomData(GregtechDataCodes.UPDATE_ENERGY_PER, packetBuffer -> {
-                            packetBuffer.writeLong(energyContainer.getInputPerSec());
-                            packetBuffer.writeLong(energyContainer.getOutputPerSec());
-                            inputEnergyList.add(energyInputPerDur);
-                            outputEnergyList.add(energyOutputPerDur);
-                            if (inputEnergyList.size() > 13) {
-                                inputEnergyList.remove(0);
-                                outputEnergyList.remove(0);
-                            }
+                            packetBuffer.writeLong(energyInputPerDur);
+                            packetBuffer.writeLong(energyOutputPerDur);
                         });
                     }
                 }
@@ -940,12 +947,7 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
         } else if (id == GregtechDataCodes.UPDATE_ENERGY_PER) {
             energyInputPerDur = packetBuffer.readLong();
             energyOutputPerDur = packetBuffer.readLong();
-            inputEnergyList.add(energyInputPerDur);
-            outputEnergyList.add(energyOutputPerDur);
-            if (inputEnergyList.size() > 13) {
-                inputEnergyList.remove(0);
-                outputEnergyList.remove(0);
-            }
+            recordEnergyHistory();
         } else if (id == GregtechDataCodes.UPDATE_MACHINE) {
             this.progress = packetBuffer.readInt();
             this.maxProgress = packetBuffer.readInt();
