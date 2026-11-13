@@ -231,6 +231,13 @@ public class OreGlobTest {
         assertMatch(expr, "1234", false);
         assertMatch(expr, "12345", false);
 
+        // negation is the complement over every branch, so a later branch's positive match counts
+        expr = compile("(a|ab)!(??*)");
+        assertMatch(expr, "a", true);
+        assertMatch(expr, "ab", true);
+        assertMatch(expr, "abc", false);
+        assertMatch(expr, "abcd", false);
+
         expr = compile("!() iron");
         assertMatch(expr, "iron", false);
         assertMatch(expr, "ingotIron", true);

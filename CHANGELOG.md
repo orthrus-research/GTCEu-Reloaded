@@ -113,6 +113,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | The digital interface cover's slot arrows cycle through the slots its screen shows and wrap to the last one; before, they used the machine's input inventory, wrapped one past the end, and on non-machine blocks jumped to slot 2,147,483,647 |
 | Covers | The advanced energy detector keeps EU thresholds above 2,147,483,647 when switched from percent to EU; before, the maximum was cut to that value |
 | Covers | Smart item filters with an out-of-range saved mode load in electrolyzer mode; before, loading them threw |
+| Covers | Ore filter expressions that negate a minimum length after alternatives, such as `(a|ab)!(??*)`, reject inputs that one of the alternatives leaves too long; before, they accepted them |
 
 ### Earlier fork changes
 
