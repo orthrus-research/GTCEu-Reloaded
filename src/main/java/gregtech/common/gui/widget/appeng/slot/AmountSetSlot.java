@@ -64,7 +64,7 @@ public class AmountSetSlot<T extends IAEStack<T>> extends Widget {
         if (id == 0) {
             this.index = buffer.readVarInt();
         } else if (id == 1) {
-            if (this.index < 0) {
+            if (this.index < 0 || this.index >= this.parentWidget.getConfigSize()) {
                 return;
             }
             IConfigurableSlot<T> slot = this.parentWidget.getConfig(this.index);

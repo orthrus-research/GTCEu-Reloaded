@@ -161,7 +161,7 @@ public class TabGroup<T extends AbstractWidgetGroup> extends AbstractWidgetGroup
         super.handleClientAction(id, buffer);
         if (id == 2) {
             int tabIndex = buffer.readVarInt();
-            if (selectedTabIndex != tabIndex) {
+            if (tabIndex >= 0 && tabIndex < tabWidgets.size() && selectedTabIndex != tabIndex) {
                 setSelectedTab(tabIndex);
             }
         }

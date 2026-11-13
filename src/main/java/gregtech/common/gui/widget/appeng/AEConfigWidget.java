@@ -131,6 +131,10 @@ public abstract class AEConfigWidget<T extends IAEStack<T>> extends AbstractWidg
         return this.config[index];
     }
 
+    public final int getConfigSize() {
+        return this.config.length;
+    }
+
     public final IConfigurableSlot<T> getDisplay(int index) {
         return this.displayList[index];
     }

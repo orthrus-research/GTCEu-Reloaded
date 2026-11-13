@@ -361,6 +361,8 @@ public class AbstractWidgetGroup extends Widget implements IGhostIngredientTarge
         if (id == 1) {
             int widgetIndex = buffer.readVarInt();
             int widgetUpdateId = buffer.readVarInt();
+            // the index comes from the client
+            if (widgetIndex < 0 || widgetIndex >= widgets.size()) return;
             Widget widget = widgets.get(widgetIndex);
             widget.handleClientAction(widgetUpdateId, buffer);
         }
