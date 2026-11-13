@@ -201,7 +201,8 @@ public class MetaTileEntityPump extends TieredMetaTileEntity {
             int amountIterated = 0;
             do {
                 if (checkPos != null) {
-                    blocksToCheck.push(checkPos);
+                    // re-queue an unloaded position behind the others so the next poll moves on
+                    blocksToCheck.addLast(checkPos);
                     amountIterated++;
                 }
                 checkPos = blocksToCheck.poll();
