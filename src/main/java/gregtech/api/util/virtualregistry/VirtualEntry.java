@@ -58,6 +58,12 @@ public abstract class VirtualEntry implements INBTSerializable<NBTTagCompound> {
                 this.color == other.color;
     }
 
+    /** Hashes the fields equals compares here; subclasses that compare more stay consistent with it. */
+    @Override
+    public int hashCode() {
+        return 31 * System.identityHashCode(getType()) + color;
+    }
+
     @Override
     public NBTTagCompound serializeNBT() {
         var tag = new NBTTagCompound();
