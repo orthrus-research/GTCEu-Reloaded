@@ -189,6 +189,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Rendering | Entities drawn after a GregTech portal keep their transparent cut-outs. |
 | Rendering | Fluid fog under night vision no longer turns black for fluids with a black fog colour. |
 | Recipes | Blocks of a material with neither a gem nor an ingot get arc furnace recycling recipes instead of stopping recipe loading. |
+| Tools | Using the multiblock builder on a controller that has not built its structure pattern yet no longer throws. |
 
 ### Earlier fork changes
 
