@@ -27,7 +27,8 @@ public class ToolHeadReplaceRecipe extends IForgeRegistryEntry.Impl<IRecipe> imp
 
     public static void setToolHeadForTool(OrePrefix toolHead, IGTTool tool) {
         if (!tool.isElectric()) return;
-        TOOL_HEAD_TO_TOOL_MAP.computeIfAbsent(toolHead, p -> new IGTTool[GTValues.MAX])[tool.getElectricTier()] = tool;
+        TOOL_HEAD_TO_TOOL_MAP.computeIfAbsent(toolHead, p -> new IGTTool[GTValues.MAX + 1])[tool
+                .getElectricTier()] = tool;
     }
 
     @Override

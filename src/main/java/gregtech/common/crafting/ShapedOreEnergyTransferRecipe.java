@@ -78,10 +78,10 @@ public class ShapedOreEnergyTransferRecipe extends ShapedOreRecipe {
                 toCharge += batteryItem.discharge(Long.MAX_VALUE, Integer.MAX_VALUE, true, true, true);
             }
         }
+        if (electricItem == null) return;
         if (electricItem instanceof ElectricItem && transferMaxCharge) {
             ((ElectricItem) electricItem).setMaxChargeOverride(totalMaxCharge);
         }
-        // noinspection DataFlowIssue
         electricItem.charge(toCharge, Integer.MAX_VALUE, true, false);
     }
 }
