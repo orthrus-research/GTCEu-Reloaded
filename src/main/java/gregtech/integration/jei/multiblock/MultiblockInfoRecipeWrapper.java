@@ -23,6 +23,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
@@ -59,6 +60,7 @@ import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import mezz.jei.gui.recipes.RecipeLayout;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
@@ -115,6 +117,8 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
     private boolean drawInfoIcon;
     private static ItemStack tooltipBlockStack;
     private static long lastRender;
+    // the screen the hover belongs to: a stale hover from a closed screen must not be reported
+    private static @Nullable GuiScreen lastRenderScreen;
     private List<String> predicateTips;
 
     private BlockPos selected;
@@ -380,6 +384,7 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
         }
 
         lastRender = System.currentTimeMillis();
+        lastRenderScreen = Minecraft.getMinecraft().currentScreen;
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;
 
@@ -669,14 +674,19 @@ public class MultiblockInfoRecipeWrapper implements IRecipeWrapper {
     }
 
     public static ItemStack getHoveredItemStack() {
-        if (lastRender > System.currentTimeMillis() - 100) {
+        // drawn on the screen that is still open, recently enough to survive a slow frame
+        if (lastRenderScreen != null && lastRenderScreen == Minecraft.getMinecraft().currentScreen &&
+                lastRender > System.currentTimeMillis() - HOVER_VALID_MILLIS) {
             return tooltipBlockStack;
         }
         return null;
     }
 
+    private static final long HOVER_VALID_MILLIS = 1000;
+
     protected static void setHoveredItemStack(ItemStack stack) {
         tooltipBlockStack = stack;
         lastRender = System.currentTimeMillis();
+        lastRenderScreen = Minecraft.getMinecraft().currentScreen;
     }
 }
