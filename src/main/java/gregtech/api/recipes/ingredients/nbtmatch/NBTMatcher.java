@@ -98,7 +98,8 @@ public interface NBTMatcher {
         }
         if (hasKey(tag, condition.nbtKey, condition.tagType.typeId)) {
             if (NBTTagType.isNumeric(condition.tagType)) {
-                return tag.getLong(condition.nbtKey) == (long) condition.value;
+                return condition.value instanceof Number number &&
+                        tag.getLong(condition.nbtKey) == number.longValue();
             }
             switch (condition.tagType) {
                 case BOOLEAN:

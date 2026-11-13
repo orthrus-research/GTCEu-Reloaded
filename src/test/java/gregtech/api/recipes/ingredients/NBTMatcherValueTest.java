@@ -10,7 +10,7 @@ import net.minecraft.nbt.NBTTagLongArray;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class NBTMatcherArrayTest {
+public class NBTMatcherValueTest {
 
     private static NBTTagCompound tag() {
         NBTTagCompound tag = new NBTTagCompound();
@@ -42,5 +42,17 @@ public class NBTMatcherArrayTest {
             Assertions.assertFalse(matcher.evaluate(tag(),
                     NBTCondition.create(NBTTagType.LONG_ARRAY, "longs", new long[] { 6L })));
         }
+    }
+
+    @Test
+    public void numericConditionsAcceptAnyNumberType() {
+        NBTTagCompound tag = new NBTTagCompound();
+        tag.setInteger("count", 5);
+        tag.setShort("small", (short) 2);
+        Assertions.assertTrue(NBTMatcher.EQUAL_TO.evaluate(tag, NBTCondition.create(NBTTagType.INT, "count", 5)));
+        Assertions.assertTrue(NBTMatcher.EQUAL_TO.evaluate(tag, NBTCondition.create(NBTTagType.INT, "count", 5L)));
+        Assertions.assertTrue(
+                NBTMatcher.EQUAL_TO.evaluate(tag, NBTCondition.create(NBTTagType.SHORT, "small", (short) 2)));
+        Assertions.assertFalse(NBTMatcher.EQUAL_TO.evaluate(tag, NBTCondition.create(NBTTagType.INT, "count", 6)));
     }
 }
