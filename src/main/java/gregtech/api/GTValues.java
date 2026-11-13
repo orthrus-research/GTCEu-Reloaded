@@ -81,12 +81,17 @@ public class GTValues {
             9007199254740992L, 36028797018963968L, 144115188075855872L, 576460752303423488L, 2305843009213693952L,
             Long.MAX_VALUE };
 
-    public static final long[] VAOC = { 7, 30, 120, 480, 1920, 7680, 30720, 123880, 491520, 1966080, 7864320,
-            31457280, 125829120, 503316480, 2013265920, 8053063680L, 32212254720L, 128849018880L, 515396075520L,
-            2061584302080L, 8246337208320L, 32985348833280L, 131948427333120L, 527865581332480L, 2111062325297920L,
-            8444249301319680L, 33777097205278720L, 135108988821415880L, 540431751284459520L, 2161727821137838080L,
-            8646911284550352320L
-    };
+    /** 15/16 of each {@link #VOC} entry, rounded down. */
+    public static final long[] VAOC = computeVAOC();
+
+    private static long[] computeVAOC() {
+        long[] vaoc = new long[VOC.length];
+        for (int i = 0; i < VOC.length; i++) {
+            // VOC - ceil(VOC / 16), which cannot overflow even for Long.MAX_VALUE
+            vaoc[i] = VOC[i] - ((VOC[i] - 1) / 16 + 1);
+        }
+        return vaoc;
+    }
 
     public static final int ULV = 0;
     public static final int LV = 1;
