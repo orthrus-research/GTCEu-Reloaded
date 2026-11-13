@@ -203,7 +203,8 @@ public class RecyclingRecipes {
         if (prefix == OrePrefix.dust && ms != null && ms.material.hasProperty(PropertyKey.BLAST)) {
             return;
         } else if (prefix == OrePrefix.block) {
-            if (ms != null && !ms.material.hasProperty(PropertyKey.GEM)) {
+            // a block material may have neither a gem nor an ingot; it takes the general path below
+            if (ms != null && !ms.material.hasProperty(PropertyKey.GEM) && ms.material.hasProperty(PropertyKey.INGOT)) {
                 Material arcSmeltInto = ms.material.getProperty(PropertyKey.INGOT).getArcSmeltInto();
 
                 // Check results to see if the material does not arc smelt into itself
@@ -426,7 +427,7 @@ public class RecyclingRecipes {
 
         for (MaterialStack ms : materials) {
             ItemStack stack = toItemStackMapper.apply(ms);
-            if (stack == ItemStack.EMPTY) continue;
+            if (stack.isEmpty()) continue;
             if (stack.getCount() > 64) {
                 UnificationEntry entry = OreDictUnifier.getUnificationEntry(stack);
                 if (entry != null) { // should always be true

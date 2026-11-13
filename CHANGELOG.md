@@ -188,6 +188,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Rendering | Blocks with custom texture models keep geometry that has no cull face, and meshing on one thread no longer turns off the render layer hook for the others. |
 | Rendering | Entities drawn after a GregTech portal keep their transparent cut-outs. |
 | Rendering | Fluid fog under night vision no longer turns black for fluids with a black fog colour. |
+| Recipes | Blocks of a material with neither a gem nor an ingot get arc furnace recycling recipes instead of stopping recipe loading. |
 
 ### Earlier fork changes
 
