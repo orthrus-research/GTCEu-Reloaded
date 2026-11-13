@@ -114,6 +114,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | The advanced energy detector keeps EU thresholds above 2,147,483,647 when switched from percent to EU; before, the maximum was cut to that value |
 | Covers | Smart item filters with an out-of-range saved mode load in electrolyzer mode; before, loading them threw |
 | Covers | Ore filter expressions that negate a minimum length after alternatives, such as `(a|ab)!(??*)`, reject inputs that one of the alternatives leaves too long; before, they accepted them |
+| World generation | Gameplay change: the `single` vein shape places `blocks_count` blocks in a random walk; before, every block went to the same position, so it placed one |
 
 ### Earlier fork changes
 
