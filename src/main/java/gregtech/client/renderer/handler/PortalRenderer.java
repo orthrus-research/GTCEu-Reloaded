@@ -69,7 +69,8 @@ public class PortalRenderer extends Render<PortalEntity> {
         this.model.render(entity, partialTicks, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F);
         GlStateManager.popMatrix();
         super.doRender(entity, x, y, z, entityYaw, partialTicks);
-        GlStateManager.disableAlpha();
+        // entity rendering expects alpha test on and blending off
+        GlStateManager.enableAlpha();
         GlStateManager.disableBlend();
     }
 
