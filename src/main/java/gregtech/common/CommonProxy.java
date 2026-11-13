@@ -72,8 +72,6 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.registries.IForgeRegistry;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.function.Function;
@@ -228,9 +226,17 @@ public class CommonProxy {
         createOreBlock(material, copyNotNull(stoneTypeBuffer), generationIndex, names);
     }
 
+    /**
+     * Drop empty slots but keep every stone type after them. Metadata is the position in the result, so types
+     * before a gap in the ids keep their metadata.
+     */
     private static <T> T[] copyNotNull(T[] src) {
-        int nullIndex = ArrayUtils.indexOf(src, null);
-        return Arrays.copyOfRange(src, 0, nullIndex == -1 ? src.length : nullIndex);
+        T[] result = Arrays.copyOf(src, src.length);
+        int count = 0;
+        for (T value : src) {
+            if (value != null) result[count++] = value;
+        }
+        return Arrays.copyOf(result, count);
     }
 
     private static void createOreBlock(Material material, StoneType[] stoneTypes, int index,
