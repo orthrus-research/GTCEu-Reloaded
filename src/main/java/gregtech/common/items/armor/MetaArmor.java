@@ -12,7 +12,7 @@ public class MetaArmor extends ArmorMetaItem<ArmorMetaItem<?>.ArmorMetaValueItem
     @Override
     public void registerSubItems() {
         MetaItems.NIGHTVISION_GOGGLES = addItem(1, "nightvision_goggles").setArmorLogic(new NightvisionGoggles(2,
-                80_000L * (long) Math.max(1, Math.pow(1, ConfigHolder.tools.voltageTierNightVision - 1)),
+                80_000L * (long) Math.max(1, Math.pow(4, ConfigHolder.tools.voltageTierNightVision - 1)),
                 ConfigHolder.tools.voltageTierNightVision, EntityEquipmentSlot.HEAD));
 
         MetaItems.SEMIFLUID_JETPACK = addItem(2, "liquid_fuel_jetpack").setArmorLogic(new PowerlessJetpack());
