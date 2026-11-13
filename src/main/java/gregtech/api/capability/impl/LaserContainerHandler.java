@@ -52,7 +52,8 @@ public class LaserContainerHandler extends EnergyContainerHandler implements ILa
             long amperesUsed = 0;
             for (EnumFacing side : EnumFacing.VALUES) {
                 if (!outputsEnergy(side)) continue;
-                TileEntity tileEntity = metaTileEntity.getWorld().getTileEntity(metaTileEntity.getPos().offset(side));
+                // the holder's neighbour cache, which also leaves unloaded chunks alone
+                TileEntity tileEntity = metaTileEntity.getNeighbor(side);
                 EnumFacing oppositeSide = side.getOpposite();
                 if (tileEntity != null &&
                         tileEntity.hasCapability(GregtechTileCapabilities.CAPABILITY_LASER, oppositeSide)) {
