@@ -490,15 +490,15 @@ public class MultiblockUIFactory {
 
     public static final class Screen {
 
-        public static int WIDTH = 190;
+        public static final int WIDTH = 190;
 
         private Screen() {}
     }
 
     public static final class Bars {
 
-        public static int FULL_WIDTH = Screen.WIDTH;
-        public static int HEIGHT = 7;
+        public static final int FULL_WIDTH = Screen.WIDTH;
+        public static final int HEIGHT = 7;
 
         private Bars() {}
     }

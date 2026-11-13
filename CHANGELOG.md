@@ -181,6 +181,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | World generation | Gameplay change, custom configs only: a one-layer layered vein places its sporadic block at the configured density instead of everywhere, and a `state_match` filler may leave out "default". Bundled veins generate as before |
 | Blocks | Gameplay change: GregTech explosives broken by a machine, another mod or a mob explode; before, the server threw an exception |
 | Machines | Placing a machine from a creative stack with stored data no longer strips that data from the stack. |
+| GUI | Multiblock screens show 0/s for a zero-amount output instead of infinity, and highlighted text fields without an unfocus callback no longer throw when they lose focus. |
 
 ### Earlier fork changes
 

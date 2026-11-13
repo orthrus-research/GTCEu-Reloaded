@@ -58,7 +58,7 @@ public class HighlightedTextField extends TextFieldWidget {
         highlighter.runHighlighter(getText());
         if (isSynced())
             this.stringSyncValue.setStringValue(getText(), true, true);
-        onUnfocus.run();
+        if (onUnfocus != null) onUnfocus.run();
     }
 
     public HighlightedTextField onUnfocus(Runnable onUnfocus) {
@@ -70,6 +70,7 @@ public class HighlightedTextField extends TextFieldWidget {
 
         private Function<String, String> highlightRule = string -> string;
 
+        private static final int MAX_CACHED_TEXTS = 64;
         private final Map<String, String> cacheMap = new Object2ObjectOpenHashMap<>();
 
         public TextHighlighter(TextFieldHandler handler) {
@@ -89,6 +90,8 @@ public class HighlightedTextField extends TextFieldWidget {
             if (this.highlightRule == null) {
                 return;
             }
+            // keep the cache from growing with every text ever typed
+            if (this.cacheMap.size() >= MAX_CACHED_TEXTS) this.cacheMap.clear();
             this.cacheMap.computeIfAbsent(text, this.highlightRule);
         }
     }
