@@ -33,7 +33,13 @@ public class TextFormattingUtil {
 
     private static final NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
 
+    /**
+     * @param precision number of significant digits to keep, at least 3
+     */
     public static String formatLongToCompactString(long value, int precision) {
+        if (precision < 3) {
+            throw new IllegalArgumentException("precision must be at least 3, was " + precision);
+        }
         if (value == 0 || Math.abs(value) < Math.pow(10, precision)) {
             return formatNumbers(value); // deal with easy case
         }
