@@ -1,13 +1,14 @@
 package gregtech.api;
 
-import gregtech.api.util.random.XoShiRo256PlusPlusRandom;
+import gregtech.api.util.random.PerThreadRandom;
 import gregtech.common.ConfigHolder;
 
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.oredict.OreDictionary;
 
-import java.time.LocalDate;
+import java.time.Month;
+import java.time.MonthDay;
 import java.util.Random;
 import java.util.function.Supplier;
 
@@ -43,7 +44,8 @@ public class GTValues {
      */
     public static final short W = OreDictionary.WILDCARD_VALUE;
 
-    public static final Random RNG = new XoShiRo256PlusPlusRandom();
+    /** Shared by every thread; each thread draws from its own generator. */
+    public static final Random RNG = new PerThreadRandom();
 
     /** Current time on the Client. Will always be zero on the server. */
     public static long CLIENT_TIME = 0;
@@ -197,14 +199,12 @@ public class GTValues {
      */
     public static final int FALLBACK = -1;
 
-    public static Supplier<Boolean> FOOLS = () -> {
-        String[] yearMonthDay = LocalDate.now().toString().split("-");
-        return ConfigHolder.misc.specialEvents && yearMonthDay[1].equals("04") && yearMonthDay[2].equals("01");
-    };
+    public static final Supplier<Boolean> FOOLS = () -> ConfigHolder.misc.specialEvents &&
+            MonthDay.now().equals(MonthDay.of(Month.APRIL, 1));
 
-    public static Supplier<Boolean> XMAS = () -> {
-        String[] yearMonthDay = LocalDate.now().toString().split("-");
-        return ConfigHolder.misc.specialEvents && yearMonthDay[1].equals("12") &&
-                (yearMonthDay[2].equals("24") || yearMonthDay[2].equals("25"));
+    public static final Supplier<Boolean> XMAS = () -> {
+        MonthDay today = MonthDay.now();
+        return ConfigHolder.misc.specialEvents &&
+                (today.equals(MonthDay.of(Month.DECEMBER, 24)) || today.equals(MonthDay.of(Month.DECEMBER, 25)));
     };
 }
