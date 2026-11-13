@@ -21,6 +21,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,12 +45,16 @@ public class TorchPlaceBehavior implements IToolBehavior {
         if (behaviourTag.getBoolean(ToolHelper.TORCH_PLACING_KEY)) {
             int cachedTorchSlot;
             ItemStack slotStack;
-            if (behaviourTag.getBoolean(ToolHelper.TORCH_PLACING_CACHE_SLOT_KEY)) {
+            if (behaviourTag.hasKey(ToolHelper.TORCH_PLACING_CACHE_SLOT_KEY, Constants.NBT.TAG_INT)) {
+                // main inventory slots are saved as i, off-hand slots as -(i + 1)
                 cachedTorchSlot = behaviourTag.getInteger(ToolHelper.TORCH_PLACING_CACHE_SLOT_KEY);
-                if (cachedTorchSlot < 0) {
-                    slotStack = player.inventory.offHandInventory.get(0);
-                } else {
+                int offHandSlot = -cachedTorchSlot - 1;
+                if (cachedTorchSlot < 0 && offHandSlot < player.inventory.offHandInventory.size()) {
+                    slotStack = player.inventory.offHandInventory.get(offHandSlot);
+                } else if (cachedTorchSlot >= 0 && cachedTorchSlot < player.inventory.mainInventory.size()) {
                     slotStack = player.inventory.mainInventory.get(cachedTorchSlot);
+                } else {
+                    slotStack = ItemStack.EMPTY;
                 }
                 if (checkAndPlaceTorch(slotStack, player, world, pos, hand, facing, hitX, hitY, hitZ)) {
                     return EnumActionResult.SUCCESS;
