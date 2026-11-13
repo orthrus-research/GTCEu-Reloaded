@@ -57,7 +57,7 @@ public class CommandBenchmarkLookup extends CommandBase {
                 trials = Integer.parseInt(args[0]);
                 if (trials <= 0) throw new NumberFormatException();
                 if (args.length != 1) {
-                    rate = Integer.parseInt(args[0]);
+                    rate = Integer.parseInt(args[1]);
                     if (rate <= 0) throw new NumberFormatException();
                 }
             } catch (NumberFormatException ignored) {
@@ -272,7 +272,8 @@ public class CommandBenchmarkLookup extends CommandBase {
                 numbers[3] = func.applyAsLong(results.get(s + offset + s / 2));
             } else {
                 numbers[1] = (func.applyAsLong(results.get(s / 2 - 1)) + func.applyAsLong(results.get(s / 2))) / 2d;
-                numbers[3] = (func.applyAsLong(results.get(s / 2 - 1)) + func.applyAsLong(results.get(s / 2))) / 2d;
+                numbers[3] = (func.applyAsLong(results.get(s + offset + s / 2 - 1)) +
+                        func.applyAsLong(results.get(s + offset + s / 2))) / 2d;
             }
             return numbers;
         }

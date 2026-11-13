@@ -101,6 +101,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Multiblocks | Fluid passthrough hatches no longer allocate two unused 16,000-slot item inventories each, which every save and inventory clear walked |
 | World generation | Rubber trees check the whole canopy footprint for free space; before, the row on the positive Z side was skipped, so a canopy could replace a block there |
 | Machines | The pump moves past positions in unloaded chunks while scanning; before, one unloaded position at the head of its queue stalled the scan for that tick |
+| Commands | `/gregtech benchmark lookup` reads its second argument as the rate and reports the third quartile; before, the rate repeated the trial count and Q3 repeated Q1 |
 
 ### Earlier fork changes
 
