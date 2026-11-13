@@ -22,11 +22,16 @@ public final class TreeFellingListener {
     private final EntityPlayerMP player;
     private final ItemStack tool;
     private final Deque<BlockPos> orderedBlocks;
+    private final World world;
+    private final Block log;
 
-    private TreeFellingListener(EntityPlayerMP player, ItemStack tool, Deque<BlockPos> orderedBlocks) {
+    private TreeFellingListener(EntityPlayerMP player, ItemStack tool, Deque<BlockPos> orderedBlocks, World world,
+                                Block log) {
         this.player = player;
         this.tool = tool;
         this.orderedBlocks = orderedBlocks;
+        this.world = world;
+        this.log = log;
     }
 
     public static void start(@NotNull IBlockState state, ItemStack tool, BlockPos start,
@@ -68,18 +73,26 @@ public final class TreeFellingListener {
             Deque<BlockPos> orderedBlocks = visited.stream()
                     .sorted(Comparator.comparingInt(pos -> start.getY() - pos.getY()))
                     .collect(Collectors.toCollection(ArrayDeque::new));
-            MinecraftForge.EVENT_BUS.register(new TreeFellingListener(player, tool, orderedBlocks));
+            MinecraftForge.EVENT_BUS.register(new TreeFellingListener(player, tool, orderedBlocks, world, block));
         }
     }
 
     @SubscribeEvent
     public void onWorldTick(@NotNull TickEvent.WorldTickEvent event) {
-        if (event.phase == TickEvent.Phase.START && event.world == player.world && event.side == Side.SERVER) {
-            if (orderedBlocks.isEmpty() || tool.isEmpty()) {
+        if (event.phase == TickEvent.Phase.START && event.world == world && event.side == Side.SERVER) {
+            // stop when the player has left the tree's world, so the rest is not broken in another one
+            if (orderedBlocks.isEmpty() || tool.isEmpty() || player.world != world || player.hasDisconnected()) {
                 MinecraftForge.EVENT_BUS.unregister(this);
                 return;
             }
-            ToolHelper.breakBlockRoutine(player, tool, orderedBlocks.removeLast());
+            // skip positions whose log is gone or was replaced since the tree was scanned
+            while (!orderedBlocks.isEmpty()) {
+                BlockPos pos = orderedBlocks.removeLast();
+                if (world.getBlockState(pos).getBlock() == log) {
+                    ToolHelper.breakBlockRoutine(player, tool, pos);
+                    return;
+                }
+            }
         }
     }
 }
