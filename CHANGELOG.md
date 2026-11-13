@@ -184,6 +184,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | Multiblock screens show 0/s for a zero-amount output instead of infinity, and highlighted text fields without an unfocus callback no longer throw when they lose focus. |
 | Ender links | A damaged or client-sent ender link colour no longer fails the virtual registry load, and an overfull virtual tank no longer loses fluid when filled. |
 | Fluids | A fluid that another mod registered first keeps that mod's temperature, colour, density, luminosity and viscosity instead of GregTech's defaults. |
+| World generation | Stone types registered with a gap in their ids get ore blocks; before, every type after the gap had none. |
 
 ### Earlier fork changes
 
