@@ -30,8 +30,6 @@ public class MetaOreDictItem extends StandardMetaItem {
     private static final List<MaterialIconType> DISALLOWED_TYPES = ImmutableList.of(
             MaterialIconType.block, MaterialIconType.ore, MaterialIconType.oreSmall,
             MaterialIconType.frameGt);
-    private static final ModelResourceLocation MISSING_LOCATION = new ModelResourceLocation("builtin/missing",
-            "inventory");
 
     public MetaOreDictItem(short metaItemOffset) {
         super(metaItemOffset);

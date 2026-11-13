@@ -58,7 +58,6 @@ public class MetaTileEntityLargeCombustionEngine extends FuelMultiblockControlle
     private final int tier;
     private final boolean isExtreme;
     private boolean boostAllowed;
-    private boolean hasLubricant;
 
     public MetaTileEntityLargeCombustionEngine(ResourceLocation metaTileEntityId, int tier) {
         super(metaTileEntityId, RecipeMaps.COMBUSTION_GENERATOR_FUELS, tier);
