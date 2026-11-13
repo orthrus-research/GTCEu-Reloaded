@@ -119,8 +119,9 @@ public class FluidDrillLogic {
         int remainingOperations = BedrockFluidVeinHandler.getOperationsRemaining(metaTileEntity.getWorld(), getChunkX(),
                 getChunkZ());
 
+        // yield * operations passes Integer.MAX_VALUE for yields above 21,474, so scale in long
         int produced = Math.max(depletedYield,
-                regularYield * remainingOperations / BedrockFluidVeinHandler.MAXIMUM_VEIN_OPERATIONS);
+                (int) ((long) regularYield * remainingOperations / BedrockFluidVeinHandler.MAXIMUM_VEIN_OPERATIONS));
         produced *= metaTileEntity.getRigMultiplier();
 
         // Overclocks produce 50% more fluid

@@ -104,6 +104,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Commands | `/gregtech benchmark lookup` reads its second argument as the rate and reports the third quartile; before, the rate repeated the trial count and Q3 repeated Q1 |
 | World generation | Ellipsoid ore veins with radii of about 46 and up generate their full shape; before, the size arithmetic overflowed and the vein came out empty or scrambled |
 | World generation | Invalid filler weights and layered veins with the wrong ore count report their value in the error message; before, the message showed a literal `%d` |
+| Machines | Fluid drilling rigs on veins with a configured yield above 21,474 produce their scaled yield; before, the arithmetic overflowed |
 
 ### Earlier fork changes
 
