@@ -99,6 +99,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | The sifter recipe for purified gem ores without the high sifter output adds the chipped gem only when one exists; before, it checked the exquisite gem and could add an empty output when chipped gems were disabled |
 | Tools | Tools with torch placing remember a torch in the first hotbar slot, and an edited cached slot number no longer throws |
 | Multiblocks | Fluid passthrough hatches no longer allocate two unused 16,000-slot item inventories each, which every save and inventory clear walked |
+| World generation | Rubber trees check the whole canopy footprint for free space; before, the row on the positive Z side was skipped, so a canopy could replace a block there |
 
 ### Earlier fork changes
 
