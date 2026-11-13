@@ -38,6 +38,8 @@ public class DepthTextureUtil {
     private static boolean useDefaultFBO = true;
     private static boolean lastBind;
     private static int lastWidth, lastHeight;
+    /** Whether attaching the depth texture to the vanilla framebuffer failed. */
+    private static boolean defaultFboRejected;
 
     private static boolean shouldRenderDepthTexture() {
         return lastBind && !Mods.ShadersMod.isModLoaded() && ConfigHolder.client.hookDepthTexture &&
@@ -48,8 +50,8 @@ public class DepthTextureUtil {
         Minecraft mc = Minecraft.getMinecraft();
         if (event.phase == TickEvent.Phase.START && mc.world != null) {
             if (shouldRenderDepthTexture()) {
-                if (useDefaultFBO && GL11.glGetError() != 0) { // if we can't use the vanilla fbo.... okay, why not
-                                                               // create our own fbo?
+                // if we can't use the vanilla fbo.... okay, why not create our own fbo?
+                if (useDefaultFBO && defaultFboRejected) {
                     useDefaultFBO = false;
                     if (framebufferDepthTexture != 0) {
                         disposeDepthTexture();
@@ -116,12 +118,19 @@ public class DepthTextureUtil {
         lastWidth = framebuffer.framebufferTextureWidth;
         lastHeight = framebuffer.framebufferTextureHeight;
 
+        // drain errors from earlier draw calls, so only this attachment is judged below
+        for (int i = 0; i < 32 && GL11.glGetError() != GL11.GL_NO_ERROR; i++);
         OpenGlHelper.glBindFramebuffer(OpenGlHelper.GL_FRAMEBUFFER, framebufferObject); // bind buffer then bind depth
                                                                                         // texture
         OpenGlHelper.glFramebufferTexture2D(OpenGlHelper.GL_FRAMEBUFFER,
                 stencil ? GL30.GL_DEPTH_STENCIL_ATTACHMENT : OpenGlHelper.GL_DEPTH_ATTACHMENT,
                 GL11.GL_TEXTURE_2D,
                 framebufferDepthTexture, 0);
+        if (useDefaultFBO) {
+            defaultFboRejected = GL11.glGetError() != GL11.GL_NO_ERROR ||
+                    OpenGlHelper.glCheckFramebufferStatus(OpenGlHelper.GL_FRAMEBUFFER) !=
+                            OpenGlHelper.GL_FRAMEBUFFER_COMPLETE;
+        }
 
         if (BloomEffectUtil.getBloomFBO() != null && useDefaultFBO) {
             RenderUtil.hookDepthTexture(BloomEffectUtil.getBloomFBO(), framebufferDepthTexture);
