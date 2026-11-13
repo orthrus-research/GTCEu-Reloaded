@@ -126,7 +126,8 @@ public class BoilerRecipeLogic extends AbstractRecipeLogic implements ICategoryO
                     this.excessFuel %= 80;
                     setMaxProgress(excessProgress +
                             adjustBurnTimeForThrottle(boiler.boilerType.runtimeBoost(fuelBurnTime / 80)));
-                    stack.shrink(1);
+                    // through the handler, so the bus is told and marked for saving
+                    importItems.extractItem(i, 1, false);
                     didStartRecipe = true;
                     break;
                 }
