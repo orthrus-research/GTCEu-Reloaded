@@ -80,8 +80,9 @@ public class RenderUtil {
             int newWidth = width - (newX - x);
             int newHeight = height - (newY - y);
             if (newWidth > 0 && newHeight > 0) {
-                int maxWidth = parentWidth - (x - parentX);
-                int maxHeight = parentHeight - (y - parentY);
+                // what is left of the parent to the right of and below the clamped origin
+                int maxWidth = parentWidth - (newX - parentX);
+                int maxHeight = parentHeight - (newY - parentY);
                 newWidth = Math.min(maxWidth, newWidth);
                 newHeight = Math.min(maxHeight, newHeight);
                 applyScissor(newX, newY, newWidth, newHeight);
@@ -117,7 +118,10 @@ public class RenderUtil {
     // applies scissor with gui-space coordinates and sizes
     private static void applyScissor(int x, int y, int w, int h) {
         // translate upper-left to bottom-left
-        ScaledResolution r = ((GuiIngameForge) Minecraft.getMinecraft().ingameGUI).getResolution();
+        // another mod may replace the in-game GUI; fall back to a fresh resolution then
+        Minecraft mc = Minecraft.getMinecraft();
+        ScaledResolution r = mc.ingameGUI instanceof GuiIngameForge forgeGui ? forgeGui.getResolution() :
+                new ScaledResolution(mc);
         int s = r == null ? 1 : r.getScaleFactor();
         int translatedY = r == null ? 0 : (r.getScaledHeight() - y - h);
         GL11.glScissor(x * s, translatedY * s, w * s, h * s);
