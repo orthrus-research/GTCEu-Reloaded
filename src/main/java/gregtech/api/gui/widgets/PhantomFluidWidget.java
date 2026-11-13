@@ -66,6 +66,13 @@ public class PhantomFluidWidget extends Widget implements IIngredientSlot, IGhos
         this.fluidStackUpdater = fluidTank::setFluid;
     }
 
+    /**
+     * @return the tank's capacity, or no upper bound when the widget was built from a supplier
+     */
+    private int getCapacity() {
+        return fluidTank == null ? Integer.MAX_VALUE : fluidTank.getCapacity();
+    }
+
     public PhantomFluidWidget showTip(boolean showTip) {
         this.showTip = showTip;
         return this;
@@ -207,7 +214,7 @@ public class PhantomFluidWidget extends Widget implements IIngredientSlot, IGhos
                             if (fluid.amount < 0) {
                                 fluid.amount = Integer.MAX_VALUE / 2;
                             }
-                            fluid.amount = MathHelper.clamp(fluid.amount, 1, fluidTank.getCapacity());
+                            fluid.amount = MathHelper.clamp(fluid.amount, 1, getCapacity());
                             fluidStackUpdater.accept(fluid);
                         }
                     } else if (clickData.button == 1) {
@@ -219,7 +226,7 @@ public class PhantomFluidWidget extends Widget implements IIngredientSlot, IGhos
                             if (fluid.amount < 0) {
                                 fluid.amount = Integer.MAX_VALUE;
                             }
-                            fluid.amount = MathHelper.clamp(fluid.amount, 1, fluidTank.getCapacity());
+                            fluid.amount = MathHelper.clamp(fluid.amount, 1, getCapacity());
                             fluidStackUpdater.accept(fluid);
                         }
                     }
@@ -242,7 +249,7 @@ public class PhantomFluidWidget extends Widget implements IIngredientSlot, IGhos
                 multiplier *= wheelData.isShiftClick ? 10 : 1;
                 FluidStack currentFluid = fluidStackSupplier.get().copy();
                 int amount = wheelData.wheelDelta * multiplier;
-                currentFluid.amount = MathHelper.clamp(currentFluid.amount + amount, 1, fluidTank.getCapacity());
+                currentFluid.amount = MathHelper.clamp(currentFluid.amount + amount, 1, getCapacity());
                 fluidStackUpdater.accept(currentFluid);
             }
         }
