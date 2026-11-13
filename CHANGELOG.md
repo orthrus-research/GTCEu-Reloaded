@@ -98,6 +98,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | `GTUtility.safeCastLongToInt` clamps values below `Integer.MIN_VALUE` too, and the generator tank-size functions give tier 0 the tier 1 size instead of zero |
 | Recipes | The sifter recipe for purified gem ores without the high sifter output adds the chipped gem only when one exists; before, it checked the exquisite gem and could add an empty output when chipped gems were disabled |
 | Tools | Tools with torch placing remember a torch in the first hotbar slot, and an edited cached slot number no longer throws |
+| Multiblocks | Fluid passthrough hatches no longer allocate two unused 16,000-slot item inventories each, which every save and inventory clear walked |
 
 ### Earlier fork changes
 

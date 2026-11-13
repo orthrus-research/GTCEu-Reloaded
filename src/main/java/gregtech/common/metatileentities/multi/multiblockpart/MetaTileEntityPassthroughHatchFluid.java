@@ -6,7 +6,6 @@ import gregtech.api.capability.IControllable;
 import gregtech.api.capability.impl.FilteredFluidHandler;
 import gregtech.api.capability.impl.FluidHandlerProxy;
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.capability.impl.NotifiableItemStackHandler;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.AbilityInstances;
@@ -28,7 +27,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
 
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
@@ -121,16 +119,6 @@ public class MetaTileEntityPassthroughHatchFluid extends MetaTileEntityMultibloc
             Textures.FLUID_HATCH_OUTPUT_OVERLAY.renderSided(getFrontFacing().getOpposite(), renderState, translation,
                     pipeline);
         }
-    }
-
-    @Override
-    protected IItemHandlerModifiable createExportItemHandler() {
-        return new NotifiableItemStackHandler(this, TANK_SIZE, getController(), true);
-    }
-
-    @Override
-    protected IItemHandlerModifiable createImportItemHandler() {
-        return new NotifiableItemStackHandler(this, TANK_SIZE, getController(), false);
     }
 
     @Override
