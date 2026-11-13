@@ -28,8 +28,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +45,9 @@ import static gregtech.api.unification.ore.OrePrefix.Flags.SELF_REFERENCING;
 
 public class OrePrefix {
 
-    private final static Map<String, OrePrefix> PREFIXES = new HashMap<>();
+    // registration order: material handlers run prefix by prefix, and a hash order would let one added prefix
+    // reorder every generated recipe registration after it
+    private final static Map<String, OrePrefix> PREFIXES = new LinkedHashMap<>();
     private final static AtomicInteger idCounter = new AtomicInteger(0);
 
     // Regular Ore Prefix. Ore -> Material is a Oneway Operation! Introduced by Eloraam
