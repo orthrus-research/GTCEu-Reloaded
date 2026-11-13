@@ -460,7 +460,6 @@ public class MinerLogic {
             drops.clear();
             for (ItemStack outputStack : recipe.getResultItemOutputs(GTUtility.getTierByVoltage(recipe.getEUt()), tier,
                     map)) {
-                outputStack = outputStack.copy();
                 if (OreDictUnifier.getPrefix(outputStack) == OrePrefix.crushed) {
                     if (fortuneLevel > 0) {
                         outputStack.grow(outputStack.getCount() * fortuneLevel);

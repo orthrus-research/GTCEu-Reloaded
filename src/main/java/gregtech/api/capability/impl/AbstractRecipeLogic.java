@@ -1497,8 +1497,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         if (map != null) {
             this.fluidOutputs = GTUtility
                     .copyFluidList(recipe.getResultFluidOutputs(recipeTier, machineTier, map));
-            this.itemOutputs = GTUtility
-                    .copyStackList(recipe.getResultItemOutputs(recipeTier, machineTier, map));
+            this.itemOutputs = recipe.getResultItemOutputs(recipeTier, machineTier, map);
         }
 
         if (this.wasActiveAndNeedsUpdate) {
