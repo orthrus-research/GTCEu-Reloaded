@@ -12,11 +12,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.ForgeHooksClient;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Map;
 
 @Mixin(LayerArmorBase.class)
 public class LayerArmorBaseMixin {
@@ -55,6 +58,11 @@ public class LayerArmorBaseMixin {
                 armorModel.render(entityLivingBaseIn, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch,
                         scale);
             }
+            // leave the state as vanilla armour rendering found it
+            GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
+            GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA,
+                    GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+            GlStateManager.disableBlend();
             if (itemStack.hasEffect()) {
                 LayerArmorBase.renderEnchantedGlint(layer.renderer, entityLivingBaseIn, armorModel, limbSwing,
                         limbSwingAmount, partialTicks, ageInTicks, netHeadYaw, headPitch, scale);
@@ -63,17 +71,21 @@ public class LayerArmorBaseMixin {
     }
 
     @Unique
+    private static final Map<String, ResourceLocation> gregTechCEu$TEXTURE_CACHE = new Object2ObjectOpenHashMap<>();
+
+    @Unique
     private static ResourceLocation gregTechCEu$getArmorTexture(EntityLivingBase entity, ItemStack itemStack,
                                                                 EntityEquipmentSlot slot, String type) {
         ResourceLocation registryName = itemStack.getItem().getRegistryName();
         if (registryName == null) {
             throw new IllegalArgumentException(
-                    "ItemStack " + itemStack.getTranslationKey() + "has a null registry name");
+                    "ItemStack " + itemStack.getTranslationKey() + " has a null registry name");
         }
 
-        String s1 = String.format("%s:textures/models/armor/%s_layer_%d%s.png", registryName.getNamespace(),
-                registryName.getPath(),
-                (slot == EntityEquipmentSlot.LEGS ? 2 : 1), type == null ? "" : String.format("_%s", type));
-        return new ResourceLocation(ForgeHooksClient.getArmorTexture(entity, itemStack, s1, slot, type));
+        String s1 = registryName.getNamespace() + ":textures/models/armor/" + registryName.getPath() + "_layer_" +
+                (slot == EntityEquipmentSlot.LEGS ? 2 : 1) + (type == null ? "" : "_" + type) + ".png";
+        // the item may pick another texture per wearer, so cache by the final path as vanilla does
+        String path = ForgeHooksClient.getArmorTexture(entity, itemStack, s1, slot, type);
+        return gregTechCEu$TEXTURE_CACHE.computeIfAbsent(path, ResourceLocation::new);
     }
 }

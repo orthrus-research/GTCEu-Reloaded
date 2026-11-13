@@ -140,6 +140,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Items | Gameplay change: food potion effects apply with their stated chance. The chocolate coin gives Speed 10% of the time and the purple drink gives Haste 90% of the time; before, the odds were the other way round |
 | Networking | A GregTech packet with an unknown id is logged and ignored instead of throwing in the network handler. |
 | Modules | A module skipped for a missing dependency now also skips the modules that depend on it, each with a log line; modules left out by a dependency cycle are logged. |
+| Armor | GregTech armour no longer leaves blending enabled after it renders, which could tint entities drawn after it. |
 
 ### Earlier fork changes
 
