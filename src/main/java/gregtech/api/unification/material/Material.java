@@ -1255,13 +1255,17 @@ public class Material implements Comparable<Material> {
                 if (!averageRGB || componentList.isEmpty())
                     color = 0xFFFFFF;
                 else {
-                    long colorTemp = 0;
-                    int divisor = 0;
+                    // average each channel on its own so carries cannot cross into the next one
+                    long red = 0, green = 0, blue = 0, divisor = 0;
                     for (MaterialStack stack : componentList) {
-                        colorTemp += stack.material.getMaterialRGB() * stack.amount;
+                        int rgb = stack.material.getMaterialRGB();
+                        red += ((rgb >> 16) & 0xFF) * stack.amount;
+                        green += ((rgb >> 8) & 0xFF) * stack.amount;
+                        blue += (rgb & 0xFF) * stack.amount;
                         divisor += stack.amount;
                     }
-                    color = (int) (colorTemp / divisor);
+                    color = GTUtility.combineRGB((int) (red / divisor), (int) (green / divisor),
+                            (int) (blue / divisor));
                 }
             }
         }
