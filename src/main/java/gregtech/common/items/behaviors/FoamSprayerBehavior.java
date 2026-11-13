@@ -142,7 +142,7 @@ public class FoamSprayerBehavior implements IItemCapabilityProvider, IItemDurabi
         // perform block physics updates
         for (BlockPos blockPos : replacableBlocks) {
             IBlockState blockState = world.getBlockState(blockPos);
-            world.notifyNeighborsRespectDebug(pos, blockState.getBlock(), true);
+            world.notifyNeighborsRespectDebug(blockPos, blockState.getBlock(), true);
         }
         return replacableBlocks.size();
     }
