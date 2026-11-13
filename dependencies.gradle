@@ -4,8 +4,8 @@ dependencies {
     api("com.cleanroommc:modularui:${modularUiVersion}") { transitive = false }
     // Optional integrations are available in local development without being installed transitively for consumers.
     developmentOnly("com.cleanroommc:groovyscript:1.5.0") { transitive = false }
-    developmentOnly("curse.maven:inventory-bogosorter-632327:7102721-deobf-6717233-sources-6717234") // Inventory BogoSorter − v1.5.0
-    developmentOnly("curse.maven:key-binding-patch-928895:5951859") // Key Binding Patch v1.3.3.3, needed by Inventory BogoSorter v1.5.0+
+    developmentOnly deobf("maven.modrinth:CuLATCrJ:nD915vxB") // Inventory BogoSorter v1.6.4; ModularUI 3.1.6 needs BogoSorter 1.6.1 or newer
+    developmentOnly("curse.maven:key-binding-patch-928895:5951859") // Key Binding Patch v1.3.3.3, needed by Inventory BogoSorter
 
     developmentOnly("appeng:ae2-uel:v0.56.4") { transitive = false }
     developmentOnly deobf("curse.maven:ctm-267602:2915363") // CTM 1.0.2.31
