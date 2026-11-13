@@ -179,6 +179,11 @@ public class FluidVisualHandler {
                 nightVisionModifier = 1.0F / b;
             }
 
+            // a fog colour with all three channels at zero; vanilla guards the same way
+            if (Float.isInfinite(nightVisionModifier)) {
+                nightVisionModifier = Math.nextAfter(nightVisionModifier, 0.0);
+            }
+
             r = r * (1.0F - nightVisionBrightness) + r * nightVisionModifier * nightVisionBrightness;
             g = g * (1.0F - nightVisionBrightness) + g * nightVisionModifier * nightVisionBrightness;
             b = b * (1.0F - nightVisionBrightness) + b * nightVisionModifier * nightVisionBrightness;
