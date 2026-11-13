@@ -213,6 +213,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Pipes | A pipe destroyed without a player, by an explosion or another mod, drops its own item, not the item of a pipe broken before it. |
 | Machines | Gameplay change: several machines destroyed by one explosion each drop their own item and contents; before, the first machine's item and contents were duplicated for every other machine in the blast and the others were lost |
 | Pipes | Laser pipes no longer switch off early when several players load them, and a laser pipe saved while active turns off after loading. |
+| Damage | Gameplay change: armour keeps protecting against heat and frost damage after a player has carried a hot or cryogenic item; before, all such damage ignored armour for the rest of the session |
 
 ### Earlier fork changes
 
