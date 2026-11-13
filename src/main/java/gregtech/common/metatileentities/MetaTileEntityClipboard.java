@@ -93,6 +93,9 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     private static final NBTBase NO_CLIPBOARD_SIG = new NBTTagInt(0);
     private boolean didSetFacing = false;
 
+    private static final int FAKE_GUI_RETRY_TICKS = 100;
+    private boolean fakeGuiFailed;
+
     public MetaTileEntityClipboard(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId);
     }
@@ -100,7 +103,8 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     @Override
     public void update() {
         super.update();
-        if (guiContainerCache == null) {
+        // after a failed attempt, retry every few seconds rather than every tick
+        if (guiContainerCache == null && (!fakeGuiFailed || getOffsetTimer() % FAKE_GUI_RETRY_TICKS == 0)) {
             createFakeGui();
             scheduleRenderUpdate();
         }
@@ -195,8 +199,12 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
             if (getWorld().isRemote)
                 this.guiCache = new FakeModularGui(ui, fakeModularUIContainer);
             this.writeCustomData(CREATE_FAKE_UI);
+            this.fakeGuiFailed = false;
         } catch (Exception e) {
-            GTLog.logger.error(e);
+            if (!fakeGuiFailed) {
+                GTLog.logger.error("Could not create the clipboard's in-world GUI at {}", getPos(), e);
+            }
+            this.fakeGuiFailed = true;
         }
     }
 
@@ -513,6 +521,7 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     public void onLeftClick(EntityPlayer player, EnumFacing facing, CuboidRayTraceResult hitResult) {
         if (this.getWorld().isRemote) return;
         Pair<Double, Double> clickCoords = this.checkLookingAt(player);
+        if (clickCoords == null) return; // the click missed the page
         int width = 178; // These should always be correct.
         int height = 230;
         double scale = 1.0 / Math.max(width, height);
