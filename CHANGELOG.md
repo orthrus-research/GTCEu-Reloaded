@@ -206,6 +206,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Pipes | A fluid pipe that saved an unknown fluid keeps new fluid in that channel across saves. |
 | Pipes | Gameplay change: fluid in quadruple and nonuple pipes no longer flows back toward the pipe it just came from; before, every channel after the first could |
 | Monitors | Monitor pictures with long URLs can be cached, and concurrent downloads no longer corrupt cache times. |
+| Ender links | Ender link covers in single-player no longer add entries to the shared registry from the client thread. |
 
 ### Earlier fork changes
 
