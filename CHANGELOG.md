@@ -248,6 +248,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | Gameplay change: the alarm uses its stated 4 EU/t; before, it drained up to three times that, and probes reading it drained energy too |
 | Machines | Miners scan an ore-free area over several ticks instead of walking all of it at once |
 | Machines | Energy sent to FE machines at the highest voltage tiers is capped at the largest FE amount instead of wrapping to nothing |
+| Performance | The EU to FE adapter is skipped when native conversion is off and no longer allocated on every cable transfer |
 
 ### Earlier fork changes
 
