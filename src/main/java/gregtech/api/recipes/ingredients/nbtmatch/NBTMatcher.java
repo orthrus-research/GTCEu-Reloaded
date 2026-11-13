@@ -8,6 +8,7 @@ import net.minecraftforge.fluids.FluidStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -103,7 +104,8 @@ public interface NBTMatcher {
                 case BOOLEAN:
                     return tag.getBoolean(condition.nbtKey) == (boolean) condition.value;
                 case BYTE_ARRAY:
-                    return tag.getByteArray(condition.nbtKey).equals(condition.value);
+                    return condition.value instanceof byte[] bytes &&
+                            Arrays.equals(tag.getByteArray(condition.nbtKey), bytes);
                 case STRING:
                     return tag.getString(condition.nbtKey).equals(condition.value);
                 case LIST:
@@ -116,9 +118,12 @@ public interface NBTMatcher {
                 case COMPOUND:
                     return tag.getCompoundTag(condition.nbtKey).equals(condition.value);
                 case INT_ARRAY:
-                    return tag.getIntArray(condition.nbtKey).equals(condition.value);
+                    return condition.value instanceof int[] ints &&
+                            Arrays.equals(tag.getIntArray(condition.nbtKey), ints);
                 case LONG_ARRAY:
-                    return ((NBTTagLongArray) tag.getTag(condition.nbtKey)).data.equals(condition.value);
+                    return condition.value instanceof long[] longs &&
+                            tag.getTag(condition.nbtKey) instanceof NBTTagLongArray array &&
+                            Arrays.equals(array.data, longs);
             }
         }
         return false;
@@ -143,7 +148,8 @@ public interface NBTMatcher {
                     case BOOLEAN:
                         return tag.getBoolean(condition.nbtKey) == (boolean) condition.value;
                     case BYTE_ARRAY:
-                        return tag.getByteArray(condition.nbtKey).equals(condition.value);
+                        return condition.value instanceof byte[] bytes &&
+                                Arrays.equals(tag.getByteArray(condition.nbtKey), bytes);
                     case STRING:
                         return tag.getString(condition.nbtKey).equals(condition.value);
                     case LIST:
@@ -160,9 +166,12 @@ public interface NBTMatcher {
                             return tag.getCompoundTag(condition.nbtKey).equals(condition.value);
                         }
                     case INT_ARRAY:
-                        return tag.getIntArray(condition.nbtKey).equals(condition.value);
+                        return condition.value instanceof int[] ints &&
+                                Arrays.equals(tag.getIntArray(condition.nbtKey), ints);
                     case LONG_ARRAY:
-                        return ((NBTTagLongArray) tag.getTag(condition.nbtKey)).data.equals(condition.value);
+                        return condition.value instanceof long[] longs &&
+                                tag.getTag(condition.nbtKey) instanceof NBTTagLongArray array &&
+                                Arrays.equals(array.data, longs);
                 }
             }
             return false;
