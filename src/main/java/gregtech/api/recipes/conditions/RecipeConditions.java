@@ -1,5 +1,7 @@
 package gregtech.api.recipes.conditions;
 
+import gregtech.api.recipes.IdentifierPatterns;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biome;
@@ -138,7 +140,7 @@ public final class RecipeConditions {
     }
 
     static ResourceLocation registryName(String name) {
-        if (name == null || name.length() > 128 || !name.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) {
+        if (name == null || name.length() > 128 || !IdentifierPatterns.isResourceId(name)) {
             throw new IllegalArgumentException("Expected a namespaced registry ID of at most 128 characters");
         }
         return new ResourceLocation(name);

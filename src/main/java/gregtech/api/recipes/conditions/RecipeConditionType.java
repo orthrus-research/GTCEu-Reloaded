@@ -1,5 +1,7 @@
 package gregtech.api.recipes.conditions;
 
+import gregtech.api.recipes.IdentifierPatterns;
+
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 
@@ -25,7 +27,7 @@ public final class RecipeConditionType<T> {
                                BiFunction<T, RecipeConditionContext, ConditionState> evaluator,
                                Function<T, ConditionDescription> description) {
         this.id = Objects.requireNonNull(id);
-        if (id.toString().length() > 128 || !id.toString().matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) {
+        if (id.toString().length() > 128 || !IdentifierPatterns.isResourceId(id.toString())) {
             throw new IllegalArgumentException("Condition ID must be a bounded namespaced registry identity");
         }
         this.alternatives = alternatives;

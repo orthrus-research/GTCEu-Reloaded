@@ -1,5 +1,7 @@
 package gregtech.api.recipes.conditions;
 
+import gregtech.api.recipes.IdentifierPatterns;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +23,7 @@ public final class ConditionDescription {
     }
 
     ConditionDescription(String typeId, String key, boolean inverted, String[] arguments) {
-        if (typeId == null || typeId.length() > MAX_TEXT_LENGTH || !typeId.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) {
+        if (typeId == null || typeId.length() > MAX_TEXT_LENGTH || !IdentifierPatterns.isResourceId(typeId)) {
             throw new IllegalArgumentException("Invalid condition description type identity");
         }
         if (key == null || key.isEmpty() || key.length() > MAX_TEXT_LENGTH || arguments == null ||

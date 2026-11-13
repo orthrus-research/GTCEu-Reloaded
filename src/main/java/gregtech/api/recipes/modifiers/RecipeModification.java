@@ -1,5 +1,6 @@
 package gregtech.api.recipes.modifiers;
 
+import gregtech.api.recipes.IdentifierPatterns;
 import gregtech.api.recipes.conditions.RecipeConditionSet;
 
 import java.util.Objects;
@@ -35,7 +36,7 @@ public final class RecipeModification {
     /** The declared localization key is display-only and never selects executable behavior. */
     public static RecipeModification cancel(String reasonKey) {
         if (reasonKey == null || reasonKey.isEmpty() || reasonKey.length() > 128 ||
-                !reasonKey.matches("[a-zA-Z0-9_.-]+"))
+                !IdentifierPatterns.isReasonKey(reasonKey))
             throw new IllegalArgumentException("Invalid modifier cancellation key");
         return new RecipeModification(new Builder(), reasonKey);
     }

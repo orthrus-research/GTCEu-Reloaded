@@ -1,5 +1,7 @@
 package gregtech.api.recipes.modifiers;
 
+import gregtech.api.recipes.IdentifierPatterns;
+
 import java.util.Objects;
 import java.util.function.BiFunction;
 
@@ -11,7 +13,7 @@ public final class RecipeModifier {
 
     private RecipeModifier(String id,
                            BiFunction<RecipeModifierContext, RecipeModifierView, RecipeModification> callback) {
-        if (id == null || id.length() > 128 || !id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+"))
+        if (id == null || id.length() > 128 || !IdentifierPatterns.isResourceId(id))
             throw new IllegalArgumentException("Invalid recipe modifier identity");
         this.id = id;
         this.callback = Objects.requireNonNull(callback);
