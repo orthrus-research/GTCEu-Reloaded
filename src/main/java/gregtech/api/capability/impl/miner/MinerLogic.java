@@ -100,23 +100,30 @@ public class MinerLogic {
     }
 
     private static IBlockState findMiningReplacementBlock() {
-        String[] blockDescription = StringUtils.split(ConfigHolder.machines.replaceMinedBlocksWith, ":");
-        Block replacementBlock;
-
-        if (blockDescription.length == 2) {
-            replacementBlock = Block.getBlockFromName(ConfigHolder.machines.replaceMinedBlocksWith);
-        } else {
-            replacementBlock = Block.getBlockFromName(String.format("%s:%s", blockDescription[0], blockDescription[1]));
+        // accepted forms: name (minecraft namespace), modid:name and modid:name:meta
+        String config = ConfigHolder.machines.replaceMinedBlocksWith;
+        String[] blockDescription = StringUtils.split(config, ":");
+        if (blockDescription == null || blockDescription.length < 1 || blockDescription.length > 3) {
+            GTLog.logger.error("Miner Config Replacement block \"{}\" is not modid:name[:meta], replacing with " +
+                    "Cobblestone", config);
+            return Blocks.COBBLESTONE.getDefaultState();
         }
+
+        Block replacementBlock = Block.getBlockFromName(blockDescription.length == 1 ? blockDescription[0] :
+                blockDescription[0] + ":" + blockDescription[1]);
         if (replacementBlock == null) {
             GTLog.logger.error("Miner Config Replacement block was null, replacing with Cobblestone");
             return Blocks.COBBLESTONE.getDefaultState();
         }
 
         // check for meta
-        if (blockDescription.length > 2 && !blockDescription[2].isEmpty()) {
-            return replacementBlock.getDefaultState().getBlock()
-                    .getStateFromMeta(Integer.parseInt(blockDescription[2]));
+        if (blockDescription.length == 3 && !blockDescription[2].isEmpty()) {
+            try {
+                return replacementBlock.getStateFromMeta(Integer.parseInt(blockDescription[2]));
+            } catch (NumberFormatException e) {
+                GTLog.logger.error("Miner Config Replacement block meta \"{}\" is not a number, using the " +
+                        "block's default state", blockDescription[2]);
+            }
         }
 
         return replacementBlock.getDefaultState();
