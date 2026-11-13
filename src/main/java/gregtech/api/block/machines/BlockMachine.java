@@ -363,7 +363,12 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
     @Override
     public void getDrops(@NotNull NonNullList<ItemStack> drops, @NotNull IBlockAccess world, @NotNull BlockPos pos,
                          @NotNull IBlockState state, int fortune) {
-        MetaTileEntity metaTileEntity = tileEntities.get() == null ? getMetaTileEntity(world, pos) : tileEntities.get();
+        // breakBlock parks the removed machine for harvestBlock; a break without a harvest (an explosion,
+        // world.destroyBlock) leaves it behind, so use it only for this position and clear it once read
+        MetaTileEntity metaTileEntity = tileEntities.get();
+        tileEntities.remove();
+        if (metaTileEntity == null || !pos.equals(metaTileEntity.getPos()))
+            metaTileEntity = getMetaTileEntity(world, pos);
         if (metaTileEntity == null) return;
         if (!metaTileEntity.shouldDropWhenDestroyed()) return;
         ItemStack itemStack = metaTileEntity.getStackForm();
