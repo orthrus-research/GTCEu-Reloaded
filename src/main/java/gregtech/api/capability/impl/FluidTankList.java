@@ -98,6 +98,35 @@ public class FluidTankList implements IMultipleTankHandler, INBTSerializable<NBT
         return allowSameFluidFill;
     }
 
+    // the fill order only changes when a tank turns empty or non-empty or a filter's priority changes;
+    // these remember the last order and the sort keys it was built from
+    private ITankEntry @Nullable [] sortedTanks;
+    private long @Nullable [] sortKeys;
+
+    private ITankEntry @NotNull [] sortedForFill() {
+        long[] keys = sortKeys;
+        boolean changed = keys == null || keys.length != fluidTanks.length;
+        if (changed) keys = new long[fluidTanks.length];
+        for (int i = 0; i < fluidTanks.length; i++) {
+            ITankEntry tank = fluidTanks[i];
+            IFilter<FluidStack> filter = tank.getFilter();
+            // the two parts ENTRY_COMPARATOR orders by: emptiness, then filter priority
+            long key = (tank.getFluidAmount() <= 0 ? 1L << 32 : 0L) |
+                    (filter == null ? 0xFFFFFFFFL : filter.getPriority() & 0xFFFFFFFFL);
+            if (keys[i] != key) {
+                keys[i] = key;
+                changed = true;
+            }
+        }
+        if (changed || sortedTanks == null) {
+            ITankEntry[] sorted = fluidTanks.clone();
+            Arrays.sort(sorted, IMultipleTankHandler.ENTRY_COMPARATOR);
+            sortedTanks = sorted;
+            sortKeys = keys;
+        }
+        return sortedTanks;
+    }
+
     @Override
     public int fill(FluidStack resource, boolean doFill) {
         if (resource == null || resource.amount <= 0) {
@@ -108,8 +137,7 @@ public class FluidTankList implements IMultipleTankHandler, INBTSerializable<NBT
         // flag value indicating whether the fluid was stored in 'distinct' slot at least once
         boolean distinctSlotVisited = false;
 
-        ITankEntry[] fluidTanks = this.fluidTanks.clone();
-        Arrays.sort(fluidTanks, IMultipleTankHandler.ENTRY_COMPARATOR);
+        ITankEntry[] fluidTanks = sortedForFill();
 
         // search for tanks with same fluid type first
         for (ITankEntry tank : fluidTanks) {
