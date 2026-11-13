@@ -199,9 +199,10 @@ public class MetaTileEntityMagicEnergyAbsorber extends TieredMetaTileEntity {
         // enhanced for loops cause boxing and unboxing with FastUtil collections
         // noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < connectedCrystalsIds.size(); i++) {
-            EntityEnderCrystal entityEnderCrystal = (EntityEnderCrystal) getWorld()
-                    .getEntityByID(connectedCrystalsIds.get(i));
-            if (entityEnderCrystal != null && getPos().equals(entityEnderCrystal.getBeamTarget())) {
+            // entity ids are reused, so a stale id can name another kind of entity
+            if (getWorld()
+                    .getEntityByID(connectedCrystalsIds.get(i)) instanceof EntityEnderCrystal entityEnderCrystal &&
+                    getPos().equals(entityEnderCrystal.getBeamTarget())) {
                 // on removal, reset ender crystal beam location so somebody can use it
                 entityEnderCrystal.setBeamTarget(null);
             }
