@@ -81,7 +81,8 @@ public class CoverDigitalInterfaceWireless extends CoverDigitalInterface {
     @Override
     public void update() {
         super.update();
-        if (remote != null && !isRemote() && getOffsetTimer() % 20 == 0) {
+        // never load the remote monitor's chunk just to register with it
+        if (remote != null && !isRemote() && getOffsetTimer() % 20 == 0 && getWorld().isBlockLoaded(remote)) {
             TileEntity te = getWorld().getTileEntity(remote);
             if (te instanceof IGregTechTileEntity igtte &&
                     igtte.getMetaTileEntity() instanceof MetaTileEntityCentralMonitor monitor) {

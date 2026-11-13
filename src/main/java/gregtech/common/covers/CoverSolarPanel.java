@@ -26,6 +26,8 @@ import org.jetbrains.annotations.NotNull;
 public class CoverSolarPanel extends CoverBase implements ITickable {
 
     private final long EUt;
+    // the sky check is costly; it runs once a second and its answer holds until the next one
+    private boolean seesSun;
 
     public CoverSolarPanel(@NotNull CoverDefinition definition, @NotNull CoverableView coverableView,
                            @NotNull EnumFacing attachedSide, long EUt) {
@@ -49,7 +51,11 @@ public class CoverSolarPanel extends CoverBase implements ITickable {
     public void update() {
         CoverableView coverable = getCoverableView();
         World world = coverable.getWorld();
-        if (GTUtility.canSeeSunClearly(world, coverable.getPos())) {
+        if (world.isRemote) return;
+        if (getOffsetTimer() % 20 == 0) {
+            seesSun = GTUtility.canSeeSunClearly(world, coverable.getPos());
+        }
+        if (seesSun) {
             IEnergyContainer energyContainer = coverable.getCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER,
                     getAttachedSide());
             if (energyContainer != null) {
