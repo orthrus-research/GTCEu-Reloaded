@@ -182,6 +182,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Blocks | Gameplay change: GregTech explosives broken by a machine, another mod or a mob explode; before, the server threw an exception |
 | Machines | Placing a machine from a creative stack with stored data no longer strips that data from the stack. |
 | GUI | Multiblock screens show 0/s for a zero-amount output instead of infinity, and highlighted text fields without an unfocus callback no longer throw when they lose focus. |
+| Ender links | A damaged or client-sent ender link colour no longer fails the virtual registry load, and an overfull virtual tank no longer loses fluid when filled. |
 
 ### Earlier fork changes
 

@@ -94,7 +94,7 @@ public class VirtualTank extends VirtualEntry implements IFluidTank, IFluidHandl
     @Override
     public void deserializeNBT(NBTTagCompound nbt) {
         super.deserializeNBT(nbt);
-        this.capacity = nbt.getInteger(CAPACITY_KEY);
+        if (nbt.hasKey(CAPACITY_KEY)) this.capacity = nbt.getInteger(CAPACITY_KEY);
 
         if (nbt.hasKey(FLUID_KEY))
             setFluid(FluidStack.loadFluidStackFromNBT(nbt.getCompoundTag(FLUID_KEY)));
@@ -106,7 +106,9 @@ public class VirtualTank extends VirtualEntry implements IFluidTank, IFluidHandl
                 (this.fluidStack != null && !fluidStack.isFluidEqual(this.fluidStack)))
             return 0;
 
-        int fillAmt = Math.min(fluidStack.amount, getCapacity() - this.getFluidAmount());
+        // a tank holding more than its capacity takes nothing rather than giving fluid back
+        int fillAmt = Math.max(0, Math.min(fluidStack.amount, getCapacity() - this.getFluidAmount()));
+        if (fillAmt == 0) return 0;
 
         if (doFill) {
             if (this.fluidStack == null) {

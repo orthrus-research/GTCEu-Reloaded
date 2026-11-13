@@ -27,8 +27,19 @@ public abstract class VirtualEntry implements INBTSerializable<NBTTagCompound> {
         return this.color;
     }
 
+    /**
+     * @param color up to eight hex digits; anything else, which can come from damaged data or a client, is
+     *              ignored and the current colour kept
+     */
     public void setColor(String color) {
-        this.color = parseColor(color);
+        if (color == null || color.isEmpty() || color.length() > 8) return;
+        int parsed;
+        try {
+            parsed = parseColor(color);
+        } catch (NumberFormatException e) {
+            return;
+        }
+        this.color = parsed;
         this.colorStr = color.toUpperCase(Locale.ROOT);
     }
 
