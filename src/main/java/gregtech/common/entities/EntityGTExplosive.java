@@ -16,6 +16,8 @@ import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.BlockEvent;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -98,6 +100,9 @@ public abstract class EntityGTExplosive extends EntityTNTPrimed {
         if (this.inWater) return;
 
         EntityPlayer player = GregFakePlayer.get((WorldServer) world);
+        // the blocks are broken by hand below, after ExplosionEvent.Detonate; protection mods see them through a
+        // BreakEvent, posted for the player who lit the explosive when known
+        EntityPlayer breaker = getTntPlacedBy() instanceof EntityPlayer igniter ? igniter : player;
 
         int range = getRange();
         for (BlockPos pos : BlockPos.getAllInBox(this.getPosition().add(-range, -range, -range),
@@ -110,7 +115,8 @@ public abstract class EntityGTExplosive extends EntityTNTPrimed {
             float hardness = state.getBlockHardness(world, pos);
             float resistance = state.getBlock().getExplosionResistance(player);
 
-            if (hardness >= 0.0f && resistance < 100 && world.isBlockModifiable(player, pos)) {
+            if (hardness >= 0.0f && resistance < 100 && world.isBlockModifiable(player, pos) &&
+                    !MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(world, pos, state, breaker))) {
                 List<ItemStack> drops = attemptBreakBlockAndObtainDrops(pos, state, player);
 
                 for (ItemStack stack : drops) {
