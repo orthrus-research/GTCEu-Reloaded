@@ -177,6 +177,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Armor | Gameplay change: swapping the quantum chestplate for another GregTech chest piece ends its fire immunity; before, it lasted until the slot was emptied. Night vision from potions is no longer removed by GregTech armour |
 | Armor | Other players and armour stands wearing NanoMuscle or QuarkTech armour show their own advanced or normal texture, not yours. |
 | API | The `StoneTypes` constants are `final`. |
+| API | `Material.setProperty` and `MaterialProperties.setProperty` take a value of the key's property type, so a mismatched property no longer compiles. |
 
 ### Earlier fork changes
 

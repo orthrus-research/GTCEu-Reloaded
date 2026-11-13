@@ -37,8 +37,8 @@ public class PropertyKey<T extends IMaterialProperty> {
 
     protected T constructDefault() {
         try {
-            return type.newInstance();
-        } catch (Exception e) {
+            return type.getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
             return null;
         }
     }

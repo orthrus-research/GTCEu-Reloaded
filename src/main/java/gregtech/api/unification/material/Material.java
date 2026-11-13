@@ -465,7 +465,7 @@ public class Material implements Comparable<Material> {
         return properties.getProperty(key);
     }
 
-    public <T extends IMaterialProperty> void setProperty(PropertyKey<T> key, IMaterialProperty property) {
+    public <T extends IMaterialProperty> void setProperty(PropertyKey<T> key, T property) {
         if (!GregTechAPI.materialManager.canModifyMaterials()) {
             throw new IllegalStateException("Cannot add properties to a Material when registry is frozen!");
         }
