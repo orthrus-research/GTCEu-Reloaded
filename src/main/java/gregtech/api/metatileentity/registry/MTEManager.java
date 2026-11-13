@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.Collection;
@@ -68,11 +69,11 @@ public final class MTEManager {
 
     /**
      * @param networkId the network id of the registry
-     * @return the registry associated with the network id, otherwise the default registry
+     * @return the registry associated with the network id, or {@code null} if there is none; an id
+     *         mismatch between client and server must not resolve to another mod's machines
      */
-    public @NotNull MTERegistry getRegistry(int networkId) {
-        MTERegistry registry = networkMap.get(networkId);
-        return registry == null ? internalRegistry : registry;
+    public @Nullable MTERegistry getRegistry(int networkId) {
+        return networkMap.get(networkId);
     }
 
     /**
