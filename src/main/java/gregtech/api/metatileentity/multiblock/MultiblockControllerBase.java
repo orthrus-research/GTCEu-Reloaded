@@ -240,9 +240,10 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
                 }
             }
             return false;
-        }, getCandidates(Arrays.stream(allowedAbilities)
-                .flatMap(ability -> MultiblockAbility.REGISTRY.get(ability).stream())
-                .toArray(MetaTileEntity[]::new)));
+        }, () -> getCandidates(Arrays.stream(allowedAbilities)
+                // an ability can have no registered part: an add-on ability, or a part registered conditionally
+                .flatMap(ability -> MultiblockAbility.REGISTRY.getOrDefault(ability, Collections.emptyList()).stream())
+                .toArray(MetaTileEntity[]::new)).get());
     }
 
     public static TraceabilityPredicate states(IBlockState... allowedStates) {
