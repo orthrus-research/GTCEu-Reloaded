@@ -179,6 +179,7 @@ public class FixWiringTaskWidget extends Widget {
     public void handleClientAction(int id, PacketBuffer buffer) {
         if (id == 5) {
             int connected = buffer.readVarInt();
+            if (connected < 0 || connected >= connect.length) return;
             connect[connected] = true;
             if (onConnected != null) {
                 onConnected.accept(connected);

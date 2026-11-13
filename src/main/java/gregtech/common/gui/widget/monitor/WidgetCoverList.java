@@ -134,10 +134,13 @@ public class WidgetCoverList extends ScrollableListWidget {
         super.handleClientAction(id, buffer);
         if (id == 2) {
             int index = buffer.readInt();
+            List<Widget> widgets = this.getContainedWidgets(true);
             if (index == -1) {
                 this.selected = null;
+            } else if (index >= 0 && index < widgets.size() && widgets.get(index) instanceof WidgetGroup group) {
+                this.selected = group;
             } else {
-                this.selected = (WidgetGroup) this.getContainedWidgets(true).get(index);
+                return; // an index the client should not have sent
             }
             if (onSelected != null) {
                 onSelected.accept(widgetMap.getOrDefault(this.selected, null));
