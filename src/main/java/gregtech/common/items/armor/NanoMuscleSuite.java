@@ -8,7 +8,6 @@ import gregtech.api.util.GTUtility;
 import gregtech.api.util.input.KeyBind;
 import gregtech.common.items.MetaItems;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -132,8 +131,9 @@ public class NanoMuscleSuite extends ArmorLogicSuite implements IStepAssist {
 
     @Override
     public String getArmorTexture(ItemStack stack, Entity entity, EntityEquipmentSlot slot, String type) {
-        ItemStack currentChest = Minecraft.getMinecraft().player.inventory
-                .armorItemInSlot(EntityEquipmentSlot.CHEST.getIndex());
+        // the wearer being rendered, which need not be the local player
+        ItemStack currentChest = entity instanceof EntityLivingBase living ?
+                living.getItemStackFromSlot(EntityEquipmentSlot.CHEST) : ItemStack.EMPTY;
         ItemStack advancedChest = MetaItems.NANO_CHESTPLATE_ADVANCED.getStackForm();
         String armorTexture = "nano_muscule_suite";
         if (advancedChest.isItemEqual(currentChest)) armorTexture = "advanced_nano_muscle_suite";
