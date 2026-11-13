@@ -120,8 +120,9 @@ public abstract class BlockGTExplosive extends Block {
     public void dropBlockAsItemWithChance(@NotNull World world, @NotNull BlockPos pos, @NotNull IBlockState state,
                                           float chance, int fortune) {
         if (explodeOnMine) {
+            // null when a machine, another mod or a mob breaks the block: no one can sneak to defuse it
             EntityPlayer player = this.harvesters.get();
-            if (!player.isSneaking()) {
+            if (player == null || !player.isSneaking()) {
                 this.explode(world, pos, player);
                 return;
             }
