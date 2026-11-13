@@ -133,7 +133,7 @@ public class EnergyContainerList implements IEnergyContainer {
         long amperesUsed = 0L;
         List<IEnergyContainer> energyContainerList = this.energyContainerList;
         for (IEnergyContainer iEnergyContainer : energyContainerList) {
-            amperesUsed += iEnergyContainer.acceptEnergyFromNetwork(null, voltage, amperage);
+            amperesUsed += iEnergyContainer.acceptEnergyFromNetwork(null, voltage, amperage - amperesUsed);
             if (amperage == amperesUsed) {
                 return amperesUsed;
             }
