@@ -13,7 +13,6 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -72,10 +71,10 @@ public class MultiblockMinerLogic extends MinerLogic {
         if (!isChunkMode) {
             super.initPos(pos, currentRadius);
         } else {
-            WorldServer world = (WorldServer) this.metaTileEntity.getWorld();
-            Chunk origin = world.getChunk(this.metaTileEntity.getPos());
-            ChunkPos startPos = (world.getChunk(origin.x - currentRadius / CHUNK_LENGTH,
-                    origin.z - currentRadius / CHUNK_LENGTH)).getPos();
+            // only the chunk position is needed: computing it does not load or generate the chunk
+            ChunkPos origin = new ChunkPos(this.metaTileEntity.getPos());
+            ChunkPos startPos = new ChunkPos(origin.x - currentRadius / CHUNK_LENGTH,
+                    origin.z - currentRadius / CHUNK_LENGTH);
             getX().set(startPos.getXStart());
             getY().set(this.metaTileEntity.getPos().getY() - 1);
             getZ().set(startPos.getZStart());
