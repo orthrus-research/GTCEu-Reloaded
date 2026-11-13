@@ -183,7 +183,7 @@ public class MetaTileEntityObjectHolder extends MetaTileEntityMultiblockNotifiab
     @NotNull
     private ItemStack getHeldItem(int slot, boolean remove) {
         ItemStack stackInSlot = heldItems.getStackInSlot(slot);
-        if (remove && stackInSlot != ItemStack.EMPTY) {
+        if (remove && !stackInSlot.isEmpty()) {
             heldItems.setStackInSlot(slot, ItemStack.EMPTY);
         }
         return stackInSlot;

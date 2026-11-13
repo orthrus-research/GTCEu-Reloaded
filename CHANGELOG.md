@@ -144,6 +144,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Tools | Repairing GregTech tools through automated crafting no longer posts a tool-destroyed event without a player. |
 | World generation | Gameplay change, custom configs only: bedrock fluid veins with a negative biome modifier no longer change the odds of other veins or of no vein. Bundled veins roll as before |
 | Utilities | `GTUtility.nearestLesserOrEqual` and `nearestLesser` terminate for every input, and `formatLongToCompactString` rejects a precision below 3 instead of dividing by zero. |
+| Items | Code that checked for an empty item stack now also treats zero-count stacks as empty, not only the shared empty stack. |
 
 ### Earlier fork changes
 

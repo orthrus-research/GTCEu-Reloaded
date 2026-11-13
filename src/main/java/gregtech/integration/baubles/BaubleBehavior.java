@@ -29,7 +29,7 @@ public class BaubleBehavior implements IItemCapabilityProvider, ICapabilityProvi
 
     @Override
     public void onWornTick(ItemStack stack, EntityLivingBase player) {
-        if (stack != null && stack != ItemStack.EMPTY && player != null) {
+        if (stack != null && !stack.isEmpty() && player != null) {
             stack.getItem().onUpdate(stack, player.getEntityWorld(), player, 0, false);
         }
     }

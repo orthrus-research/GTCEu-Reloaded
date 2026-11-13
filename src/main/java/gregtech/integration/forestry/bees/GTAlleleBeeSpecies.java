@@ -30,7 +30,7 @@ public class GTAlleleBeeSpecies extends AlleleBeeSpecies {
     @NotNull
     @Override
     public IAlleleBeeSpeciesBuilder addProduct(@NotNull ItemStack product, @NotNull Float chance) {
-        if (product == ItemStack.EMPTY) {
+        if (product.isEmpty()) {
             IntegrationModule.logger.warn(
                     "GTAlleleBeeSpecies#addProduct() passed an empty ItemStack for allele {}! Setting default",
                     getUID());
@@ -48,7 +48,7 @@ public class GTAlleleBeeSpecies extends AlleleBeeSpecies {
     @NotNull
     @Override
     public IAlleleBeeSpeciesBuilder addSpecialty(@NotNull ItemStack specialty, @NotNull Float chance) {
-        if (specialty == ItemStack.EMPTY) {
+        if (specialty.isEmpty()) {
             IntegrationModule.logger.warn(
                     "GTAlleleBeeSpecies#addProduct() passed an empty ItemStack for allele {}! Setting default",
                     getUID());

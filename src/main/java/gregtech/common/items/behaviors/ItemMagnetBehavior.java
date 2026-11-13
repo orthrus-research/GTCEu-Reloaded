@@ -55,7 +55,7 @@ public class ItemMagnetBehavior implements IItemBehaviour {
     }
 
     private static boolean isActive(ItemStack stack) {
-        if (stack == ItemStack.EMPTY) {
+        if (stack.isEmpty()) {
             return false;
         }
         NBTTagCompound tag = stack.getTagCompound();

@@ -373,7 +373,7 @@ public final class ModHandler {
         } else if (Arrays.asList(recipe).contains(null) || Arrays.asList(recipe).contains(ItemStack.EMPTY)) {
             String recipeMessage = Arrays.stream(recipe)
                     .map(o -> o == null ? "NULL" : o)
-                    .map(o -> o == ItemStack.EMPTY ? "EMPTY STACK" : o)
+                    .map(o -> o instanceof ItemStack stack && stack.isEmpty() ? "EMPTY STACK" : o)
                     .map(Object::toString)
                     .map(s -> "\"" + s + "\"")
                     .collect(Collectors.joining(", "));

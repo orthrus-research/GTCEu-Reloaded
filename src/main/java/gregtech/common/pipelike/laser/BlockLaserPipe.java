@@ -132,7 +132,7 @@ public class BlockLaserPipe extends BlockPipe<LaserPipeType, LaserPipeProperties
             return false;
         }
         ItemStack stack = player.getHeldItemMainhand();
-        return stack != ItemStack.EMPTY && stack.getItem() instanceof ItemBlockLaserPipe;
+        return !stack.isEmpty() && stack.getItem() instanceof ItemBlockLaserPipe;
     }
 
     @Override

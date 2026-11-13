@@ -207,7 +207,7 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     }
 
     public ItemStack getClipboard() {
-        if (this.itemInventory.getStackInSlot(0) == ItemStack.EMPTY) {
+        if (this.itemInventory.getStackInSlot(0).isEmpty()) {
             ((InaccessibleItemStackHandler) this.itemInventory).setStackInSlot(0, CLIPBOARD.getStackForm());
         }
         return this.itemInventory.getStackInSlot(0);

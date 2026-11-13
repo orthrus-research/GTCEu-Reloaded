@@ -83,7 +83,7 @@ public class BlockFluidPipe extends BlockMaterialPipe<FluidPipeType, FluidPipePr
             return false;
         }
         ItemStack stack = player.getHeldItemMainhand();
-        return stack != ItemStack.EMPTY && stack.getItem() instanceof ItemBlockFluidPipe;
+        return !stack.isEmpty() && stack.getItem() instanceof ItemBlockFluidPipe;
     }
 
     @Override

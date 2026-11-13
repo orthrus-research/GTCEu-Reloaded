@@ -480,7 +480,7 @@ public class GTFluidSyncHandler extends SyncHandler {
             itemStackEmptied = fluidHandler.getContainer();
             fluidAmountTaken = drained.amount;
         }
-        if (itemStackEmptied == ItemStack.EMPTY) {
+        if (itemStackEmptied.isEmpty()) {
             return ItemStack.EMPTY;
         }
 
