@@ -193,6 +193,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Networking | The server rejects key binding packets with more entries than there are key binds, or with unknown keys, instead of allocating or throwing. |
 | Networking | Machine recovery, clipboard and monitor plugin packets only act on positions in the sender's dimension and in chunks the sender can see, and clipboard edits only within reach. They no longer load chunks. |
 | Multiblocks | The large boiler throttle stays within 0 to 100% whatever a client sends, and an empty throttle field no longer throws on the server. |
+| AE2 | ME bus and hatch config slots ignore a zero or negative amount sent by a client. |
 
 ### Earlier fork changes
 

@@ -168,8 +168,9 @@ public class AEItemConfigSlot extends AEConfigSlot<IAEItemStack> {
             } catch (IOException ignored) {}
         }
         if (id == AMOUNT_CHANGE_ID) {
-            if (slot.getConfig() != null) {
-                int amt = buffer.readInt();
+            int amt = buffer.readInt();
+            // a client value; the amount dialog only ever sends a positive size
+            if (slot.getConfig() != null && amt > 0) {
                 slot.getConfig().setStackSize(amt);
                 writeUpdateInfo(AMOUNT_CHANGE_ID, buf -> buf.writeInt(amt));
             }
