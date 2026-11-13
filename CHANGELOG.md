@@ -134,6 +134,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Fluids | `IFilteredFluidContainer.COMPARATOR` no longer throws on a container without a filter; such containers sort last. |
 | Networking | `NetworkUtil.writeFluidStack` no longer writes a tag after a null stack, which misaligned every value read after it. |
 | GUI | `ModifyGuiTexture.loadConfig` loads each texture type as saved; a saved text texture used to come back as a plain colour rectangle. |
+| GUI | Phantom slots adjust their count when clicked with the same item and take the held stack otherwise; `PhantomSlotUtil.areItemsEqual` returned true for different stacks. |
 
 ### Earlier fork changes
 
