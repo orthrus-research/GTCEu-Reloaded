@@ -71,6 +71,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Armor | On servers, armor and tool key binds (hover, mode switch, inertia cancel, charging, tool area) reach the server as the key that was pressed; before, a single changed key was recorded as jump |
 | Machines | The World Accelerator obeys machine controller covers, the soft mallet and other controllers; before, enabling it paused it and the soft mallet did nothing, and the change was not saved |
 | Recipes | Recipe NBT equality conditions on byte, int and long array tags match equal arrays; before, they compared array identity and never matched |
+| Recipes | Numeric recipe NBT equality conditions accept any number type; before, a value that was not a `long` failed the recipe check with an exception |
 
 ### Earlier fork changes
 
