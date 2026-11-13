@@ -61,6 +61,12 @@ public class GTFluidVeinInfo implements IRecipeWrapper {
         fluidList2.add(fluid);
         fluidList.add(fluidList2);
 
+        // built once: JEI asks for the ingredients on every layout and lookup
+        ItemStack bucket = FluidUtil.getFilledBucket(fluid);
+        if (!bucket.isEmpty()) {
+            bucketList.add(Collections.singletonList(bucket));
+        }
+
         this.biomeFunction = definition.getBiomeWeightModifier();
     }
 
@@ -69,9 +75,7 @@ public class GTFluidVeinInfo implements IRecipeWrapper {
         ingredients.setInputLists(VanillaTypes.FLUID, fluidList);
         ingredients.setOutputLists(VanillaTypes.FLUID, fluidList);
 
-        ItemStack bucket = FluidUtil.getFilledBucket(fluid);
-        if (!bucket.isEmpty()) {
-            bucketList.add(Collections.singletonList(bucket));
+        if (!bucketList.isEmpty()) {
             ingredients.setInputLists(VanillaTypes.ITEM, bucketList);
             ingredients.setOutputLists(VanillaTypes.ITEM, bucketList);
         }
