@@ -72,8 +72,11 @@ public class SurfaceBlockPopulator implements VeinChunkPopulator {
                 }
             }
 
-            // The Guaranteed generation
-            generateSurfaceBlock(world, new BlockPos(gridEntryInfo.getCenterPos(definition)));
+            // the guaranteed indicator, from the vein center's own chunk only, so population never loads another
+            BlockPos center = gridEntryInfo.getCenterPos(definition);
+            if (SurfaceRockPopulator.isInChunk(center, chunkX, chunkZ)) {
+                generateSurfaceBlock(world, new BlockPos(center));
+            }
 
         }
 

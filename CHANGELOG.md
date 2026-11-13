@@ -251,6 +251,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Performance | The EU to FE adapter is skipped when native conversion is off and no longer allocated on every cable transfer |
 | Recipes | Checking whether an item is an integrated circuit no longer adds a tag to it, so circuits keep stacking after JEI or a filter looks at them |
 | Pipes | Long distance pipe networks are rebuilt on the server thread instead of a separate thread |
+| World generation | Gameplay change: a vein's guaranteed surface indicator is placed only from the chunk holding its center, ending cascading chunk generation; a vein with no ore in that chunk has no guaranteed indicator |
 
 ### Earlier fork changes
 
