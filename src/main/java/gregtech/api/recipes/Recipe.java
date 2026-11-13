@@ -490,7 +490,8 @@ public class Recipe {
      * @return A list of all resulting ItemStacks from the recipe, after chance has been applied to any chanced outputs
      */
     public List<ItemStack> getResultItemOutputs(int recipeTier, int machineTier, RecipeMap<?> recipeMap) {
-        List<ItemStack> outputs = new ArrayList<>(getOutputs());
+        // copies, so a caller can hand the result to an inventory without sharing the recipe's stacks
+        List<ItemStack> outputs = GTUtility.copyStackList(getOutputs());
         ChanceBoostFunction function = recipeMap.getChanceFunction();
         List<ChancedItemOutput> chancedOutputsList = getChancedOutputs().roll(function, recipeTier, machineTier);
 
