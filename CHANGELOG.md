@@ -147,6 +147,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Items | Code that checked for an empty item stack now also treats zero-count stacks as empty, not only the shared empty stack. |
 | Multiblocks | The Power Substation's passive drain after a battery change no longer includes a remainder left from the previous batteries, which could add 1 EU/t. |
 | Saved data | Machines and covers whose saved mode is out of range load with their default mode instead of failing to load. |
+| Multiblocks | The multi smelter accepts coils with no energy discount, the HPCA's computation bar shows empty instead of NaN when it has no capacity, and the central monitor follows its EU-cost config without a restart. |
 
 ### Earlier fork changes
 

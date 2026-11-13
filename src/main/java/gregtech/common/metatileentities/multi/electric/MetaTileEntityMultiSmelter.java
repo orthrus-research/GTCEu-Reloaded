@@ -161,7 +161,8 @@ public class MetaTileEntityMultiSmelter extends RecipeMapMultiblockController {
      * @return the un-overclocked EUt for an amount of parallel recipes
      */
     public static int getEUtForParallel(int parallel, int discount) {
-        return RecipeMapFurnace.RECIPE_EUT * Math.max(1, (parallel / 8) / discount);
+        // a custom coil can report a discount of 0
+        return RecipeMapFurnace.RECIPE_EUT * Math.max(1, (parallel / 8) / Math.max(1, discount));
     }
 
     /**
