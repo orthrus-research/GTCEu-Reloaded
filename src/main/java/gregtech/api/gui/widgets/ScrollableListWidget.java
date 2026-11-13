@@ -42,7 +42,8 @@ public class ScrollableListWidget extends AbstractWidgetGroup {
     }
 
     private void addScrollOffset(int offset) {
-        this.scrollOffset = MathHelper.clamp(scrollOffset + offset, 0, totalListHeight - getSize().height);
+        // a list shorter than the viewport has nothing to scroll
+        this.scrollOffset = MathHelper.clamp(scrollOffset + offset, 0, Math.max(0, totalListHeight - getSize().height));
         updateElementPositions();
     }
 
