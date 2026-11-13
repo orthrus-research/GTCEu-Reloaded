@@ -55,7 +55,8 @@ public class PacketKeysPressed implements IPacket, IServerExecutor {
         }
 
         for (int i = 0; i < serverKeysUpdated.length; i++) {
-            KeyBind.VALUES[i].updateServerState(handler.player, serverKeysPressed[i], serverKeysDown[i]);
+            KeyBind.VALUES[serverKeysUpdated[i]].updateServerState(handler.player, serverKeysPressed[i],
+                    serverKeysDown[i]);
         }
     }
 }
