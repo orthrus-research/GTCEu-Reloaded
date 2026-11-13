@@ -72,6 +72,19 @@ public abstract class VariantActiveBlock<T extends IStringSerializable & Compara
         }
     }
 
+    /**
+     * Forget the active blocks of a dimension whose world unloads, so the same coordinates in the next world do
+     * not render as active.
+     */
+    public static void clearDimension(int dimension) {
+        ACTIVE_BLOCKS_LOCK.writeLock().lock();
+        try {
+            ACTIVE_BLOCKS.remove(dimension);
+        } finally {
+            ACTIVE_BLOCKS_LOCK.writeLock().unlock();
+        }
+    }
+
     public VariantActiveBlock(Material materialIn) {
         super(materialIn);
     }

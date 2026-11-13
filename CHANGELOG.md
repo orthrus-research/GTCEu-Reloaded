@@ -218,6 +218,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Armor | Equipping a fuel jetpack by right-click plays its sound for nearby players. |
 | World generation | Gameplay change, new chunks only: surface block vein indicators are placed with the same eight-block population offset as surface rocks |
 | World generation | Gameplay change, new chunks only: the blocks within an ore vein are chosen the same way for a given seed whatever order chunks generate in |
+| Rendering | Casings and coils at the same coordinates in another world no longer glow as active because a multiblock was running there in the previous one. |
 
 ### Earlier fork changes
 
