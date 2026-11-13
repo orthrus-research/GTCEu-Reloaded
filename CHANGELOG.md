@@ -109,6 +109,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | The ore filter's consecutive-negation warning highlights the whole negated run; before, the highlight covered only the token after it |
 | Rendering | Connected-texture blocks rebuild their models after a resource-pack reload; before, models baked against the previous texture atlas stayed in the cache |
 | GUI | Nested clipped areas that start left of or above their parent stay inside it, and clipping no longer crashes when another mod replaces the in-game HUD |
+| Recipes | JEI output tooltips on assembly-line recipes look up the right chanced output; before, every index was one too high |
 
 ### Earlier fork changes
 

@@ -48,6 +48,14 @@ import java.util.Map;
 
 public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
 
+    /**
+     * The item input slots the category lays out for a map. The assembly line has one more than its maximum inputs,
+     * for the data item; output slot indexes start after these.
+     */
+    static int importSlotCount(@NotNull RecipeMap<?> recipeMap) {
+        return recipeMap.getMaxInputs() + (recipeMap == RecipeMaps.ASSEMBLY_LINE_RECIPES ? 1 : 0);
+    }
+
     private final RecipeMap<?> recipeMap;
     private final GTRecipeCategory category;
     private final ModularUI modularUI;
@@ -71,8 +79,7 @@ public class RecipeMapCategory implements IRecipeCategory<GTRecipeWrapper> {
         for (int i = 0; i < exportFluidTanks.length; i++)
             exportFluidTanks[i] = new FluidTank(16000);
         this.modularUI = recipeMap.getRecipeMapUI().createJeiUITemplate(
-                (importItems = new ItemStackHandler(
-                        recipeMap.getMaxInputs() + (recipeMap == RecipeMaps.ASSEMBLY_LINE_RECIPES ? 1 : 0))),
+                (importItems = new ItemStackHandler(importSlotCount(recipeMap))),
                 (exportItems = new ItemStackHandler(recipeMap.getMaxOutputs())),
                 (importFluids = new FluidTankList(false, importFluidTanks)),
                 (exportFluids = new FluidTankList(false, exportFluidTanks)), 0)
