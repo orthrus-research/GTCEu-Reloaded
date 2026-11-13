@@ -103,6 +103,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | The pump moves past positions in unloaded chunks while scanning; before, one unloaded position at the head of its queue stalled the scan for that tick |
 | Commands | `/gregtech benchmark lookup` reads its second argument as the rate and reports the third quartile; before, the rate repeated the trial count and Q3 repeated Q1 |
 | World generation | Ellipsoid ore veins with radii of about 46 and up generate their full shape; before, the size arithmetic overflowed and the vein came out empty or scrambled |
+| World generation | Invalid filler weights and layered veins with the wrong ore count report their value in the error message; before, the message showed a literal `%d` |
 
 ### Earlier fork changes
 
