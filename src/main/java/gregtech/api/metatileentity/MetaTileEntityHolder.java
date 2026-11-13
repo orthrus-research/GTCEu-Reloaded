@@ -68,6 +68,9 @@ public class MetaTileEntityHolder extends TickableTileEntityBase implements IGre
 
     MetaTileEntity metaTileEntity;
     private boolean needToUpdateLightning = false;
+    private static final int RECOVER_REQUEST_INTERVAL = 20;
+    /** Ticks until a client holder without a meta tile entity asks the server for it again. */
+    private int recoverRequestCooldown;
     private String customName;
     @SideOnly(Side.CLIENT)
     private GTNameTagParticle nameTagParticle;
@@ -203,7 +206,11 @@ public class MetaTileEntityHolder extends TickableTileEntityBase implements IGre
         if (metaTileEntity != null) {
             metaTileEntity.update();
         } else if (world.isRemote) { // recover the mte
-            GregTechAPI.networkHandler.sendToServer(new PacketRecoverMTE(world.provider.getDimension(), getPos()));
+            // the server answers each request, so ask about once a second rather than every tick
+            if (recoverRequestCooldown-- <= 0) {
+                recoverRequestCooldown = RECOVER_REQUEST_INTERVAL;
+                GregTechAPI.networkHandler.sendToServer(new PacketRecoverMTE(world.provider.getDimension(), getPos()));
+            }
         } else { // remove the block
             if (world.getBlockState(pos).getBlock() instanceof BlockMachine) {
                 world.setBlockToAir(pos);
