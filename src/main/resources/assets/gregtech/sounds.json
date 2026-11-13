@@ -407,5 +407,15 @@
         "stream" : false
       }
     ]
+  },
+  "jet_engine" : {
+    "subtitle" : "gregtech.subtitle.jet_engine",
+    "category" : "players",
+    "sounds" : [
+      {
+        "name" : "gregtech:jet_engine",
+        "stream" : false
+      }
+    ]
   }
 }

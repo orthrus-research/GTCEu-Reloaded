@@ -10,6 +10,7 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.*;
@@ -92,7 +93,7 @@ public abstract class ArmorLogicSuite implements ISpecialArmorLogic, IItemHUDPro
                     player.inventory.armorInventory.get(SLOT.getIndex()).isEmpty() && !player.isSneaking()) {
                 player.inventory.armorInventory.set(SLOT.getIndex(), armor.copy());
                 player.setHeldItem(hand, ItemStack.EMPTY);
-                player.playSound(new SoundEvent(new ResourceLocation("item.armor.equip_generic")), 1.0F, 1.0F);
+                player.playSound(SoundEvents.ITEM_ARMOR_EQUIP_GENERIC, 1.0F, 1.0F);
                 return ActionResult.newResult(EnumActionResult.SUCCESS, armor);
             }
         }
