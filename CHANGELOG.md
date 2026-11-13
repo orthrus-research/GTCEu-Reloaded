@@ -88,6 +88,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Scripting | GroovyScript `addBlastProperty` on a material without a blast property applies the duration and EU/t overrides as given; before, the two were swapped |
 | Storage | Quantum chests and tanks saved by releases before voiding modes were merged load with voiding on if they had partial voiding on; before, that legacy key was misspelled and never read |
 | Tools | The foam sprayer updates the neighbours of every block it foams; before, it updated only the neighbours of the block it was aimed at |
+| Armor | A jetpack that breaks a fall takes the damage as chest armour; before, the hit was reported for the boots slot |
 
 ### Earlier fork changes
 

@@ -182,7 +182,7 @@ public class EventHandlers {
                         ArmorMetaItem<?>.ArmorMetaValueItem valueItem = ((ArmorMetaItem<?>) jet.getItem()).getItem(jet);
                         if (valueItem != null) {
                             valueItem.getArmorLogic().damageArmor(player, jet, DamageSource.FALL,
-                                    (int) (player.fallDistance - 1.2f), EntityEquipmentSlot.FEET);
+                                    (int) (player.fallDistance - 1.2f), EntityEquipmentSlot.CHEST);
                             player.fallDistance = 0;
                             event.setCanceled(true);
                         }
