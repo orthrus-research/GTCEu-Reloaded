@@ -306,7 +306,7 @@ public class CachedGridEntry implements GridEntryInfo, IBlockGeneratorAccess, IB
             long chunkKey = (long) chunkX << 32 | chunkZ & 0xFFFFFFFFL;
             ChunkDataEntry dataEntry = dataByChunkPos.get(chunkKey);
             if (dataEntry == null) {
-                dataEntry = new ChunkDataEntry(chunkX, chunkZ, gridRandom);
+                dataEntry = new ChunkDataEntry(chunkX, chunkZ);
                 dataByChunkPos.put(chunkKey, dataEntry);
             }
             dataEntry.setBlock(localX, worldY, localZ, definition, index);
@@ -320,12 +320,10 @@ public class CachedGridEntry implements GridEntryInfo, IBlockGeneratorAccess, IB
         private final List<OreDepositDefinition> generatedOres = new ArrayList<>();
         private final int chunkX;
         private final int chunkZ;
-        private final Random gridRandom;
 
-        public ChunkDataEntry(int chunkX, int chunkZ, Random gridRandom) {
+        public ChunkDataEntry(int chunkX, int chunkZ) {
             this.chunkX = chunkX;
             this.chunkZ = chunkZ;
-            this.gridRandom = gridRandom;
         }
 
         public void setBlock(int x, int y, int z, OreDepositDefinition definition, int index) {
@@ -354,6 +352,10 @@ public class CachedGridEntry implements GridEntryInfo, IBlockGeneratorAccess, IB
                 int lowestY = entry.getValue().getRight();
                 LongSet generatedBlocks = new LongOpenHashSet();
                 boolean generatedOreVein = false;
+                // filler choices from a stream of their own per chunk and vein: drawing them from the grid's
+                // shared random made them depend on the order the grid's chunks were populated in
+                Random fillerRandom = new XoShiRo256PlusPlusRandom(world.getSeed() ^
+                        (31L * chunkX + chunkZ) * 0x9E3779B97F4A7C15L ^ definition.getDepositName().hashCode());
                 // enhanced for loops cause boxing and unboxing with FastUtil collections
                 // noinspection ForLoopReplaceableByForEach
                 for (int i = 0; i < blockIndexList.size(); i++) {
@@ -371,7 +373,7 @@ public class CachedGridEntry implements GridEntryInfo, IBlockGeneratorAccess, IB
                         if (!definition.getGenerationPredicate().test(currentState, world, blockPos))
                             continue; // do not generate if predicate didn't match
                         newState = definition.getBlockFiller().apply(currentState, world, blockPos, blockX, blockY,
-                                blockZ, definition.getDensity(), gridRandom, blockY - lowestY);
+                                blockZ, definition.getDensity(), fillerRandom, blockY - lowestY);
                     } else {
                         // it's populator-generated block with index
                         VeinBufferPopulator populator = (VeinBufferPopulator) definition.getVeinPopulator();

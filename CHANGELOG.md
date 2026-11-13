@@ -217,6 +217,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Armor | Gameplay change: advanced NanoMuscle and QuarkTech chestplates charge only their wearer's items, at the same rate however many players wear them, and fuel jetpacks and QuarkTech boots no longer share state between wearers |
 | Armor | Equipping a fuel jetpack by right-click plays its sound for nearby players. |
 | World generation | Gameplay change, new chunks only: surface block vein indicators are placed with the same eight-block population offset as surface rocks |
+| World generation | Gameplay change, new chunks only: the blocks within an ore vein are chosen the same way for a given seed whatever order chunks generate in |
 
 ### Earlier fork changes
 
