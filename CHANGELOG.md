@@ -86,6 +86,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Tools | A tool belt reports the harvest level of its selected tool for that tool's own material; before, the belt stack was passed in its place |
 | API | `ModHandler.removeFurnaceSmelting(UnificationEntry)` removes the furnace recipe of every ore-dictionary variant; before, it stopped after the first one it removed |
 | Scripting | GroovyScript `addBlastProperty` on a material without a blast property applies the duration and EU/t overrides as given; before, the two were swapped |
+| Storage | Quantum chests and tanks saved by releases before voiding modes were merged load with voiding on if they had partial voiding on; before, that legacy key was misspelled and never read |
 
 ### Earlier fork changes
 
