@@ -178,6 +178,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Armor | Other players and armour stands wearing NanoMuscle or QuarkTech armour show their own advanced or normal texture, not yours. |
 | API | The `StoneTypes` constants are `final`. |
 | API | `Material.setProperty` and `MaterialProperties.setProperty` take a value of the key's property type, so a mismatched property no longer compiles. |
+| World generation | Gameplay change, custom configs only: a one-layer layered vein places its sporadic block at the configured density instead of everywhere, and a `state_match` filler may leave out "default". Bundled veins generate as before |
 
 ### Earlier fork changes
 

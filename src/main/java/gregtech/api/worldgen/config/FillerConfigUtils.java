@@ -94,7 +94,8 @@ public class FillerConfigUtils {
             matchers.add(Pair.of(predicate, filler));
         }
 
-        if (!defaultElement.isJsonNull()) {
+        // "default" is optional; without it the first matcher is the fallback
+        if (defaultElement != null && !defaultElement.isJsonNull()) {
             FillerEntry filler = createBlockStateFiller(defaultElement);
             WorldBlockPredicate predicate = (state, world, pos) -> true;
             matchers.add(Pair.of(predicate, filler));
@@ -263,7 +264,8 @@ public class FillerConfigUtils {
             Preconditions.checkArgument(primaryLayers + secondaryLayers >= betweenLayers,
                     "Error: cannot be more \"between\" layers than primary and secondary layers combined!");
 
-            this.sporadicDivisor = primaryLayers + secondaryLayers - 1;
+            // a one-layer vein would divide by zero and always place the sporadic block
+            this.sporadicDivisor = Math.max(1, primaryLayers + secondaryLayers - 1);
             this.startPrimary = secondaryLayers;
             this.startBetween = secondaryLayers - betweenLayers / 2;
 
