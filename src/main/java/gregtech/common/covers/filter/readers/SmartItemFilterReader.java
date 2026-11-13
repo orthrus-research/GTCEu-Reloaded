@@ -17,7 +17,7 @@ public class SmartItemFilterReader extends SimpleItemFilterReader {
         if (!getStackTag().hasKey(FILTER_MODE))
             setFilteringMode(SmartItemFilter.SmartFilteringMode.ELECTROLYZER);
 
-        return SmartItemFilter.SmartFilteringMode.VALUES[getStackTag().getInteger(FILTER_MODE)];
+        return modeOf(getStackTag().getInteger(FILTER_MODE));
     }
 
     public void setFilteringMode(SmartItemFilter.SmartFilteringMode filteringMode) {
@@ -28,13 +28,20 @@ public class SmartItemFilterReader extends SimpleItemFilterReader {
     @Override
     public void deserializeNBT(NBTTagCompound nbt) {
         super.deserializeNBT(nbt);
-        this.setFilteringMode(SmartItemFilter.SmartFilteringMode.VALUES[nbt.getInteger(FILTER_MODE)]);
+        this.setFilteringMode(modeOf(nbt.getInteger(FILTER_MODE)));
     }
 
     @Override
     public void handleLegacyNBT(NBTTagCompound tag) {
         super.handleLegacyNBT(tag);
         var legacyFilter = tag.getCompoundTag(KEY_LEGACY_FILTER);
-        this.setFilteringMode(SmartItemFilter.SmartFilteringMode.VALUES[legacyFilter.getInteger(FILTER_MODE)]);
+        this.setFilteringMode(modeOf(legacyFilter.getInteger(FILTER_MODE)));
+    }
+
+    /** The mode saved at {@code ordinal}, or the default electrolyzer mode for a value that names none. */
+    private static SmartItemFilter.SmartFilteringMode modeOf(int ordinal) {
+        var values = SmartItemFilter.SmartFilteringMode.VALUES;
+        return ordinal >= 0 && ordinal < values.length ? values[ordinal] :
+                SmartItemFilter.SmartFilteringMode.ELECTROLYZER;
     }
 }
