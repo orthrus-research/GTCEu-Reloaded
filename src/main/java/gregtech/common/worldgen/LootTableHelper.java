@@ -1,24 +1,18 @@
 package gregtech.common.worldgen;
 
-import gregtech.api.util.GTLog;
-
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.JsonUtils;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.storage.loot.LootEntry;
-import net.minecraft.world.storage.loot.LootTableManager;
 import net.minecraft.world.storage.loot.conditions.LootCondition;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import com.google.common.collect.Lists;
 import com.google.gson.*;
+import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import java.util.*;
-import java.util.function.BiFunction;
 
 public class LootTableHelper {
 
@@ -47,113 +41,52 @@ public class LootTableHelper {
         serializerMap.put(type, serializer);
     }
 
+    /**
+     * Registers GregTech's loot entry types. They are read and written through a head injection on the vanilla
+     * loot entry serializer, see {@link #deserializeCustomEntry} and {@link #serializeCustomEntry}.
+     */
     public static void initialize() {
-        try {
-            Field gsonField = Arrays.stream(LootTableManager.class.getDeclaredFields())
-                    .filter(it -> Gson.class.isAssignableFrom(it.getType()))
-                    .findFirst().orElseThrow(() -> new RuntimeException("Failed to find Gson field!"));
-            gsonField.setAccessible(true);
-            Gson gsonInstance = (Gson) gsonField.get(null);
-            replaceGsonTypeHierarchySerializer(gsonInstance, LootEntry.class, LootTableEntrySerializerDelegate::new);
-        } catch (SecurityException | IllegalAccessException e) {
-            GTLog.logger.fatal("Failed to initialize loot table helper", e);
-            throw new IllegalStateException(e);
-        }
         registerLootEntry("gregtech:meta_item", LootEntryMetaItem::deserialize);
         registerLootEntry("gregtech:ore_dict", LootEntryOreDict::deserialize);
     }
 
-    private static class LootTableEntrySerializerDelegate implements JsonSerializer<LootEntry>,
-                                                          JsonDeserializer<LootEntry> {
-
-        private final JsonSerializer<LootEntry> delegatedSerializer;
-        private final JsonDeserializer<LootEntry> delegatedDeserializer;
-
-        @SuppressWarnings("unchecked")
-        public LootTableEntrySerializerDelegate(JsonSerializer<?> delegatedSerializer,
-                                                JsonDeserializer<?> delegatedDeserializer) {
-            this.delegatedSerializer = (JsonSerializer<LootEntry>) delegatedSerializer;
-            this.delegatedDeserializer = (JsonDeserializer<LootEntry>) delegatedDeserializer;
+    /**
+     * @return the entry for a registered GregTech type, or {@code null} to leave the JSON to vanilla
+     */
+    @Nullable
+    public static LootEntry deserializeCustomEntry(JsonElement json, JsonDeserializationContext context) {
+        if (!json.isJsonObject()) return null;
+        JsonObject jsonobject = json.getAsJsonObject();
+        if (!jsonobject.has("type") || !jsonobject.get("type").isJsonPrimitive()) return null;
+        LootTableEntrySerializer<?> serializer = serializerMap.get(jsonobject.get("type").getAsString());
+        if (serializer == null) return null;
+        int weight = JsonUtils.getInt(jsonobject, "weight", 1);
+        int quality = JsonUtils.getInt(jsonobject, "quality", 0);
+        LootCondition[] lootConditions;
+        if (jsonobject.has("conditions")) {
+            lootConditions = JsonUtils.deserializeClass(jsonobject, "conditions", context, LootCondition[].class);
+        } else {
+            lootConditions = new LootCondition[0];
         }
-
-        @Override
-        public LootEntry deserialize(JsonElement json, Type typeOfT,
-                                     JsonDeserializationContext context) throws JsonParseException {
-            JsonObject jsonobject = JsonUtils.getJsonObject(json, "loot item");
-            String type = JsonUtils.getString(jsonobject, "type");
-            if (serializerMap.containsKey(type)) {
-                int weight = JsonUtils.getInt(jsonobject, "weight", 1);
-                int quality = JsonUtils.getInt(jsonobject, "quality", 0);
-                LootCondition[] lootConditions;
-                if (jsonobject.has("conditions")) {
-                    lootConditions = JsonUtils.deserializeClass(jsonobject, "conditions", context,
-                            LootCondition[].class);
-                } else {
-                    lootConditions = new LootCondition[0];
-                }
-                LootTableEntrySerializer<?> serializer = serializerMap.get(type);
-                return serializer.deserialize(jsonobject, context, weight, quality, lootConditions);
-            }
-            return delegatedDeserializer.deserialize(json, typeOfT, context);
-        }
-
-        @Override
-        public JsonElement serialize(LootEntry src, Type typeOfSrc, JsonSerializationContext context) {
-            if (src instanceof SerializableLootEntry) {
-                SerializableLootEntry entry = (SerializableLootEntry) src;
-                JsonObject jsonObject = new JsonObject();
-                jsonObject.addProperty("weight", entry.getWeight());
-                jsonObject.addProperty("quality", entry.getQuality());
-                LootCondition[] conditions = entry.getConditions();
-                if (conditions.length > 0) {
-                    jsonObject.add("conditions", context.serialize(entry.getConditions()));
-                }
-                jsonObject.addProperty("type", entry.getType());
-                entry.serializeEntry(jsonObject, context);
-                return jsonObject;
-            }
-            return delegatedSerializer.serialize(src, typeOfSrc, context);
-        }
+        return serializer.deserialize(jsonobject, context, weight, quality, lootConditions);
     }
 
-    @SuppressWarnings("unchecked")
-    private static void replaceGsonTypeHierarchySerializer(Gson gson, Class<?> type,
-                                                           BiFunction<JsonSerializer<?>, JsonDeserializer<?>, Object> replacer) {
-        try {
-            Field field = Gson.class.getDeclaredField("factories");
-            field.setAccessible(true);
-            Class<?> singleTypeFactoryClass = Class
-                    .forName("com.google.gson.internal.bind.TreeTypeAdapter$SingleTypeFactory");
-            Field hierarchyTypeField = singleTypeFactoryClass.getDeclaredField("hierarchyType");
-            hierarchyTypeField.setAccessible(true);
-            List<TypeAdapterFactory> factories = (List<TypeAdapterFactory>) field.get(gson);
-            Object factoryObject = factories.stream()
-                    .filter(factory -> singleTypeFactoryClass.isAssignableFrom(factory.getClass()))
-                    .filter(factory -> {
-                        try {
-                            return hierarchyTypeField.get(factory) == type;
-                        } catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).findFirst().orElseThrow(() -> new IllegalArgumentException("Serializer not found for " + type));
-
-            Field serializerField = singleTypeFactoryClass.getDeclaredField("serializer");
-            Field deserializerField = singleTypeFactoryClass.getDeclaredField("deserializer");
-            serializerField.setAccessible(true);
-            deserializerField.setAccessible(true);
-            JsonSerializer<?> serializer = (JsonSerializer<?>) serializerField.get(factoryObject);
-            JsonDeserializer<?> deserializer = (JsonDeserializer<?>) deserializerField.get(factoryObject);
-            Object replacedSerializer = replacer.apply(serializer, deserializer);
-
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.set(serializerField, serializerField.getModifiers() & (~Modifier.FINAL));
-            modifiersField.set(deserializerField, deserializerField.getModifiers() & (~Modifier.FINAL));
-            serializerField.set(factoryObject, replacedSerializer);
-            deserializerField.set(factoryObject, replacedSerializer);
-        } catch (ReflectiveOperationException ex) {
-            throw new RuntimeException(ex);
+    /**
+     * @return the JSON for a GregTech entry, or {@code null} to leave the entry to vanilla
+     */
+    @Nullable
+    public static JsonElement serializeCustomEntry(LootEntry src, JsonSerializationContext context) {
+        if (!(src instanceof SerializableLootEntry entry)) return null;
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("weight", entry.getWeight());
+        jsonObject.addProperty("quality", entry.getQuality());
+        LootCondition[] conditions = entry.getConditions();
+        if (conditions.length > 0) {
+            jsonObject.add("conditions", context.serialize(entry.getConditions()));
         }
+        jsonObject.addProperty("type", entry.getType());
+        entry.serializeEntry(jsonObject, context);
+        return jsonObject;
     }
 
     public static void fillInventory(IItemHandlerModifiable inventory, Random rand, List<ItemStack> lootList) {
