@@ -176,6 +176,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Armor | Equipping electric armour and flying a jetpack play their sounds for nearby players. `ArmorUtils.JET_ENGINE` moved to `GTSoundEvents.JET_ENGINE`. |
 | Armor | Gameplay change: swapping the quantum chestplate for another GregTech chest piece ends its fire immunity; before, it lasted until the slot was emptied. Night vision from potions is no longer removed by GregTech armour |
 | Armor | Other players and armour stands wearing NanoMuscle or QuarkTech armour show their own advanced or normal texture, not yours. |
+| API | The `StoneTypes` constants are `final`. |
 
 ### Earlier fork changes
 
