@@ -96,6 +96,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | Energy, fluid, item and activity detectors give the right signal for stored amounts above about 6×10¹⁷; before, the scaled amount overflowed and the signal went wrong or negative |
 | API | `PositionedRect.intersects(PositionedRect)` detects every overlap; before, it missed a rectangle inside the other one and cross-shaped overlaps |
 | API | `GTUtility.safeCastLongToInt` clamps values below `Integer.MIN_VALUE` too, and the generator tank-size functions give tier 0 the tier 1 size instead of zero |
+| Recipes | The sifter recipe for purified gem ores without the high sifter output adds the chipped gem only when one exists; before, it checked the exquisite gem and could add an empty output when chipped gems were disabled |
 
 ### Earlier fork changes
 
