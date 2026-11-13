@@ -221,6 +221,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Rendering | Casings and coils at the same coordinates in another world no longer glow as active because a multiblock was running there in the previous one. |
 | API | `GTValues.RNG` is safe to use from several threads; each thread draws from its own generator. `GTValues.FOOLS` and `XMAS` are `final`. |
 | JEI | Bedrock fluid vein pages in JEI no longer collect another copy of the bucket each time they are opened. |
+| JEI | The integrated circuit page in JEI always labels each slot with its own number. |
 
 ### Earlier fork changes
 

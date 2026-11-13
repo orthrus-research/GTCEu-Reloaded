@@ -37,8 +37,8 @@ public class CompositeDrawable implements IDrawable {
         }
     }
 
-    public static Builder startBuilder(int height, int width) {
-        return new Builder(height, width);
+    public static Builder startBuilder(int width, int height) {
+        return new Builder(width, height);
     }
 
     public static class Builder {
@@ -47,7 +47,7 @@ public class CompositeDrawable implements IDrawable {
         private final int width;
         private final List<RenderNode> steps = new LinkedList<>();
 
-        public Builder(int height, int width) {
+        public Builder(int width, int height) {
             this.height = height;
             this.width = width;
         }
