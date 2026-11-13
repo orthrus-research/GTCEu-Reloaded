@@ -137,6 +137,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | Phantom slots adjust their count when clicked with the same item and take the held stack otherwise; `PhantomSlotUtil.areItemsEqual` returned true for different stacks. |
 | GUI | A `PhantomFluidWidget` built from a supplier no longer crashes when clicked or scrolled. |
 | Materials | Gameplay change: materials built with `colorAverage()` average each colour channel separately. Ruridit turns from green-grey `0x6BBF7F` to the blue `0x6BBED4` of its ruthenium and iridium components |
+| Items | Gameplay change: food potion effects apply with their stated chance. The chocolate coin gives Speed 10% of the time and the purple drink gives Haste 90% of the time; before, the odds were the other way round |
 
 ### Earlier fork changes
 

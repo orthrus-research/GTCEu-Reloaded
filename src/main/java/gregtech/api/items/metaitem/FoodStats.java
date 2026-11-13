@@ -73,7 +73,7 @@ public class FoodStats implements IFoodBehavior {
     public ItemStack onFoodEaten(ItemStack itemStack, EntityPlayer player) {
         if (!player.world.isRemote) {
             for (RandomPotionEffect potionEffect : potionEffects) {
-                if (GTValues.RNG.nextDouble() * 100 > potionEffect.chance) {
+                if (GTValues.RNG.nextInt(100) < potionEffect.chance) {
                     player.addPotionEffect(new PotionEffect(potionEffect.effect));
                 }
             }
