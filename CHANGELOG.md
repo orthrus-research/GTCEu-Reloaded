@@ -115,6 +115,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | Smart item filters with an out-of-range saved mode load in electrolyzer mode; before, loading them threw |
 | Covers | Ore filter expressions that negate a minimum length after alternatives, such as `(a|ab)!(??*)`, reject inputs that one of the alternatives leaves too long; before, they accepted them |
 | World generation | Gameplay change: the `single` vein shape places `blocks_count` blocks in a random walk; before, every block went to the same position, so it placed one |
+| Multiblocks | Gameplay change: random maintenance failures can pick all six problems; before, the sixth never occurred at random |
 
 ### Earlier fork changes
 

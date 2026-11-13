@@ -86,7 +86,8 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
      */
     @Override
     public void causeMaintenanceProblems() {
-        this.maintenance_problems &= ~(1 << ((int) (GTValues.RNG.nextFloat() * 5)));
+        // six problem bits, 0 to 5, as setMaintenanceFixed and the hatches use
+        this.maintenance_problems &= ~(1 << GTValues.RNG.nextInt(6));
         this.getWorld().playSound(null, this.getPos().getX(), this.getPos().getY(), this.getPos().getZ(),
                 this.getBreakdownSound(), SoundCategory.BLOCKS, 1.f, 1.f);
     }
