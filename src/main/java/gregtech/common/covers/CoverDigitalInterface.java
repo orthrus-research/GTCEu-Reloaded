@@ -835,11 +835,30 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
         return nbt;
     }
 
+    // combined views of a multiblock's hatches, rebuilt only when its structure changes; syncAllInfo asks every
+    // second tick
+    private int cachedRevision = -1;
+    private IFluidHandler cachedFluids;
+    private IItemHandler cachedItems;
+    private IEnergyContainer cachedEnergy;
+
+    private void syncCacheRevision(MultiblockControllerBase controller) {
+        int revision = controller.getStructureRevision();
+        if (revision != cachedRevision) {
+            cachedRevision = revision;
+            cachedFluids = null;
+            cachedItems = null;
+            cachedEnergy = null;
+        }
+    }
+
     public IFluidHandler getFluidCapability() {
         TileEntity te = getCoveredTE();
         IFluidHandler capability = te == null ? null :
                 te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, getCoveredFacing());
         if (capability == null && this.getCoverableView() instanceof MultiblockControllerBase controllerBase) {
+            syncCacheRevision(controllerBase);
+            if (cachedFluids != null) return cachedFluids;
             List<IFluidTank> input = controllerBase.getAbilities(MultiblockAbility.IMPORT_FLUIDS);
             List<IFluidTank> output = controllerBase.getAbilities(MultiblockAbility.EXPORT_FLUIDS);
             List<IFluidTank> list = new ArrayList<>();
@@ -849,7 +868,7 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
             if (output.size() > 0) {
                 list.addAll(output);
             }
-            capability = new FluidTankList(true, list);
+            capability = cachedFluids = new FluidTankList(true, list);
         }
         return capability;
     }
@@ -859,6 +878,8 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
         IItemHandler capability = te == null ? null :
                 te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, getCoveredFacing());
         if (capability == null && this.getCoverableView() instanceof MultiblockControllerBase controllerBase) {
+            syncCacheRevision(controllerBase);
+            if (cachedItems != null) return cachedItems;
             List<IItemHandlerModifiable> input = controllerBase.getAbilities(MultiblockAbility.IMPORT_ITEMS);
             List<IItemHandlerModifiable> output = controllerBase.getAbilities(MultiblockAbility.EXPORT_ITEMS);
             List<IItemHandlerModifiable> list = new ArrayList<>();
@@ -868,7 +889,7 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
             if (output.size() > 0) {
                 list.addAll(output);
             }
-            capability = new ItemHandlerList(list);
+            capability = cachedItems = new ItemHandlerList(list);
         }
         return capability;
     }
@@ -878,6 +899,8 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
         IEnergyContainer capability = te == null ? null :
                 te.getCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER, getCoveredFacing());
         if (capability == null && this.getCoverableView() instanceof MultiblockControllerBase controllerBase) {
+            syncCacheRevision(controllerBase);
+            if (cachedEnergy != null) return cachedEnergy;
             List<IEnergyContainer> input = controllerBase.getAbilities(MultiblockAbility.INPUT_ENERGY);
             List<IEnergyContainer> output = controllerBase.getAbilities(MultiblockAbility.OUTPUT_ENERGY);
             List<IEnergyContainer> list = new ArrayList<>();
@@ -887,7 +910,7 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
             if (output.size() > 0) {
                 list.addAll(output);
             }
-            capability = new EnergyContainerList(list);
+            capability = cachedEnergy = new EnergyContainerList(list);
         } else if (capability == null && te != null) {
             IEnergyStorage fe = te.getCapability(CapabilityEnergy.ENERGY, getCoveredFacing());
             if (fe != null) {
