@@ -6,6 +6,8 @@ import net.minecraft.item.EnumDyeColor;
 
 import com.google.common.collect.HashBiMap;
 
+import java.util.Locale;
+
 public class MarkerMaterials {
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -87,22 +89,22 @@ public class MarkerMaterials {
      */
     public static class Tier {
 
-        public static final Material ULV = MarkerMaterial.create(GTValues.VN[GTValues.ULV].toLowerCase());
-        public static final Material LV = MarkerMaterial.create(GTValues.VN[GTValues.LV].toLowerCase());
-        public static final Material MV = MarkerMaterial.create(GTValues.VN[GTValues.MV].toLowerCase());
-        public static final Material HV = MarkerMaterial.create(GTValues.VN[GTValues.HV].toLowerCase());
-        public static final Material EV = MarkerMaterial.create(GTValues.VN[GTValues.EV].toLowerCase());
-        public static final Material IV = MarkerMaterial.create(GTValues.VN[GTValues.IV].toLowerCase());
-        public static final Material LuV = MarkerMaterial.create(GTValues.VN[GTValues.LuV].toLowerCase());
-        public static final Material ZPM = MarkerMaterial.create(GTValues.VN[GTValues.ZPM].toLowerCase());
-        public static final Material UV = MarkerMaterial.create(GTValues.VN[GTValues.UV].toLowerCase());
-        public static final Material UHV = MarkerMaterial.create(GTValues.VN[GTValues.UHV].toLowerCase());
+        public static final Material ULV = MarkerMaterial.create(GTValues.VN[GTValues.ULV].toLowerCase(Locale.ROOT));
+        public static final Material LV = MarkerMaterial.create(GTValues.VN[GTValues.LV].toLowerCase(Locale.ROOT));
+        public static final Material MV = MarkerMaterial.create(GTValues.VN[GTValues.MV].toLowerCase(Locale.ROOT));
+        public static final Material HV = MarkerMaterial.create(GTValues.VN[GTValues.HV].toLowerCase(Locale.ROOT));
+        public static final Material EV = MarkerMaterial.create(GTValues.VN[GTValues.EV].toLowerCase(Locale.ROOT));
+        public static final Material IV = MarkerMaterial.create(GTValues.VN[GTValues.IV].toLowerCase(Locale.ROOT));
+        public static final Material LuV = MarkerMaterial.create(GTValues.VN[GTValues.LuV].toLowerCase(Locale.ROOT));
+        public static final Material ZPM = MarkerMaterial.create(GTValues.VN[GTValues.ZPM].toLowerCase(Locale.ROOT));
+        public static final Material UV = MarkerMaterial.create(GTValues.VN[GTValues.UV].toLowerCase(Locale.ROOT));
+        public static final Material UHV = MarkerMaterial.create(GTValues.VN[GTValues.UHV].toLowerCase(Locale.ROOT));
 
-        public static final Material UEV = MarkerMaterial.create(GTValues.VN[GTValues.UEV].toLowerCase());
-        public static final Material UIV = MarkerMaterial.create(GTValues.VN[GTValues.UIV].toLowerCase());
-        public static final Material UXV = MarkerMaterial.create(GTValues.VN[GTValues.UXV].toLowerCase());
-        public static final Material OpV = MarkerMaterial.create(GTValues.VN[GTValues.OpV].toLowerCase());
-        public static final Material MAX = MarkerMaterial.create(GTValues.VN[GTValues.MAX].toLowerCase());
+        public static final Material UEV = MarkerMaterial.create(GTValues.VN[GTValues.UEV].toLowerCase(Locale.ROOT));
+        public static final Material UIV = MarkerMaterial.create(GTValues.VN[GTValues.UIV].toLowerCase(Locale.ROOT));
+        public static final Material UXV = MarkerMaterial.create(GTValues.VN[GTValues.UXV].toLowerCase(Locale.ROOT));
+        public static final Material OpV = MarkerMaterial.create(GTValues.VN[GTValues.OpV].toLowerCase(Locale.ROOT));
+        public static final Material MAX = MarkerMaterial.create(GTValues.VN[GTValues.MAX].toLowerCase(Locale.ROOT));
     }
 
     public static class Component {

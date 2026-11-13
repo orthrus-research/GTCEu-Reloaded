@@ -17,6 +17,7 @@ import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -101,7 +102,7 @@ public class WorldConfigUtils {
                 HashMap<Type, Integer> backedMap = new HashMap<>();
                 for (Entry<String, JsonElement> elementEntry : object.entrySet()) {
                     if (elementEntry.getKey().equals("type")) continue; // skip type
-                    String tagName = elementEntry.getKey().toUpperCase();
+                    String tagName = elementEntry.getKey().toUpperCase(Locale.ROOT);
                     Type type = GTUtility.getBiomeTypeTagByName(tagName);
                     if (type == null)
                         throw new IllegalArgumentException("Couldn't find biome dictionary tag " + tagName);

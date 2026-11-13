@@ -122,6 +122,7 @@ import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -422,7 +423,7 @@ public final class MetaTileEntities {
             if (i > 4 && !getMidTier(name)) continue;
             if (i > 7 && !getHighTier(name)) break;
 
-            String voltageName = GTValues.VN[i + 1].toLowerCase();
+            String voltageName = GTValues.VN[i + 1].toLowerCase(Locale.ROOT);
             machines[i + 1] = registerMetaTileEntity(startId + i, mteCreator.apply(i + 1, voltageName));
         }
     }

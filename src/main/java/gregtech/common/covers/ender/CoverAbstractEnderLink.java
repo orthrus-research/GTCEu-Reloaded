@@ -53,6 +53,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -132,7 +133,7 @@ public abstract class CoverAbstractEnderLink<T extends VirtualEntry> extends Cov
 
     public void updateColor(String str) {
         if (str.length() == 8) {
-            this.color = str.toUpperCase();
+            this.color = str.toUpperCase(Locale.ROOT);
             updateLink();
         }
     }
@@ -293,7 +294,7 @@ public abstract class CoverAbstractEnderLink<T extends VirtualEntry> extends Cov
         this.workingEnabled = nbt.getBoolean("WorkingAllowed");
         this.playerUUID = UUID.fromString(nbt.getString("PlacedUUID"));
         int color = nbt.getInteger("Frequency");
-        this.color = Integer.toHexString(color).toUpperCase();
+        this.color = Integer.toHexString(color).toUpperCase(Locale.ROOT);
         updateLink();
     }
 

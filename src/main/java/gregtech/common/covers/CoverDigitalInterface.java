@@ -83,6 +83,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaTileEntity, ITickable, CoverWithUI {
@@ -108,7 +109,8 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
 
         public IKey getLangKey(boolean selected) {
             return IKey.lang(
-                    "metaitem.cover.digital.mode." + name().toLowerCase() + "." + (selected ? "enabled" : "disabled"));
+                    "metaitem.cover.digital.mode." + name().toLowerCase(Locale.ROOT) + "." +
+                            (selected ? "enabled" : "disabled"));
         }
 
         public IDrawable getOverlay(boolean selected) {

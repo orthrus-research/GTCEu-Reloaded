@@ -44,6 +44,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static gregtech.api.util.GTUtility.gregtechId;
@@ -638,7 +639,7 @@ public class Textures {
 
     static {
         for (int i = 0; i < VOLTAGE_CASINGS.length; i++) {
-            String voltageName = GTValues.VN[i].toLowerCase();
+            String voltageName = GTValues.VN[i].toLowerCase(Locale.ROOT);
             VOLTAGE_CASINGS[i] = new SimpleSidedCubeRenderer("casings/voltage/" + voltageName);
         }
         if (GTValues.isClientSide()) {

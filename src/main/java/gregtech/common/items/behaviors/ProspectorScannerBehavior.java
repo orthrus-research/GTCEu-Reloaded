@@ -158,9 +158,10 @@ public class ProspectorScannerBehavior implements IItemBehaviour, ItemUIFactory,
     @Override
     public void search(String word, Consumer<String> find) {
         if (widgetOreList != null) {
-            word = word.toLowerCase();
+            word = word.toLowerCase(Locale.ROOT);
             for (Map.Entry<String, String> entry : widgetOreList.ores.entrySet()) {
-                if (entry.getKey().toLowerCase().contains(word) || entry.getValue().toLowerCase().contains(word)) {
+                if (entry.getKey().toLowerCase(Locale.ROOT).contains(word) ||
+                        entry.getValue().toLowerCase(Locale.ROOT).contains(word)) {
                     find.accept(entry.getKey());
                 }
             }

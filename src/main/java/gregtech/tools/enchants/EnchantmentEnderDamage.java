@@ -16,6 +16,8 @@ import net.minecraft.potion.PotionEffect;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
+
 public class EnchantmentEnderDamage extends Enchantment {
 
     public static final EnchantmentEnderDamage INSTANCE = new EnchantmentEnderDamage();
@@ -46,7 +48,7 @@ public class EnchantmentEnderDamage extends Enchantment {
         String entityName = EntityList.getEntityString(target);
         if (target instanceof EntityLivingBase && (target instanceof EntityEnderman || target instanceof EntityDragon ||
                 target instanceof EntityEndermite ||
-                (entityName != null && entityName.toLowerCase().contains("ender")))) {
+                (entityName != null && entityName.toLowerCase(Locale.ROOT).contains("ender")))) {
             ((EntityLivingBase) target)
                     .addPotionEffect(new PotionEffect(MobEffects.WEAKNESS, level * 200, Math.max(1, (5 * level) / 7)));
             ((EntityLivingBase) target)

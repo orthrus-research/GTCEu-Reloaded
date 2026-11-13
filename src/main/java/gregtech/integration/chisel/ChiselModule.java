@@ -27,6 +27,7 @@ import net.minecraftforge.fml.common.event.FMLInterModComms;
 
 import team.chisel.common.carving.Carving;
 
+import java.util.Locale;
 import java.util.Objects;
 
 @GregTechModule(
@@ -48,7 +49,7 @@ public class ChiselModule extends IntegrationSubmodule {
         for (EnumDyeColor color : EnumDyeColor.values()) {
             Block lamp = MetaBlocks.LAMPS.get(color);
             Block lampBorderless = MetaBlocks.BORDERLESS_LAMPS.get(color);
-            String group = "gt_lamp_" + color.getName().toLowerCase();
+            String group = "gt_lamp_" + color.getName().toLowerCase(Locale.ROOT);
             for (int i = 0; i < 8; i++) {
                 addVariation(group, lamp, i);
                 addVariation(group, lampBorderless, i);
