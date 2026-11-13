@@ -594,14 +594,50 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         return getClass() == RecipeMap.class;
     }
 
+    /**
+     * @return the stacks that are not empty; the given collection itself when it has no empty stacks, which is the
+     *         common case on this idle-machine search path
+     */
+    private static Collection<ItemStack> withoutEmptyItems(Collection<ItemStack> items) {
+        boolean hasEmpty = false;
+        for (ItemStack stack : items) {
+            if (stack.isEmpty()) {
+                hasEmpty = true;
+                break;
+            }
+        }
+        if (!hasEmpty) return items;
+        List<ItemStack> nonEmpty = new ArrayList<>(items.size());
+        for (ItemStack stack : items) {
+            if (!stack.isEmpty()) nonEmpty.add(stack);
+        }
+        return nonEmpty;
+    }
+
+    /** @see #withoutEmptyItems */
+    private static Collection<FluidStack> withoutEmptyFluids(Collection<FluidStack> fluids) {
+        boolean hasEmpty = false;
+        for (FluidStack stack : fluids) {
+            if (stack == null || stack.amount == 0) {
+                hasEmpty = true;
+                break;
+            }
+        }
+        if (!hasEmpty) return fluids;
+        List<FluidStack> nonEmpty = new ArrayList<>(fluids.size());
+        for (FluidStack stack : fluids) {
+            if (stack != null && stack.amount != 0) nonEmpty.add(stack);
+        }
+        return nonEmpty;
+    }
+
     /** Uses the existing deterministic traversal, checking each matching recipe's eligibility at most once. */
     public RecipeSearchResult findWithEligibility(Collection<ItemStack> items, Collection<FluidStack> fluids,
                                                   Predicate<Recipe> inputMatch, Predicate<Recipe> eligibility) {
         Recipe[] firstMatch = { null };
         Map<Recipe, Boolean> checked = new IdentityHashMap<>();
-        List<ItemStack> nonEmptyItems = items.stream().filter(stack -> !stack.isEmpty()).collect(Collectors.toList());
-        List<FluidStack> nonEmptyFluids = fluids.stream().filter(stack -> stack != null && stack.amount != 0)
-                .collect(Collectors.toList());
+        Collection<ItemStack> nonEmptyItems = withoutEmptyItems(items);
+        Collection<FluidStack> nonEmptyFluids = withoutEmptyFluids(fluids);
         Recipe selected = find(nonEmptyItems, nonEmptyFluids, recipe -> {
             if (!inputMatch.test(recipe)) return false;
             if (firstMatch[0] == null) firstMatch[0] = recipe;
@@ -635,9 +671,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     @Nullable
     public Recipe findRecipe(long voltage, final List<ItemStack> inputs, final List<FluidStack> fluidInputs,
                              boolean exactVoltage) {
-        final List<ItemStack> items = inputs.stream().filter(s -> !s.isEmpty()).collect(Collectors.toList());
-        final List<FluidStack> fluids = fluidInputs.stream().filter(f -> f != null && f.amount != 0)
-                .collect(Collectors.toList());
+        final Collection<ItemStack> items = withoutEmptyItems(inputs);
+        final Collection<FluidStack> fluids = withoutEmptyFluids(fluidInputs);
 
         return find(items, fluids, recipe -> {
             if (exactVoltage && recipe.getEUt() != voltage) {
