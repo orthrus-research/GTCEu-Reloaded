@@ -66,6 +66,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Range;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -79,7 +80,9 @@ import static gregtech.api.items.toolitem.ToolHelper.MATERIAL_KEY;
 public class ItemGTToolbelt extends ItemGTTool implements IDyeableItem {
 
     private static final ThreadLocal<Integer> lastSlot = ThreadLocal.withInitial(() -> -999);
-    private static final ThreadLocal<EntityPlayerMP> lastPlayer = ThreadLocal.withInitial(() -> null);
+    // weak: a strong thread-local would keep the last crafting player, and their world, alive after logout
+    private static final ThreadLocal<WeakReference<EntityPlayerMP>> lastPlayer = ThreadLocal
+            .withInitial(() -> new WeakReference<>(null));
 
     public ItemGTToolbelt(String domain, String id, Supplier<ItemStack> markerItem, IToolBehavior... behaviors) {
         super(domain, id, -1,
@@ -403,7 +406,7 @@ public class ItemGTToolbelt extends ItemGTTool implements IDyeableItem {
         if (match != -1) {
             setSelectedTool(match, stack);
             PacketToolbeltSelectionChange.toClient(match,
-                    lastSlot.get(), lastPlayer.get());
+                    lastSlot.get(), lastPlayer.get().get());
         }
     }
 
@@ -540,7 +543,7 @@ public class ItemGTToolbelt extends ItemGTTool implements IDyeableItem {
 
     public static void setCraftingSlot(int slot, EntityPlayerMP player) {
         lastSlot.set(slot);
-        lastPlayer.set(player);
+        lastPlayer.set(new WeakReference<>(player));
     }
 
     public static boolean checkToolAgainstToolbelt(@NotNull ItemStack toolbelt, @NotNull ItemStack tool) {
