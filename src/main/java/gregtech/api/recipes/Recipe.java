@@ -392,16 +392,19 @@ public class Recipe {
         return this.hashCode;
     }
 
+    // equals matches inputs regardless of their order, so the input hashes are summed rather than folded in order
     private int hashInputs() {
         int hash = 0;
         for (GTRecipeInput recipeIngredient : this.inputs) {
+            int ingredientHash = 0;
             if (!recipeIngredient.isOreDict()) {
                 for (ItemStack is : recipeIngredient.getInputStacks()) {
-                    hash = 31 * hash + ItemStackHashStrategy.comparingAll().hashCode(is);
+                    ingredientHash = 31 * ingredientHash + ItemStackHashStrategy.comparingAll().hashCode(is);
                 }
             } else {
-                hash = 31 * hash + recipeIngredient.getOreDict();
+                ingredientHash = recipeIngredient.getOreDict();
             }
+            hash += ingredientHash;
         }
         return hash;
     }
@@ -422,10 +425,13 @@ public class Recipe {
         return otherRecipe.matchesItems(thisStackList).getLeft();
     }
 
+    /**
+     * @return a hash of the fluid inputs that does not depend on their order, matching how recipes compare them
+     */
     public static int hashFluidList(@NotNull List<GTRecipeInput> fluids) {
         int hash = 0;
         for (GTRecipeInput fluidInput : fluids) {
-            hash = 31 * hash + fluidInput.hashCode();
+            hash += fluidInput.hashCode();
         }
         return hash;
     }
@@ -698,7 +704,8 @@ public class Recipe {
             FluidStack stackToAdd = chancedOutput.getIngredient().copy();
             for (FluidStack stackInList : resultChanced) {
                 int insertable = stackInList.amount;
-                if (insertable > 0 && stackInList.getFluid() == stackToAdd.getFluid()) {
+                // same fluid and tag: fluids that differ only in NBT stay separate outputs
+                if (insertable > 0 && stackInList.isFluidEqual(stackToAdd)) {
                     stackInList.amount += stackToAdd.amount;
                     stackToAdd = null;
                     break;
