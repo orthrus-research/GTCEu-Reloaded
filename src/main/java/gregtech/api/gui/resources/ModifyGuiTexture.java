@@ -87,17 +87,14 @@ public class ModifyGuiTexture implements IGuiTexture {
     public void loadConfig(JsonObject config) {
         try {
             switch (config.get("type").getAsString()) {
-                case "resource":
-                    setTexture(new TextureArea(new ResourceLocation(config.get("resource").getAsString()), 0.0, 0.0,
-                            1.0, 1.0));
-                case "url":
-                    setTexture(new URLTexture(config.get("url").getAsString()));
-                case "text":
-                    setTexture(new TextTexture(config.get("text").getAsString(), config.get("color").getAsInt()));
-                case "color":
-                    setTexture(new ColorRectTexture(config.get("color").getAsInt()));
-                case "file":
-                    setTexture(new FileTexture(new File(config.get("file").getAsString())));
+                case "resource" -> setTexture(new TextureArea(
+                        new ResourceLocation(config.get("resource").getAsString()), 0.0, 0.0, 1.0, 1.0));
+                case "url" -> setTexture(new URLTexture(config.get("url").getAsString()));
+                case "text" -> setTexture(
+                        new TextTexture(config.get("text").getAsString(), config.get("color").getAsInt()));
+                case "color" -> setTexture(new ColorRectTexture(config.get("color").getAsInt()));
+                case "file" -> setTexture(new FileTexture(new File(config.get("file").getAsString())));
+                default -> {}
             }
         } catch (Exception ignored) {}
     }
