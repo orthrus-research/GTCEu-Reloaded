@@ -718,25 +718,19 @@ public final class ToolHelper {
                 // Search for forge hammer recipes from all drops individually (only LV or under)
                 Recipe hammerRecipe = RecipeMaps.FORGE_HAMMER_RECIPES.findRecipe(V[LV], dropAsList,
                         Collections.emptyList(), false);
+                // read the prefix first: matches(true, ...) consumes the silk touch stack
+                OrePrefix prefix = OreDictUnifier.getPrefix(silktouchDrop);
+                boolean isOre = prefix != null && prefix.name.startsWith("ore");
                 if (hammerRecipe != null && hammerRecipe.matches(true, dropAsList, Collections.emptyList())) {
                     drops.clear();
-                    OrePrefix prefix = OreDictUnifier.getPrefix(silktouchDrop);
-                    if (prefix == null) {
-                        for (ItemStack output : hammerRecipe.getOutputs()) {
-                            if (dropChance == 1.0F || random.nextFloat() <= dropChance) {
-                                drops.add(output.copy());
+                    for (ItemStack output : hammerRecipe.getOutputs()) {
+                        if (dropChance == 1.0F || random.nextFloat() <= dropChance) {
+                            ItemStack drop = output.copy();
+                            // Only apply fortune on ore -> crushed forge hammer recipes
+                            if (isOre && fortune > 0 && OreDictUnifier.getPrefix(output) == OrePrefix.crushed) {
+                                drop.grow(random.nextInt(fortune));
                             }
-                        }
-                    } else if (prefix.name.startsWith("ore")) {
-                        for (ItemStack output : hammerRecipe.getOutputs()) {
-                            if (dropChance == 1.0F || random.nextFloat() <= dropChance) {
-                                // Only apply fortune on ore -> crushed forge hammer recipes
-                                if (OreDictUnifier.getPrefix(output) == OrePrefix.crushed) {
-                                    output = output.copy();
-                                    output.grow(random.nextInt(fortune));
-                                    drops.add(output);
-                                }
-                            }
+                            drops.add(drop);
                         }
                     }
                 }

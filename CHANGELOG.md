@@ -124,6 +124,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | Gameplay change: bedrock fluid veins deplete at their configured chance; before, each operation was one percentage point more likely to deplete them |
 | Recipes | Gameplay change: fluid-solidifier pipe recipes use the material's working tier for their voltage like every other generated pipe recipe; before, they ignored it |
 | Recipes | Parallel recipe checks reject at once when a non-consumable input with a stack size is short; before, some shortages passed this check and were caught only later, after the parallel amount had been computed |
+| Tools | Gameplay change: Fortune on a hard hammer adds crushed ore when it hammers ore blocks, as its code intended; before, Fortune never applied |
 
 ### Earlier fork changes
 
