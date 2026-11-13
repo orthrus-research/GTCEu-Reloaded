@@ -78,6 +78,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Rendering | Texture metadata that gives separate block and sky light (`"light": {"block": …, "sky": …}`) applies both; before, the sky value overwrote the block value |
 | GUI | Editing the green value in an ARGB colour field (monitor plugins) keeps the alpha; before, it made the colour fully transparent |
 | Machines | A newly placed diode passes energy straight away; before, it had zero capacity and passed nothing until the world was reloaded or its amperage was changed |
+| Machines | Viewing the Large Miner's screen no longer consumes drilling fluid; before, the status check drained it while the screen was open |
 
 ### Earlier fork changes
 

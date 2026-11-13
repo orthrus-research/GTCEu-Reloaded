@@ -301,7 +301,7 @@ public class MetaTileEntityLargeMiner extends MultiblockWithDisplayBase
     protected void configureErrorText(MultiblockUIBuilder builder) {
         super.configureErrorText(builder);
         builder.addCustom((list, syncer) -> {
-            if (isStructureFormed() && syncer.syncBoolean(() -> !drainFluid(false))) {
+            if (isStructureFormed() && syncer.syncBoolean(() -> !drainFluid(true))) {
                 list.add(KeyUtil.lang(TextFormatting.RED, "gregtech.machine.miner.multi.needsfluid"));
             }
         });
