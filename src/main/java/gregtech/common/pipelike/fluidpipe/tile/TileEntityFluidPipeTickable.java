@@ -435,6 +435,17 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
     @Override
     public NBTTagCompound writeToNBT(@NotNull NBTTagCompound nbt) {
         super.writeToNBT(nbt);
+        // a record kept for an unknown fluid must not overwrite a channel that carries fluid again:
+        // move it past the live tanks, where the overflow records go
+        for (int i = 0; i < getFluidTanks().length; i++) {
+            FluidStack live = getContainedFluid(i);
+            if (live != null && live.amount > 0 && retainedFluidData.containsKey(i)) {
+                NBTTagCompound retained = retainedFluidData.remove(i);
+                int channel = getFluidTanks().length;
+                while (retainedFluidData.containsKey(channel)) channel++;
+                retainedFluidData.put(channel, retained);
+            }
+        }
         NBTTagList list = new NBTTagList();
         for (int i = 0; i < getFluidTanks().length; i++) {
             FluidStack stack1 = getContainedFluid(i);
