@@ -224,7 +224,7 @@ public class QuarkTechSuite extends ArmorLogicSuite implements IStepAssist {
         }
 
         if (ret) {
-            player.inventoryContainer.detectAndSendChanges();
+            ArmorUtils.syncInventoryContainer(player);
         }
     }
 

@@ -65,7 +65,7 @@ public class Jetpack extends ArmorLogicSuite implements IJetpack {
 
         data.setBoolean("hover", hover);
         data.setByte("toggleTimer", toggleTimer);
-        player.inventoryContainer.detectAndSendChanges();
+        ArmorUtils.syncInventoryContainer(player);
     }
 
     @Override
