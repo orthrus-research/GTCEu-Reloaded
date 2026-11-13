@@ -256,6 +256,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | Custom loot entries no longer depend on reflection that current JDKs refuse |
 | API | Two vanilla hooks now combine with other mods that hook the same code instead of failing to apply |
 | Rendering | The bloom pass no longer stops other mods from hooking the translucent block layer |
+| GUI | In ModularUI text, /n becomes a line break only in GregTech's own translations; other mods' text keeps it as written |
 
 ### Earlier fork changes
 

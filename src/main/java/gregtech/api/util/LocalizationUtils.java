@@ -4,13 +4,23 @@ import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("deprecation")
 public class LocalizationUtils {
 
     private static final Pattern NEW_LINE_PATTERN = Pattern.compile("/n");
+    private static final String OWN_LANG_FILE = "/assets/gregtech/lang/en_us.lang";
+    private static volatile Set<String> ownKeys;
 
     /**
      * This function calls {@link net.minecraft.client.resources.I18n#format(String, Object...)} when called on client
@@ -29,6 +39,39 @@ public class LocalizationUtils {
      * @param key the localization key passed to the underlying hasKey function
      * @return a boolean indicating if the given localization key has localisations
      */
+    /**
+     * GregTech's translations mark line breaks with {@code /n}. Text from other mods may contain {@code /n} for
+     * other reasons (a unit such as m/n, a path, a URL), so that marker is only honoured for keys GregTech defines.
+     *
+     * @return whether the key is one of GregTech's own translation keys
+     */
+    public static boolean isOwnKey(@Nullable String key) {
+        if (key == null) return false;
+        Set<String> keys = ownKeys;
+        if (keys == null) {
+            keys = loadOwnKeys();
+            ownKeys = keys;
+        }
+        return keys.contains(key);
+    }
+
+    @NotNull
+    private static Set<String> loadOwnKeys() {
+        Set<String> keys = new HashSet<>();
+        InputStream in = LocalizationUtils.class.getResourceAsStream(OWN_LANG_FILE);
+        if (in == null) return keys;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int equals = line.indexOf('=');
+                if (equals > 0 && !line.startsWith("#")) keys.add(line.substring(0, equals).trim());
+            }
+        } catch (IOException e) {
+            GTLog.logger.warn("Could not read GregTech's translation keys", e);
+        }
+        return keys;
+    }
+
     public static String format(String key, Object... format) {
         if (FMLCommonHandler.instance().getSide() == Side.SERVER) {
             return net.minecraft.util.text.translation.I18n.translateToLocalFormatted(key, format);
