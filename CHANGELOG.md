@@ -257,6 +257,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | Two vanilla hooks now combine with other mods that hook the same code instead of failing to apply |
 | Rendering | The bloom pass no longer stops other mods from hooking the translucent block layer |
 | GUI | In ModularUI text, /n becomes a line break only in GregTech's own translations; other mods' text keeps it as written |
+| API | GregTech's ModularUI tweaks apply only to the tested ModularUI release; other releases log a warning and run unmodified |
 
 ### Earlier fork changes
 
