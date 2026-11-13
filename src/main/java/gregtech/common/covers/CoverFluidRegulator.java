@@ -81,15 +81,18 @@ public class CoverFluidRegulator extends CoverPump {
         int fluidLeftToTransfer = transferLimit;
         for (IFluidTankProperties tankProperties : sourceHandler.getTankProperties()) {
             FluidStack sourceFluid = tankProperties.getContents();
-            if (this.fluidFilterContainer.hasFilter()) {
-                supplyAmount = this.fluidFilterContainer.getFilter().getTransferLimit(sourceFluid, supplyAmount);
-            }
-            if (fluidLeftToTransfer < supplyAmount)
+            if (sourceFluid == null || sourceFluid.amount == 0) continue;
+            // per tank, so one tank's filter limit does not carry over to the next
+            int tankSupplyAmount = this.fluidFilterContainer.hasFilter() ?
+                    this.fluidFilterContainer.getFilter().getTransferLimit(sourceFluid, supplyAmount) : supplyAmount;
+            if (fluidLeftToTransfer < tankSupplyAmount)
                 break;
-            if (sourceFluid == null || sourceFluid.amount == 0 || !fluidFilter.test(sourceFluid)) continue;
-            sourceFluid.amount = supplyAmount;
-            if (GTTransferUtils.transferExactFluidStack(sourceHandler, destHandler, sourceFluid.copy())) {
-                fluidLeftToTransfer -= sourceFluid.amount;
+            if (!fluidFilter.test(sourceFluid)) continue;
+            // getContents may be the tank's live stack, so never write into it
+            FluidStack toTransfer = sourceFluid.copy();
+            toTransfer.amount = tankSupplyAmount;
+            if (GTTransferUtils.transferExactFluidStack(sourceHandler, destHandler, toTransfer)) {
+                fluidLeftToTransfer -= tankSupplyAmount;
             }
             if (fluidLeftToTransfer == 0) break;
         }
