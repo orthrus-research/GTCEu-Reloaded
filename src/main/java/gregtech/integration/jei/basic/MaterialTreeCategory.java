@@ -32,18 +32,22 @@ public class MaterialTreeCategory extends BasicRecipeCategory<MaterialTree, Mate
 
     public static final String UID = String.format("%s.material_tree", GTValues.MODID);
 
-    protected String materialName;
-    protected String materialFormula;
-    protected int materialBFTemp;
-    protected String materialAvgM;
-    protected String materialAvgP;
-    protected String materialAvgN;
+    /** What one recipe draws; JEI lays out every recipe of a page before drawing any, so it lives per recipe. */
+    static final class RecipeState {
+
+        String materialName;
+        String materialFormula;
+        int materialBFTemp;
+        String materialAvgM;
+        String materialAvgP;
+        String materialAvgN;
+        final List<Boolean> itemExists = new ArrayList<>();
+        final List<Boolean> fluidExists = new ArrayList<>();
+    }
 
     protected final IDrawable slot;
     protected final IDrawable icon;
 
-    protected List<Boolean> itemExists = new ArrayList<>();
-    protected List<Boolean> fluidExists = new ArrayList<>();
     // XY positions of ingredients
     protected final static ImmutableList<Integer> ITEM_LOCATIONS = ImmutableList.of(
             // corresponds pair-to-one with PREFIXES in MaterialTree.java
@@ -131,9 +135,11 @@ public class MaterialTreeCategory extends BasicRecipeCategory<MaterialTree, Mate
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, @NotNull MaterialTree recipeWrapper, IIngredients ingredients) {
         // place and check existence of items
+        RecipeState state = new RecipeState();
+        List<Boolean> itemExists = state.itemExists;
+        List<Boolean> fluidExists = state.fluidExists;
         IGuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
         List<List<ItemStack>> itemInputs = ingredients.getInputs(VanillaTypes.ITEM);
-        itemExists.clear();
         for (int i = 0; i < ITEM_LOCATIONS.size(); i += 2) {
             itemStackGroup.init(i, true, ITEM_LOCATIONS.get(i), ITEM_LOCATIONS.get(i + 1));
             itemExists.add(itemInputs.get(i / 2).size() > 0);
@@ -143,7 +149,6 @@ public class MaterialTreeCategory extends BasicRecipeCategory<MaterialTree, Mate
         // place and check existence of fluid(s)
         IGuiFluidStackGroup fluidStackGroup = recipeLayout.getFluidStacks();
         List<List<FluidStack>> fluidInputs = ingredients.getInputs(VanillaTypes.FLUID);
-        fluidExists.clear();
         for (int i = 0; i < FLUID_LOCATIONS.size(); i += 2) {
             // fluids annoyingly need to be offset by 1 to fit in the slot graphic
             fluidStackGroup.init(0, true, FLUID_LOCATIONS.get(i) + 1, FLUID_LOCATIONS.get(i + 1) + 1);
@@ -152,12 +157,13 @@ public class MaterialTreeCategory extends BasicRecipeCategory<MaterialTree, Mate
         fluidStackGroup.set(ingredients);
 
         // set info of current material
-        materialName = recipeWrapper.getMaterialName();
-        materialFormula = recipeWrapper.getMaterialFormula();
-        materialBFTemp = recipeWrapper.getBlastTemp();
-        materialAvgM = I18n.format("gregtech.jei.materials.average_mass", recipeWrapper.getAvgM());
-        materialAvgP = I18n.format("gregtech.jei.materials.average_protons", recipeWrapper.getAvgP());
-        materialAvgN = I18n.format("gregtech.jei.materials.average_neutrons", recipeWrapper.getAvgN());
+        state.materialName = recipeWrapper.getMaterialName();
+        state.materialFormula = recipeWrapper.getMaterialFormula();
+        state.materialBFTemp = recipeWrapper.getBlastTemp();
+        state.materialAvgM = I18n.format("gregtech.jei.materials.average_mass", recipeWrapper.getAvgM());
+        state.materialAvgP = I18n.format("gregtech.jei.materials.average_protons", recipeWrapper.getAvgP());
+        state.materialAvgN = I18n.format("gregtech.jei.materials.average_neutrons", recipeWrapper.getAvgN());
+        recipeWrapper.setDrawing(this, state);
     }
 
     @NotNull
@@ -172,8 +178,18 @@ public class MaterialTreeCategory extends BasicRecipeCategory<MaterialTree, Mate
         return icon;
     }
 
-    @Override
-    public void drawExtras(@NotNull Minecraft minecraft) {
+    /**
+     * Draw one recipe's slots, arrows and text; called from {@link MaterialTree#drawInfo}.
+     */
+    void drawRecipeExtras(@NotNull Minecraft minecraft, @NotNull RecipeState state) {
+        String materialName = state.materialName;
+        String materialFormula = state.materialFormula;
+        int materialBFTemp = state.materialBFTemp;
+        String materialAvgM = state.materialAvgM;
+        String materialAvgP = state.materialAvgP;
+        String materialAvgN = state.materialAvgN;
+        List<Boolean> itemExists = state.itemExists;
+        List<Boolean> fluidExists = state.fluidExists;
         // item slot rendering
         for (int i = 0; i < ITEM_LOCATIONS.size(); i += 2) {
             if (itemExists.get(i / 2))

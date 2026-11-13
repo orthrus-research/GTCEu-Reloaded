@@ -5,6 +5,7 @@ import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.ore.OrePrefix;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
@@ -13,6 +14,8 @@ import com.google.common.collect.ImmutableList;
 import mezz.jei.api.ingredients.IIngredients;
 import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeWrapper;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,5 +128,19 @@ public class MaterialTree implements IRecipeWrapper {
 
     public int getBlastTemp() {
         return blastTemp;
+    }
+
+    // per-recipe drawing; the category is shared by every recipe on a page
+    private @Nullable MaterialTreeCategory category;
+    private MaterialTreeCategory.@Nullable RecipeState state;
+
+    void setDrawing(@NotNull MaterialTreeCategory category, MaterialTreeCategory.@NotNull RecipeState state) {
+        this.category = category;
+        this.state = state;
+    }
+
+    @Override
+    public void drawInfo(@NotNull Minecraft minecraft, int recipeWidth, int recipeHeight, int mouseX, int mouseY) {
+        if (category != null && state != null) category.drawRecipeExtras(minecraft, state);
     }
 }

@@ -41,12 +41,17 @@ public class OreByProductCategory extends BasicRecipeCategory<OreByProduct, OreB
     protected final IDrawable arrowsSeparator;
     protected final IDrawable arrowsSifter;
     protected final IDrawable icon;
-    protected final List<Boolean> itemOutputExists = new ArrayList<>();
-    protected final List<Boolean> fluidInputExists = new ArrayList<>();
-    protected boolean hasDirectSmelt;
-    protected boolean hasChemBath;
-    protected boolean hasSeparator;
-    protected boolean hasSifter;
+
+    /** What one recipe draws; JEI lays out every recipe of a page before drawing any, so it lives per recipe. */
+    static final class RecipeState {
+
+        final List<Boolean> itemOutputExists = new ArrayList<>();
+        final List<Boolean> fluidInputExists = new ArrayList<>();
+        boolean hasDirectSmelt;
+        boolean hasChemBath;
+        boolean hasSeparator;
+        boolean hasSifter;
+    }
 
     // XY positions of every item and fluid, in three enormous lists
     protected final static ImmutableList<Integer> ITEM_INPUT_LOCATIONS = ImmutableList.of(
@@ -141,6 +146,9 @@ public class OreByProductCategory extends BasicRecipeCategory<OreByProduct, OreB
     @Override
     public void setRecipe(IRecipeLayout recipeLayout, @NotNull OreByProduct recipeWrapper,
                           @NotNull IIngredients ingredients) {
+        RecipeState state = new RecipeState();
+        List<Boolean> itemOutputExists = state.itemOutputExists;
+        List<Boolean> fluidInputExists = state.fluidInputExists;
         IGuiItemStackGroup itemStackGroup = recipeLayout.getItemStacks();
         IGuiFluidStackGroup fluidStackGroup = recipeLayout.getFluidStacks();
 
@@ -150,7 +158,6 @@ public class OreByProductCategory extends BasicRecipeCategory<OreByProduct, OreB
         }
 
         List<List<ItemStack>> itemOutputs = ingredients.getOutputs(VanillaTypes.ITEM);
-        itemOutputExists.clear();
         for (int i = 0; i < ITEM_OUTPUT_LOCATIONS.size(); i += 2) {
             itemStackGroup.init(i / 2 + itemInputs.size(), false,
                     new ItemStackTextRenderer(recipeWrapper.getChance(i / 2 + itemInputs.size()),
@@ -160,7 +167,6 @@ public class OreByProductCategory extends BasicRecipeCategory<OreByProduct, OreB
         }
 
         List<List<FluidStack>> fluidInputs = ingredients.getInputs(VanillaTypes.FLUID);
-        fluidInputExists.clear();
         for (int i = 0; i < FLUID_LOCATIONS.size(); i += 2) {
             fluidStackGroup.init(i / 2, true, new FluidStackTextRenderer(1, false, 16, 16, null),
                     FLUID_LOCATIONS.get(i) + 1, FLUID_LOCATIONS.get(i + 1) + 1, 16, 16, 0, 0);
@@ -171,10 +177,11 @@ public class OreByProductCategory extends BasicRecipeCategory<OreByProduct, OreB
         itemStackGroup.set(ingredients);
         fluidStackGroup.set(ingredients);
 
-        hasDirectSmelt = recipeWrapper.hasDirectSmelt();
-        hasChemBath = recipeWrapper.hasChemBath();
-        hasSeparator = recipeWrapper.hasSeparator();
-        hasSifter = recipeWrapper.hasSifter();
+        state.hasDirectSmelt = recipeWrapper.hasDirectSmelt();
+        state.hasChemBath = recipeWrapper.hasChemBath();
+        state.hasSeparator = recipeWrapper.hasSeparator();
+        state.hasSifter = recipeWrapper.hasSifter();
+        recipeWrapper.setDrawing(this, state);
     }
 
     @NotNull
@@ -191,7 +198,20 @@ public class OreByProductCategory extends BasicRecipeCategory<OreByProduct, OreB
 
     @Override
     public void drawExtras(@NotNull Minecraft minecraft) {
+        // the same for every recipe
         arrowsBase.draw(minecraft, 0, 0);
+    }
+
+    /**
+     * Draw one recipe's arrows and slots; called from {@link OreByProduct#drawInfo}.
+     */
+    void drawRecipeExtras(@NotNull Minecraft minecraft, @NotNull RecipeState state) {
+        List<Boolean> itemOutputExists = state.itemOutputExists;
+        List<Boolean> fluidInputExists = state.fluidInputExists;
+        boolean hasDirectSmelt = state.hasDirectSmelt;
+        boolean hasChemBath = state.hasChemBath;
+        boolean hasSeparator = state.hasSeparator;
+        boolean hasSifter = state.hasSifter;
         if (hasDirectSmelt) {
             arrowsDirectSmelt.draw(minecraft, 0, 0);
         }
