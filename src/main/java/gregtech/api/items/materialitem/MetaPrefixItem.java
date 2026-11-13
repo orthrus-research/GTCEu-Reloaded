@@ -167,9 +167,9 @@ public class MetaPrefixItem extends StandardMetaItem {
                 }
 
                 if (heatDamage > 0.0) {
-                    entity.attackEntityFrom(DamageSources.getHeatDamage().setDamageBypassesArmor(), heatDamage);
+                    entity.attackEntityFrom(DamageSources.getHeatDamageBypassingArmor(), heatDamage);
                 } else if (heatDamage < 0.0) {
-                    entity.attackEntityFrom(DamageSources.getFrostDamage().setDamageBypassesArmor(), -heatDamage);
+                    entity.attackEntityFrom(DamageSources.getFrostDamageBypassingArmor(), -heatDamage);
                 }
             }
         }
