@@ -1,5 +1,7 @@
 package gregtech.api.util;
 
+import java.math.BigInteger;
+
 public class RedstoneUtil {
 
     /**
@@ -58,7 +60,10 @@ public class RedstoneUtil {
      * @throws ArithmeticException when max is 0
      */
     public static int computeRedstoneValue(long current, long max, boolean isInverted) throws ArithmeticException {
-        int outputAmount = (int) (15 * current / max);
+        // 15 * current overflows a long above Long.MAX_VALUE / 15; take the exact quotient there
+        int outputAmount = current <= Long.MAX_VALUE / 15 ? (int) (15 * current / max) :
+                BigInteger.valueOf(current).multiply(BigInteger.valueOf(15)).divide(BigInteger.valueOf(max))
+                        .intValue();
 
         if (isInverted) {
             outputAmount = 15 - outputAmount;
