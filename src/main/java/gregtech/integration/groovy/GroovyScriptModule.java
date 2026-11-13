@@ -173,7 +173,7 @@ public class GroovyScriptModule extends IntegrationSubmodule implements GroovyPl
         int i = toSplit.indexOf(':');
         if (i >= 0) {
             resultSplit[1] = toSplit.substring(i + 1);
-            if (i > 1) {
+            if (i > 0) {
                 resultSplit[0] = toSplit.substring(0, i);
             }
         }

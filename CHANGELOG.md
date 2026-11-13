@@ -105,6 +105,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | World generation | Ellipsoid ore veins with radii of about 46 and up generate their full shape; before, the size arithmetic overflowed and the vein came out empty or scrambled |
 | World generation | Invalid filler weights and layered veins with the wrong ore count report their value in the error message; before, the message showed a literal `%d` |
 | Machines | Fluid drilling rigs on veins with a configured yield above 21,474 produce their scaled yield; before, the arithmetic overflowed |
+| Scripting | GroovyScript object names with a one-letter namespace (`x:name`) look up that namespace; before, they fell back to `gregtech` |
 
 ### Earlier fork changes
 
