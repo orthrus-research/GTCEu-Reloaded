@@ -77,6 +77,7 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
                     return null;
                 }
             }
+            if (multi.structurePattern == null) return null;
             PatternMatchContext context = multi.structurePattern.checkPatternFastAt(
                     target.getWorld(), target.getPos(), target.getFrontFacing().getOpposite(), multi.getUpwardsFacing(),
                     multi.allowsFlip());

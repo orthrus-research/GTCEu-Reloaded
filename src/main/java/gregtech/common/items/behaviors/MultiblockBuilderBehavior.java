@@ -39,6 +39,8 @@ public class MultiblockBuilderBehavior implements IItemBehaviour {
         if (!player.canPlayerEdit(pos, side, player.getHeldItem(hand))) return EnumActionResult.FAIL;
         MultiblockControllerBase multiblock = (MultiblockControllerBase) mte;
         if (world.isRemote) return EnumActionResult.SUCCESS;
+        // the pattern is built lazily; a controller that has not built it yet has nothing to show or build
+        if (multiblock.structurePattern == null) return EnumActionResult.PASS;
 
         if (player.isSneaking()) {
             // If sneaking, try to build the multiblock.
