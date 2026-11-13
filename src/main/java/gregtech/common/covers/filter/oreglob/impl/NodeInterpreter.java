@@ -114,16 +114,15 @@ class NodeInterpreter implements NodeVisitor {
 
     @Override
     public void charsOrMore(int amount, boolean not) {
-        IntIterator it = this.inputStates.iterator();
         if (not) {
-            // less than n chars
-            while (it.hasNext()) {
-                int state = it.nextInt();
-                for (int i = state; i < state + amount; i++) {
-                    this.outputStates.add(i);
-                }
+            // less than n chars: the complement of [min + n, length], as negate() would compute it
+            int state = computeMinInputState();
+            int end = Math.min(state + amount, this.input.length() + 1);
+            for (; state < end; state++) {
+                this.outputStates.add(state);
             }
         } else {
+            IntIterator it = this.inputStates.iterator();
             // Match n~ chars, where n is amount of characters needed to match the whole input
             while (it.hasNext()) {
                 int state = it.nextInt();
