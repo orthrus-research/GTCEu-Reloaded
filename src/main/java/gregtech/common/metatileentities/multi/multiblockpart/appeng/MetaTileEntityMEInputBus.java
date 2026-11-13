@@ -51,6 +51,7 @@ import codechicken.lib.vec.Matrix4;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -140,24 +141,49 @@ public class MetaTileEntityMEInputBus extends MetaTileEntityAEHostablePart<IAEIt
     }
 
     @Override
+    public void clearMachineInventory(@NotNull List<@NotNull ItemStack> itemBuffer) {
+        // what the network does not take back (it is offline or full) drops as items instead of vanishing
+        for (IAEItemStack remainder : flushInventory()) {
+            long left = remainder.getStackSize();
+            while (left > 0) {
+                ItemStack stack = remainder.createItemStack();
+                if (stack.isEmpty()) break;
+                int count = (int) Math.min(left, stack.getMaxStackSize());
+                stack.setCount(count);
+                itemBuffer.add(stack);
+                left -= count;
+            }
+        }
+    }
+
+    @Override
     public void onRemoval() {
+        // a broken bus was already emptied by clearMachineInventory
         flushInventory();
         super.onRemoval();
     }
 
-    protected void flushInventory() {
+    /**
+     * Returns the held stock to the network and empties the slots.
+     *
+     * @return what the network did not accept
+     */
+    @NotNull
+    protected List<IAEItemStack> flushInventory() {
         IMEMonitor<IAEItemStack> monitor = getMonitor();
-        if (monitor == null) return;
-
+        List<IAEItemStack> remainders = new ArrayList<>();
         for (ExportOnlyAEItemSlot aeSlot : this.getAEItemHandler().getInventory()) {
             IAEItemStack stock = aeSlot.getStock();
             if (stock instanceof WrappedItemStack) {
                 stock = ((WrappedItemStack) stock).getAEStack();
             }
-            if (stock != null) {
-                monitor.injectItems(stock, Actionable.MODULATE, this.getActionSource());
-            }
+            if (stock == null || stock.getStackSize() <= 0) continue;
+            IAEItemStack left = monitor == null ? stock.copy() :
+                    monitor.injectItems(stock.copy(), Actionable.MODULATE, this.getActionSource());
+            if (left != null && left.getStackSize() > 0) remainders.add(left);
+            aeSlot.setStock(null);
         }
+        return remainders;
     }
 
     @Override

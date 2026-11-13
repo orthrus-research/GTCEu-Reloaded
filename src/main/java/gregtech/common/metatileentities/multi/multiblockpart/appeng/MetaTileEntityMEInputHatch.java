@@ -43,16 +43,21 @@ import codechicken.lib.vec.Matrix4;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class MetaTileEntityMEInputHatch extends MetaTileEntityAEHostablePart<IAEFluidStack>
                                         implements IMultiblockAbilityPart<IFluidTank>, IDataStickIntractable {
 
     public final static String FLUID_BUFFER_TAG = "FluidTanks";
+    private static final String LEFTOVER_FLUIDS_TAG = "LeftoverFluids";
     public final static String WORKING_TAG = "WorkingEnabled";
     private final static int CONFIG_SIZE = 16;
     private boolean workingEnabled = true;
+    /** What the network did not take back when this hatch was removed; written into the dropped item. */
+    private List<IAEFluidStack> removalRemainders = Collections.emptyList();
     protected ExportOnlyAEFluidList aeFluidHandler;
 
     public MetaTileEntityMEInputHatch(ResourceLocation metaTileEntityId) {
@@ -124,22 +129,57 @@ public class MetaTileEntityMEInputHatch extends MetaTileEntityAEHostablePart<IAE
 
     @Override
     public void onRemoval() {
-        flushInventory();
+        // fluids cannot drop; what the network does not take back is kept in the dropped hatch
+        this.removalRemainders = flushInventory();
         super.onRemoval();
     }
 
-    protected void flushInventory() {
+    /**
+     * Returns the held stock to the network and empties the tanks.
+     *
+     * @return what the network did not accept
+     */
+    @NotNull
+    protected List<IAEFluidStack> flushInventory() {
         IMEMonitor<IAEFluidStack> monitor = getMonitor();
-        if (monitor == null) return;
-
+        List<IAEFluidStack> remainders = new ArrayList<>();
         for (ExportOnlyAEFluidSlot aeTank : this.getAEFluidHandler().getInventory()) {
             IAEFluidStack stock = aeTank.getStock();
             if (stock instanceof WrappedFluidStack) {
                 stock = ((WrappedFluidStack) stock).getAEStack();
             }
-            if (stock != null) {
-                monitor.injectItems(stock, Actionable.MODULATE, this.getActionSource());
-            }
+            if (stock == null || stock.getStackSize() <= 0) continue;
+            IAEFluidStack left = monitor == null ? stock.copy() :
+                    monitor.injectItems(stock.copy(), Actionable.MODULATE, this.getActionSource());
+            if (left != null && left.getStackSize() > 0) remainders.add(left);
+            aeTank.setStock(null);
+        }
+        return remainders;
+    }
+
+    @Override
+    public void writeItemStackData(NBTTagCompound itemStack) {
+        super.writeItemStackData(itemStack);
+        if (this.removalRemainders.isEmpty()) return;
+        NBTTagList fluids = new NBTTagList();
+        for (IAEFluidStack fluid : this.removalRemainders) {
+            NBTTagCompound fluidTag = new NBTTagCompound();
+            fluid.writeToNBT(fluidTag);
+            fluids.appendTag(fluidTag);
+        }
+        itemStack.setTag(LEFTOVER_FLUIDS_TAG, fluids);
+    }
+
+    @Override
+    public void initFromItemStackData(NBTTagCompound itemStack) {
+        super.initFromItemStackData(itemStack);
+        if (!itemStack.hasKey(LEFTOVER_FLUIDS_TAG, 9)) return;
+        // held without a config, the fluids go back to the network once the hatch is connected
+        NBTTagList fluids = itemStack.getTagList(LEFTOVER_FLUIDS_TAG, 10);
+        ExportOnlyAEFluidSlot[] tanks = this.getAEFluidHandler().getInventory();
+        for (int i = 0; i < fluids.tagCount() && i < tanks.length; i++) {
+            WrappedFluidStack fluid = WrappedFluidStack.fromNBT(fluids.getCompoundTagAt(i));
+            if (fluid != null) tanks[i].setStock(fluid);
         }
     }
 

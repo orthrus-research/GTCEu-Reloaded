@@ -32,6 +32,7 @@ import codechicken.lib.raytracer.CuboidRayTraceResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -142,8 +143,9 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
     }
 
     @Override
-    protected void flushInventory() {
-        // no-op, nothing to send back to the network
+    protected @NotNull List<IAEFluidStack> flushInventory() {
+        // nothing to send back to the network
+        return Collections.emptyList();
     }
 
     @Override
