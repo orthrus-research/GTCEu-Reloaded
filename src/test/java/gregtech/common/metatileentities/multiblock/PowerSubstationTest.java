@@ -404,6 +404,21 @@ public class PowerSubstationTest {
         MatcherAssert.assertThat(storage.hasEnergy(), is(false));
     }
 
+    @Test
+    public void Test_Fill_Fraction() {
+        MatcherAssert.assertThat(PowerStationEnergyBank.fillFraction(BigInteger.ZERO, BigInteger.valueOf(100)),
+                is(0.0));
+        MatcherAssert.assertThat(PowerStationEnergyBank.fillFraction(BigInteger.valueOf(60), BigInteger.valueOf(100)),
+                is(0.6));
+        MatcherAssert.assertThat(PowerStationEnergyBank.fillFraction(BigInteger.valueOf(100), BigInteger.valueOf(100)),
+                is(1.0));
+        MatcherAssert.assertThat(PowerStationEnergyBank.fillFraction(BigInteger.valueOf(5), BigInteger.ZERO), is(0.0));
+
+        BigInteger huge = BigInteger.valueOf(Long.MAX_VALUE).multiply(BigInteger.valueOf(400));
+        MatcherAssert.assertThat(PowerStationEnergyBank.fillFraction(huge.divide(BigInteger.valueOf(4)), huge),
+                is(0.25));
+    }
+
     private static PowerStationEnergyBank createStorage(long... storageValues) {
         List<IBatteryData> batteries = new ArrayList<>();
         for (long value : storageValues) {

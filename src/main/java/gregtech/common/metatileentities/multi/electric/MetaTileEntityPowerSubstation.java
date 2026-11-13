@@ -586,14 +586,8 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
         syncManager.syncValue("energy_stored", energyStoredValue);
         syncManager.syncValue("energy_capacity", energyCapacityValue);
 
-        bars.add(b -> b.progress(() -> {
-            BigInteger capacity = energyCapacityValue.getValue();
-            BigInteger stored = energyStoredValue.getValue();
-            if (stored.equals(BigInteger.ZERO)) return 0;
-            double factor = capacity.divide(stored).doubleValue();
-            if (factor == 0) return 0;
-            return 1 / factor;
-        })
+        bars.add(b -> b.progress(() -> PowerStationEnergyBank.fillFraction(energyStoredValue.getValue(),
+                energyCapacityValue.getValue()))
                 .texture(GTGuiTextures.PROGRESS_BAR_MULTI_ENERGY_YELLOW)
                 .tooltipBuilder(t -> {
                     if (isStructureFormed()) {
@@ -737,6 +731,14 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
 
         public boolean hasEnergy() {
             return stored[0] != 0 || stored[1] != 0;
+        }
+
+        /**
+         * @return how full a bank with this stored energy and capacity is, from 0 to 1
+         */
+        public static double fillFraction(@NotNull BigInteger stored, @NotNull BigInteger capacity) {
+            if (stored.signum() <= 0 || capacity.signum() <= 0) return 0;
+            return Math.min(1, stored.doubleValue() / capacity.doubleValue());
         }
 
         private static BigInteger summarize(long[] num) {
