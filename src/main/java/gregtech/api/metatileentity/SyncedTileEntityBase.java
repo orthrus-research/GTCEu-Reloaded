@@ -5,16 +5,13 @@ import gregtech.api.metatileentity.interfaces.ISyncedTileEntity;
 import gregtech.api.network.PacketDataList;
 
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.util.Constants;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -86,25 +83,20 @@ public abstract class SyncedTileEntityBase extends BlockStateTileEntity implemen
         if (this.updates.isEmpty()) {
             return null;
         }
+        // one binary list instead of a compound per update keyed by its discriminator as a decimal string
         NBTTagCompound updateTag = new NBTTagCompound();
-        updateTag.setTag("d", this.updates.dumpToNbt());
+        updateTag.setByteArray("d", this.updates.dumpToBytes());
         return new SPacketUpdateTileEntity(getPos(), 0, updateTag);
     }
 
     @Override
     public final void onDataPacket(@NotNull NetworkManager net, @NotNull SPacketUpdateTileEntity pkt) {
         NBTTagCompound updateTag = pkt.getNbtCompound();
-        NBTTagList listTag = updateTag.getTagList("d", Constants.NBT.TAG_COMPOUND);
-        for (NBTBase entryBase : listTag) {
-            NBTTagCompound entryTag = (NBTTagCompound) entryBase;
-            for (String discriminatorKey : entryTag.getKeySet()) {
-                ByteBuf backedBuffer = Unpooled.copiedBuffer(entryTag.getByteArray(discriminatorKey));
-                int dataId = Integer.parseInt(discriminatorKey);
-                ISyncedTileEntity.addCode(dataId, this);
-                receiveCustomData(dataId, new PacketBuffer(backedBuffer));
-                ISyncedTileEntity.checkData(backedBuffer);
-            }
-        }
+        PacketDataList.forEachEncoded(updateTag.getByteArray("d"), (dataId, data) -> {
+            ISyncedTileEntity.addCode(dataId, this);
+            receiveCustomData(dataId, data);
+            ISyncedTileEntity.checkData(data);
+        });
     }
 
     @Override

@@ -2,9 +2,9 @@ package gregtech.common.metatileentities.multi.multiblockpart;
 
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
+import gregtech.api.network.PacketDataList;
 import gregtech.api.util.world.DummyWorld;
 
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -56,10 +56,8 @@ final class MufflerTestHatch extends MetaTileEntityMufflerHatch {
         super.update();
         var packet = tile.getUpdatePacket();
         if (packet == null) return;
-        for (var entry : packet.getNbtCompound().getTagList("d", 10)) {
-            var compound = (NBTTagCompound) entry;
-            String key = Integer.toString(GregtechDataCodes.MUFFLER_OBSTRUCTED);
-            if (compound.hasKey(key)) updates.add(compound.getByteArray(key)[0] != 0);
-        }
+        PacketDataList.forEachEncoded(packet.getNbtCompound().getByteArray("d"), (id, data) -> {
+            if (id == GregtechDataCodes.MUFFLER_OBSTRUCTED) updates.add(data.readBoolean());
+        });
     }
 }
