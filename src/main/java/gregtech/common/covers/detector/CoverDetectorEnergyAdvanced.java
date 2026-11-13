@@ -185,7 +185,7 @@ public class CoverDetectorEnergyAdvanced extends CoverDetectorEnergy implements 
             maxValue = (long) Math.floor((this.maxValue / 100d) * getCoverHolderCapacity());
         }
         this.minValue = clamp(minValue, 0, maxValue - 1);
-        this.maxValue = clamp(maxValue, minValue + 1, isUsePercent() ? 100 : Integer.MAX_VALUE);
+        this.maxValue = clamp(maxValue, minValue + 1, isUsePercent() ? 100 : Long.MAX_VALUE);
     }
 
     private String getPostFix() {
