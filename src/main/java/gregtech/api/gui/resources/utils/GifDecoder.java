@@ -626,7 +626,8 @@ public class GifDecoder {
         readLSD();
         if (gctFlag && !err()) {
             gct = readColorTable(gctSize);
-            bgColor = gct[bgIndex];
+            // a short colour table sets the error status and returns null
+            if (gct != null) bgColor = gct[bgIndex];
         }
     }
 
@@ -652,18 +653,19 @@ public class GifDecoder {
             if (bgIndex == transIndex)
                 bgColor = 0;
         }
-        int save = 0;
-        if (transparency) {
-            save = act[transIndex];
-            act[transIndex] = 0; // set transparent color if specified
-        }
-
         if (act == null) {
             status = STATUS_FORMAT_ERROR; // no color table defined
         }
 
         if (err())
             return;
+
+        // checked first: the transparent colour is set in the active table, which may be missing
+        int save = 0;
+        if (transparency) {
+            save = act[transIndex];
+            act[transIndex] = 0; // set transparent color if specified
+        }
 
         decodeImageData(); // decode pixel data
         skip();
@@ -728,9 +730,10 @@ public class GifDecoder {
         lastRect = new Rectangle(ix, iy, iw, ih);
         lastImage = image;
         lastBgColor = bgColor;
-        int dispose = 0;
-        boolean transparency = false;
-        int delay = 0;
+        // the fields, not new locals: a frame without a graphic control extension must not inherit the last one's
+        dispose = 0;
+        transparency = false;
+        delay = 0;
         lct = null;
     }
 
