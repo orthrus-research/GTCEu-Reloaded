@@ -1,6 +1,7 @@
 package gregtech.common;
 
 import gregtech.api.GTValues;
+import gregtech.api.block.VariantActiveBlock;
 import gregtech.api.items.armor.ArmorMetaItem;
 import gregtech.api.items.armor.ArmorUtils;
 import gregtech.api.items.toolitem.ToolClasses;
@@ -330,6 +331,7 @@ public class EventHandlers {
 
     @SubscribeEvent
     public static void onWorldUnloadEvent(WorldEvent.Unload event) {
+        VariantActiveBlock.clearDimension(event.getWorld().provider.getDimension());
         BedrockFluidVeinSaveData.setDirty();
         if (!event.getWorld().isRemote) {
             LongDistanceNetwork.WorldData.unload(event.getWorld());
