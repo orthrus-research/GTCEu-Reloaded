@@ -374,6 +374,8 @@ public class AdvancedMonitorPluginBehavior extends ProxyHolderPluginBehavior {
     public void readPluginAction(EntityPlayerMP player, int id, PacketBuffer buf) {
         if (id == GregtechDataCodes.ACTION_PLUGIN_CONFIG) { // open GUI
             BlockPos pos = buf.readBlockPos();
+            // only a block of the structure this monitor shows, and never one in an unloaded chunk
+            if (validPos == null || !validPos.contains(pos) || !this.screen.getWorld().isBlockLoaded(pos)) return;
             TileEntity tileEntity = this.screen.getWorld().getTileEntity(pos);
             if (tileEntity instanceof IGregTechTileEntity && ((IGregTechTileEntity) tileEntity).isValid()) {
                 ((IGregTechTileEntity) tileEntity).getMetaTileEntity().onRightClick(player, EnumHand.MAIN_HAND,
