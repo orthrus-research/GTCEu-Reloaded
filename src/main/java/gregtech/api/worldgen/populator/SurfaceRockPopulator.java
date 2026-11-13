@@ -90,6 +90,8 @@ public class SurfaceRockPopulator implements VeinChunkPopulator {
     public void populateChunk(World world, int chunkX, int chunkZ, Random random, OreDepositDefinition definition,
                               GridEntryInfo gridEntryInfo) {
         int stonesCount = random.nextInt(2) + 1;
+        // the populator lives as long as its vein: count this chunk's failures only
+        failedGenerationCounter = 0;
         if (world.getWorldType() != WorldType.FLAT) {
             if (!hasUndergroundMaterials(gridEntryInfo.getGeneratedBlocks(definition, chunkX, chunkZ))) {
                 return;
