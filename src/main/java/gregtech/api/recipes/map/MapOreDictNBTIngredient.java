@@ -7,6 +7,8 @@ import net.minecraft.nbt.NBTTagCompound;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
+
 public class MapOreDictNBTIngredient extends MapOreDictIngredient {
 
     @Nullable
@@ -45,7 +47,10 @@ public class MapOreDictNBTIngredient extends MapOreDictIngredient {
                 }
             }
             if (ore == other.ore) {
-                return other.matcher.evaluate(this.nbtTagCompound, other.condition);
+                // the side with the matcher judges the other's tag; with neither, the tags must match
+                if (other.matcher != null) return other.matcher.evaluate(this.nbtTagCompound, other.condition);
+                if (this.matcher != null) return this.matcher.evaluate(other.nbtTagCompound, this.condition);
+                return Objects.equals(this.nbtTagCompound, other.nbtTagCompound);
             }
         }
         return false;

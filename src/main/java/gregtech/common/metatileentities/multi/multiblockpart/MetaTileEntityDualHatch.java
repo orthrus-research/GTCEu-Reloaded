@@ -356,10 +356,11 @@ public class MetaTileEntityDualHatch extends MetaTileEntityMultiblockPart
             panel.child(new GhostCircuitSlotWidget().pos(width - 25, height - 63).slot(circuitInventory, 0)
                     .background(GTGuiTextures.SLOT, GTGuiTextures.INT_CIRCUIT_OVERLAY));
         }
-        if (itemFilter != null) {
-            panel.child(Flow.column().pos(7, filterTop).width(width - 14).coverChildrenHeight()
-                    .child(itemFilter.initUI(data, manager, "dual_item_filter"))
-                    .child(fluidFilter.initUI(data, manager, "dual_fluid_filter")));
+        if (itemFilter != null || fluidFilter != null) {
+            Flow filters = Flow.column().pos(7, filterTop).width(width - 14).coverChildrenHeight();
+            if (itemFilter != null) filters.child(itemFilter.initUI(data, manager, "dual_item_filter"));
+            if (fluidFilter != null) filters.child(fluidFilter.initUI(data, manager, "dual_fluid_filter"));
+            panel.child(filters);
         }
         return panel;
     }
