@@ -38,7 +38,11 @@ public class BedrockFluidVeinHandler {
      */
     public static int saveDataVersion;
 
-    public static final int MAX_FLUID_SAVE_DATA_VERSION = 2;
+    /**
+     * Version 2 groups negative chunk coordinates into veins with floor division. Version 3 picks a vein's biome and
+     * yield from the vein's origin chunk instead of the chunk that first asked for it.
+     */
+    public static final int MAX_FLUID_SAVE_DATA_VERSION = 3;
 
     public static final int VEIN_CHUNK_SIZE = 8; // veins are 8x8 chunk squares
 
@@ -66,7 +70,16 @@ public class BedrockFluidVeinHandler {
 
             int query = chunkRandom(world.getSeed(), getVeinCoord(chunkX), getVeinCoord(chunkZ), 90210).nextInt();
 
-            Biome biome = world.getBiomeForCoordsBody(new BlockPos(chunkX << 4, 64, chunkZ << 4));
+            // before version 3 the chunk that first asked decided the biome and yield, so which of the vein's 64
+            // chunks was queried first changed its content; keep that for worlds whose veins were made that way
+            int sampleX = chunkX;
+            int sampleZ = chunkZ;
+            if (saveDataVersion >= 3) {
+                sampleX = coords.x * VEIN_CHUNK_SIZE;
+                sampleZ = coords.z * VEIN_CHUNK_SIZE;
+            }
+
+            Biome biome = world.getBiomeForCoordsBody(new BlockPos(sampleX << 4, 64, sampleZ << 4));
             int totalWeight = getTotalWeight(world.provider, biome);
             if (totalWeight > 0) {
                 int weight = Math.abs(query % totalWeight);
@@ -83,7 +96,7 @@ public class BedrockFluidVeinHandler {
             }
 
             Random random = new XoShiRo256PlusPlusRandom(
-                    31L * 31 * chunkX + chunkZ * 31L + Long.hashCode(world.getSeed()));
+                    31L * 31 * sampleX + sampleZ * 31L + Long.hashCode(world.getSeed()));
 
             int maximumYield = 0;
             if (definition != null) {
