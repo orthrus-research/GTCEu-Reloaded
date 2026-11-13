@@ -91,7 +91,7 @@ public class NanoMuscleSuite extends ArmorLogicSuite implements IStepAssist {
 
     public static void disableNightVision(@NotNull World world, EntityPlayer player, boolean sendMsg) {
         if (!world.isRemote) {
-            player.removePotionEffect(MobEffects.NIGHT_VISION);
+            ArmorUtils.removeArmorNightVision(player);
             if (sendMsg)
                 player.sendStatusMessage(new TextComponentTranslation("metaarmor.nms.nightvision.disabled"), true);
         }

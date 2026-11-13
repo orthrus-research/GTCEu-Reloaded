@@ -2,6 +2,7 @@ package gregtech.common;
 
 import gregtech.api.GTValues;
 import gregtech.api.items.armor.ArmorMetaItem;
+import gregtech.api.items.armor.ArmorUtils;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.items.toolitem.ToolHelper;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -197,7 +198,8 @@ public class EventHandlers {
             return;
 
         ItemStack stack = event.getFrom();
-        if (!(stack.getItem() instanceof ArmorMetaItem) || stack.getItem().equals(event.getTo().getItem()))
+        // every armour piece is a metadata value of one item, so compare the item and its metadata
+        if (!(stack.getItem() instanceof ArmorMetaItem) || ItemStack.areItemsEqual(stack, event.getTo()))
             return;
 
         ArmorMetaItem<?>.ArmorMetaValueItem valueItem = ((ArmorMetaItem<?>) stack.getItem()).getItem(stack);
@@ -205,7 +207,7 @@ public class EventHandlers {
         if (valueItem.isItemEqual(MetaItems.NIGHTVISION_GOGGLES.getStackForm()) ||
                 valueItem.isItemEqual(MetaItems.NANO_HELMET.getStackForm()) ||
                 valueItem.isItemEqual(MetaItems.QUANTUM_HELMET.getStackForm())) {
-            event.getEntityLiving().removePotionEffect(MobEffects.NIGHT_VISION);
+            ArmorUtils.removeArmorNightVision(event.getEntityLiving());
         }
         if (valueItem.isItemEqual(MetaItems.QUANTUM_CHESTPLATE.getStackForm()) ||
                 valueItem.isItemEqual(MetaItems.QUANTUM_CHESTPLATE_ADVANCED.getStackForm())) {

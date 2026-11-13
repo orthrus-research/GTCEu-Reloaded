@@ -8,11 +8,14 @@ import gregtech.core.sound.GTSoundEvents;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.NetHandlerPlayServer;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.*;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -33,6 +36,21 @@ import java.util.Collections;
 import java.util.List;
 
 public class ArmorUtils {
+
+    /**
+     * Remove night vision only if armour applied it. Armour applies it as an ambient effect without particles
+     * and with a duration far longer than any brewed potion, so a potion's night vision is left alone.
+     */
+    public static void removeArmorNightVision(@NotNull EntityLivingBase entity) {
+        PotionEffect effect = entity.getActivePotionEffect(MobEffects.NIGHT_VISION);
+        if (effect != null && effect.getIsAmbient() && !effect.doesShowParticles() &&
+                effect.getDuration() > LONGEST_POTION_DURATION) {
+            entity.removePotionEffect(MobEffects.NIGHT_VISION);
+        }
+    }
+
+    /** Eight minutes, the longest night vision a brewed potion gives. */
+    private static final int LONGEST_POTION_DURATION = 9600;
 
     public static final Side SIDE = FMLCommonHandler.instance().getSide();
 

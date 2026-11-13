@@ -3,6 +3,7 @@ package gregtech.common.items.armor;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
 import gregtech.api.items.armor.ArmorLogicSuite;
+import gregtech.api.items.armor.ArmorUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.input.KeyBind;
 
@@ -77,7 +78,7 @@ public class NightvisionGoggles extends ArmorLogicSuite {
 
     public static void disableNightVision(@NotNull World world, EntityPlayer player, boolean sendMsg) {
         if (!world.isRemote) {
-            player.removePotionEffect(MobEffects.NIGHT_VISION);
+            ArmorUtils.removeArmorNightVision(player);
             if (sendMsg)
                 player.sendStatusMessage(new TextComponentTranslation("metaarmor.message.nightvision.disabled"), true);
         }
