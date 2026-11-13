@@ -155,7 +155,7 @@ public class ImageCycleButtonWidget extends Widget {
     public void handleClientAction(int id, PacketBuffer buffer) {
         super.handleClientAction(id, buffer);
         if (id == 1) {
-            this.currentOption = MathHelper.clamp(buffer.readVarInt(), 0, optionCount);
+            this.currentOption = MathHelper.clamp(buffer.readVarInt(), 0, optionCount - 1);
             setOptionExecutor.accept(currentOption);
         }
     }

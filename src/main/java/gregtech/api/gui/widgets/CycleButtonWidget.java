@@ -147,7 +147,7 @@ public class CycleButtonWidget extends Widget {
     public void handleClientAction(int id, PacketBuffer buffer) {
         super.handleClientAction(id, buffer);
         if (id == 1) {
-            this.currentOption = MathHelper.clamp(buffer.readVarInt(), 0, optionNames.length);
+            this.currentOption = MathHelper.clamp(buffer.readVarInt(), 0, optionNames.length - 1);
             setOptionExecutor.accept(currentOption);
         }
     }
