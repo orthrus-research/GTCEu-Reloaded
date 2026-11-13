@@ -1,6 +1,7 @@
 package gregtech.core.network.packets;
 
 import gregtech.api.gui.ModularUI;
+import gregtech.api.gui.Widget;
 import gregtech.api.gui.impl.ModularUIContainer;
 import gregtech.api.network.IPacket;
 import gregtech.api.network.IServerExecutor;
@@ -44,7 +45,11 @@ public class PacketUIClientAction implements IPacket, IServerExecutor {
         Container openContainer = handler.player.openContainer;
         if (openContainer instanceof ModularUIContainer && openContainer.windowId == windowId) {
             ModularUI modularUI = ((ModularUIContainer) openContainer).getModularUI();
-            modularUI.guiWidgets.get(widgetId).handleClientAction(updateData.readVarInt(), updateData);
+            // the id comes from the client and can be stale or forged
+            Widget widget = modularUI.guiWidgets.get(widgetId);
+            if (widget != null) {
+                widget.handleClientAction(updateData.readVarInt(), updateData);
+            }
         }
     }
 }
