@@ -257,6 +257,14 @@ public final class ModuleManager implements IModuleManager {
     private void configureModules(@NotNull Map<String, List<IGregTechModule>> modules) {
         Locale locale = Locale.getDefault();
         Locale.setDefault(Locale.ENGLISH);
+        try {
+            configureModulesInEnglish(modules);
+        } finally {
+            Locale.setDefault(locale);
+        }
+    }
+
+    private void configureModulesInEnglish(@NotNull Map<String, List<IGregTechModule>> modules) {
         Set<ResourceLocation> toLoad = new ObjectLinkedOpenHashSet<>();
         Set<IGregTechModule> modulesToLoad = new ReferenceLinkedOpenHashSet<>();
         Configuration config = getConfiguration();
@@ -339,7 +347,6 @@ public final class ModuleManager implements IModuleManager {
         if (config.hasChanged()) {
             config.save();
         }
-        Locale.setDefault(locale);
     }
 
     /**
