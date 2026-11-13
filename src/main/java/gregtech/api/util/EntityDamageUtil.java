@@ -3,22 +3,20 @@ package gregtech.api.util;
 import gregtech.api.damagesources.DamageSources;
 import gregtech.core.advancement.AdvancementTriggers;
 
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.monster.*;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Enchantments;
 import net.minecraft.init.MobEffects;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.PotionEffect;
 
 import org.jetbrains.annotations.NotNull;
 
 public class EntityDamageUtil {
-
-    private static final int FROST_WALKER_ID = 9;
 
     /**
      * @param entity      the entity to damage
@@ -77,14 +75,9 @@ public class EntityDamageUtil {
         // frost walker entities cannot be chilled
         ItemStack stack = entity.getItemStackFromSlot(EntityEquipmentSlot.FEET);
         // check for empty in order to force damage to be applied if armor breaks
-        if (!stack.isEmpty()) {
-            for (NBTBase base : stack.getEnchantmentTagList()) {
-                NBTTagCompound compound = (NBTTagCompound) base;
-                if (compound.getShort("id") == FROST_WALKER_ID) {
-                    stack.damageItem(1, entity);
-                    return;
-                }
-            }
+        if (!stack.isEmpty() && EnchantmentHelper.getEnchantmentLevel(Enchantments.FROST_WALKER, stack) > 0) {
+            stack.damageItem(1, entity);
+            return;
         }
 
         entity.attackEntityFrom(DamageSources.getFrostDamage(), damage);

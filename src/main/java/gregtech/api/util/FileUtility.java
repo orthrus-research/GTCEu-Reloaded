@@ -62,10 +62,10 @@ public class FileUtility {
     public static JsonElement loadJson(File file) {
         try {
             if (!file.isFile()) return null;
-            Reader reader = new InputStreamReader(Files.newInputStream(file.toPath()), StandardCharsets.UTF_8);
-            JsonElement json = jsonParser.parse(new JsonReader(reader));
-            reader.close();
-            return json;
+            try (Reader reader = new InputStreamReader(Files.newInputStream(file.toPath()),
+                    StandardCharsets.UTF_8)) {
+                return jsonParser.parse(new JsonReader(reader));
+            }
         } catch (Exception e) {
             GTLog.logger.error("Failed to read file on path {}", file, e);
         }
@@ -79,9 +79,10 @@ public class FileUtility {
                     GTLog.logger.error("Failed to create file dirs on path {}", file);
                 }
             }
-            Writer writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8);
-            writer.write(gson.toJson(element));
-            writer.close();
+            try (Writer writer = new OutputStreamWriter(Files.newOutputStream(file.toPath()),
+                    StandardCharsets.UTF_8)) {
+                writer.write(gson.toJson(element));
+            }
             return true;
         } catch (Exception e) {
             GTLog.logger.error("Failed to save file on path {}", file, e);
@@ -159,6 +160,7 @@ public class FileUtility {
         // Replace all "_" with a space
         newName = UNDERSCORE_REGEX.matcher(newName).replaceAll(" ");
         // Capitalize the first letter
+        if (newName.isEmpty()) return newName;
         newName = newName.substring(0, 1).toUpperCase(Locale.ROOT) + newName.substring(1);
 
         return newName;
