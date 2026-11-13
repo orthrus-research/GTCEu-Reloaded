@@ -376,7 +376,7 @@ public final class ModuleManager implements IModuleManager {
      * @param table the ASM Data Table containing the module data
      * @return a map of Container ID to list of associated modules sorted by Module ID
      */
-    private static @NotNull Map<String, List<IGregTechModule>> getModules(@NotNull ASMDataTable table) {
+    private @NotNull Map<String, List<IGregTechModule>> getModules(@NotNull ASMDataTable table) {
         List<IGregTechModule> instances = getInstances(table);
         Map<String, List<IGregTechModule>> modules = new Object2ReferenceLinkedOpenHashMap<>();
         for (IGregTechModule module : instances) {
@@ -391,11 +391,22 @@ public final class ModuleManager implements IModuleManager {
      * @return all IGregTechModule instances in sorted order by Container and Module ID
      */
     @SuppressWarnings("unchecked")
-    private static @NotNull List<IGregTechModule> getInstances(@NotNull ASMDataTable table) {
+    private @NotNull List<IGregTechModule> getInstances(@NotNull ASMDataTable table) {
         Set<ASMDataTable.ASMData> dataSet = table.getAll(GregTechModule.class.getCanonicalName());
         List<IGregTechModule> instances = new ArrayList<>();
+        getConfiguration().load();
         for (ASMDataTable.ASMData data : dataSet) {
             String moduleID = (String) data.getAnnotationInfo().get("moduleID");
+            // read the toggle from the annotation data, before the class is loaded: a disabled module must not
+            // run its static initialisers or constructor. Core modules are left to the full check later.
+            String containerID = (String) data.getAnnotationInfo().get("containerID");
+            if (containerID != null && moduleID != null &&
+                    !Boolean.TRUE.equals(data.getAnnotationInfo().get("coreModule")) &&
+                    !getConfiguration().get(MODULE_CFG_CATEGORY_NAME, containerID + ":" + moduleID, true)
+                            .getBoolean()) {
+                logger.debug("Module disabled: {}:{}", containerID, moduleID);
+                continue;
+            }
             List<String> modDependencies = (List<String>) data.getAnnotationInfo().get("modDependencies");
             if (modDependencies == null || modDependencies.stream().allMatch(Loader::isModLoaded)) {
                 try {

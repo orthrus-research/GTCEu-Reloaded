@@ -238,6 +238,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | Gameplay change: generated material recipes register in a fixed order that add-ons cannot shuffle; where two generated recipes conflict, which one is kept can differ from before |
 | GUI | Multiblock screens display correctly on a client whose maintenance setting differs from the server's. |
 | Networking | Machine traits keep their synced data apart however the client and server happened to load them. |
+| Modules | Disabling a GregTech module in its config keeps that module's code from loading at all. |
 
 ### Earlier fork changes
 
