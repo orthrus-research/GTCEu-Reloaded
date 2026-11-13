@@ -244,6 +244,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | AE2 | Gameplay change: ME buses and hatches broken while their network is offline or full keep their contents: items drop, and fluids and output buffers stay in the dropped part |
 | Recipes | Chanced fluid outputs that differ only in NBT are no longer merged into one stack |
 | Saved data | Legacy ender tank data is migrated once instead of on every start, so it no longer overwrites newer ender entries |
+| Storage | Gameplay change: a quantum chest refuses other items in its input slot, and with voiding on no longer deletes matching items while its output slot is empty |
 
 ### Earlier fork changes
 

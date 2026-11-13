@@ -213,6 +213,20 @@ public class QuantumChestTest {
     }
 
     @Test
+    public void Test_Input_Rejects_Other_Items_While_Output_Is_Empty() {
+        for (var quantumChest : createInstances()) {
+            insertItem(quantumChest.getCombinedInventory(), GTUtility.copy(256, GRAVEL), false);
+            quantumChest.getExportItems().extractItem(0, 64, false);
+            quantumChest.setVoiding(true);
+
+            IItemHandler importItems = quantumChest.getImportItems();
+            assertThat("A different item was accepted while the output slot was empty",
+                    importItems.isItemValid(0, SAND.copy()), is(false));
+            assertThat("The stored item was refused", importItems.isItemValid(0, GRAVEL.copy()), is(true));
+        }
+    }
+
+    @Test
     public void Test_Extraction() {
         for (var quantumChest : createInstances()) {
             insertItem(quantumChest.getCombinedInventory(), GTUtility.copy(256, GRAVEL), false);
