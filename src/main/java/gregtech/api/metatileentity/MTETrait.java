@@ -7,22 +7,11 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 
-import it.unimi.dsi.fastutil.objects.Object2IntFunction;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
 public abstract class MTETrait implements ISyncedTileEntity {
-
-    private static final Object2IntFunction<String> traitIds = new Object2IntOpenHashMap<>();
-    private static final int NO_NETWORK_ID = -1;
-
-    private static int rollingNetworkId = 0;
-
-    static {
-        traitIds.defaultReturnValue(NO_NETWORK_ID);
-    }
 
     protected final MetaTileEntity metaTileEntity;
     private final int networkId;
@@ -35,13 +24,9 @@ public abstract class MTETrait implements ISyncedTileEntity {
     public MTETrait(@NotNull MetaTileEntity metaTileEntity) {
         this.metaTileEntity = metaTileEntity;
 
-        final String traitName = getName();
-        int networkId = traitIds.getInt(traitName);
-        if (networkId == NO_NETWORK_ID) {
-            networkId = rollingNetworkId++;
-            traitIds.put(traitName, networkId);
-        }
-        this.networkId = networkId;
+        // derived from the name, so client and server agree whatever order traits are first built in, and no
+        // shared table is written from several threads
+        this.networkId = getName().hashCode();
         metaTileEntity.addMetaTileEntityTrait(this);
     }
 
