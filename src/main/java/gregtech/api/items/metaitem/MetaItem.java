@@ -580,8 +580,10 @@ public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
             if (item.getNameProvider() != null) {
                 return item.getNameProvider().getItemStackDisplayName(stack, unlocalizedName);
             }
-            IFluidHandlerItem fluidHandlerItem = ItemHandlerHelper.copyStackWithSize(stack, 1)
-                    .getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
+            // only items with a capability component can hold fluid: skip the copy and lookup for the rest
+            IFluidHandlerItem fluidHandlerItem = !item.hasCapabilityProvider() ? null :
+                    ItemHandlerHelper.copyStackWithSize(stack, 1)
+                            .getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null);
             if (fluidHandlerItem != null) {
                 FluidStack fluidInside = fluidHandlerItem.drain(Integer.MAX_VALUE, false);
                 return LocalizationUtils.format(unlocalizedName, fluidInside == null ?
@@ -933,6 +935,16 @@ public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
 
         public List<IItemComponent> getAllStats() {
             return Collections.unmodifiableList(allStats);
+        }
+
+        /**
+         * @return whether any component gives this item's stacks a capability, such as a fluid tank
+         */
+        public boolean hasCapabilityProvider() {
+            for (IItemComponent component : allStats) {
+                if (component instanceof IItemCapabilityProvider) return true;
+            }
+            return false;
         }
 
         public List<IItemBehaviour> getBehaviours() {
