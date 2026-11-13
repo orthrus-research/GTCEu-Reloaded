@@ -62,7 +62,7 @@ public class WrappedItemStack implements IAEItemStack {
 
     @Override
     public void add(IAEItemStack iaeItemStack) {
-        this.delegate.grow((int) iaeItemStack.getStackSize());
+        this.delegate.setCount(saturate((long) this.delegate.getCount() + iaeItemStack.getStackSize()));
     }
 
     @Override
@@ -72,7 +72,7 @@ public class WrappedItemStack implements IAEItemStack {
 
     @Override
     public IAEItemStack setStackSize(long l) {
-        this.delegate.setCount((int) l);
+        this.delegate.setCount(saturate(l));
         return this;
     }
 
@@ -109,12 +109,12 @@ public class WrappedItemStack implements IAEItemStack {
 
     @Override
     public void incStackSize(long l) {
-        this.delegate.grow((int) l);
+        this.delegate.setCount(saturate((long) this.delegate.getCount() + l));
     }
 
     @Override
     public void decStackSize(long l) {
-        this.delegate.shrink((int) l);
+        this.delegate.setCount(saturate((long) this.delegate.getCount() - l));
     }
 
     @Override
@@ -245,5 +245,10 @@ public class WrappedItemStack implements IAEItemStack {
     @Override
     public void setCachedItemStack(ItemStack itemStack) {
         this.delegate = itemStack;
+    }
+
+    /** AE2 sizes are longs; an ItemStack holds an int count from 0 up. */
+    private static int saturate(long count) {
+        return Math.clamp(count, 0, Integer.MAX_VALUE);
     }
 }
