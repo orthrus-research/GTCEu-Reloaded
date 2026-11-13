@@ -254,7 +254,7 @@ public class WorldGenRegistry {
             // Tries to extract the json worldgen definition from the file
             JsonObject element = FileUtility.tryExtractFromFile(worldgenDefinition);
             if (element == null) {
-                break;
+                continue;
             }
 
             // Finds the file name to create the Definition with, using a consistent separator character
@@ -287,7 +287,7 @@ public class WorldGenRegistry {
             // Tries to extract the json worldgen definition from the file
             JsonObject element = FileUtility.tryExtractFromFile(worldgenDefinition);
             if (element == null) {
-                break;
+                continue;
             }
 
             // Finds the file name to create the Definition with, using a consistent separator character

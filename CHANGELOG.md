@@ -80,6 +80,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | A newly placed diode passes energy straight away; before, it had zero capacity and passed nothing until the world was reloaded or its amperage was changed |
 | Machines | Viewing the Large Miner's screen no longer consumes drilling fluid; before, the status check drained it while the screen was open |
 | Tools | The tricorder reports the bedrock fluid of the chunk you stand in at negative coordinates; before, it read the neighbouring chunk |
+| World generation | A worldgen definition file that fails to parse is skipped with its error; before, it also silently dropped every vein file that sorted after it |
 
 ### Earlier fork changes
 
