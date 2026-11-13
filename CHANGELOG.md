@@ -89,6 +89,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Storage | Quantum chests and tanks saved by releases before voiding modes were merged load with voiding on if they had partial voiding on; before, that legacy key was misspelled and never read |
 | Tools | The foam sprayer updates the neighbours of every block it foams; before, it updated only the neighbours of the block it was aimed at |
 | Armor | A jetpack that breaks a fall takes the damage as chest armour; before, the hit was reported for the boots slot |
+| Monitors | The text monitor plugin accepts all 16 lines and loads saved colours of any length; before, line 16 threw and a short saved colour list made rendering throw |
 
 ### Earlier fork changes
 
