@@ -239,6 +239,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | Multiblock screens display correctly on a client whose maintenance setting differs from the server's. |
 | Networking | Machine traits keep their synced data apart however the client and server happened to load them. |
 | Modules | Disabling a GregTech module in its config keeps that module's code from loading at all. |
+| World generation | Gameplay change: in new worlds a bedrock fluid vein's fluid and yield no longer depend on which of its chunks is prospected first; existing worlds keep their veins |
 
 ### Earlier fork changes
 
