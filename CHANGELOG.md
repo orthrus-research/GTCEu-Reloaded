@@ -153,6 +153,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | AE2 | An ME input bus slot reconfigured to an item that differs only in NBT no longer keeps counting stock of the previous item. |
 | Cables | A cable overloaded within its own voltage tier, possible only with custom cable limits, now heats up instead of cooling down. |
 | GUI | Scrolling a list that fits in its window no longer pushes the content down. |
+| GUI | `TextFieldWidget` accepts text without a validator and keeps its configured maximum length on dedicated servers. |
 
 ### Earlier fork changes
 
