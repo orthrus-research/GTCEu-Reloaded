@@ -67,6 +67,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Area | Change |
 | --- | --- |
 | Machines | The Power Substation reports itself active while it holds energy; before, it never did |
+| Machines | The Power Substation energy bar shows the actual fill level; before, anything above half charge drew as full |
 
 ### Earlier fork changes
 
