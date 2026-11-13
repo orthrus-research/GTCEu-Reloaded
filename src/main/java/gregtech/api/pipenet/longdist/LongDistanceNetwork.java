@@ -1,6 +1,7 @@
 package gregtech.api.pipenet.longdist;
 
 import gregtech.api.pipenet.WorldPipeNet;
+import gregtech.api.util.TaskScheduler;
 
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -39,6 +40,8 @@ public class LongDistanceNetwork {
     // all endpoint positions, for nbt
     private final List<BlockPos> endpointPoss = new ArrayList<>();
     private int activeInputIndex = -1, activeOutputIndex = -1;
+    @Nullable
+    private NetworkBuilder pendingBuilder;
 
     protected LongDistanceNetwork(LongDistancePipeType pipeType, WorldData world) {
         this.pipeType = pipeType;
@@ -51,13 +54,19 @@ public class LongDistanceNetwork {
     }
 
     /**
-     * Calculates one or more networks based on the given starting points.
-     * For this it will start a new thread to keep the main thread free.
+     * Calculates one or more networks based on the given starting points. The walk runs on the server thread,
+     * spread over ticks for very large networks; a newer recalculation replaces one still running.
      */
     protected void recalculateNetwork(Collection<BlockPos> starts) {
         invalidateNetwork(true);
-        // start a new thread where all given starting points are being walked
-        new NetworkBuilder(world, this, starts).start();
+        if (this.pendingBuilder != null) this.pendingBuilder.cancel();
+        NetworkBuilder builder = new NetworkBuilder(world, this, starts);
+        this.pendingBuilder = builder;
+        TaskScheduler.scheduleTask(world.getWorld(), builder);
+    }
+
+    void onBuilderFinished(NetworkBuilder builder) {
+        if (this.pendingBuilder == builder) this.pendingBuilder = null;
     }
 
     /**

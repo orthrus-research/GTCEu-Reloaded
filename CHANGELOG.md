@@ -250,6 +250,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | Energy sent to FE machines at the highest voltage tiers is capped at the largest FE amount instead of wrapping to nothing |
 | Performance | The EU to FE adapter is skipped when native conversion is off and no longer allocated on every cable transfer |
 | Recipes | Checking whether an item is an integrated circuit no longer adds a tag to it, so circuits keep stacking after JEI or a filter looks at them |
+| Pipes | Long distance pipe networks are rebuilt on the server thread instead of a separate thread |
 
 ### Earlier fork changes
 
