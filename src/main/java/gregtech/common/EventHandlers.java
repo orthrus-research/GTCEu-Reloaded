@@ -341,6 +341,9 @@ public class EventHandlers {
     @SubscribeEvent
     public static void onWorldSaveEvent(WorldEvent.Save event) {
         BedrockFluidVeinSaveData.setDirty();
+        if (!event.getWorld().isRemote && event.getWorld().provider.getDimension() == 0) {
+            CapesRegistry.saveIfDirty();
+        }
         if (!event.getWorld().isRemote) {
             LongDistanceNetwork.WorldData.get(event.getWorld()).markDirty();
         }

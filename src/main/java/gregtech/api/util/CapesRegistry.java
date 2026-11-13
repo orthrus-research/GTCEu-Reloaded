@@ -15,9 +15,9 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -66,14 +66,27 @@ public class CapesRegistry {
         unlockCape(UUID.fromString("24ab5496-0c9d-45d7-bfa6-c57760263be6"), Textures.GREGTECH_CAPE_TEXTURE); // TarLaboratories
         unlockCape(UUID.fromString("60057953-6a71-4f11-9e72-bb0c81fa0085"), Textures.GREGTECH_CAPE_TEXTURE); // ursamina
         unlockCape(UUID.fromString("3a27782d-6864-4814-a9fe-7c6931f29a8a"), Textures.GREGTECH_CAPE_TEXTURE); // YoungOnion
-        save();
+        markDirty();
     }
 
     public static ResourceLocation getPlayerCape(UUID uuid) {
         return WORN_CAPES.get(uuid);
     }
 
+    private static boolean dirty;
+
+    /** Write the cape file at the next overworld save instead of on the server thread right away. */
+    public static void markDirty() {
+        dirty = true;
+    }
+
+    /** Write the cape file if anything changed since the last write. */
+    public static void saveIfDirty() {
+        if (dirty) save();
+    }
+
     public static void save() {
+        dirty = false;
         NBTTagCompound comp = new NBTTagCompound();
         NBTTagList unlockedCapesTag = new NBTTagList();
         for (Map.Entry<UUID, List<ResourceLocation>> entry : UNLOCKED_CAPES.entrySet()) {
@@ -199,8 +212,7 @@ public class CapesRegistry {
      */
     public static void registerCape(ResourceLocation advancement, ResourceLocation cape, World world) {
         if (!world.isRemote) {
-            AdvancementManager advManager = ObfuscationReflectionHelper.getPrivateValue(World.class, world,
-                    "field_191951_C");
+            AdvancementManager advManager = ((WorldServer) world).getAdvancementManager();
             Advancement advObject = advManager.getAdvancement(advancement);
             if (advObject != null) {
                 CAPE_ADVANCEMENTS.put(advObject, cape);
@@ -250,7 +262,7 @@ public class CapesRegistry {
         if (CAPE_ADVANCEMENTS.containsKey(advancement)) {
             unlockCape(player.getPersistentID(), CAPE_ADVANCEMENTS.get(advancement));
             player.sendMessage(new TextComponentTranslation("gregtech.chat.cape"));
-            save();
+            markDirty();
         }
     }
 
@@ -267,7 +279,7 @@ public class CapesRegistry {
     public static void giveCape(UUID uuid, ResourceLocation cape) {
         WORN_CAPES.put(uuid, cape);
         GregTechAPI.networkHandler.sendToAll(new PacketNotifyCapeChange(uuid, cape));
-        save();
+        markDirty();
     }
 
     // For loading capes when the player logs in, so that it's synced to the clients.
@@ -300,7 +312,7 @@ public class CapesRegistry {
                 for (ResourceLocation cape : FREE_CAPES) {
                     unlockCape(player.getPersistentID(), cape);
                 }
-                save();
+                markDirty();
             }
         }
     }
