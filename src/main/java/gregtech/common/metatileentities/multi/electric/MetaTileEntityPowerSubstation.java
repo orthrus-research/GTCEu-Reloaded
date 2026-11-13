@@ -671,6 +671,7 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
             }
             Arrays.fill(max, 0);
             drain = 0;
+            drainMod = 0;
             for (IBatteryData i : batteries) {
                 add(max, i.getCapacity());
                 updateDrain(i.getCapacity());

@@ -145,6 +145,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | World generation | Gameplay change, custom configs only: bedrock fluid veins with a negative biome modifier no longer change the odds of other veins or of no vein. Bundled veins roll as before |
 | Utilities | `GTUtility.nearestLesserOrEqual` and `nearestLesser` terminate for every input, and `formatLongToCompactString` rejects a precision below 3 instead of dividing by zero. |
 | Items | Code that checked for an empty item stack now also treats zero-count stacks as empty, not only the shared empty stack. |
+| Multiblocks | The Power Substation's passive drain after a battery change no longer includes a remainder left from the previous batteries, which could add 1 EU/t. |
 
 ### Earlier fork changes
 
