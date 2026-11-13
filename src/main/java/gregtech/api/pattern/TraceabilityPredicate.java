@@ -40,7 +40,7 @@ public class TraceabilityPredicate {
                 blockWorldState.setError(new PatternStringError("gregtech.multiblock.pattern.error.coils"));
                 return false;
             }
-            blockWorldState.getMatchContext().getOrPut("VABlock", new LinkedList<>()).add(blockWorldState.getPos());
+            blockWorldState.getMatchContext().getOrCreate("VABlock", LinkedList::new).add(blockWorldState.getPos());
             return true;
         }
         return false;
