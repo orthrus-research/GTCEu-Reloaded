@@ -221,6 +221,9 @@ public class BlockLamp extends Block implements IEmissiveLayerBlock {
     }
 
     public static boolean isLightActive(IBlockState state) {
-        return state.getValue(INVERTED) == state.getValue(POWERED);
+        // compare the values, not the boxed Boolean instances
+        boolean inverted = state.getValue(INVERTED);
+        boolean powered = state.getValue(POWERED);
+        return inverted == powered;
     }
 }
