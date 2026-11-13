@@ -14,12 +14,16 @@ public class FeCompat {
     }
 
     /**
-     * Converts eu to fe, using specified ratio
-     * 
-     * @return fe
+     * Converts eu to fe, using specified ratio. The result saturates at {@link Integer#MAX_VALUE}, and a negative
+     * amount converts to 0, so the top voltage tiers do not wrap to a negative or zero amount.
+     *
+     * @return fe, from 0 to {@link Integer#MAX_VALUE}
      */
     public static int toFe(long eu, int ratio) {
-        return (int) toFeLong(eu, ratio);
+        if (eu <= 0 || ratio <= 0) return 0;
+        // with eu at most Integer.MAX_VALUE the product fits in a long
+        if (eu >= Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        return (int) Math.min(Integer.MAX_VALUE, eu * ratio);
     }
 
     /**

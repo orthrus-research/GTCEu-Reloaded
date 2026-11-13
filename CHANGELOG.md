@@ -247,6 +247,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Storage | Gameplay change: a quantum chest refuses other items in its input slot, and with voiding on no longer deletes matching items while its output slot is empty |
 | Machines | Gameplay change: the alarm uses its stated 4 EU/t; before, it drained up to three times that, and probes reading it drained energy too |
 | Machines | Miners scan an ore-free area over several ticks instead of walking all of it at once |
+| Machines | Energy sent to FE machines at the highest voltage tiers is capped at the largest FE amount instead of wrapping to nothing |
 
 ### Earlier fork changes
 
