@@ -215,6 +215,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Pipes | Laser pipes no longer switch off early when several players load them, and a laser pipe saved while active turns off after loading. |
 | Damage | Gameplay change: armour keeps protecting against heat and frost damage after a player has carried a hot or cryogenic item; before, all such damage ignored armour for the rest of the session |
 | Armor | Gameplay change: advanced NanoMuscle and QuarkTech chestplates charge only their wearer's items, at the same rate however many players wear them, and fuel jetpacks and QuarkTech boots no longer share state between wearers |
+| Armor | Equipping a fuel jetpack by right-click plays its sound for nearby players. |
 
 ### Earlier fork changes
 
