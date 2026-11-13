@@ -166,6 +166,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Localisation | Machine ids, texture paths and translation keys no longer change under a Turkish system locale. |
 | Multiblocks | Gameplay change: a large boiler that runs short of water uses its distilled water or configured boiler fluids for the rest instead of exploding |
 | Multiblocks | Fuel a large boiler burns from an input bus is saved with that bus, so it is not returned after a reload. |
+| Config | A miner replacement block configured as a bare name or with a non-numeric meta no longer stops every miner from being created. |
 
 ### Earlier fork changes
 
