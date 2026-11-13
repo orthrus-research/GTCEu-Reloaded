@@ -254,6 +254,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | World generation | Gameplay change: a vein's guaranteed surface indicator is placed only from the chunk holding its center, ending cascading chunk generation; a vein with no ore in that chunk has no guaranteed indicator |
 | Tools | Gameplay change: industrial TNT and similar GT explosives respect claim and protection mods, which can now cancel each block they break |
 | API | Custom loot entries no longer depend on reflection that current JDKs refuse |
+| API | Two vanilla hooks now combine with other mods that hook the same code instead of failing to apply |
 
 ### Earlier fork changes
 

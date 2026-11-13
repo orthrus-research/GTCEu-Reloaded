@@ -21,7 +21,6 @@ import com.llamalad7.mixinextras.sugar.Local;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
@@ -30,24 +29,22 @@ import java.util.Set;
 @Mixin(RecipeRepairItem.class)
 public class RecipeRepairItemMixin {
 
-    @Redirect(method = "matches",
-              at = @At(value = "INVOKE",
-                       ordinal = 0,
-                       target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
-    public Item gregtechCEu$checkFirst(ItemStack instance) {
-        if (instance.getItem() instanceof IGTTool)
-            return null; // return null to bypass item check
-        else return instance.getItem();
+    @WrapOperation(method = "matches",
+                   at = @At(value = "INVOKE",
+                            ordinal = 0,
+                            target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
+    public Item gregtechCEu$checkFirst(ItemStack instance, Operation<Item> original) {
+        Item item = original.call(instance);
+        return item instanceof IGTTool ? null : item; // null bypasses the vanilla item check
     }
 
-    @Redirect(method = "matches",
-              at = @At(value = "INVOKE",
-                       ordinal = 1,
-                       target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
-    public Item gregtechCEu$checkSecond(ItemStack instance) {
-        if (instance.getItem() instanceof IGTTool)
-            return null; // return null to bypass item check
-        else return instance.getItem();
+    @WrapOperation(method = "matches",
+                   at = @At(value = "INVOKE",
+                            ordinal = 1,
+                            target = "Lnet/minecraft/item/ItemStack;getItem()Lnet/minecraft/item/Item;"))
+    public Item gregtechCEu$checkSecond(ItemStack instance, Operation<Item> original) {
+        Item item = original.call(instance);
+        return item instanceof IGTTool ? null : item; // null bypasses the vanilla item check
     }
 
     @ModifyReturnValue(method = "matches", at = @At(value = "RETURN", ordinal = 1))
