@@ -158,6 +158,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | The pump returns to a fluid block it skipped because its tank was full, instead of ignoring the block until its next full rescan. |
 | Machines | The fisher's bait use is saved even when nothing else changes in the machine. |
 | Clipboard | Left-clicking a clipboard outside its page no longer throws, and a clipboard whose GUI cannot be built logs once instead of every tick. |
+| Machines | Gameplay change: a finished charcoal pile converts only the logs still inside it; before, blocks at positions recorded by earlier or larger pile checks also turned into brittle charcoal |
 
 ### Earlier fork changes
 
