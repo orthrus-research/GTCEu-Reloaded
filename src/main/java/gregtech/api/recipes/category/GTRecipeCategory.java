@@ -35,17 +35,23 @@ public final class GTRecipeCategory {
     @NotNull
     public static GTRecipeCategory create(@NotNull String modid, @NotNull String categoryName,
                                           @NotNull String translationKey, @NotNull RecipeMap<?> recipeMap) {
-        return categories.computeIfAbsent(categoryName,
+        // keyed by modid.name: the same name from another mod is another category
+        return categories.computeIfAbsent(modid + '.' + categoryName,
                 (k) -> new GTRecipeCategory(modid, categoryName, translationKey, recipeMap));
     }
 
     /**
-     * @param categoryName the name of the category
-     * @return the category associated with the name
+     * @param categoryName the unique id ({@code modid.name}) of the category, or its bare name
+     * @return the category with that unique id, else a category with that name
      */
     @Nullable
     public static GTRecipeCategory getByName(@NotNull String categoryName) {
-        return categories.get(categoryName);
+        GTRecipeCategory category = categories.get(categoryName);
+        if (category != null) return category;
+        for (GTRecipeCategory candidate : categories.values()) {
+            if (candidate.getName().equals(categoryName)) return candidate;
+        }
+        return null;
     }
 
     /**
