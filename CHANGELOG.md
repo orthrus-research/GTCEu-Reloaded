@@ -161,6 +161,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | Gameplay change: a finished charcoal pile converts only the logs still inside it; before, blocks at positions recorded by earlier or larger pile checks also turned into brittle charcoal |
 | Crafting | Gameplay change: the crafting station damages, empties or uses only as many tools, buckets and cells as the recipe needs; before, one craft damaged every matching tool and emptied every matching bucket in the station, and one needing two items from a stack used only one |
 | Storage | The quantum storage controller no longer throws when its network changes before every saved storage has been loaded. |
+| Covers | Turning a conveyor, pump, shutter, voiding or ender link cover on or off is saved even when nothing else changes in that chunk. |
 
 ### Earlier fork changes
 

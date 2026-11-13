@@ -448,6 +448,7 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     @Override
     public void setWorkingEnabled(boolean isActivationAllowed) {
         this.isWorkingAllowed = isActivationAllowed;
+        markDirty();
     }
 
     @Override

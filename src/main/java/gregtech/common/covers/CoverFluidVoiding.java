@@ -105,6 +105,7 @@ public class CoverFluidVoiding extends CoverPump {
                                                        @NotNull CuboidRayTraceResult hitResult) {
         this.isWorkingAllowed = !this.isWorkingAllowed;
         if (!playerIn.world.isRemote) {
+            markDirty();
             playerIn.sendStatusMessage(new TextComponentTranslation(isWorkingEnabled() ?
                     "cover.voiding.message.enabled" : "cover.voiding.message.disabled"), true);
         }

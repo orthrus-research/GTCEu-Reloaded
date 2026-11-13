@@ -78,6 +78,7 @@ public class CoverShutter extends CoverBase implements IControllable {
                                                        @NotNull CuboidRayTraceResult hitResult) {
         this.isWorkingAllowed = !this.isWorkingAllowed;
         if (!playerIn.world.isRemote) {
+            markDirty();
             playerIn.sendMessage(new TextComponentTranslation(isWorkingEnabled() ?
                     "cover.shutter.message.enabled" : "cover.shutter.message.disabled"));
         }
@@ -92,6 +93,7 @@ public class CoverShutter extends CoverBase implements IControllable {
     @Override
     public void setWorkingEnabled(boolean isActivationAllowed) {
         isWorkingAllowed = isActivationAllowed;
+        markDirty();
     }
 
     @Override

@@ -720,6 +720,7 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
     @Override
     public void setWorkingEnabled(boolean isActivationAllowed) {
         this.isWorkingAllowed = isActivationAllowed;
+        markDirty();
     }
 
     @Override

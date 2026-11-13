@@ -250,6 +250,7 @@ public abstract class CoverAbstractEnderLink<T extends VirtualEntry> extends Cov
     @Override
     public void setWorkingEnabled(boolean isActivationAllowed) {
         this.workingEnabled = isActivationAllowed;
+        markDirty();
     }
 
     public boolean isIoEnabled() {

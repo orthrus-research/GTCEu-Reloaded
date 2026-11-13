@@ -117,6 +117,7 @@ public class CoverItemVoiding extends CoverConveyor {
                                                        @NotNull CuboidRayTraceResult hitResult) {
         this.isWorkingAllowed = !this.isWorkingAllowed;
         if (!playerIn.world.isRemote) {
+            markDirty();
             playerIn.sendStatusMessage(new TextComponentTranslation(isWorkingEnabled() ?
                     "cover.voiding.message.enabled" : "cover.voiding.message.disabled"), true);
         }
