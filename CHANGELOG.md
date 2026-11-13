@@ -203,6 +203,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | World generation | A new single-player world no longer inherits the bedrock fluid veins of the world played before it. |
 | Pipes | Worlds with long-distance pipes are released when they unload instead of being kept in memory until the game exits. |
 | Cables | Gameplay change: a hot cable cools at the normal rate after its chunk loads instead of twice as fast, and a broken hot cable no longer sets fire to what replaces it |
+| Pipes | A fluid pipe that saved an unknown fluid keeps new fluid in that channel across saves. |
 
 ### Earlier fork changes
 
