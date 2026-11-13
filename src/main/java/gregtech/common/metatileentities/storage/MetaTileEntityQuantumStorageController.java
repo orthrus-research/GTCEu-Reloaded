@@ -328,7 +328,9 @@ public class MetaTileEntityQuantumStorageController extends MetaTileEntity imple
             var state = getWorld().getBlockState(pos);
             if (state.getBlock().isAir(state, getWorld(), pos)) continue;
 
-            IQuantumStorage<?> storage = oldInstances.get(pos).get();
+            // positions restored from NBT have no instance until getStorage has resolved them
+            var reference = oldInstances.get(pos);
+            IQuantumStorage<?> storage = reference == null ? null : reference.get();
             if (storage == null) {
                 MetaTileEntity mte = GTUtility.getMetaTileEntity(getWorld(), pos);
                 if (!(mte instanceof IQuantumStorage<?> quantumStorage)) {
