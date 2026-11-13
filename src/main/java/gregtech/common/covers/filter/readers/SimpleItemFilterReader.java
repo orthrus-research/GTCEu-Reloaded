@@ -19,8 +19,15 @@ public class SimpleItemFilterReader extends BaseFilterReader implements IItemHan
     public static final String RESPECT_NBT = "IgnoreNBT";
     public static final String RESPECT_DAMAGE = "IgnoreDamage";
 
+    // decoded slot stacks, keyed by the identity of the slot's tag: every write replaces the tag, so a cached
+    // stack is never stale, and a filter test no longer decodes NBT for each of its slots
+    private final NBTTagCompound[] decodedTags;
+    private final ItemStack[] decodedStacks;
+
     public SimpleItemFilterReader(ItemStack container, int slots) {
         super(container, slots);
+        this.decodedTags = new NBTTagCompound[slots];
+        this.decodedStacks = new ItemStack[slots];
     }
 
     public void setIgnoreDamage(boolean ignoreDamage) {
@@ -68,7 +75,16 @@ public class SimpleItemFilterReader extends BaseFilterReader implements IItemHan
     public ItemStack getStackInSlot(int slot) {
         if (validateSlotIndex(slot)) {
             NBTTagCompound item = getTagAt(slot);
-            return item.isEmpty() ? ItemStack.EMPTY : new ItemStack(item);
+            if (item.isEmpty()) return ItemStack.EMPTY;
+            if (slot < decodedTags.length && decodedTags[slot] == item) {
+                return decodedStacks[slot].copy();
+            }
+            ItemStack decoded = new ItemStack(item);
+            if (slot < decodedTags.length) {
+                decodedTags[slot] = item;
+                decodedStacks[slot] = decoded.copy();
+            }
+            return decoded;
         }
         return ItemStack.EMPTY;
     }
