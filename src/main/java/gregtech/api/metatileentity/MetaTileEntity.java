@@ -430,6 +430,11 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
      * @param trait trait object to add
      */
     void addMetaTileEntityTrait(@NotNull MTETrait trait) {
+        MTETrait sameId = this.mteTraitByNetworkId.get(trait.getNetworkID());
+        if (sameId != null && !sameId.getName().equals(trait.getName())) {
+            throw new IllegalStateException("MTE traits " + sameId.getName() + " and " + trait.getName() +
+                    " have names with the same hash code, which is their network id; rename one");
+        }
         this.mteTraits.put(trait.getName(), trait);
         this.mteTraitByNetworkId.put(trait.getNetworkID(), trait);
     }
