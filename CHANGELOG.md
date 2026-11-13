@@ -94,6 +94,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | Scrollable panels (terminal apps, monitor and clipboard editors) hide and stop accepting clicks for children scrolled out sideways; before, only the vertical position was checked, and the horizontal scroll bar's drag test read the vertical offset |
 | Tools | The prospector map places the player marker correctly on the north-south axis at positive Z, and clicking just left of or above the map no longer adds a waypoint in its first row or column |
 | Covers | Energy, fluid, item and activity detectors give the right signal for stored amounts above about 6×10¹⁷; before, the scaled amount overflowed and the signal went wrong or negative |
+| API | `PositionedRect.intersects(PositionedRect)` detects every overlap; before, it missed a rectangle inside the other one and cross-shaped overlaps |
 
 ### Earlier fork changes
 

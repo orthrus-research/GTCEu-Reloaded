@@ -39,10 +39,11 @@ public class PositionedRect {
     }
 
     public boolean intersects(PositionedRect other) {
-        return intersects(other.position) ||
-                intersects(other.position.add(other.size)) ||
-                intersects(other.position.add(new Size(other.size.width, 0))) ||
-                intersects(other.position.add(new Size(0, other.size.height)));
+        // overlapping intervals on both axes; edges that touch count, as in intersects(Position)
+        return position.x <= other.position.x + other.size.width &&
+                other.position.x <= position.x + size.width &&
+                position.y <= other.position.y + other.size.height &&
+                other.position.y <= position.y + size.height;
     }
 
     @Override
