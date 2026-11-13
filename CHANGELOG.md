@@ -19,7 +19,7 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 | Authoring | Remove the remaining CT-specific material-component array accessor; use the native material-component list |
 | Pipes | Preserve named fluid-containment attributes through pipe sizing and graph saves; restore loaded pipes' derived decisions without replacing tanks or changing saved geometry and connections |
 | Storage | Expose native crate layouts and retention behavior; support retained machine replacement across namespaces without stale harvest state |
-| Runtime | Require Java 26 and Cleanroom 0.7.14-alpha; remove the Java 8 and standalone Forge lanes |
+| Runtime | Require Java 25, Cleanroom's declared runtime, and Cleanroom 0.7.14-alpha; remove the Java 8 and standalone Forge lanes |
 | Breaking | Remove the BetterQuesting quest-database migration (`BQuDataFixer`, run at server start) and the `/gregtech datafix` command. Before moving to 3.0, on a 2.x release with BetterQuestingUnofficial: pack makers run `/gregtech datafix` once to migrate the default quests in `config/betterquesting/`, and each existing world is loaded once so server start migrates `<world>/betterquesting/QuestDatabase.json`; native world and item saved-state migration is unchanged |
 | Authoring | Apply the GroovyScript mixins only on the tested GroovyScript 1.5.0; other versions keep stock script caching and report typed Groovy definitions as unavailable instead of failing at startup |
 | Authoring | Degrade script-cache persistence failures (locked or unreadable `cache/groovy`, link loops) to a session-only cache with a warning; unverified bytecode is still never reused |

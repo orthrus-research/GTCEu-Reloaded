@@ -22,11 +22,11 @@ what is specific to GTCEu: Reloaded. Report GTCEu: Reloaded problems here, not t
   otherwise, and its document states where its guarantees end.
 - Upstream authorship, copyright headers and license notices stay intact. Material adapted from
   another project names its source and license in [NOTICE.md](NOTICE.md).
-- Code and tests target Java 26 through CleanroomGradle. Do not introduce a Java 8 compatibility lane.
+- Code and tests target Java 25, Cleanroom's declared runtime, through CleanroomGradle. Do not introduce a Java 8 compatibility lane.
 
 ## Checks
 
-Build with the tests and the formatting check (JDK 26):
+Build with the tests and the formatting check (JDK 25):
 
 ```sh
 ./gradlew test build spotlessCheck

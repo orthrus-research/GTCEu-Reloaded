@@ -21,7 +21,7 @@ gradle.projectsEvaluated {
     def renameType = productReobf.get().class.classLoader.loadClass('net.minecraftforge.renamer.gradle.RenameJar')
     p.tasks.register('reobfHeiAsyncRepairJar', renameType, p.extensions.getByName('renamer')).configure {
         dependsOn(dev)
-        javaLauncher.set(p.javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(26) })
+        javaLauncher.set(p.javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(25) })
         input.set(dev.flatMap { it.archiveFile })
         output.set(new File(root, 'build/hei-async-repair.jar'))
         map.setFrom(productReobf.map { it.map })

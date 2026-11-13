@@ -16,7 +16,7 @@ maintainers.
 
 ## Status
 
-The `ct-overhaul` branch prepares the 3.0 alpha line for Java 26 and Cleanroom 0.7.14-alpha.
+The `ct-overhaul` branch prepares the 3.0 alpha line for Java 25 and Cleanroom 0.7.14-alpha.
 It replaces CraftTweaker integration with shared typed Java definitions and GroovyScript 1.5.0
 authoring. This is a breaking API/toolchain migration; existing packs and addons require review.
 Saved content retains its registry identities when declarations preserve their original IDs.
@@ -82,8 +82,8 @@ networks guarantee to addon handlers and where those guarantees end, and
 
 ## Building from source
 
-The ct-overhaul build requires JDK 26 and uses CleanroomGradle. Product code and tests target
-Java 26; Java 8 and the standalone Forge development runtime are no longer supported.
+The ct-overhaul build requires JDK 25 and uses CleanroomGradle. Product code and tests target
+Java 25, the runtime Cleanroom declares; Java 8 and the standalone Forge development runtime are no longer supported.
 See [release validation](docs/pre-delivery-qualification.md) for the tested artifact and runtime.
 
 ```sh

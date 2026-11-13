@@ -15,7 +15,7 @@ The current results are in [release validation](pre-delivery-qualification.md).
 It records the tested artifact, supported runtime and known limits. Earlier candidates do not
 extend that qualification to different artifacts or integrations.
 
-The current candidate targets Java 26, CodeChickenLib 3.3.10, ModularUI 3.1.6, Cleanroom
+The current candidate targets Java 25 (Cleanroom's declared runtime), CodeChickenLib 3.3.10, ModularUI 3.1.6, Cleanroom
 0.7.14-alpha and the dependencies pinned in the build. GroovyScript 1.5.0 is required for Groovy
 authoring and optional for Java-only consumers. Record runtime, source, configuration and artifact
 identities for each validation run. Additional JVM versions require separate validation.

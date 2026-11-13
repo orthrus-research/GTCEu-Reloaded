@@ -1,6 +1,6 @@
 # Native Java and Groovy authoring migration
 
-Reloaded 3.0 targets Java 26 and Cleanroom. CraftTweaker/ZenScript scripts and addon APIs must
+Reloaded 3.0 targets Java 25 and Cleanroom. CraftTweaker/ZenScript scripts and addon APIs must
 migrate to native Java or Groovy authoring. This guide maps the replacements and their lifecycle
 requirements. See [release validation](pre-delivery-qualification.md) for supported versions and
 compatibility limits.
@@ -94,7 +94,7 @@ numbers; do not restart allocation in a new script order.
 - The terminal search API uses cooperative interruption and owner-thread `drainResults()`;
   the obsolete `isManualInterrupt()` switch is removed.
 - Loader integration uses a manifest `MixinConnector` and Cleanroom conditional registration.
-  The early/late MixinBooter adapters are removed; Cleanroom 0.7.14-alpha and Java 26 are required.
+  The early/late MixinBooter adapters are removed; Cleanroom 0.7.14-alpha and Java 25 are required.
 
 Recipe mutability remains an authoring feature. Groovy can create recipes, delete individual
 recipes, clear recipe maps, and explicitly remove and register replacements. Immutable descriptors
@@ -244,7 +244,7 @@ after successful replacement.
 
 ## Dependencies and runtime
 
-The 3.0 alpha line requires Java 26 and Cleanroom 0.7.14-alpha. GroovyScript 1.5.0 is optional for
+The 3.0 alpha line requires Java 25 and Cleanroom 0.7.14-alpha. GroovyScript 1.5.0 is optional for
 native Java consumers and required for Groovy authoring. Publication metadata includes CodeChickenLib 3.3.10,
 ModularUI and compile annotations; it does not install the development loader bundle, Groovy engine,
 HEI or optional integrations. Addons using an integration's types must declare that dependency explicitly.
