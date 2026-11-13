@@ -47,7 +47,7 @@ public final class FTBChunksHelper {
         if (claimedChunk != null) {
             ForgePlayer forgePlayer = instance.universe.getPlayer(playerID);
             EnumTeamStatus status = claimedChunk.getData().getEditBlocksStatus();
-            return !claimedChunk.getTeam().hasStatus(forgePlayer, status);
+            return claimedChunk.getTeam().hasStatus(forgePlayer, status);
         }
 
         return true;
