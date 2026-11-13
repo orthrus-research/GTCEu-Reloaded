@@ -333,7 +333,7 @@ class XoRoShiRo128PlusRandom extends Random {
      * @param seed a seed for this generator.
      */
     @Override
-    public void setSeed(final long seed) {
+    public synchronized void setSeed(final long seed) {
         final SplitMix64Random r = new SplitMix64Random(seed);
         s0 = r.nextLong();
         s1 = r.nextLong();

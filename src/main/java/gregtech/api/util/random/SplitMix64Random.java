@@ -147,7 +147,7 @@ public class SplitMix64Random extends Random {
      * @param seed a seed for this generator.
      */
     @Override
-    public void setSeed(final long seed) {
+    public synchronized void setSeed(final long seed) {
         x = HashCommon.murmurHash3(seed);
     }
 
