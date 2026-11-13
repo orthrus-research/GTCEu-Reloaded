@@ -233,6 +233,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | Multiblock screens update when a line gets shorter but otherwise matches what was shown before. |
 | API | `TraceabilityPredicate.ANY`, `AIR` and `HEATING_COILS` are `final`, and limiting a predicate no longer changes others that share its entries. |
 | OpenComputers | OpenComputers cover values kept by a script no longer load their machine's dimension or chunk when called. |
+| Saved data | An asymmetric cleanroom keeps its front and back depth across a reload. |
 
 ### Earlier fork changes
 

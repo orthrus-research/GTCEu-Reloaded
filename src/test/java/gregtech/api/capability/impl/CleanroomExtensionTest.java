@@ -87,6 +87,16 @@ class CleanroomExtensionTest {
     }
 
     @Test
+    void savedDimensionsLoadBackUnchanged() {
+        var server = new Room();
+        var dimensions = new CleanroomDimensions(3, 5, 4, 2, 6);
+        server.dimensions(dimensions);
+        var loaded = new Room();
+        loaded.readFromNBT(server.writeToNBT(new NBTTagCompound()));
+        assertEquals(dimensions, loaded.dimensions());
+    }
+
+    @Test
     void dimensionsUseNativeInitialSyncAndPreserveExistingSaveFieldConvention() {
         var server = new Room();
         var dimensions = new CleanroomDimensions(3, 5, 4, 2, 6);

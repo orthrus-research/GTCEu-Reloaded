@@ -706,6 +706,7 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
         super.writeToNBT(data);
         data.setInteger("lDist", this.lDist);
         data.setInteger("rDist", this.rDist);
+        // the saved keys are exchanged, a convention existing saves already use; readFromNBT matches it
         data.setInteger("bDist", this.fDist);
         data.setInteger("fDist", this.bDist);
         data.setInteger("hDist", this.hDist);
@@ -719,8 +720,9 @@ public class MetaTileEntityCleanroom extends MultiblockWithDisplayBase
         this.lDist = data.hasKey("lDist") ? data.getInteger("lDist") : this.lDist;
         this.rDist = data.hasKey("rDist") ? data.getInteger("rDist") : this.rDist;
         this.hDist = data.hasKey("hDist") ? data.getInteger("hDist") : this.hDist;
-        this.bDist = data.hasKey("bDist") ? data.getInteger("bDist") : this.bDist;
-        this.fDist = data.hasKey("fDist") ? data.getInteger("fDist") : this.fDist;
+        // exchanged keys, matching writeToNBT and every save written so far
+        this.bDist = data.hasKey("fDist") ? data.getInteger("fDist") : this.bDist;
+        this.fDist = data.hasKey("bDist") ? data.getInteger("bDist") : this.fDist;
         reinitializeStructurePattern();
         this.cleanAmount = data.getInteger("cleanAmount");
         this.cleanroomLogic.readFromNBT(data);
