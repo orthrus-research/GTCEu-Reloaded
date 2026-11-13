@@ -231,6 +231,22 @@ public final class MultiblockRecipeInputs implements IRecipeInputViewProvider {
         return owner instanceof MetaTileEntity part && part.isValid() && owner.isAttachedToMultiBlock() &&
                 (!(part instanceof MetaTileEntityMultiblockPart nativePart) ||
                         nativePart.getController() == controller) &&
-                controller.getMultiblockParts().contains(owner);
+                partSet().contains(owner);
+    }
+
+    // the controller's parts as an identity set, rebuilt when its structure changes: isAvailable runs several
+    // times per recipe search, and a list lookup per ability instance made it quadratic in part count
+    private Set<IMultiblockPart> partSet;
+    private int partSetRevision = -1;
+
+    private Set<IMultiblockPart> partSet() {
+        int revision = controller.getStructureRevision();
+        if (partSet == null || partSetRevision != revision) {
+            Set<IMultiblockPart> parts = Collections.newSetFromMap(new IdentityHashMap<>());
+            parts.addAll(controller.getMultiblockParts());
+            partSet = parts;
+            partSetRevision = revision;
+        }
+        return partSet;
     }
 }
