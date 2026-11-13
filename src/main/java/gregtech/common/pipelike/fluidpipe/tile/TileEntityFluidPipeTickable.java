@@ -84,6 +84,7 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
             }
 
             boolean shouldDistribute = (oldLastReceivedFrom == lastReceivedFrom);
+            boolean distributed = false;
             int tanks = getNodeData().getTanks();
             for (int i = 0, j = GTValues.RNG.nextInt(tanks); i < tanks; i++) {
                 int index = (i + j) % tanks;
@@ -98,9 +99,11 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
 
                 if (shouldDistribute) {
                     distributeFluid(index, tank, fluid);
-                    lastReceivedFrom = 0;
+                    distributed = true;
                 }
             }
+            // after every channel has moved, so later channels also avoid the side their fluid came from
+            if (distributed) lastReceivedFrom = 0;
             oldLastReceivedFrom = lastReceivedFrom;
         }
     }
@@ -226,7 +229,8 @@ public class TileEntityFluidPipeTickable extends TileEntityFluidPipe implements 
 
         boolean burning = prop.getMaxFluidTemperature() < fluid.getTemperature(stack);
         boolean leaking = !prop.isGasProof() && fluid.isGaseous(stack);
-        boolean shattering = !prop.isCryoProof() && fluid.getTemperature() < FluidConstants.CRYOGENIC_FLUID_THRESHOLD;
+        boolean shattering = !prop.isCryoProof() &&
+                fluid.getTemperature(stack) < FluidConstants.CRYOGENIC_FLUID_THRESHOLD;
         boolean corroding = false;
         boolean melting = false;
 
