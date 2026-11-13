@@ -174,6 +174,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Recipes | Two mods can create recipe categories with the same name without one taking over the other. |
 | Tools | Tree felling stops when the player changes dimension and no longer breaks blocks placed where a felled log used to be. |
 | Armor | Equipping electric armour and flying a jetpack play their sounds for nearby players. `ArmorUtils.JET_ENGINE` moved to `GTSoundEvents.JET_ENGINE`. |
+| Armor | Gameplay change: swapping the quantum chestplate for another GregTech chest piece ends its fire immunity; before, it lasted until the slot was emptied. Night vision from potions is no longer removed by GregTech armour |
 
 ### Earlier fork changes
 
