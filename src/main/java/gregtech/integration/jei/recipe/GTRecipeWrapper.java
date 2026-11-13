@@ -217,7 +217,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         BoostableChanceEntry<?> entry = null;
         if (!input) {
             if (!recipe.getChancedOutputs().getChancedEntries().isEmpty()) {
-                int outputIndex = slotIndex - recipeMap.getMaxInputs();
+                int outputIndex = slotIndex - RecipeMapCategory.importSlotCount(recipeMap);
                 if (outputIndex >= recipe.getOutputs().size()) {
                     entry = recipe.getChancedOutputs().getChancedEntries()
                             .get(outputIndex - recipe.getOutputs().size());
