@@ -23,7 +23,7 @@ public class TextPluginBehavior extends MonitorPluginBaseBehavior {
     public int[] colors;
 
     public void setText(int line, String text, int color) {
-        if (line < 0 || line > texts.length || (texts[line].equals(text) && colors[line] == color)) return;
+        if (line < 0 || line >= texts.length || (texts[line].equals(text) && colors[line] == color)) return;
         this.texts[line] = text;
         this.colors[line] = color;
         writePluginData(GregtechDataCodes.UPDATE_PLUGIN_CONFIG, packetBuffer -> {
@@ -71,11 +71,10 @@ public class TextPluginBehavior extends MonitorPluginBaseBehavior {
         for (int i = 0; i < texts.length; i++) {
             texts[i] = data.hasKey("t" + i) ? data.getString("t" + i) : "";
         }
-        if (data.hasKey("color")) {
-            colors = data.getIntArray("color");
-        } else {
-            Arrays.fill(colors, 0XFFFFFFFF);
-        }
+        // keep one colour per line whatever length was saved
+        int[] saved = data.hasKey("color") ? data.getIntArray("color") : new int[0];
+        Arrays.fill(colors, 0XFFFFFFFF);
+        System.arraycopy(saved, 0, colors, 0, Math.min(saved.length, colors.length));
     }
 
     @SideOnly(Side.CLIENT)
