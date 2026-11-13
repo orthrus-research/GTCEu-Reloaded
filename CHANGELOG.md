@@ -116,6 +116,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | Ore filter expressions that negate a minimum length after alternatives, such as `(a|ab)!(??*)`, reject inputs that one of the alternatives leaves too long; before, they accepted them |
 | World generation | Gameplay change: the `single` vein shape places `blocks_count` blocks in a random walk; before, every block went to the same position, so it placed one |
 | Multiblocks | Gameplay change: random maintenance failures can pick all six problems; before, the sixth never occurred at random |
+| Armor | Gameplay change: QuarkTech leggings move the wearer up and down only underwater and with charge; before, holding jump on land or with an empty battery lifted the player every tick |
 
 ### Earlier fork changes
 
