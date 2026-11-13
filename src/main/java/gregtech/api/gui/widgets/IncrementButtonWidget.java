@@ -143,7 +143,12 @@ public class IncrementButtonWidget extends Widget {
     @Override
     public void handleClientAction(int id, PacketBuffer buffer) {
         if (id == -1) {
-            updater.accept(buffer.readInt());
+            int value = buffer.readInt();
+            // the client chooses which increment, not its size
+            if (value == increment || value == incrementShift || value == incrementCtrl ||
+                    value == incrementShiftCtrl) {
+                updater.accept(value);
+            }
         }
     }
 }
