@@ -58,10 +58,10 @@ public class MetaTileEntityDiode extends MetaTileEntityMultiblockPart
      */
     public MetaTileEntityDiode(ResourceLocation metaTileEntityId, int tier, int maxAmps) {
         super(metaTileEntityId, tier);
-        amps = 1;
-        reinitializeEnergyContainer();
-        isWorkingEnabled = true;
         this.maxAmps = maxAmps;
+        this.amps = 1;
+        this.isWorkingEnabled = true;
+        reinitializeEnergyContainer();
     }
 
     @Override
