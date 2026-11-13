@@ -96,6 +96,10 @@ public class CustomTextureBakedModel implements IBakedModel {
         return null;
     }
 
+    /** The six faces and {@code null}, under which a model returns its quads without a cull face. */
+    private static final EnumFacing[] FACES_AND_UNCULLED = { EnumFacing.DOWN, EnumFacing.UP, EnumFacing.NORTH,
+            EnumFacing.SOUTH, EnumFacing.WEST, EnumFacing.EAST, null };
+
     protected CustomTextureBakedModel createModel(@Nullable IBlockState state, CustomTextureModel model, long rand) {
         IBakedModel parent = getParent(rand);
         while (parent instanceof CustomTextureBakedModel) {
@@ -104,7 +108,7 @@ public class CustomTextureBakedModel implements IBakedModel {
 
         CustomTextureBakedModel ret = new CustomTextureBakedModel(model, parent);
         for (BlockRenderLayer layer : BlockRenderLayer.values()) {
-            for (EnumFacing facing : EnumFacing.VALUES) {
+            for (EnumFacing facing : FACES_AND_UNCULLED) {
                 List<BakedQuad> parentQuads = parent.getQuads(state, facing, rand);
                 List<BakedQuad> quads;
                 if (facing != null) {
@@ -128,16 +132,20 @@ public class CustomTextureBakedModel implements IBakedModel {
                     }
                 }
 
-                BlockHooks.ENABLE = false;
-                for (Map.Entry<BakedQuad, CustomTexture> e : textureMap.entrySet()) {
-                    // If the layer is null, this is a wrapped vanilla texture, so passthrough the layer check to the
-                    // block
-                    if (e.getValue().getLayer() == layer || (e.getValue().getLayer() == null &&
-                            (state == null || state.getBlock().canRenderInLayer(state, layer)))) {
-                        quads.add(e.getValue().transformQuad(e.getKey()));
+                // only this thread bypasses the hook: chunk meshing runs on several threads at once
+                BlockHooks.setBypass(true);
+                try {
+                    for (Map.Entry<BakedQuad, CustomTexture> e : textureMap.entrySet()) {
+                        // If the layer is null, this is a wrapped vanilla texture, so passthrough the layer check
+                        // to the block
+                        if (e.getValue().getLayer() == layer || (e.getValue().getLayer() == null &&
+                                (state == null || state.getBlock().canRenderInLayer(state, layer)))) {
+                            quads.add(e.getValue().transformQuad(e.getKey()));
+                        }
                     }
+                } finally {
+                    BlockHooks.setBypass(false);
                 }
-                BlockHooks.ENABLE = true;
             }
         }
         return ret;

@@ -185,6 +185,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Ender links | A damaged or client-sent ender link colour no longer fails the virtual registry load, and an overfull virtual tank no longer loses fluid when filled. |
 | Fluids | A fluid that another mod registered first keeps that mod's temperature, colour, density, luminosity and viscosity instead of GregTech's defaults. |
 | World generation | Stone types registered with a gap in their ids get ore blocks; before, every type after the gap had none. |
+| Rendering | Blocks with custom texture models keep geometry that has no cull face, and meshing on one thread no longer turns off the render layer hook for the others. |
 
 ### Earlier fork changes
 

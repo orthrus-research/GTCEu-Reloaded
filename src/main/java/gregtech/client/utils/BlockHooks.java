@@ -12,10 +12,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class BlockHooks {
 
-    public static boolean ENABLE = true;
+    /** Per thread, since chunk meshing calls the hook from several threads at once. */
+    private static final ThreadLocal<Boolean> BYPASS = ThreadLocal.withInitial(() -> Boolean.FALSE);
+
+    /**
+     * @param bypass whether {@link #canRenderInLayer} gives no opinion on the calling thread
+     */
+    public static void setBypass(boolean bypass) {
+        BYPASS.set(bypass);
+    }
 
     public static Boolean canRenderInLayer(@NotNull IBlockState state, @NotNull BlockRenderLayer layer) {
-        if (ENABLE) {
+        if (!BYPASS.get()) {
             IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(state);
             if (model instanceof WeightedBakedModel) {
                 model = ((WeightedBakedModel) model).baseModel;
