@@ -511,7 +511,7 @@ public final class ModHandler {
     public static boolean removeFurnaceSmelting(@NotNull UnificationEntry input) {
         boolean result = false;
         for (ItemStack inputStack : OreDictUnifier.getAll(input)) {
-            result = result || removeFurnaceSmelting(inputStack);
+            result |= removeFurnaceSmelting(inputStack);
         }
         return result;
     }
