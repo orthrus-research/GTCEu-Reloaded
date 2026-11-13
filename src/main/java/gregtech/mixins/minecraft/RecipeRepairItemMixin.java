@@ -4,6 +4,7 @@ import gregtech.api.items.toolitem.IGTTool;
 import gregtech.api.items.toolitem.ItemGTToolbelt;
 import gregtech.api.items.toolitem.ToolHelper;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -125,7 +126,11 @@ public class RecipeRepairItemMixin {
                                                     Operation<Object> original,
                                                     @Local(ordinal = 0) ItemStack itemStack) {
         if (itemStack.getItem() instanceof IGTTool) {
-            ForgeEventFactory.onPlayerDestroyItem(ForgeHooks.getCraftingPlayer(), itemStack, null);
+            // automated crafting has no player, and the event's listeners expect one
+            EntityPlayer player = ForgeHooks.getCraftingPlayer();
+            if (player != null) {
+                ForgeEventFactory.onPlayerDestroyItem(player, itemStack, null);
+            }
             return instance.get(index);
         } else {
             return original.call(instance, index, newValue);

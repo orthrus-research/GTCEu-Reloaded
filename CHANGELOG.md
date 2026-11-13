@@ -141,6 +141,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Networking | A GregTech packet with an unknown id is logged and ignored instead of throwing in the network handler. |
 | Modules | A module skipped for a missing dependency now also skips the modules that depend on it, each with a log line; modules left out by a dependency cycle are logged. |
 | Armor | GregTech armour no longer leaves blending enabled after it renders, which could tint entities drawn after it. |
+| Tools | Repairing GregTech tools through automated crafting no longer posts a tool-destroyed event without a player. |
 
 ### Earlier fork changes
 
