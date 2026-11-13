@@ -24,6 +24,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
+import net.minecraft.world.World;
 
 import codechicken.lib.raytracer.CuboidRayTraceResult;
 import com.cleanroommc.modularui.api.IPanelHandler;
@@ -78,7 +79,14 @@ public abstract class CoverAbstractEnderLink<T extends VirtualEntry> extends Cov
     }
 
     protected void updateLink() {
-        this.activeEntry = VirtualEnderRegistry.getOrCreateEntry(getOwner(), getType(), createName());
+        World world = getWorld();
+        if (world != null && world.isRemote) {
+            // the registry belongs to the server; on an integrated server the client thread would write into
+            // the same static map. The client only needs an entry to show the colour.
+            this.activeEntry = getType().createInstance();
+        } else {
+            this.activeEntry = VirtualEnderRegistry.getOrCreateEntry(getOwner(), getType(), createName());
+        }
         this.activeEntry.setColor(this.color);
         markDirty();
     }
