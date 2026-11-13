@@ -736,7 +736,7 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
         }
 
         public boolean hasEnergy() {
-            return stored[0] != 0 && stored[1] != 0;
+            return stored[0] != 0 || stored[1] != 0;
         }
 
         private static BigInteger summarize(long[] num) {

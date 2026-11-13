@@ -62,6 +62,12 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 
 See [the migration guide](docs/ct-migration.md). Alpha qualification does not imply arbitrary pack compatibility.
 
+### Fixes
+
+| Area | Change |
+| --- | --- |
+| Machines | The Power Substation reports itself active while it holds energy; before, it never did |
+
 ### Earlier fork changes
 
 Changes since the fork from GTCEu at `52c04cd7b`, after 2.8.10.
