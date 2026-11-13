@@ -15,6 +15,13 @@ public class ItemHandlerProxy implements IItemHandler {
         this.extractHandler = extractHandler;
     }
 
+    /**
+     * @return the handler that receives inserted items; its slots come first in this proxy
+     */
+    public IItemHandler getInsertHandler() {
+        return insertHandler;
+    }
+
     @Override
     public int getSlots() {
         return insertHandler.getSlots() + extractHandler.getSlots();
