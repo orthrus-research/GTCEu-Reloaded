@@ -186,6 +186,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Fluids | A fluid that another mod registered first keeps that mod's temperature, colour, density, luminosity and viscosity instead of GregTech's defaults. |
 | World generation | Stone types registered with a gap in their ids get ore blocks; before, every type after the gap had none. |
 | Rendering | Blocks with custom texture models keep geometry that has no cull face, and meshing on one thread no longer turns off the render layer hook for the others. |
+| Rendering | Entities drawn after a GregTech portal keep their transparent cut-outs. |
 
 ### Earlier fork changes
 
