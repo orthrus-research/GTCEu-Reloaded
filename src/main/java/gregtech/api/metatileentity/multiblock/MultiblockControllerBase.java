@@ -355,7 +355,12 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
                 }
             }
             this.setFlipped(context.neededFlip());
-            parts.sort(Comparator.comparing(it -> multiblockPartSorter().apply(((MetaTileEntity) it).getPos())));
+            // the sorter once per sort; ties in its key are broken by position, so the order never depends
+            // on set iteration
+            Function<BlockPos, Integer> sorter = multiblockPartSorter();
+            parts.sort(
+                    Comparator.<IMultiblockPart, Integer>comparing(it -> sorter.apply(((MetaTileEntity) it).getPos()))
+                            .thenComparingLong(it -> ((MetaTileEntity) it).getPos().toLong()));
             Map<MultiblockAbility<Object>, AbilityInstances> abilities = new HashMap<>();
             for (IMultiblockPart part : parts) {
                 if (part instanceof IMultiblockAbilityPart abilityPart) {
