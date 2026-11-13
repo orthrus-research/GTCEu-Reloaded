@@ -204,7 +204,7 @@ public class MetaTileEntityRotorHolder extends MetaTileEntityMultiblockNotifiabl
         if (player.isCreative()) return false;
 
         if (!getWorld().isRemote && isRotorSpinning) {
-            float damageApplied = Math.min(1, currentSpeed / 1000);
+            float damageApplied = Math.min(1.0f, currentSpeed / 1000.0f);
             player.attackEntityFrom(DamageSources.getTurbineDamage(), damageApplied);
             AdvancementTriggers.ROTOR_HOLDER_DEATH.trigger((EntityPlayerMP) player);
             return true;
