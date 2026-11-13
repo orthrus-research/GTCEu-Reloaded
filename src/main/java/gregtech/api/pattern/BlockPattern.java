@@ -109,8 +109,8 @@ public class BlockPattern {
                                                   EnumFacing upwardsFacing, boolean allowsFlip) {
         if (!cache.isEmpty()) {
             boolean pass = true;
-            for (Map.Entry<Long, BlockInfo> entry : cache.entrySet()) {
-                BlockPos pos = BlockPos.fromLong(entry.getKey());
+            for (Long2ObjectMap.Entry<BlockInfo> entry : cache.long2ObjectEntrySet()) {
+                BlockPos pos = BlockPos.fromLong(entry.getLongKey());
                 IBlockState blockState = world.getBlockState(pos);
                 if (blockState != entry.getValue().getBlockState()) {
                     pass = false;
