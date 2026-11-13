@@ -144,14 +144,12 @@ public class IntCircuitIngredient extends GTRecipeInput {
         return 0;
     }
 
+    /**
+     * A query only: an untagged circuit reads as configuration 0 and keeps its missing tag, so that a lookup (JEI,
+     * filters, the ghost slot) does not stop it from stacking with circuits it stacked with before.
+     */
     public static boolean isIntegratedCircuit(ItemStack itemStack) {
-        boolean isCircuit = MetaItems.INTEGRATED_CIRCUIT.isItemEqual(itemStack);
-        if (isCircuit && !itemStack.hasTagCompound()) {
-            NBTTagCompound compound = new NBTTagCompound();
-            compound.setInteger("Configuration", 0);
-            itemStack.setTagCompound(compound);
-        }
-        return isCircuit;
+        return MetaItems.INTEGRATED_CIRCUIT.isItemEqual(itemStack);
     }
 
     public static void adjustConfiguration(PlayerInventoryHolder holder, int amount) {
