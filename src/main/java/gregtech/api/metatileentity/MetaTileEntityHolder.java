@@ -340,7 +340,13 @@ public class MetaTileEntityHolder extends TickableTileEntityBase implements IGre
         int networkId = buf.readVarInt();
         int metaTileEntityId = buf.readVarInt();
         MTERegistry registry = GregTechAPI.mteManager.getRegistry(networkId);
-        setMetaTileEntity(registry.getObjectById(metaTileEntityId));
+        MetaTileEntity sample = registry == null ? null : registry.getObjectById(metaTileEntityId);
+        if (sample == null) {
+            GTLog.logger.error("Received unknown meta tile entity {} of registry {} at {}, ignoring it",
+                    metaTileEntityId, networkId, getPos());
+            return;
+        }
+        setMetaTileEntity(sample);
         this.metaTileEntity.onPlacement();
         this.metaTileEntity.receiveInitialSyncData(buf);
         scheduleRenderUpdate();
