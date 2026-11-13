@@ -227,6 +227,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | JEI | JEI pages that show several ore vein, fluid vein, material tree or by-product recipes at once draw each recipe's own details. |
 | JEI | Looking up a block hovered in a JEI multiblock preview works when the game renders below 10 frames per second. |
 | Fluids | Moving fluid out of tanks that expose their live contents, such as some other mods' tanks, no longer changes the amount stored in them. |
+| Covers | Gameplay change: solar panel covers check for sunlight once a second instead of every tick, so they react to a change up to a second later |
 
 ### Earlier fork changes
 

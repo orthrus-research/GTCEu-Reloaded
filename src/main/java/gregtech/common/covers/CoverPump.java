@@ -90,7 +90,11 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     }
 
     public void setStringTransferRate(String s) {
-        this.fluidFilterContainer.setTransferSize(bucketMode.parseRate(s, Integer.MAX_VALUE));
+        try {
+            this.fluidFilterContainer.setTransferSize(bucketMode.parseRate(s, Integer.MAX_VALUE));
+        } catch (NumberFormatException | ArithmeticException ignored) {
+            // not a number: keep the current size
+        }
     }
 
     public String getStringTransferRate() {
