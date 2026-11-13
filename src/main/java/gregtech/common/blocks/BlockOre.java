@@ -93,8 +93,18 @@ public class BlockOre extends Block implements IBlockOre {
         // always drop StoneTypes.STONE as the default
         // this prevents stone types of id>15 from dropping the meta=0 variant of the block,
         // which might not be the block with the vanilla stone type
-        IBlockState stoneOre = OreConfigUtils.getOreForMaterial(this.material).get(StoneTypes.STONE);
-        return Item.getItemFromBlock(stoneOre.getBlock());
+        return getStoneOreItem();
+    }
+
+    // resolved once: the lookup streams over every ore block and builds a map, and this runs per drop
+    private Item stoneOreItem;
+
+    private Item getStoneOreItem() {
+        if (stoneOreItem == null) {
+            IBlockState stoneOre = OreConfigUtils.getOreForMaterial(this.material).get(StoneTypes.STONE);
+            stoneOreItem = Item.getItemFromBlock(stoneOre.getBlock());
+        }
+        return stoneOreItem;
     }
 
     @Override
