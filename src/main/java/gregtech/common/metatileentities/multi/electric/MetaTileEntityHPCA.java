@@ -548,7 +548,8 @@ public class MetaTileEntityHPCA extends MultiblockWithDisplayBase
         syncManager.syncValue("temperature", temperatureValue);
 
         bars.add(barTest -> barTest
-                .progress(() -> 1.0 * currentCWUtValue.getIntValue() / maxCWUtValue.getIntValue())
+                .progress(() -> maxCWUtValue.getIntValue() <= 0 ? 0 :
+                        1.0 * currentCWUtValue.getIntValue() / maxCWUtValue.getIntValue())
                 .texture(GTGuiTextures.PROGRESS_BAR_HPCA_COMPUTATION)
                 .tooltipBuilder(t -> {
                     if (isStructureFormed()) {

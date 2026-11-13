@@ -72,7 +72,6 @@ import static gregtech.api.util.RelativeDirection.*;
 
 public class MetaTileEntityCentralMonitor extends MultiblockWithDisplayBase implements IFastRenderMetaTileEntity {
 
-    private final static long ENERGY_COST = ConfigHolder.machines.centralMonitorEuCost;
     public final static int MAX_HEIGHT = 9;
     public final static int MAX_WIDTH = 14;
     // run-time data
@@ -414,7 +413,7 @@ public class MetaTileEntityCentralMonitor extends MultiblockWithDisplayBase impl
      * @return if the Central Monitor was able to drain enough energy.
      */
     private boolean drainEnergy(boolean simulate) {
-        long energyToDrain = ENERGY_COST * this.getMultiblockParts().size();
+        long energyToDrain = ConfigHolder.machines.centralMonitorEuCost * this.getMultiblockParts().size();
         long resultEnergy = inputEnergy.getEnergyStored() - energyToDrain;
         if (resultEnergy >= 0L && resultEnergy <= inputEnergy.getEnergyCapacity()) {
             if (!simulate)
@@ -483,7 +482,11 @@ public class MetaTileEntityCentralMonitor extends MultiblockWithDisplayBase impl
         for (IMultiblockPart part : this.getMultiblockParts()) {
             if (part instanceof MetaTileEntityMonitorScreen) {
                 MetaTileEntityMonitorScreen screen = (MetaTileEntityMonitorScreen) part;
-                screens[screen.getX()][screen.getY()] = screen;
+                // getX and getY are -1 for a screen without a controller
+                int x = screen.getX(), y = screen.getY();
+                if (x >= 0 && x < width && y >= 0 && y < height) {
+                    screens[x][y] = screen;
+                }
             }
         }
         writeCustomData(GregtechDataCodes.UPDATE_ALL, packetBuffer -> {
@@ -670,7 +673,8 @@ public class MetaTileEntityCentralMonitor extends MultiblockWithDisplayBase impl
         tooltip.add(I18n.format("gregtech.multiblock.central_monitor.tooltip.1"));
         tooltip.add(I18n.format("gregtech.multiblock.central_monitor.tooltip.2", MAX_WIDTH, MAX_HEIGHT));
         tooltip.add(I18n.format("gregtech.multiblock.central_monitor.tooltip.3"));
-        tooltip.add(I18n.format("gregtech.multiblock.central_monitor.tooltip.4", ENERGY_COST));
+        tooltip.add(I18n.format("gregtech.multiblock.central_monitor.tooltip.4",
+                ConfigHolder.machines.centralMonitorEuCost));
     }
 
     @Override
