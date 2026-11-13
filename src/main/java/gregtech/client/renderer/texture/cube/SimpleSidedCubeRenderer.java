@@ -23,6 +23,7 @@ import codechicken.lib.vec.Matrix4;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class SimpleSidedCubeRenderer implements ICubeRenderer {
@@ -71,7 +72,7 @@ public class SimpleSidedCubeRenderer implements ICubeRenderer {
         this.sprites = new EnumMap<>(RenderSide.class);
         this.spritesEmissive = new EnumMap<>(RenderSide.class);
         for (RenderSide overlayFace : RenderSide.VALUES) {
-            String faceName = overlayFace.name().toLowerCase();
+            String faceName = overlayFace.name().toLowerCase(Locale.ROOT);
             ResourceLocation resourceLocation = new ResourceLocation(modID,
                     String.format("blocks/%s/%s", basePath, faceName));
             sprites.put(overlayFace, textureMap.registerSprite(resourceLocation));

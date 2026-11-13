@@ -5,6 +5,8 @@ import net.minecraftforge.common.util.INBTSerializable;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
+
 public abstract class VirtualEntry implements INBTSerializable<NBTTagCompound> {
 
     public static final String DEFAULT_COLOR = "FFFFFFFF";
@@ -27,7 +29,7 @@ public abstract class VirtualEntry implements INBTSerializable<NBTTagCompound> {
 
     public void setColor(String color) {
         this.color = parseColor(color);
-        this.colorStr = color.toUpperCase();
+        this.colorStr = color.toUpperCase(Locale.ROOT);
     }
 
     public void setColor(int color) {

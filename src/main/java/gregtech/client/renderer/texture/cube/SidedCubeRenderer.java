@@ -24,6 +24,7 @@ import codechicken.lib.vec.Matrix4;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class SidedCubeRenderer implements ICubeRenderer {
@@ -59,7 +60,7 @@ public class SidedCubeRenderer implements ICubeRenderer {
 
         boolean foundTexture = false;
         for (OverlayFace overlayFace : OverlayFace.VALUES) {
-            final String faceName = overlayFace.name().toLowerCase();
+            final String faceName = overlayFace.name().toLowerCase(Locale.ROOT);
             final String overlayPath = String.format(BASE_DIR, basePath, faceName);
 
             TextureAtlasSprite normalSprite = ICubeRenderer.getResource(textureMap, modID, overlayPath);

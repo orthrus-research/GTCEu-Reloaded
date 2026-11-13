@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class OrientedOverlayRenderer implements ICubeRenderer {
@@ -127,7 +128,7 @@ public class OrientedOverlayRenderer implements ICubeRenderer {
 
         boolean foundTexture = false;
         for (OverlayFace overlayFace : OverlayFace.VALUES) {
-            final String faceName = overlayFace.name().toLowerCase();
+            final String faceName = overlayFace.name().toLowerCase(Locale.ROOT);
             final String overlayPath = String.format("blocks/%s/overlay_%s", basePath, faceName);
 
             // if a normal texture location is found, try to find the rest
@@ -144,7 +145,8 @@ public class OrientedOverlayRenderer implements ICubeRenderer {
 
             if (activeSprite == null) {
                 FMLClientHandler.instance().trackMissingTexture(new ResourceLocation(modID,
-                        "blocks/" + basePath + "/overlay_" + overlayFace.toString().toLowerCase() + "_active"));
+                        "blocks/" + basePath + "/overlay_" + overlayFace.toString().toLowerCase(Locale.ROOT) +
+                                "_active"));
                 continue;
             }
 

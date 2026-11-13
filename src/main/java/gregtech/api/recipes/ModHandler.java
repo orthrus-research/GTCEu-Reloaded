@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -642,7 +643,7 @@ public final class ModHandler {
     @SuppressWarnings("unused")
     public static void removeTieredRecipeByName(@NotNull String recipeName, int startTier, int endTier) {
         for (int i = startTier; i <= endTier; i++) {
-            removeRecipeByName(String.format("%s%s", recipeName, GTValues.VN[i].toLowerCase()));
+            removeRecipeByName(String.format("%s%s", recipeName, GTValues.VN[i].toLowerCase(Locale.ROOT)));
         }
     }
 

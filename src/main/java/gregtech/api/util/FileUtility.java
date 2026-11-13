@@ -15,6 +15,7 @@ import java.nio.file.*;
 import java.nio.file.FileSystem;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -158,7 +159,7 @@ public class FileUtility {
         // Replace all "_" with a space
         newName = UNDERSCORE_REGEX.matcher(newName).replaceAll(" ");
         // Capitalize the first letter
-        newName = newName.substring(0, 1).toUpperCase() + newName.substring(1);
+        newName = newName.substring(0, 1).toUpperCase(Locale.ROOT) + newName.substring(1);
 
         return newName;
     }

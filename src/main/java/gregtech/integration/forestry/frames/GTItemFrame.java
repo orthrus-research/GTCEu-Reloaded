@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Locale;
 
 public class GTItemFrame extends Item implements IHiveFrame, IItemModelRegister {
 
@@ -33,7 +34,7 @@ public class GTItemFrame extends Item implements IHiveFrame, IItemModelRegister 
         this.setMaxStackSize(1);
         this.setCreativeTab(Tabs.tabApiculture);
         this.setRegistryName(GTValues.MODID, "gt.frame_" + type.getName());
-        this.setTranslationKey("gt.frame_" + type.getName().toLowerCase());
+        this.setTranslationKey("gt.frame_" + type.getName().toLowerCase(Locale.ROOT));
     }
 
     @SideOnly(Side.CLIENT)
@@ -63,7 +64,7 @@ public class GTItemFrame extends Item implements IHiveFrame, IItemModelRegister 
     @SuppressWarnings("deprecation")
     @Override
     public void registerModel(@NotNull Item item, @NotNull IModelManager manager) {
-        manager.registerItemModel(item, 0, Mods.Names.FORESTRY, "gt.frame_" + type.getName().toLowerCase());
+        manager.registerItemModel(item, 0, Mods.Names.FORESTRY, "gt.frame_" + type.getName().toLowerCase(Locale.ROOT));
     }
 
     public ItemStack getItemStack() {

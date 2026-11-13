@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Class GifDecoder - Decodes a GIF file into one or more frames.
@@ -332,7 +333,7 @@ public class GifDecoder {
     public int read(String name) {
         status = STATUS_OK;
         try {
-            name = name.trim().toLowerCase();
+            name = name.trim().toLowerCase(Locale.ROOT);
             if ((name.indexOf("file:") >= 0) || (name.indexOf(":/") > 0)) {
                 URL url = new URL(name);
                 in = new BufferedInputStream(url.openStream());

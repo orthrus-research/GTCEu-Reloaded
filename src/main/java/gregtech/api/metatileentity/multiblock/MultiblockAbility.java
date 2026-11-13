@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class MultiblockAbility<T> {
@@ -101,7 +102,7 @@ public class MultiblockAbility<T> {
     private final Class<T> clazz;
 
     public MultiblockAbility(String name, Class<T> clazz) {
-        this.name = name.toLowerCase();
+        this.name = name.toLowerCase(Locale.ROOT);
         this.clazz = clazz;
     }
 

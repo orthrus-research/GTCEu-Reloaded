@@ -14,6 +14,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumMap;
+import java.util.Locale;
 
 /**
  * Intended for removal. Is only meant of LD pipes with only one regular and optionally an emissive texture per face.
@@ -46,7 +47,7 @@ public class LDPipeOverlayRenderer extends AlignedOrientedOverlayRenderer {
 
         boolean foundTexture = false;
         for (OverlayFace overlayFace : OverlayFace.VALUES) {
-            final String faceName = overlayFace.name().toLowerCase();
+            final String faceName = overlayFace.name().toLowerCase(Locale.ROOT);
             final String overlayPath = String.format("blocks/%s/overlay_%s", basePath, faceName);
 
             // if a normal texture location is found, try to find the rest

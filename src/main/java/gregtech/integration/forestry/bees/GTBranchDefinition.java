@@ -10,6 +10,7 @@ import forestry.core.genetics.alleles.AlleleHelper;
 import forestry.core.genetics.alleles.EnumAllele;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 import static forestry.api.apiculture.EnumBeeChromosome.*;
@@ -92,7 +93,7 @@ public enum GTBranchDefinition {
 
     GTBranchDefinition(String scientific, Consumer<IAllele[]> branchProperties) {
         // noinspection ConstantConditions
-        this.branch = BeeManager.beeFactory.createBranch(this.name().toLowerCase(), scientific);
+        this.branch = BeeManager.beeFactory.createBranch(this.name().toLowerCase(Locale.ROOT), scientific);
         AlleleManager.alleleRegistry.getClassification("family.apidae").addMemberGroup(this.branch);
         this.branchProperties = branchProperties;
     }

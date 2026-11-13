@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Locale;
 
 public class BlockBatteryPart extends VariantBlock<BlockBatteryPart.BatteryPartType> {
 
@@ -95,7 +96,7 @@ public class BlockBatteryPart extends VariantBlock<BlockBatteryPart.BatteryPartT
         @NotNull
         @Override
         public String getBatteryName() {
-            return name().toLowerCase();
+            return name().toLowerCase(Locale.ROOT);
         }
 
         @NotNull
