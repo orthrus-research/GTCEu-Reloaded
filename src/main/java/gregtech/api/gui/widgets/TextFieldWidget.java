@@ -25,7 +25,7 @@ public class TextFieldWidget extends Widget {
     protected GuiTextField textField;
 
     protected int maxStringLength = 32;
-    protected Predicate<String> textValidator;
+    protected Predicate<String> textValidator = text -> true;
     protected Supplier<String> textSupplier;
     protected Consumer<String> textResponder;
     protected String currentString;
@@ -57,7 +57,10 @@ public class TextFieldWidget extends Widget {
     public TextFieldWidget(int xPosition, int yPosition, int width, int height, boolean enableBackground,
                            Supplier<String> textSupplier, Consumer<String> textResponder, int maxStringLength) {
         super(new Position(xPosition, yPosition), new Size(width, height));
+        // the server truncates client text to this length, so it must be set on both sides
+        this.maxStringLength = maxStringLength;
         if (isClientSide()) {
+            this.enableBackground = enableBackground;
             FontRenderer fontRenderer = Minecraft.getMinecraft().fontRenderer;
             if (enableBackground) {
                 this.textField = new GuiTextField(0, fontRenderer, xPosition, yPosition, width, height);
@@ -68,7 +71,6 @@ public class TextFieldWidget extends Widget {
             this.textField.setCanLoseFocus(true);
             this.textField.setEnableBackgroundDrawing(enableBackground);
             this.textField.setMaxStringLength(maxStringLength);
-            this.maxStringLength = maxStringLength;
             this.textField.setGuiResponder(MCGuiUtil.createTextFieldResponder(this::onTextChanged));
         }
         this.textSupplier = textSupplier;
