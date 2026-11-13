@@ -8,7 +8,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,10 +20,8 @@ public class NetworkUtils {
     }
 
     public static PacketBuffer readPacketBuffer(PacketBuffer buf) {
-        ByteBuf directSliceBuffer = buf.readBytes(buf.readVarInt());
-        ByteBuf copiedDataBuffer = Unpooled.copiedBuffer(directSliceBuffer);
-        directSliceBuffer.release();
-        return new PacketBuffer(copiedDataBuffer);
+        // one copy, out of a slice of the incoming buffer
+        return new PacketBuffer(Unpooled.copiedBuffer(buf.readSlice(buf.readVarInt())));
     }
 
     /** Squared distance within which vanilla accepts a player's block interaction. */
