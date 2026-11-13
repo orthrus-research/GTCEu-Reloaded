@@ -1840,7 +1840,11 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             NBTTagList fluidOutputsList = compound.getTagList("FluidOutputs", Constants.NBT.TAG_COMPOUND);
             this.fluidOutputs = new ArrayList<>(fluidOutputsList.tagCount());
             for (int i = 0; i < fluidOutputsList.tagCount(); i++) {
-                this.fluidOutputs.add(FluidStack.loadFluidStackFromNBT(fluidOutputsList.getCompoundTagAt(i)));
+                // null for a fluid that is no longer registered
+                FluidStack output = FluidStack.loadFluidStackFromNBT(fluidOutputsList.getCompoundTagAt(i));
+                if (output != null) {
+                    this.fluidOutputs.add(output);
+                }
             }
         }
     }
