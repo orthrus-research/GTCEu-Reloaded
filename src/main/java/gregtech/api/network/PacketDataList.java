@@ -2,7 +2,9 @@ package gregtech.api.network;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.network.PacketBuffer;
 
+import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -97,6 +99,45 @@ public class PacketDataList {
      *
      * @return nbt list with discriminators and data
      */
+    /**
+     * Write the updates as one binary list, discriminator and length before each, and clear the list.
+     *
+     * @return the encoded updates, read back with {@link #forEachEncoded}
+     */
+    public byte @NotNull [] dumpToBytes() {
+        PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
+        buffer.writeVarInt(this.size);
+        for (int i = 0; i < this.size; i++) {
+            buffer.writeVarInt(this.discriminators[i]);
+            buffer.writeVarInt(this.data[i].length);
+            buffer.writeBytes(this.data[i]);
+            this.data[i] = null;
+        }
+        this.size = 0;
+        return Arrays.copyOfRange(buffer.array(), 0, buffer.writerIndex());
+    }
+
+    /** Receives one decoded update: its discriminator and a buffer over its bytes. */
+    @FunctionalInterface
+    public interface EncodedUpdateConsumer {
+
+        void accept(int discriminator, @NotNull PacketBuffer data);
+    }
+
+    /**
+     * Decode a list written by {@link #dumpToBytes}, handing each update a buffer over its own bytes without
+     * copying them.
+     */
+    public static void forEachEncoded(byte @NotNull [] encoded, @NotNull EncodedUpdateConsumer consumer) {
+        PacketBuffer buffer = new PacketBuffer(Unpooled.wrappedBuffer(encoded));
+        int count = buffer.readVarInt();
+        for (int i = 0; i < count; i++) {
+            int discriminator = buffer.readVarInt();
+            int length = buffer.readVarInt();
+            consumer.accept(discriminator, new PacketBuffer(buffer.readSlice(length)));
+        }
+    }
+
     @NotNull
     public NBTTagList dumpToNbt() {
         NBTTagList listTag = new NBTTagList();
