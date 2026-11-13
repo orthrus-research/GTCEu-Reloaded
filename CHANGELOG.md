@@ -170,6 +170,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Saved data | A machine saved mid-recipe with a fluid output from a removed mod finishes the recipe without that fluid instead of failing. |
 | API | `MTEManager.getRegistry(int)` returns null for an unknown network id instead of the GregTech registry. |
 | Recipes | Machines with more than 64 different inputs find recipes whose ingredients sit more than 64 slots apart. |
+| Recipes | A recipe with a rejected input, such as a null fluid or a negative count, is now refused instead of registering without that input. |
 
 ### Earlier fork changes
 
