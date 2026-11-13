@@ -78,8 +78,13 @@ public class LampBakedModel implements IBakedModel {
         List<BakedQuad> quads = new ArrayList<>();
         BlockRenderLayer layer = MinecraftForgeClient.getRenderLayer();
         ForgeHooksClient.setRenderLayer(null); // ctm
-        List<BakedQuad> originalQuads = getModel().getQuads(state, side, rand);
-        ForgeHooksClient.setRenderLayer(layer);
+        List<BakedQuad> originalQuads;
+        // restore the thread's render layer even if the model throws
+        try {
+            originalQuads = getModel().getQuads(state, side, rand);
+        } finally {
+            ForgeHooksClient.setRenderLayer(layer);
+        }
         for (BakedQuad q : originalQuads) {
             boolean isBloomTexture = false;
             for (String bloomTextureSuffix : BLOOM_TEXTURE_SUFFIX) {

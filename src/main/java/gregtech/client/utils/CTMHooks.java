@@ -57,9 +57,13 @@ public class CTMHooks {
                 CTMHooks.ENABLE.set(true);
                 List<BakedQuad> result = new ArrayList<>(ret);
                 ForgeHooksClient.setRenderLayer(BloomEffectUtil.getBloomLayer());
-                result.addAll(bakedModel.getQuads(state, side, rand));
-                ForgeHooksClient.setRenderLayer(layer);
-                CTMHooks.ENABLE.remove();
+                // restore the thread's state even if the model throws
+                try {
+                    result.addAll(bakedModel.getQuads(state, side, rand));
+                } finally {
+                    ForgeHooksClient.setRenderLayer(layer);
+                    CTMHooks.ENABLE.remove();
+                }
                 return result;
             }
         }
