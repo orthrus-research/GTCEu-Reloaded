@@ -164,6 +164,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | Turning a conveyor, pump, shutter, voiding or ender link cover on or off is saved even when nothing else changes in that chunk. |
 | Covers | The fluid regulator and advanced fluid voiding covers no longer overwrite the amount in tanks that expose their live contents, and the voider leaves tanks below its keep amount alone. |
 | Localisation | Machine ids, texture paths and translation keys no longer change under a Turkish system locale. |
+| Multiblocks | Gameplay change: a large boiler that runs short of water uses its distilled water or configured boiler fluids for the rest instead of exploding |
 
 ### Earlier fork changes
 

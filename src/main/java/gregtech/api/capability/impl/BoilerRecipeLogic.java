@@ -343,22 +343,26 @@ public class BoilerRecipeLogic extends AbstractRecipeLogic implements ICategoryO
     @Nullable
     private static FluidStack getBoilerFluidFromContainer(@NotNull IFluidHandler fluidHandler, int amount) {
         if (amount == 0) return null;
-        FluidStack drainedWater = fluidHandler.drain(Materials.Water.getFluid(amount), true);
-        if (drainedWater == null || drainedWater.amount == 0) {
-            drainedWater = fluidHandler.drain(Materials.DistilledWater.getFluid(amount), true);
+        // take what each accepted fluid has until the amount is met, so a nearly empty water tank
+        // is topped up from distilled water or a configured fluid instead of counting as a shortage
+        int remaining = amount - drainAccepted(fluidHandler, Materials.Water.getFluid(), amount);
+        if (remaining > 0) {
+            remaining -= drainAccepted(fluidHandler, Materials.DistilledWater.getFluid(), remaining);
         }
-        if (drainedWater == null || drainedWater.amount == 0) {
-            for (String fluidName : ConfigHolder.machines.boilerFluids) {
-                Fluid fluid = FluidRegistry.getFluid(fluidName);
-                if (fluid != null) {
-                    drainedWater = fluidHandler.drain(new FluidStack(fluid, amount), true);
-                    if (drainedWater != null && drainedWater.amount > 0) {
-                        break;
-                    }
-                }
+        for (String fluidName : ConfigHolder.machines.boilerFluids) {
+            if (remaining <= 0) break;
+            Fluid fluid = FluidRegistry.getFluid(fluidName);
+            if (fluid != null) {
+                remaining -= drainAccepted(fluidHandler, fluid, remaining);
             }
         }
-        return drainedWater;
+        int drained = amount - remaining;
+        return drained > 0 ? Materials.Water.getFluid(drained) : null;
+    }
+
+    private static int drainAccepted(@NotNull IFluidHandler fluidHandler, @NotNull Fluid fluid, int amount) {
+        FluidStack drained = fluidHandler.drain(new FluidStack(fluid, amount), true);
+        return drained == null ? 0 : drained.amount;
     }
 
     @Override
