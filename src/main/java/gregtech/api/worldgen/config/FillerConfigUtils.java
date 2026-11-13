@@ -113,7 +113,7 @@ public class FillerConfigUtils {
         for (JsonElement randomElement : values) {
             JsonObject randomObject = randomElement.getAsJsonObject();
             int weight = randomObject.get("weight").getAsInt();
-            Preconditions.checkArgument(weight > 0, "Invalid weight: %d", weight);
+            Preconditions.checkArgument(weight > 0, "Invalid weight: %s", weight);
             FillerEntry filler = createBlockStateFiller(randomObject.get("value"));
             randomList.add(Pair.of(weight, filler));
         }
@@ -124,7 +124,7 @@ public class FillerConfigUtils {
     public static LayeredFillerEntry createLayeredFiller(JsonObject object) {
         JsonArray values = object.get("values").getAsJsonArray();
         Preconditions.checkArgument(values.size() == 4,
-                "Invalid number of ores in a Layered vein (should be 4, is actually %d", values.size());
+                "Invalid number of ores in a Layered vein (should be 4, is actually %s)", values.size());
 
         return new LayeredFillerEntry(
                 readLayerFiller(values.get(0).getAsJsonObject(), "primary"),
