@@ -571,6 +571,33 @@ public class ParallelLogicTest {
     }
 
     @Test
+    public void getMaxRatioItem_NonConsumedShortOfStacksizeTest() {
+        int parallelLimit = 4;
+
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+                .itemInputs(3)
+                .itemOutputs(2)
+                .fluidInputs(1)
+                .fluidOutputs(1)
+                .build();
+
+        Recipe recipe = map.recipeBuilder()
+                .notConsumable(new ItemStack(Blocks.STONE, 5))
+                .outputs(new ItemStack(Blocks.STONE))
+                .blastFurnaceTemp(1000)
+                .EUt(30).duration(100)
+                .build().getResult();
+
+        // 3 of the 5 needed: the remaining need (2) is below the stack seen (3), which must still fail
+        importItemBus.getImportItems().insertItem(0, new ItemStack(Blocks.STONE, 3), false);
+
+        int itemRatio = ParallelLogic.getMaxRatioItem(GTHashMaps.fromItemHandler(importItemBus.getImportItems()),
+                recipe, parallelLimit);
+
+        assertThat(itemRatio, is(0));
+    }
+
+    @Test
     public void getMaxRatioFluid_RegularFluidInputsTest() {
         int parallelLimit = 4;
 

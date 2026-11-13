@@ -345,12 +345,9 @@ public abstract class ParallelLogic {
                     }
                 }
             }
-            // We need to check >= available here because of Non-Consumable inputs with stack size. If there is a NC
-            // input
-            // with size 2, and only 1 in the input, needed will be equal to available, but this situation should still
-            // fail
-            // as not all inputs are present
-            if (needed >= available) {
+            // anything still needed after every matching stack has been taken means the inputs are short;
+            // a non-consumable input with a stack size can need more than any one stack holds
+            if (needed > 0) {
                 return 0;
             }
         }
@@ -434,12 +431,9 @@ public abstract class ParallelLogic {
                     }
                 }
             }
-            // We need to check >= available here because of Non-Consumable inputs with stack size. If there is a NC
-            // input
-            // with size 1000, and only 500 in the input, needed will be equal to available, but this situation should
-            // still fail
-            // as not all inputs are present
-            if (needed >= available) {
+            // anything still needed after every matching stack has been taken means the inputs are short;
+            // a non-consumable input with a stack size can need more than any one stack holds
+            if (needed > 0) {
                 return 0;
             }
         }
