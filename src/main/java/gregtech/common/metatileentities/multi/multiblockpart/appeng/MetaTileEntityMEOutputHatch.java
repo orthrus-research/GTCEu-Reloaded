@@ -82,13 +82,36 @@ public class MetaTileEntityMEOutputHatch extends MetaTileEntityAEHostablePart<IA
 
     @Override
     public void onRemoval() {
+        // what the network does not take back (it is offline or full) stays in the buffer and goes with the
+        // dropped item, see writeItemStackData
         IMEMonitor<IAEFluidStack> monitor = getMonitor();
         if (monitor != null) {
             for (IAEFluidStack fluid : this.internalBuffer) {
-                monitor.injectItems(fluid.copy(), Actionable.MODULATE, this.getActionSource());
+                IAEFluidStack notInserted = monitor.injectItems(fluid.copy(), Actionable.MODULATE, getActionSource());
+                if (notInserted != null && notInserted.getStackSize() > 0) {
+                    fluid.setStackSize(notInserted.getStackSize());
+                } else {
+                    fluid.reset();
+                }
             }
         }
         super.onRemoval();
+    }
+
+    @Override
+    public void writeItemStackData(NBTTagCompound itemStack) {
+        super.writeItemStackData(itemStack);
+        if (!this.internalBuffer.isEmpty()) {
+            itemStack.setTag(FLUID_BUFFER_TAG, this.internalBuffer.serializeNBT());
+        }
+    }
+
+    @Override
+    public void initFromItemStackData(NBTTagCompound itemStack) {
+        super.initFromItemStackData(itemStack);
+        if (itemStack.hasKey(FLUID_BUFFER_TAG, 9)) {
+            this.internalBuffer.deserializeNBT((NBTTagList) itemStack.getTag(FLUID_BUFFER_TAG));
+        }
     }
 
     @Override

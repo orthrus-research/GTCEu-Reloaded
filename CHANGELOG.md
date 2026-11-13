@@ -241,6 +241,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Modules | Disabling a GregTech module in its config keeps that module's code from loading at all. |
 | World generation | Gameplay change: in new worlds a bedrock fluid vein's fluid and yield no longer depend on which of its chunks is prospected first; existing worlds keep their veins |
 | Multiblocks | Gameplay change: a fusion reactor that re-forms with fewer energy hatches keeps only as much energy as its new buffer holds |
+| AE2 | Gameplay change: ME buses and hatches broken while their network is offline or full keep their contents: items drop, and fluids and output buffers stay in the dropped part |
 
 ### Earlier fork changes
 

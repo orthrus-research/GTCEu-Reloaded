@@ -80,13 +80,36 @@ public class MetaTileEntityMEOutputBus extends MetaTileEntityAEHostablePart<IAEI
 
     @Override
     public void onRemoval() {
+        // what the network does not take back (it is offline or full) stays in the buffer and goes with the
+        // dropped item, see writeItemStackData
         IMEMonitor<IAEItemStack> monitor = getMonitor();
         if (monitor != null) {
             for (IAEItemStack item : this.internalBuffer) {
-                monitor.injectItems(item.copy(), Actionable.MODULATE, this.getActionSource());
+                IAEItemStack notInserted = monitor.injectItems(item.copy(), Actionable.MODULATE, getActionSource());
+                if (notInserted != null && notInserted.getStackSize() > 0) {
+                    item.setStackSize(notInserted.getStackSize());
+                } else {
+                    item.reset();
+                }
             }
         }
         super.onRemoval();
+    }
+
+    @Override
+    public void writeItemStackData(NBTTagCompound itemStack) {
+        super.writeItemStackData(itemStack);
+        if (!this.internalBuffer.isEmpty()) {
+            itemStack.setTag(ITEM_BUFFER_TAG, this.internalBuffer.serializeNBT());
+        }
+    }
+
+    @Override
+    public void initFromItemStackData(NBTTagCompound itemStack) {
+        super.initFromItemStackData(itemStack);
+        if (itemStack.hasKey(ITEM_BUFFER_TAG, 9)) {
+            this.internalBuffer.deserializeNBT((NBTTagList) itemStack.getTag(ITEM_BUFFER_TAG));
+        }
     }
 
     @Override

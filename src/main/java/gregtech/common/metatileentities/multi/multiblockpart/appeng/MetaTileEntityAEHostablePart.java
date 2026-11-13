@@ -64,8 +64,8 @@ public abstract class MetaTileEntityAEHostablePart<T extends IAEStack<T>> extend
     }
 
     /**
-     * ME hatch will try to put its buffer back to me system when removal.
-     * So there is no need to drop them.
+     * ME parts return their buffer to the network on removal. What the network does not accept is dropped or kept
+     * in the dropped item by each part, so nothing is dropped here.
      */
     @Override
     public void clearMachineInventory(@NotNull List<@NotNull ItemStack> itemBuffer) {}
