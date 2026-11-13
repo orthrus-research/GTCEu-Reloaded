@@ -214,7 +214,7 @@ public class ItemGTToolbelt extends ItemGTTool implements IDyeableItem {
                                @Nullable IBlockState blockState) {
         ItemStack selected = getHandler(stack).getSelectedStack();
         if (!selected.isEmpty()) {
-            return selected.getItem().getHarvestLevel(stack, toolClass, player, blockState);
+            return selected.getItem().getHarvestLevel(selected, toolClass, player, blockState);
         } else return definition$getHarvestLevel(stack, toolClass, player, blockState);
     }
 
