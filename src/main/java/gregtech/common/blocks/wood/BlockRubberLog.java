@@ -42,7 +42,8 @@ public class BlockRubberLog extends BlockLog {
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState()
                 .withProperty(NATURAL, (meta & 1) == 1)
-                .withProperty(LOG_AXIS, EnumAxis.values()[meta >> 1]);
+                // callers that enumerate metadata can pass 8-15; the axis uses two bits
+                .withProperty(LOG_AXIS, EnumAxis.values()[(meta >> 1) & 3]);
     }
 
     @Override
