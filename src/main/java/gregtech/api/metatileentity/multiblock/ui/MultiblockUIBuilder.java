@@ -787,6 +787,8 @@ public class MultiblockUIBuilder {
 
     private static String formatRecipeRate(int recipeLength, long amount) {
         float perSecond = ((float) amount / recipeLength) * 20f;
+        // a zero amount would print an infinite time per item
+        if (!(perSecond > 0) || Float.isInfinite(perSecond)) return "(0/s)";
 
         String rate;
         if (perSecond > 1) {
