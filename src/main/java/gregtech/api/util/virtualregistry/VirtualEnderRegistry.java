@@ -3,6 +3,7 @@ package gregtech.api.util.virtualregistry;
 import gregtech.api.GTValues;
 import gregtech.api.util.GTLog;
 
+import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.MapStorage;
@@ -12,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -129,34 +132,53 @@ public class VirtualEnderRegistry extends WorldSavedData {
     /**
      * To be called on world load event
      */
-    @SuppressWarnings("DataFlowIssue")
     public static void initializeStorage(World world) {
         MapStorage storage = world.getMapStorage();
 
         VirtualEnderRegistry instance = (VirtualEnderRegistry) storage.getOrLoadData(VirtualEnderRegistry.class,
                 DATA_ID);
-        VirtualEnderRegistry old = (VirtualEnderRegistry) storage.getOrLoadData(VirtualEnderRegistry.class,
-                OLD_DATA_ID);
 
         if (instance == null) {
             instance = new VirtualEnderRegistry(DATA_ID);
             storage.setData(DATA_ID, instance);
         }
 
-        if (old != null) {
-            instance.readFromNBT(old.serializeNBT());
-            var file = world.getSaveHandler().getMapFileFromName(OLD_DATA_ID);
-            var split = file.getName().split("\\.");
-            var stringBuilder = new StringBuilder(split[0])
-                    .append('.')
-                    .append(split[1])
-                    .append(".backup")
-                    .append('.')
-                    .append(split[2]);
-            if (file.renameTo(new File(file.getParent(), stringBuilder.toString()))) {
-                file.deleteOnExit();
-                GTLog.logger.warn("Moved Virtual Tank Data to new format, created backup!");
-            }
+        // The legacy file is read directly rather than through getOrLoadData: an instance registered in the map
+        // storage reports itself dirty and would be written back at every save, so the migration below would
+        // repeat on every start and replace newer entries with the legacy ones.
+        File legacy = world.getSaveHandler().getMapFileFromName(OLD_DATA_ID);
+        if (legacy != null && legacy.isFile()) {
+            migrateLegacyFile(instance, legacy);
         }
+    }
+
+    static void migrateLegacyFile(@NotNull VirtualEnderRegistry instance, @NotNull File legacy) {
+        try (FileInputStream in = new FileInputStream(legacy)) {
+            instance.readFromNBT(CompressedStreamTools.readCompressed(in).getCompoundTag("data"));
+        } catch (IOException e) {
+            GTLog.logger.error("Could not read the legacy virtual tank data in {}", legacy.getName(), e);
+            return;
+        }
+        File backup = backupFileFor(legacy);
+        if (legacy.renameTo(backup)) {
+            GTLog.logger.warn("Moved Virtual Tank Data to new format, created backup {}", backup.getName());
+        } else {
+            GTLog.logger.error("Migrated the legacy virtual tank data, but could not move {} aside; it will be " +
+                    "migrated again on the next start", legacy.getName());
+        }
+    }
+
+    /** {@code name.dat} becomes {@code name.backup.dat}, numbered when an earlier backup exists. */
+    @NotNull
+    static File backupFileFor(@NotNull File legacy) {
+        String name = legacy.getName();
+        int dot = name.lastIndexOf('.');
+        String base = dot < 0 ? name : name.substring(0, dot);
+        String extension = dot < 0 ? "" : name.substring(dot);
+        File backup = new File(legacy.getParentFile(), base + ".backup" + extension);
+        for (int i = 1; backup.exists(); i++) {
+            backup = new File(legacy.getParentFile(), base + ".backup" + i + extension);
+        }
+        return backup;
     }
 }
