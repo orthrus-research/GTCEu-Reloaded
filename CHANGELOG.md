@@ -130,6 +130,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Localisation | The low rotor durability warning, the inertia-cancel key bind, recipe modifier failure details and the `/gregtech recipecheck` usage show text instead of their raw translation keys |
 | Config | The tools section no longer shows a second Armor HUD Location block that had no effect; the HUD position is set under client options as before |
 | Energy | An energy container list no longer accepts more amperes from a network than were offered; each container now sees only the amperage still unclaimed. |
+| Fluids | `MultiFluidFilter` now tests the fluid it is given and honours its blacklist flag; it used to accept every fluid. |
 
 ### Earlier fork changes
 

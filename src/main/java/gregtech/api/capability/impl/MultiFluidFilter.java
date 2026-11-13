@@ -45,9 +45,9 @@ public final class MultiFluidFilter implements IFilter<FluidStack> {
     @Override
     public boolean test(@NotNull FluidStack fluidStack) {
         for (FluidStack fluid : this.fluids) {
-            if (fluid.isFluidEqual(fluid)) return true;
+            if (fluid.isFluidEqual(fluidStack)) return !this.blacklist;
         }
-        return false;
+        return this.blacklist;
     }
 
     @Override
