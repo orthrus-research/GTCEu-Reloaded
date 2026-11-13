@@ -153,7 +153,7 @@ public class MetaTileEntityLargeTurbine extends FuelMultiblockController
 
             if (rotorEfficiency > 0 && rotorDurability <= MIN_DURABILITY_TO_WARN) {
                 keyList.add(KeyUtil.lang(TextFormatting.YELLOW,
-                        "gregtech.multiblock.turbine.rotor_durability_low"));
+                        "gregtech.multiblock.turbine.rotor_durability.low"));
             }
         });
         super.configureWarningText(builder);
