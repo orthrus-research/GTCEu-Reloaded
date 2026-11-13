@@ -50,7 +50,7 @@ public class WidgetARGB extends WidgetGroup {
                 }).setValidator(validator);
         ARGB[2] = new TextFieldWidget(44, 0, 20, height, true,
                 () -> Integer.toHexString(color >> 8 & 0XFF).toUpperCase(), (data) -> {
-                    this.color = (data.isEmpty() ? 0 : Integer.parseInt(data, 16)) << 8 | (color & 0X00FF00FF);
+                    this.color = (data.isEmpty() ? 0 : Integer.parseInt(data, 16)) << 8 | (color & 0XFFFF00FF);
                     onColorChanged.accept(color);
                     writeUpdateInfo(2, update);
                 }).setValidator(validator);

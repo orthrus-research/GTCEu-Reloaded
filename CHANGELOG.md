@@ -76,6 +76,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | `SmallDigits.toSmallUpNumbers` produces superscript digits; before, it produced subscripts |
 | Integration | With FTB Utilities, the block breaker respects chunk claims: it breaks blocks in its owner's claims and refuses in other teams'; before, it did the opposite |
 | Rendering | Texture metadata that gives separate block and sky light (`"light": {"block": …, "sky": …}`) applies both; before, the sky value overwrote the block value |
+| GUI | Editing the green value in an ARGB colour field (monitor plugins) keeps the alpha; before, it made the colour fully transparent |
 
 ### Earlier fork changes
 
