@@ -150,7 +150,7 @@ public interface ChancedOutputLogic {
      * @return if the roll with the chance is successful
      */
     static boolean passesChance(int chance) {
-        return chance > 0 && GTValues.RNG.nextInt(getMaxChancedValue()) <= chance;
+        return chance > 0 && GTValues.RNG.nextInt(getMaxChancedValue()) < chance;
     }
 
     /**
