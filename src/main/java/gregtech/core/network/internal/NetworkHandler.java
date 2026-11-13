@@ -28,6 +28,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -112,8 +113,7 @@ public final class NetworkHandler implements INetworkHandler {
     @SideOnly(Side.CLIENT)
     public void onClientPacket(FMLNetworkEvent.@NotNull ClientCustomPacketEvent event) throws Exception {
         IPacket packet = toGTPacket(event.getPacket());
-        if (IClientExecutor.class.isAssignableFrom(packet.getClass())) {
-            IClientExecutor executor = (IClientExecutor) packet;
+        if (packet instanceof IClientExecutor executor) {
             NetHandlerPlayClient handler = (NetHandlerPlayClient) event.getHandler();
             IThreadListener threadListener = FMLCommonHandler.instance().getWorldThread(handler);
             if (threadListener.isCallingFromMinecraftThread()) {
@@ -127,8 +127,7 @@ public final class NetworkHandler implements INetworkHandler {
     @SubscribeEvent
     public void onServerPacket(FMLNetworkEvent.@NotNull ServerCustomPacketEvent event) throws Exception {
         IPacket packet = toGTPacket(event.getPacket());
-        if (IServerExecutor.class.isAssignableFrom(packet.getClass())) {
-            IServerExecutor executor = (IServerExecutor) packet;
+        if (packet instanceof IServerExecutor executor) {
             NetHandlerPlayServer handler = (NetHandlerPlayServer) event.getHandler();
             IThreadListener threadListener = FMLCommonHandler.instance().getWorldThread(handler);
             if (threadListener.isCallingFromMinecraftThread()) {
@@ -146,13 +145,17 @@ public final class NetworkHandler implements INetworkHandler {
         return new FMLProxyPacket(buf, GTValues.MODID);
     }
 
-    private @NotNull IPacket toGTPacket(@NotNull FMLProxyPacket proxyPacket) throws NoSuchMethodException,
-                                                                             InvocationTargetException,
-                                                                             InstantiationException,
-                                                                             IllegalAccessException {
+    private @Nullable IPacket toGTPacket(@NotNull FMLProxyPacket proxyPacket) throws InvocationTargetException,
+                                                                              InstantiationException,
+                                                                              IllegalAccessException {
         PacketBuffer payload = (PacketBuffer) proxyPacket.payload();
-        var clazz = packetHandler.getPacketClass(payload.readVarInt());
-        IPacket packet = clazz.getConstructor().newInstance();
+        int packetId = payload.readVarInt();
+        IPacket packet = packetHandler.createPacket(packetId);
+        if (packet == null) {
+            GTLog.logger.error("NetworkHandler received a packet with unknown id {}, ignoring it", packetId);
+            return null;
+        }
+        Class<? extends IPacket> clazz = packet.getClass();
         packet.decode(payload);
 
         if (payload.readableBytes() != 0) {
