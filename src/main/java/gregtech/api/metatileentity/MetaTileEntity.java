@@ -99,6 +99,7 @@ import com.cleanroommc.modularui.screen.ModularScreen;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.google.common.base.Preconditions;
+import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -1028,7 +1029,11 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
         buf.writeShort(this.mteTraitByNetworkId.size());
         for (Int2ObjectMap.Entry<MTETrait> entry : mteTraitByNetworkId.int2ObjectEntrySet()) {
             buf.writeVarInt(entry.getIntKey());
-            entry.getValue().writeInitialSyncData(buf);
+            // length-prefixed, so a reader that does not know the trait can skip its data
+            PacketBuffer traitData = new PacketBuffer(Unpooled.buffer());
+            entry.getValue().writeInitialSyncData(traitData);
+            buf.writeVarInt(traitData.readableBytes());
+            buf.writeBytes(traitData);
         }
         CoverSaveHandler.writeInitialSyncData(buf, this);
         buf.writeBoolean(muffled);
@@ -1045,11 +1050,12 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
         int amountOfTraits = buf.readShort();
         for (int i = 0; i < amountOfTraits; i++) {
             int traitNetworkId = buf.readVarInt();
+            PacketBuffer traitData = new PacketBuffer(buf.readSlice(buf.readVarInt()));
             MTETrait trait = mteTraitByNetworkId.get(traitNetworkId);
             if (trait == null) {
                 GTLog.logger.warn("Could not find MTETrait for id: {} at position {}.", traitNetworkId, getPos());
             } else {
-                trait.receiveInitialSyncData(buf);
+                trait.receiveInitialSyncData(traitData);
             }
         }
         CoverSaveHandler.receiveInitialSyncData(buf, this);
