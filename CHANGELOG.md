@@ -150,6 +150,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Multiblocks | The multi smelter accepts coils with no energy discount, the HPCA's computation bar shows empty instead of NaN when it has no capacity, and the central monitor follows its EU-cost config without a restart. |
 | AE2 | Breaking an ME output hatch that is not on a working network now unforms its multiblock like any other hatch. |
 | Multiblocks | Gameplay change: touching a spinning turbine rotor below 1000 rpm does damage in proportion to its speed; before, it did none |
+| AE2 | An ME input bus slot reconfigured to an item that differs only in NBT no longer keeps counting stock of the previous item. |
 
 ### Earlier fork changes
 
