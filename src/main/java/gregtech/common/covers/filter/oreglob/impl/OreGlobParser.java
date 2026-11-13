@@ -228,8 +228,9 @@ public final class OreGlobParser {
                 int tokenStart = this.tokenStart;
                 OreGlobNode node = not(nested || not);
                 if (OreGlobNodes.isNegatedMatch(root) && OreGlobNodes.isNegatedMatch(node)) {
+                    // the negated run ends where the next token starts
                     warn(OreGlobMessages.compileWarnConsecutiveNegation(), tokenStart,
-                            tokenStart + tokenLength - tokenStart);
+                            this.tokenStart - tokenStart);
                 }
                 root = OreGlobNodes.append(root, node);
             }
