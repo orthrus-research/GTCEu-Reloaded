@@ -96,13 +96,5 @@ public class FoodStats implements IFoodBehavior {
     }
 
     @Override
-    public void addInformation(ItemStack itemStack, List<String> lines) {
-        if (potionEffects.length > 0) {
-            PotionEffect[] effects = new PotionEffect[potionEffects.length];
-            for (int i = 0; i < potionEffects.length; i++) {
-                effects[i] = potionEffects[i].effect;
-            }
-            // GTUtility.addPotionTooltip(Iterables.cycle(effects), lines); todo implement this
-        }
-    }
+    public void addInformation(ItemStack itemStack, List<String> lines) {}
 }

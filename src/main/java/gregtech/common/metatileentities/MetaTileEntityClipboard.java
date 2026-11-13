@@ -414,7 +414,7 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
         NBTBase clipboardNBT = data.getTag("clipboardNBT");
-        if (clipboardNBT != NO_CLIPBOARD_SIG && clipboardNBT instanceof NBTTagCompound) {
+        if (clipboardNBT instanceof NBTTagCompound) {
             ItemStack clipboard = this.getClipboard();
             clipboard.setTagCompound((NBTTagCompound) clipboardNBT);
             this.setClipboard(clipboard);
@@ -476,11 +476,9 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
         } else if (dataId == INIT_CLIPBOARD_NBT) {
             try {
                 NBTTagCompound clipboardNBT = buf.readCompoundTag();
-                if (clipboardNBT != NO_CLIPBOARD_SIG) {
-                    ItemStack clipboard = this.getClipboard();
-                    clipboard.setTagCompound(clipboardNBT);
-                    this.setClipboard(clipboard);
-                }
+                ItemStack clipboard = this.getClipboard();
+                clipboard.setTagCompound(clipboardNBT);
+                this.setClipboard(clipboard);
             } catch (Exception e) {
                 GTLog.logger.error("Could not read Clipboard Init NBT from CustomData buffer", e);
             }
