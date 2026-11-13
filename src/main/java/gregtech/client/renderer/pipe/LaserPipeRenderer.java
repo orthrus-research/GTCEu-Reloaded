@@ -27,7 +27,6 @@ public class LaserPipeRenderer extends PipeRenderer {
 
     public static final LaserPipeRenderer INSTANCE = new LaserPipeRenderer();
     private final EnumMap<LaserPipeType, TextureAtlasSprite> pipeTextures = new EnumMap<>(LaserPipeType.class);
-    private boolean active = false;
 
     public LaserPipeRenderer() {
         super("gt_laser_pipe", GTUtility.gregtechId("laser_pipe"));
@@ -48,14 +47,14 @@ public class LaserPipeRenderer extends PipeRenderer {
                 renderContext.addSideRender(new IconTransformation(Textures.LASER_PIPE_OVERLAY));
             }
 
-            active = !ConfigHolder.client.preventAnimatedCables && pipeTile instanceof TileEntityLaserPipe laserPipe &&
-                    laserPipe.isActive();
+            renderContext.setActive(!ConfigHolder.client.preventAnimatedCables &&
+                    pipeTile instanceof TileEntityLaserPipe laserPipe && laserPipe.isActive());
         }
     }
 
     @Override
     protected void renderEmissiveLayer(CCRenderState renderState, PipeRenderContext renderContext) {
-        if (active && (renderContext.getConnections() & 0b111111) != 0) {
+        if (renderContext.isActive() && (renderContext.getConnections() & 0b111111) != 0) {
             Cuboid6 innerCuboid = BlockPipe.getSideBox(null, renderContext.getPipeThickness());
             for (EnumFacing side : EnumFacing.VALUES) {
                 if ((renderContext.getConnections() & (1 << side.getIndex())) == 0) {
