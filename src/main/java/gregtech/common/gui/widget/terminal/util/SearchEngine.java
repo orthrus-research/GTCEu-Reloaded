@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /** One bounded worker; obsolete searches may finish but cannot publish results into a newer query. */
@@ -20,7 +21,7 @@ public class SearchEngine<T> implements AutoCloseable {
     private final ConcurrentLinkedQueue<SearchResult<T>> pending = new ConcurrentLinkedQueue<>();
     private final ThreadPoolExecutor executor;
     private Future<?> task;
-    private volatile long generation;
+    private final AtomicLong generation = new AtomicLong();
 
     public SearchEngine(@NotNull ISearch<T> search, @NotNull Consumer<T> result) {
         this.search = search;
@@ -32,11 +33,11 @@ public class SearchEngine<T> implements AutoCloseable {
 
     public void searchWord(String word) {
         dispose();
-        long query = generation;
+        long query = generation.get();
         this.task = executor.submit(() -> {
             try {
                 search.search(word, found -> {
-                    if (query == generation) pending.add(new SearchResult<>(query, found));
+                    if (query == generation.get()) pending.add(new SearchResult<>(query, found));
                 });
             } catch (RuntimeException failure) {
                 GTLog.logger.error("Terminal search failed", failure);
@@ -54,13 +55,13 @@ public class SearchEngine<T> implements AutoCloseable {
         requireOwner();
         SearchResult<T> found;
         while ((found = pending.poll()) != null) {
-            if (found.generation() == generation) result.accept(found.value());
+            if (found.generation() == generation.get()) result.accept(found.value());
         }
     }
 
     public void dispose() {
         requireOwner();
-        this.generation++;
+        this.generation.incrementAndGet();
         if (task != null) task.cancel(true);
         executor.getQueue().clear();
         pending.clear();
