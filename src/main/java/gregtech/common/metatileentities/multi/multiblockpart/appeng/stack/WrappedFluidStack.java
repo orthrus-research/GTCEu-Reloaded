@@ -64,7 +64,7 @@ public class WrappedFluidStack implements IAEFluidStack {
 
     @Override
     public void add(IAEFluidStack iaeFluidStack) {
-        this.delegate.amount += iaeFluidStack.getStackSize();
+        this.delegate.amount = saturate((long) this.delegate.amount + iaeFluidStack.getStackSize());
     }
 
     @Override
@@ -74,7 +74,7 @@ public class WrappedFluidStack implements IAEFluidStack {
 
     @Override
     public IAEFluidStack setStackSize(long l) {
-        this.delegate.amount = (int) l;
+        this.delegate.amount = saturate(l);
         return this;
     }
 
@@ -111,12 +111,12 @@ public class WrappedFluidStack implements IAEFluidStack {
 
     @Override
     public void incStackSize(long l) {
-        this.delegate.amount += l;
+        this.delegate.amount = saturate((long) this.delegate.amount + l);
     }
 
     @Override
     public void decStackSize(long l) {
-        this.delegate.amount -= l;
+        this.delegate.amount = saturate((long) this.delegate.amount - l);
     }
 
     @Override
@@ -200,5 +200,10 @@ public class WrappedFluidStack implements IAEFluidStack {
         result = 31 * result + this.delegate.getFluid().hashCode();
         result = 31 * result + (this.delegate.tag == null ? 0 : this.delegate.tag.hashCode());
         return result;
+    }
+
+    /** AE2 sizes are longs; a FluidStack holds an int amount from 0 up. */
+    private static int saturate(long amount) {
+        return Math.clamp(amount, 0, Integer.MAX_VALUE);
     }
 }
