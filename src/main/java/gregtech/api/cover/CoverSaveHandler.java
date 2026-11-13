@@ -9,6 +9,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.Constants;
 
+import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
@@ -41,7 +42,11 @@ public final class CoverSaveHandler {
             Cover cover = covers[i];
             buf.writeByte(cover.getAttachedSide().ordinal());
             buf.writeVarInt(CoverDefinition.getNetworkIdForCover(cover.getDefinition()));
-            cover.writeInitialSyncData(buf);
+            // length-prefixed, so a reader that does not know the cover can skip its data
+            PacketBuffer coverData = new PacketBuffer(Unpooled.buffer());
+            cover.writeInitialSyncData(coverData);
+            buf.writeVarInt(coverData.readableBytes());
+            buf.writeBytes(coverData);
         }
     }
 
@@ -58,6 +63,7 @@ public final class CoverSaveHandler {
         for (int i = 0; i < count; i++) {
             EnumFacing facing = EnumFacing.VALUES[buf.readByte()];
             int id = buf.readVarInt();
+            PacketBuffer coverData = new PacketBuffer(buf.readSlice(buf.readVarInt()));
             CoverDefinition definition = CoverDefinition.getCoverByNetworkId(id);
 
             if (definition == null) {
@@ -65,7 +71,7 @@ public final class CoverSaveHandler {
                         coverHolder.getPos());
             } else {
                 Cover cover = definition.createCover(coverHolder, facing);
-                cover.readInitialSyncData(buf);
+                cover.readInitialSyncData(coverData);
                 coverHolder.addCover(facing, cover);
             }
         }
