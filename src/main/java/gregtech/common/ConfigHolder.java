@@ -317,6 +317,7 @@ public class ConfigHolder {
 
             @Config.Comment({ "Enable Native GTEU to Forge Energy (RF and alike) on GT Cables and Wires.",
                     "This does not enable nor disable Converters.", "Default: true" })
+            @Config.RequiresWorldRestart
             public boolean nativeEUToFE = true;
 
             @Config.Comment({ "Enable GTEU to FE (and vice versa) Converters.", "Default: false" })

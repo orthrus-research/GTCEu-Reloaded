@@ -26,6 +26,9 @@ public class EUToFEProvider extends CapabilityCompatProvider {
      */
     private long feBuffer;
 
+    /** One wrapper per side, and one for the null side. */
+    private final GTEnergyWrapper[] wrappers = new GTEnergyWrapper[EnumFacing.VALUES.length + 1];
+
     public EUToFEProvider(TileEntity tileEntity) {
         super(tileEntity);
     }
@@ -43,9 +46,15 @@ public class EUToFEProvider extends CapabilityCompatProvider {
             return null;
 
         IEnergyStorage energyStorage = getUpvalueCapability(CapabilityEnergy.ENERGY, facing);
-        return energyStorage != null ?
-                GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER.cast(new GTEnergyWrapper(energyStorage)) :
-                null;
+        if (energyStorage == null) return null;
+        // cables ask on every transfer; reuse the wrapper while the side exposes the same storage
+        int side = facing == null ? EnumFacing.VALUES.length : facing.getIndex();
+        GTEnergyWrapper wrapper = wrappers[side];
+        if (wrapper == null || wrapper.energyStorage != energyStorage) {
+            wrapper = new GTEnergyWrapper(energyStorage);
+            wrappers[side] = wrapper;
+        }
+        return GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER.cast(wrapper);
     }
 
     public class GTEnergyWrapper implements IEnergyContainer {
