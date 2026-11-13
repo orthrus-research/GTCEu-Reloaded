@@ -160,6 +160,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Clipboard | Left-clicking a clipboard outside its page no longer throws, and a clipboard whose GUI cannot be built logs once instead of every tick. |
 | Machines | Gameplay change: a finished charcoal pile converts only the logs still inside it; before, blocks at positions recorded by earlier or larger pile checks also turned into brittle charcoal |
 | Crafting | Gameplay change: the crafting station damages, empties or uses only as many tools, buckets and cells as the recipe needs; before, one craft damaged every matching tool and emptied every matching bucket in the station, and one needing two items from a stack used only one |
+| Storage | The quantum storage controller no longer throws when its network changes before every saved storage has been loaded. |
 
 ### Earlier fork changes
 
