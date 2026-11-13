@@ -35,6 +35,7 @@ public class TileEntityLaserPipe extends TileEntityPipeBase<LaserPipeType, Laser
 
     private int ticksActive = 0;
     private int activeDuration = 0;
+    private boolean disconnectScheduled;
     private boolean isActive = false;
 
     @Override
@@ -166,9 +167,7 @@ public class TileEntityLaserPipe extends TileEntityPipeBase<LaserPipeType, Laser
             notifyBlockUpdate();
             markDirty();
             writeCustomData(GregtechDataCodes.PIPE_LASER_ACTIVE, buf -> buf.writeBoolean(this.isActive));
-            if (active && duration != this.activeDuration) {
-                TaskScheduler.scheduleTask(getWorld(), this::queueDisconnect);
-            }
+            if (active) scheduleDisconnect();
         }
 
         this.activeDuration = duration;
@@ -177,13 +176,35 @@ public class TileEntityLaserPipe extends TileEntityPipeBase<LaserPipeType, Laser
         }
     }
 
+    /** Schedule the task that turns the pipe off, unless one is already running. */
+    private void scheduleDisconnect() {
+        if (disconnectScheduled || getWorld() == null || getWorld().isRemote) return;
+        disconnectScheduled = true;
+        TaskScheduler.scheduleTask(getWorld(), this::queueDisconnect);
+    }
+
     public boolean queueDisconnect() {
+        if (isInvalid()) {
+            disconnectScheduled = false;
+            return false;
+        }
         if (++this.ticksActive % activeDuration == 0) {
             this.ticksActive = 0;
+            disconnectScheduled = false;
             setActive(false, -1);
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void onLoad() {
+        super.onLoad();
+        // a pipe saved while active turns off after a while unless something feeds it again
+        if (isActive && !getWorld().isRemote) {
+            if (activeDuration <= 0) activeDuration = 100;
+            scheduleDisconnect();
+        }
     }
 
     @Override
@@ -199,12 +220,6 @@ public class TileEntityLaserPipe extends TileEntityPipeBase<LaserPipeType, Laser
     public void writeInitialSyncData(PacketBuffer buf) {
         super.writeInitialSyncData(buf);
         buf.writeBoolean(this.isActive);
-
-        // schedule a disconnect on world load, gotta set the duration to something
-        if (isActive) {
-            activeDuration = 100;
-            TaskScheduler.scheduleTask(getWorld(), this::queueDisconnect);
-        }
     }
 
     @Override
