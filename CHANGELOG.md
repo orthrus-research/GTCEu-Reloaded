@@ -240,6 +240,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Networking | Machine traits keep their synced data apart however the client and server happened to load them. |
 | Modules | Disabling a GregTech module in its config keeps that module's code from loading at all. |
 | World generation | Gameplay change: in new worlds a bedrock fluid vein's fluid and yield no longer depend on which of its chunks is prospected first; existing worlds keep their veins |
+| Multiblocks | Gameplay change: a fusion reactor that re-forms with fewer energy hatches keeps only as much energy as its new buffer holds |
 
 ### Earlier fork changes
 

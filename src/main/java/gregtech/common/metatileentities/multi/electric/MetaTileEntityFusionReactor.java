@@ -248,7 +248,9 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
         long energyStored = this.energyContainer.getEnergyStored();
         super.formStructure(context);
         this.initializeAbilities();
-        ((EnergyContainerHandler) this.energyContainer).setEnergyStored(energyStored);
+        // the new structure can have fewer energy hatches and so a smaller buffer than the energy carried over
+        ((EnergyContainerHandler) this.energyContainer)
+                .setEnergyStored(Math.min(energyStored, this.energyContainer.getEnergyCapacity()));
     }
 
     @Override
