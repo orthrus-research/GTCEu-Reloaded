@@ -154,7 +154,8 @@ public class MetaTileEntityWorldAccelerator extends TieredMetaTileEntity impleme
             if (te.isInvalid()) continue;
             if (!canTileAccelerate(te)) continue;
 
-            for (int i = 0; i < speed; i++) {
+            // a tile can remove or replace itself during its own update
+            for (int i = 0; i < speed && !te.isInvalid(); i++) {
                 tickable.update();
             }
         }
