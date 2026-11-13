@@ -16,7 +16,7 @@ public interface IFilteredFluidContainer {
      * Compare logic for filtered instances.
      */
     Comparator<IFilteredFluidContainer> COMPARATOR = Comparator.nullsLast(
-            Comparator.comparing(IFilteredFluidContainer::getFilter, IFilter.FILTER_COMPARATOR));
+            Comparator.comparing(IFilteredFluidContainer::getFilter, Comparator.nullsLast(IFilter.FILTER_COMPARATOR)));
 
     /**
      * @return instance of {@link IFilter} associated to this object, or {@code null} if there's no filter

@@ -131,6 +131,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Config | The tools section no longer shows a second Armor HUD Location block that had no effect; the HUD position is set under client options as before |
 | Energy | An energy container list no longer accepts more amperes from a network than were offered; each container now sees only the amperage still unclaimed. |
 | Fluids | `MultiFluidFilter` now tests the fluid it is given and honours its blacklist flag; it used to accept every fluid. |
+| Fluids | `IFilteredFluidContainer.COMPARATOR` no longer throws on a container without a filter; such containers sort last. |
 
 ### Earlier fork changes
 
