@@ -284,7 +284,13 @@ public class MetaTileEntityPump extends TieredMetaTileEntity {
                 return;
             }
             FluidStack drainStack = fluidHandler.drain(Integer.MAX_VALUE, false);
-            if (drainStack != null && exportFluids.fill(drainStack, false) == drainStack.amount) {
+            if (drainStack != null && exportFluids.fill(drainStack, false) != drainStack.amount) {
+                // the tank cannot take the whole block yet: try it again after the other known sources,
+                // so a block the tank never accepts does not hold up the rest
+                this.fluidSourceBlocks.addLast(fluidBlockPos);
+                return;
+            }
+            if (drainStack != null) {
                 if (locked && lockedFluid == null) {
                     lockedFluid = drainStack.copy();
                     lockedFluid.amount = 1;
@@ -293,7 +299,6 @@ public class MetaTileEntityPump extends TieredMetaTileEntity {
                 if (lockedFluid == null || drainStack.isFluidEqual(lockedFluid)) {
                     exportFluids.fill(drainStack, true);
                     fluidHandler.drain(drainStack.amount, true);
-                    this.fluidSourceBlocks.remove(fluidBlockPos);
                     energyContainer.changeEnergy(-GTValues.V[getTier()] * 2);
                 }
             }
