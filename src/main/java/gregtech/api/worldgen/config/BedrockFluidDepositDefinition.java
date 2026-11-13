@@ -141,48 +141,4 @@ public class BedrockFluidDepositDefinition implements IWorldgenDefinition {
     public Predicate<WorldProvider> getDimensionFilter() {
         return dimensionFilter;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof BedrockFluidDepositDefinition))
-            return false;
-
-        BedrockFluidDepositDefinition objDeposit = (BedrockFluidDepositDefinition) obj;
-        if (this.weight != objDeposit.getWeight())
-            return false;
-        if (this.getMinimumYield() != objDeposit.getMinimumYield())
-            return false;
-        if (this.getMaximumYield() != objDeposit.getMaximumYield())
-            return false;
-        if (this.depletionAmount != objDeposit.getDepletionAmount())
-            return false;
-        if (this.depletionChance != objDeposit.getDepletionChance())
-            return false;
-        if (!this.storedFluid.equals(objDeposit.getStoredFluid()))
-            return false;
-        if ((this.assignedName == null && objDeposit.getAssignedName() != null) ||
-                (this.assignedName != null && objDeposit.getAssignedName() == null) ||
-                (this.assignedName != null && objDeposit.getAssignedName() != null &&
-                        !this.assignedName.equals(objDeposit.getAssignedName())))
-            return false;
-        if ((this.description == null && objDeposit.getDescription() != null) ||
-                (this.description != null && objDeposit.getDescription() == null) ||
-                (this.description != null && objDeposit.getDescription() != null &&
-                        !this.description.equals(objDeposit.getDescription())))
-            return false;
-        if (this.depletedYield != objDeposit.getDepletedYield())
-            return false;
-        if ((this.biomeWeightModifier == null && objDeposit.getBiomeWeightModifier() != null) ||
-                (this.biomeWeightModifier != null && objDeposit.getBiomeWeightModifier() == null) ||
-                (this.biomeWeightModifier != null && objDeposit.getBiomeWeightModifier() != null &&
-                        !this.biomeWeightModifier.equals(objDeposit.getBiomeWeightModifier())))
-            return false;
-        if ((this.dimensionFilter == null && objDeposit.getDimensionFilter() != null) ||
-                (this.dimensionFilter != null && objDeposit.getDimensionFilter() == null) ||
-                (this.dimensionFilter != null && objDeposit.getDimensionFilter() != null &&
-                        !this.dimensionFilter.equals(objDeposit.getDimensionFilter())))
-            return false;
-
-        return super.equals(obj);
-    }
 }
