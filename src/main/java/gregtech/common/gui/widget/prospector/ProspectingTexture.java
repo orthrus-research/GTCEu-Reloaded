@@ -54,7 +54,7 @@ public class ProspectingTexture extends AbstractTexture {
         int playerChunkX = packet.playerChunkX;
         int playerChunkZ = packet.playerChunkZ;
         playerXGui = packet.posX - (playerChunkX - this.radius + 1) * 16 + (packet.posX > 0 ? 1 : 0);
-        playerYGui = packet.posZ - (playerChunkZ - this.radius + 1) * 16 + (packet.posX > 0 ? 1 : 0);
+        playerYGui = packet.posZ - (playerChunkZ - this.radius + 1) * 16 + (packet.posZ > 0 ? 1 : 0);
 
         int ox;
         if ((packet.chunkX > 0 && playerChunkX > 0) || (packet.chunkX < 0 && playerChunkX < 0)) {

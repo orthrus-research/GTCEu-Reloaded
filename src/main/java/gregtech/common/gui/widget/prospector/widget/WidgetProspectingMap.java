@@ -72,7 +72,8 @@ public class WidgetProspectingMap extends Widget {
         super(new Position(xPosition, yPosition), new Size(16 * (chunkRadius * 2 - 1), 16 * (chunkRadius * 2 - 1)));
         this.chunkRadius = chunkRadius;
         this.mode = mode;
-        this.scanTick = scanTick;
+        // a scan interval below one tick would divide by zero
+        this.scanTick = Math.max(1, scanTick);
         oreList = widgetOreList;
         if (oreList != null) {
             oreList.onSelected = name -> {
@@ -331,6 +332,9 @@ public class WidgetProspectingMap extends Widget {
 
     @Override
     public boolean mouseClicked(int mouseX, int mouseY, int button) {
+        // integer division rounds toward zero, so check the left and top edges first
+        if (mouseX < this.getPosition().x || mouseY < this.getPosition().y)
+            return false;
         int cX = (mouseX - this.getPosition().x) / 16;
         int cZ = (mouseY - this.getPosition().y) / 16;
 
