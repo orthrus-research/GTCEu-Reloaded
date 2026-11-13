@@ -8,6 +8,7 @@ import gregtech.api.cover.CoverableView;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.util.FluidTankSwitchShim;
 import gregtech.api.util.GTTransferUtils;
+import gregtech.api.util.GTUtility;
 import gregtech.api.util.virtualregistry.EntryTypes;
 import gregtech.api.util.virtualregistry.VirtualEnderRegistry;
 import gregtech.api.util.virtualregistry.entries.VirtualTank;
@@ -168,7 +169,8 @@ public class CoverEnderFluidLink extends CoverAbstractEnderLink<VirtualTank>
     @Override
     public void readFromNBT(NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
-        this.pumpMode = CoverPump.PumpMode.values()[tagCompound.getInteger("PumpMode")];
+        this.pumpMode = GTUtility.enumByOrdinal(CoverPump.PumpMode.values(), tagCompound.getInteger("PumpMode"),
+                CoverPump.PumpMode.IMPORT);
         this.fluidFilter.deserializeNBT(tagCompound.getCompoundTag("Filter"));
     }
 

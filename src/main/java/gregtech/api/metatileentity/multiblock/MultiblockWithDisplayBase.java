@@ -7,6 +7,7 @@ import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIFactory;
 import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.pattern.TraceabilityPredicate;
+import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -408,7 +409,8 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
         }
 
         if (data.hasKey(NBT_VOIDING_MODE)) {
-            voidingMode = VoidingMode.values()[data.getInteger(NBT_VOIDING_MODE)];
+            voidingMode = GTUtility.enumByOrdinal(VoidingMode.VALUES, data.getInteger(NBT_VOIDING_MODE),
+                    VoidingMode.VOID_NONE);
         }
     }
 
@@ -429,7 +431,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
         timeActive = buf.readInt();
         voidingFluids = buf.readBoolean();
         voidingItems = buf.readBoolean();
-        voidingMode = VoidingMode.values()[buf.readInt()];
+        voidingMode = GTUtility.enumByOrdinal(VoidingMode.VALUES, buf.readInt(), VoidingMode.VOID_NONE);
     }
 
     @Override

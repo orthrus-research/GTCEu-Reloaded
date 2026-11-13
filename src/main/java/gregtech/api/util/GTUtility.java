@@ -212,6 +212,19 @@ public class GTUtility {
     }
 
     /**
+     * Look up an enum constant by an ordinal read from saved data or a packet.
+     *
+     * @param values   the enum's constants, in ordinal order
+     * @param ordinal  the stored ordinal
+     * @param fallback the constant to use when the ordinal is out of range
+     * @return the constant with that ordinal, or {@code fallback}
+     */
+    public static <E extends Enum<E>> @NotNull E enumByOrdinal(E @NotNull [] values, int ordinal,
+                                                               @NotNull E fallback) {
+        return ordinal >= 0 && ordinal < values.length ? values[ordinal] : fallback;
+    }
+
+    /**
      * @param array Array sorted with natural order
      * @param value Value to search for
      * @return Index of the nearest value lesser or equal than {@code value},

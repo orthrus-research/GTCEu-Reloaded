@@ -146,6 +146,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Utilities | `GTUtility.nearestLesserOrEqual` and `nearestLesser` terminate for every input, and `formatLongToCompactString` rejects a precision below 3 instead of dividing by zero. |
 | Items | Code that checked for an empty item stack now also treats zero-count stacks as empty, not only the shared empty stack. |
 | Multiblocks | The Power Substation's passive drain after a battery change no longer includes a remainder left from the previous batteries, which could add 1 EU/t. |
+| Saved data | Machines and covers whose saved mode is out of range load with their default mode instead of failing to load. |
 
 ### Earlier fork changes
 
