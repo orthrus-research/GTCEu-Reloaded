@@ -10,6 +10,8 @@ public final class GregTechMixinConnector implements IMixinConnector {
 
     /** The ModularUI release of the qualified dependency baseline ({@code modularUiVersion}). */
     static final String MODULARUI_TESTED_RANGE = "[3.1.6]";
+    /** The Nothirium release the bloom pass was last checked against in a client session. */
+    static final String NOTHIRIUM_TESTED_RANGE = "[0.4.9-beta]";
 
     @Override
     public void connect() {
@@ -39,6 +41,11 @@ public final class GregTechMixinConnector implements IMixinConnector {
         ConditionalMixin.of("mixins.gregtech.ctm.json").requires("ctm").register();
         ConditionalMixin.of("mixins.gregtech.littletiles.json").requires("littletiles").register();
         ConditionalMixin.of("mixins.gregtech.vintagium.json").requires("vintagium").register();
-        ConditionalMixin.of("mixins.gregtech.nothirium.json").requires("nothirium").register();
+        // Adds a BLOOM value to Nothirium's ChunkRenderPass enum by rewriting $VALUES and its cached ALL copy
+        ConditionalMixin.of("mixins.gregtech.nothirium.json").requires("nothirium")
+                .version(NOTHIRIUM_TESTED_RANGE)
+                .because("GTCEu's bloom render pass for Nothirium is verified only for these versions")
+                .orWarn()
+                .register();
     }
 }

@@ -260,6 +260,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | GregTech's ModularUI tweaks apply only to the tested ModularUI release; other releases log a warning and run unmodified |
 | Monitors | Animated GIFs on monitors no longer carry one frame's delay and transparency into the next, and malformed GIFs fail cleanly |
 | Rendering | The invar and platinum lighters show their own textures again |
+| Rendering | GregTech's Nothirium bloom pass applies only to the tested Nothirium release; other releases log a warning and render without it |
 
 ### Earlier fork changes
 
