@@ -96,8 +96,9 @@ public class TileEntityCable extends TileEntityMaterialPipeBase<Insulation, Wire
         super.onLoad();
         if (!world.isRemote) {
             setTemperature(temperature);
-            if (temperature > getDefaultTemp()) {
+            if (temperature > getDefaultTemp() && !isTicking) {
                 TaskScheduler.scheduleTask(world, this::update);
+                isTicking = true;
             }
         }
     }
@@ -132,6 +133,11 @@ public class TileEntityCable extends TileEntityMaterialPipeBase<Insulation, Wire
     }
 
     private boolean update() {
+        // a broken or replaced cable stops; otherwise its task would heat or burn whatever is at pos now
+        if (isInvalid()) {
+            isTicking = false;
+            return false;
+        }
         if (heatQueue > 0) {
             // if received heat from overvolting or overamping, add heat
             setTemperature(temperature + heatQueue);
