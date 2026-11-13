@@ -95,17 +95,8 @@ public class EnergyContainerList implements IEnergyContainer {
     }
 
     private static boolean hasPrimeFactorGreaterThanTwo(long l) {
-        int i = 2;
-        final long max = l / 2;
-        while (i <= max) {
-            if (l % i == 0) {
-                if (i > 2) return true;
-                l /= i;
-            } else {
-                i++;
-            }
-        }
-        return false;
+        // any factor left once the factors of two are removed is odd, so it has an odd prime factor
+        return l > 0 && (l >> Long.numberOfTrailingZeros(l)) > 1;
     }
 
     /**
@@ -114,7 +105,7 @@ public class EnergyContainerList implements IEnergyContainer {
     private static boolean isPowerOfFour(long l) {
         if (l == 0) return false;
         if ((l & (l - 1)) != 0) return false;
-        return (l & 0x55555555) != 0;
+        return (l & 0x5555555555555555L) != 0;
     }
 
     @Override
