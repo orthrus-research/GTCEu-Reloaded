@@ -75,6 +75,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Machines | The Power Substation prints its stored energy and capacity with the right decimals (12,345,678 EU reads 12.3456M); before, the digits after the point were taken from the wrong position |
 | API | `SmallDigits.toSmallUpNumbers` produces superscript digits; before, it produced subscripts |
 | Integration | With FTB Utilities, the block breaker respects chunk claims: it breaks blocks in its owner's claims and refuses in other teams'; before, it did the opposite |
+| Rendering | Texture metadata that gives separate block and sky light (`"light": {"block": …, "sky": …}`) applies both; before, the sky value overwrote the block value |
 
 ### Earlier fork changes
 
