@@ -200,6 +200,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | Machine fluid slots ignore phantom-slot actions from a client, so a modified client cannot set or empty a real tank through them. |
 | OpenComputers | Setting a machine's output side from OpenComputers rejects invalid sides and the machine's front, as the wrench does. |
 | Machines | The alarm's radius stays within 0 to 128 blocks whatever a client sends, and non-numeric input to the alarm or the creative energy source no longer throws on the server. |
+| World generation | A new single-player world no longer inherits the bedrock fluid veins of the world played before it. |
 
 ### Earlier fork changes
 
