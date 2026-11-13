@@ -85,6 +85,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | AE2 | ME hatches and buses cap stack sizes they cannot hold at the largest amount instead of wrapping to a negative one when an ME network reports more than 2,147,483,647 mB or items of one kind |
 | Tools | A tool belt reports the harvest level of its selected tool for that tool's own material; before, the belt stack was passed in its place |
 | API | `ModHandler.removeFurnaceSmelting(UnificationEntry)` removes the furnace recipe of every ore-dictionary variant; before, it stopped after the first one it removed |
+| Scripting | GroovyScript `addBlastProperty` on a material without a blast property applies the duration and EU/t overrides as given; before, the two were swapped |
 
 ### Earlier fork changes
 

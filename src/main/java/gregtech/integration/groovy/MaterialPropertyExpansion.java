@@ -115,7 +115,7 @@ public class MaterialPropertyExpansion {
             BlastProperty.Builder builder = new BlastProperty.Builder();
             builder.temp(blastTemp,
                     gasTier == null ? BlastProperty.GasTier.LOW : BlastProperty.validateGasTier(gasTier));
-            builder.blastStats(durationOverride == 0 ? -1 : durationOverride, eutOverride == 0 ? -1 : eutOverride);
+            builder.blastStats(eutOverride == 0 ? -1 : eutOverride, durationOverride == 0 ? -1 : durationOverride);
             builder.vacuumStats(vacuumEUtOverride == 0 ? -1 : vacuumEUtOverride,
                     vacuumDurationOverride == 0 ? -1 : vacuumDurationOverride);
             m.setProperty(PropertyKey.BLAST, builder.build());
