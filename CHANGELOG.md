@@ -79,6 +79,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | Editing the green value in an ARGB colour field (monitor plugins) keeps the alpha; before, it made the colour fully transparent |
 | Machines | A newly placed diode passes energy straight away; before, it had zero capacity and passed nothing until the world was reloaded or its amperage was changed |
 | Machines | Viewing the Large Miner's screen no longer consumes drilling fluid; before, the status check drained it while the screen was open |
+| Tools | The tricorder reports the bedrock fluid of the chunk you stand in at negative coordinates; before, it read the neighbouring chunk |
 
 ### Earlier fork changes
 

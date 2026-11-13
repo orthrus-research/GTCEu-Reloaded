@@ -356,11 +356,11 @@ public class TricorderBehavior implements IItemBehaviour {
 
         // bedrock fluids
         list.add(new TextComponentTranslation("behavior.tricorder.divider"));
-        Fluid fluid = BedrockFluidVeinHandler.getFluidInChunk(world, pos.getX() / 16, pos.getZ() / 16);// -# to only
+        Fluid fluid = BedrockFluidVeinHandler.getFluidInChunk(world, pos.getX() >> 4, pos.getZ() >> 4);// -# to only
                                                                                                        // read
         if (fluid != null) {
             FluidStack stack = new FluidStack(fluid,
-                    BedrockFluidVeinHandler.getOperationsRemaining(world, pos.getX() / 16, pos.getZ() / 16));
+                    BedrockFluidVeinHandler.getOperationsRemaining(world, pos.getX() >> 4, pos.getZ() >> 4));
             double fluidPercent = stack.amount * 100.0 / BedrockFluidVeinHandler.MAXIMUM_VEIN_OPERATIONS;
 
             if (player.isCreative()) {
@@ -368,7 +368,7 @@ public class TricorderBehavior implements IItemBehaviour {
                         new TextComponentTranslation(fluid.getLocalizedName(stack))
                                 .setStyle(new Style().setColor(TextFormatting.GOLD)),
                         new TextComponentTranslation(String.valueOf(
-                                BedrockFluidVeinHandler.getFluidYield(world, pos.getX() / 16, pos.getZ() / 16)))
+                                BedrockFluidVeinHandler.getFluidYield(world, pos.getX() >> 4, pos.getZ() >> 4)))
                                 .setStyle(new Style().setColor(TextFormatting.GOLD)),
                         new TextComponentTranslation(String.valueOf(fluidPercent))
                                 .setStyle(new Style().setColor(TextFormatting.YELLOW))));
