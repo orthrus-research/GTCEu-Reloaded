@@ -19,6 +19,18 @@ public class OpticalPipeNet extends PipeNet<OpticalPipeProperties> {
 
     private final Map<FacingPos, OpticalRoutePath> NET_DATA = new Object2ObjectOpenHashMap<>();
     private long lastRouteRefresh;
+    // world time the pipes were last marked active; a mark lasts 100 ticks, so once a second is enough
+    private long lastActiveMark = Long.MIN_VALUE;
+
+    /**
+     * @return whether the pipes should be marked active now; true at most once a second
+     */
+    public boolean shouldMarkActive(long worldTime) {
+        if (worldTime - lastActiveMark < 20 && worldTime >= lastActiveMark) return false;
+        lastActiveMark = worldTime;
+        return true;
+    }
+
     private boolean routeCacheInitialized;
 
     public OpticalPipeNet(WorldPipeNet<OpticalPipeProperties, ? extends PipeNet<OpticalPipeProperties>> world) {

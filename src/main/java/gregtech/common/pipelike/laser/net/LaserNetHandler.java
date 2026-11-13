@@ -30,6 +30,8 @@ public class LaserNetHandler implements ILaserContainer {
     }
 
     private void setPipesActive() {
+        // every energy packet arrives here; walking the whole line once a second keeps it lit
+        if (!net.shouldMarkActive(pipe.getWorld().getTotalWorldTime())) return;
         for (BlockPos pos : net.getAllNodes().keySet()) {
             if (pipe.getWorld().isBlockLoaded(pos) &&
                     pipe.getWorld().getTileEntity(pos) instanceof TileEntityLaserPipe laserPipe) {
