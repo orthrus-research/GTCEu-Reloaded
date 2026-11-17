@@ -429,7 +429,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
      */
     public final boolean removeRecipe(@NotNull Recipe recipe) {
         var category = recipeByCategory.get(recipe.getRecipeCategory());
-        if (category == null || category.stream().noneMatch(value -> value == recipe)) return false;
+        if (category == null || !containsIdentity(category, recipe)) return false;
         var states = prepareRegistrationStates(List.of(recipe), List.of(), false);
         List<List<AbstractMapIngredient>> items = fromRecipe(recipe);
         if (recurseIngredientTreeRemove(recipe, items, lookup, 0)) {
@@ -444,6 +444,14 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             states.forEach(PreparedRecipeRegistrationState::publish);
             onRecipesChanged();
             return true;
+        }
+        return false;
+    }
+
+    /** Whether the list holds this exact recipe; a plain loop, as this runs on every removal. */
+    private static boolean containsIdentity(List<Recipe> recipes, Recipe recipe) {
+        for (Recipe value : recipes) {
+            if (value == recipe) return true;
         }
         return false;
     }
