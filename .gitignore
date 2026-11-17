@@ -89,13 +89,3 @@ libs/
 # Local tooling configuration
 .local/
 WORKSPACE.md
-AGENTS.md
-CLAUDE.md
-CLAUDE.local.md
-GEMINI.md
-.mcp.json
-.claude/
-.codex/
-.cursor/
-.agents/
-.brvspace
