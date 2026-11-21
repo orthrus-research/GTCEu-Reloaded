@@ -22,8 +22,6 @@ public final class GregTechMixinConnector implements IMixinConnector {
         ConditionalMixin.of("mixins.gregtech.theoneprobe.json").requires("theoneprobe").register();
         ConditionalMixin.of("mixins.gregtech.jei.json").requires("jei").register();
         // GTCEu draws no terrain pass of its own: emissive textures reach renderers through OrthLib's render
-        // interface, which a renderer provides, and fall back to CUTOUT elsewhere. mixins.gregtech.vintagium.json
-        // and mixins.gregtech.nothirium.json added a BLOOM pass for the BLOOM game layer, which no longer exists, so
-        // they stay unregistered until those renderers are served through the interface.
+        // interface, which a renderer provides, and fall back to CUTOUT elsewhere.
     }
 }

@@ -121,6 +121,7 @@ drew terrain without its bloom pass:
   drawn in `CUTOUT` there, full-bright.
 - OptiFine shader packs and Celeritas (also bundled in Demonica) provide no render interface: emissive textures use
   `CUTOUT` and nothing glows.
-- The Vintagium and Nothirium Mixin configurations added a `BLOOM` pass for the former `BLOOM` game layer. They are
-  kept in the tree but not registered until those renderers are served through the render interface.
+- Vintagium and Nothirium get no support of their own: their Mixin configurations, which added a `BLOOM` pass for
+  the former `BLOOM` game layer, are removed. Under them, as under any renderer that provides no render interface,
+  emissive textures use `CUTOUT` and nothing glows.
 - The CTM and LittleTiles Mixins existed for the `BLOOM` game layer only and are removed.
