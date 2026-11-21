@@ -63,7 +63,8 @@ tasks.register('refreshOrthLib') {
         def (commonFound, commonDir) = run(root, ['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'])
         def mainCheckout = commonFound == 0 ? new File(commonDir).parentFile : root
         def checkout = named.isPresent() ? file(named.get()) : new File(mainCheckout, '../OrthLib').canonicalFile
-        def git = { Object... arguments -> run(checkout, ['git'] + arguments.toList()*.toString()) }
+        // Long paths on: OrthLib's deepest files pass Windows' 260-character limit under a deep build directory.
+        def git = { Object... arguments -> run(checkout, ['git', '-c', 'core.longpaths=true'] + arguments.toList()*.toString()) }
         def (found, commit) = git('rev-parse', '--verify', "${orthlibCommit}^{commit}")
         if (found != 0) {
             throw new GradleException("${checkout} has no commit ${orthlibCommit}: fetch it there first.")
