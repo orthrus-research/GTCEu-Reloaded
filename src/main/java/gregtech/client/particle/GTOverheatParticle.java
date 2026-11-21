@@ -1,36 +1,36 @@
 package gregtech.client.particle;
 
 import gregtech.api.GTValues;
-import gregtech.client.renderer.IRenderSetup;
-import gregtech.client.shader.postprocessing.BloomEffect;
-import gregtech.client.shader.postprocessing.BloomType;
-import gregtech.client.utils.EffectRenderContext;
+import gregtech.client.renderer.EmissiveContribution;
+import gregtech.client.renderer.GTBloomKind;
 import gregtech.client.utils.RenderBufferHelper;
 import gregtech.client.utils.RenderUtil;
-import gregtech.common.ConfigHolder;
 import gregtech.common.pipelike.cable.tile.TileEntityCable;
 
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.world.World;
 
 import codechicken.lib.vec.Cuboid6;
+import dev.orthlib.api.render.Blend;
+import dev.orthlib.api.render.ContributionShape;
+import dev.orthlib.api.render.Primitive;
+import dev.orthlib.api.render.VertexLayout;
+import dev.orthlib.client.render.EmissiveSource;
+import dev.orthlib.client.render.FrameView;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
 
 import java.util.List;
 
 /**
+ * An overheating cable's glow. Its geometry is emissive: a renderer that provides OrthLib's render interface draws it
+ * with the heat effect bloom kind, and without one it is not drawn.
+ *
  * @author brachy84
  */
-public class GTOverheatParticle extends GTBloomParticle {
+public class GTOverheatParticle extends GTParticle implements EmissiveSource {
 
     /**
      * <a href="http://www.vendian.org/mncharity/dir3/blackbody/">Source</a>
@@ -145,6 +145,10 @@ public class GTOverheatParticle extends GTBloomParticle {
         return RenderUtil.interpolateColor(color, blackBodyColors[index + 1], temperature % 200 / 200f);
     }
 
+    /** Untextured, fully lit quads, blended by their alpha over what they cover. */
+    private static final ContributionShape SHAPE = new ContributionShape(VertexLayout.POSITION_COLOR,
+            Primitive.QUADS, Blend.ALPHA);
+
     private final TileEntityCable tileEntity;
 
     protected final int meltTemp;
@@ -154,6 +158,10 @@ public class GTOverheatParticle extends GTBloomParticle {
 
     protected float alpha = 0;
     protected int color = blackBodyColors[0];
+
+    private boolean contributed;
+    @Nullable
+    private EmissiveContribution contribution;
 
     public GTOverheatParticle(@NotNull TileEntityCable tileEntity, int meltTemp, @NotNull List<Cuboid6> pipeBoxes,
                               boolean insulated) {
@@ -196,8 +204,22 @@ public class GTOverheatParticle extends GTBloomParticle {
             return;
         }
 
+        // The glow of an uninsulated cable is emissive geometry, submitted on the client tick
+        if (!insulated && !contributed) {
+            contributed = true;
+            contribution = GTBloomKind.HEAT_EFFECT.contribute(SHAPE, this);
+        }
+
         if (temperature > 400 && GTValues.RNG.nextFloat() < 0.04) {
             spawnSmoke();
+        }
+    }
+
+    @Override
+    protected void onExpired() {
+        if (contribution != null) {
+            contribution.close();
+            contribution = null;
         }
     }
 
@@ -224,75 +246,33 @@ public class GTOverheatParticle extends GTBloomParticle {
                 '}';
     }
 
-    @Nullable
     @Override
-    protected IRenderSetup getBloomRenderSetup() {
-        return SETUP;
-    }
-
-    @NotNull
-    @Override
-    protected BloomType getBloomType() {
-        ConfigHolder.HeatEffectBloom heatEffectBloom = ConfigHolder.client.shader.heatEffectBloom;
-        return BloomType.fromValue(heatEffectBloom.useShader ? heatEffectBloom.bloomStyle : -1);
+    public boolean valid() {
+        return isAlive() && !tileEntity.isInvalid();
     }
 
     @Override
-    public void renderBloomEffect(@NotNull BufferBuilder buffer, @NotNull EffectRenderContext context) {
+    public @Nullable World world() {
+        return tileEntity.getWorld();
+    }
+
+    @Override
+    public boolean shouldDraw(@NotNull FrameView view) {
+        return alpha > 0;
+    }
+
+    @Override
+    public void write(@NotNull BufferBuilder buffer, @NotNull FrameView view) {
         float red = ((color >> 16) & 0xFF) / 255f;
         float green = ((color >> 8) & 0xFF) / 255f;
         float blue = (color & 0xFF) / 255f;
 
-        buffer.setTranslation(posX - context.cameraX(), posY - context.cameraY(), posZ - context.cameraZ());
+        double x = posX - view.cameraX();
+        double y = posY - view.cameraY();
+        double z = posZ - view.cameraZ();
         for (Cuboid6 cuboid : pipeBoxes) {
-            RenderBufferHelper.renderCubeFace(buffer, cuboid, red, green, blue, alpha, true);
+            RenderBufferHelper.renderCubeFace(buffer, x + cuboid.min.x, y + cuboid.min.y, z + cuboid.min.z,
+                    x + cuboid.max.x, y + cuboid.max.y, z + cuboid.max.z, red, green, blue, alpha, true);
         }
     }
-
-    @Override
-    public boolean shouldRenderBloomEffect(@NotNull EffectRenderContext context) {
-        if (this.insulated) return false;
-        for (Cuboid6 cuboid : pipeBoxes) {
-            if (!context.camera().isBoxInFrustum(
-                    cuboid.min.x + posX, cuboid.min.y + posY, cuboid.min.z + posZ,
-                    cuboid.max.x + posX, cuboid.max.y + posY, cuboid.max.z + posZ)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static final IRenderSetup SETUP = new IRenderSetup() {
-
-        float lastBrightnessX;
-        float lastBrightnessY;
-
-        @Override
-        @SideOnly(Side.CLIENT)
-        public void preDraw(@NotNull BufferBuilder buffer) {
-            BloomEffect.strength = (float) ConfigHolder.client.shader.heatEffectBloom.strength;
-            BloomEffect.baseBrightness = (float) ConfigHolder.client.shader.heatEffectBloom.baseBrightness;
-            BloomEffect.highBrightnessThreshold = (float) ConfigHolder.client.shader.heatEffectBloom.highBrightnessThreshold;
-            BloomEffect.lowBrightnessThreshold = (float) ConfigHolder.client.shader.heatEffectBloom.lowBrightnessThreshold;
-            BloomEffect.step = 1;
-
-            this.lastBrightnessX = OpenGlHelper.lastBrightnessX;
-            this.lastBrightnessY = OpenGlHelper.lastBrightnessY;
-            GlStateManager.color(1, 1, 1, 1);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
-            GlStateManager.disableTexture2D();
-            GlStateManager.enableBlend();
-            buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
-        }
-
-        @Override
-        @SideOnly(Side.CLIENT)
-        public void postDraw(@NotNull BufferBuilder buffer) {
-            buffer.setTranslation(0, 0, 0);
-            Tessellator.getInstance().draw();
-            GlStateManager.enableTexture2D();
-            GlStateManager.disableBlend();
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
-        }
-    };
 }
