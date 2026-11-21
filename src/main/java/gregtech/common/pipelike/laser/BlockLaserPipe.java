@@ -7,7 +7,6 @@ import gregtech.api.pipenet.block.BlockPipe;
 import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.pipenet.tile.TileEntityPipeBase;
 import gregtech.client.renderer.pipe.LaserPipeRenderer;
-import gregtech.client.utils.BloomEffectUtil;
 import gregtech.common.creativetab.GTCreativeTabs;
 import gregtech.common.pipelike.laser.net.WorldLaserPipeNet;
 import gregtech.common.pipelike.laser.tile.TileEntityLaserPipe;
@@ -143,9 +142,12 @@ public class BlockLaserPipe extends BlockPipe<LaserPipeType, LaserPipeProperties
         return LaserPipeRenderer.INSTANCE.getBlockRenderType();
     }
 
+    /**
+     * The pipe and its covers draw in {@code SOLID} and {@code CUTOUT}; its active overlay is in the emissive layer,
+     * which falls back to {@code CUTOUT} (see {@link #isInEmissiveLayer}).
+     */
     @Override
     public boolean canRenderInLayer(@NotNull IBlockState state, @NotNull BlockRenderLayer layer) {
-        if (layer == BlockRenderLayer.SOLID || layer == BlockRenderLayer.CUTOUT) return true;
-        return layer == BloomEffectUtil.getEffectiveBloomLayer();
+        return layer == BlockRenderLayer.SOLID || layer == BlockRenderLayer.CUTOUT;
     }
 }

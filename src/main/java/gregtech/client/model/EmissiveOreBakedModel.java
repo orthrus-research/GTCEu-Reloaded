@@ -1,9 +1,8 @@
 package gregtech.client.model;
 
 import gregtech.api.unification.ore.StoneType;
-import gregtech.client.utils.BloomEffectUtil;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.client.utils.RenderUtil;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -31,13 +30,16 @@ public class EmissiveOreBakedModel extends OreBakedModel {
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
         BlockRenderLayer layer = MinecraftForgeClient.getRenderLayer();
 
-        if (state == null || layer == null || !ConfigHolder.client.shader.useShader) {
+        // Forge's layer is null while a renderer meshes the emissive layer, which holds the overlay
+        if (EmissiveLayer.isMeshing()) {
+            return getOverlayQuads(side, rand);
+        } else if (state == null || layer == null) {
             List<BakedQuad> quads = new ArrayList<>(getBaseModel().getQuads(null, side, 0));
             quads.addAll(getOverlayQuads(side, rand));
             return quads;
         } else if (layer == BlockRenderLayer.CUTOUT_MIPPED) {
             return getBaseModel().getQuads(null, side, 0);
-        } else if (layer == BloomEffectUtil.getEffectiveBloomLayer()) {
+        } else if (EmissiveLayer.isCurrent()) {
             return getOverlayQuads(side, rand);
         } else {
             return Collections.emptyList();
@@ -47,7 +49,7 @@ public class EmissiveOreBakedModel extends OreBakedModel {
     protected List<BakedQuad> getOverlayQuads(@Nullable EnumFacing side, long rand) {
         int index = side == null ? 6 : side.getIndex();
         if (this.overlayQuads[index] == null) {
-            List<BakedQuad> quads = new ArrayList<>(this.overlay.getQuads(null, side, rand));
+            List<BakedQuad> quads = new ArrayList<>(EmissiveLayer.allQuads(this.overlay, null, side, rand));
             for (int i = 0; i < quads.size(); i++) {
                 quads.set(i, RenderUtil.makeEmissive(quads.get(i)));
             }

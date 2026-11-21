@@ -35,7 +35,6 @@ import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.Mods;
 import gregtech.client.renderer.texture.Textures;
-import gregtech.client.utils.BloomEffectUtil;
 import gregtech.client.utils.RenderUtil;
 import gregtech.client.utils.TooltipHelper;
 import gregtech.common.ConfigHolder;
@@ -319,10 +318,14 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
         }
     }
 
+    /**
+     * @param renderLayer a game layer; while the emissive layer is meshed, its fallback {@code CUTOUT}, where emissive
+     *                    overlays also fall back without a renderer that meshes it
+     * @return whether this machine draws anything in the layer
+     */
     @SideOnly(Side.CLIENT)
     public boolean canRenderInLayer(BlockRenderLayer renderLayer) {
-        return renderLayer == BlockRenderLayer.CUTOUT_MIPPED ||
-                renderLayer == BloomEffectUtil.getEffectiveBloomLayer() ||
+        return renderLayer == BlockRenderLayer.CUTOUT_MIPPED || renderLayer == BlockRenderLayer.CUTOUT ||
                 (renderLayer == BlockRenderLayer.TRANSLUCENT &&
                         !getWorld().getBlockState(getPos()).getValue(BlockMachine.OPAQUE));
     }

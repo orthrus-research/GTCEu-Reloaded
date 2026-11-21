@@ -15,6 +15,7 @@ import gregtech.api.util.Mods;
 import gregtech.api.util.input.KeyBind;
 import gregtech.client.model.customtexture.CustomTextureModelHandler;
 import gregtech.client.model.customtexture.MetadataSectionCTM;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.client.renderer.handler.FacadeRenderer;
 import gregtech.client.renderer.handler.MetaTileEntityRenderer;
 import gregtech.client.renderer.pipe.CableRenderer;
@@ -98,6 +99,9 @@ public class ClientProxy extends CommonProxy {
             ((SimpleReloadableResourceManager) Minecraft.getMinecraft().getResourceManager())
                     .registerReloadListener(CustomTextureModelHandler.INSTANCE);
         }
+
+        // Emissive textures and bloom through OrthLib's render interface, before any chunk is meshed
+        EmissiveLayer.init();
 
         MetaTileEntityRenderer.preInit();
         CableRenderer.INSTANCE.preInit();

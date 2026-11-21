@@ -5,7 +5,6 @@ import gregtech.api.gui.resources.ResourceHelper;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.cclop.LightMapOperation;
 import gregtech.client.renderer.texture.Textures;
-import gregtech.client.utils.BloomEffectUtil;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -107,8 +106,8 @@ public class SimpleSidedCubeRenderer implements ICubeRenderer {
         if (spriteEmissive != null) {
             if (ConfigHolder.client.machinesEmissiveTextures) {
                 IVertexOperation[] lightPipeline = ArrayUtils.add(pipeline, new LightMapOperation(240, 240));
-                Textures.renderFace(renderState, translation, lightPipeline, frontFacing, bounds, spriteEmissive,
-                        BloomEffectUtil.getEffectiveBloomLayer());
+                Textures.renderEmissiveFace(renderState, translation, lightPipeline, frontFacing, bounds,
+                        spriteEmissive);
             } else Textures.renderFace(renderState, translation, pipeline, frontFacing, bounds, spriteEmissive,
                     BlockRenderLayer.CUTOUT_MIPPED);
         }

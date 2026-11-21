@@ -1,7 +1,7 @@
 {
     "ctm": {
         "ctm_version": 1,
-        "layer": "BLOOM",
+        "layer": "CUTOUT",
         "gregtech": true,
         "extra": {
             "light": 15

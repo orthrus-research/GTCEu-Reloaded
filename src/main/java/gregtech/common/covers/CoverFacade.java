@@ -6,6 +6,7 @@ import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverableView;
 import gregtech.api.cover.IFacadeCover;
 import gregtech.api.util.GTLog;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.client.renderer.handler.FacadeRenderer;
 import gregtech.common.covers.facade.FacadeHelper;
 import gregtech.common.items.behaviors.FacadeItem;
@@ -65,6 +66,14 @@ public class CoverFacade extends CoverBase implements IFacadeCover {
     public void renderCover(@NotNull CCRenderState renderState, @NotNull Matrix4 translation,
                             IVertexOperation[] pipeline,
                             @NotNull Cuboid6 plateBox, @NotNull BlockRenderLayer layer) {
+        if (EmissiveLayer.isMeshing()) {
+            // In the emissive layer a facade draws what its block draws there, which its models answer for
+            if (EmissiveLayer.isMember(facadeState)) {
+                FacadeRenderer.renderBlockCover(renderState, translation, getCoverableView().getWorld(),
+                        getCoverableView().getPos(), getAttachedSide().getIndex(), facadeState, plateBox, null);
+            }
+            return;
+        }
         BlockRenderLayer oldLayer = MinecraftForgeClient.getRenderLayer();
         ForgeHooksClient.setRenderLayer(layer);
         FacadeRenderer.renderBlockCover(renderState, translation, getCoverableView().getWorld(),

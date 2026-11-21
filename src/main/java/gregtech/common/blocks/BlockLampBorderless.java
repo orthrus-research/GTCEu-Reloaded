@@ -1,7 +1,7 @@
 package gregtech.common.blocks;
 
 import gregtech.client.model.lamp.LampModelType;
-import gregtech.client.utils.BloomEffectUtil;
+import gregtech.client.renderer.EmissiveLayer;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.EnumDyeColor;
@@ -17,8 +17,7 @@ public class BlockLampBorderless extends BlockLamp {
 
     @Override
     public boolean canRenderInLayer(@NotNull IBlockState state, @NotNull BlockRenderLayer layer) {
-        return layer == BloomEffectUtil.getEffectiveBloomLayer(isLightActive(state) && state.getValue(BLOOM),
-                BlockRenderLayer.SOLID);
+        return layer == (isInEmissiveLayer(state) ? EmissiveLayer.gameLayer() : BlockRenderLayer.SOLID);
     }
 
     @NotNull

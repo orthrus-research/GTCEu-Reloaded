@@ -33,6 +33,7 @@ import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
      version = GTInternalTags.VERSION,
      dependencies = "required:cleanroom@[0.7.14-alpha,);" + "required-after:codechickenlib@[3.3.10];" +
              "required-after:modularui@[" + GTInternalTags.MODULAR_UI_VERSION + "];" +
+             "required-after:orthlib@[" + GTInternalTags.ORTHLIB_VERSION + ",);" +
              "after:appliedenergistics2;" +
              "after:forestry;" + "after:extrabees;" + "after:extratrees;" + "after:genetics;" + "after:magicbees;" +
              "after:jei@[4.15.0,);" + "after:groovyscript@[1.5.0,);" +

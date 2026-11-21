@@ -2,7 +2,7 @@ package gregtech.api.block;
 
 import gregtech.api.util.Mods;
 import gregtech.client.model.ActiveVariantBlockBakedModel;
-import gregtech.client.utils.BloomEffectUtil;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.material.Material;
@@ -37,7 +37,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-public abstract class VariantActiveBlock<T extends IStringSerializable & Comparable<T>> extends VariantBlock<T> {
+public abstract class VariantActiveBlock<T extends IStringSerializable & Comparable<T>> extends VariantBlock<T>
+                                        implements IEmissiveLayerBlock {
 
     private static final Int2ObjectMap<ObjectSet<BlockPos>> ACTIVE_BLOCKS = new Int2ObjectOpenHashMap<>();
     private static final ReadWriteLock ACTIVE_BLOCKS_LOCK = new ReentrantReadWriteLock();
@@ -100,8 +101,15 @@ public abstract class VariantActiveBlock<T extends IStringSerializable & Compara
 
     @Override
     public boolean canRenderInLayer(@NotNull IBlockState state, @NotNull BlockRenderLayer layer) {
+        // The emissive textures of a variant without bloom are drawn in CUTOUT, as are those of one with it where no
+        // renderer meshes the emissive layer
         return layer == getRenderLayer(getState(state)) ||
-                layer == BloomEffectUtil.getEffectiveBloomLayer(isBloomEnabled(getState(state)));
+                layer == (isInEmissiveLayer(state) ? EmissiveLayer.gameLayer() : EmissiveLayer.FALLBACK);
+    }
+
+    @Override
+    public boolean isInEmissiveLayer(@NotNull IBlockState state) {
+        return isBloomEnabled(getState(state));
     }
 
     @NotNull

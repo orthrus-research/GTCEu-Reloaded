@@ -5,6 +5,7 @@ import gregtech.api.unification.material.info.MaterialIconSet;
 import gregtech.api.unification.material.info.MaterialIconType;
 import gregtech.api.util.GTLog;
 import gregtech.client.renderer.CubeRendererState;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.cclop.UVMirror;
 import gregtech.client.renderer.texture.cube.AlignedOrientedOverlayRenderer;
@@ -713,14 +714,41 @@ public class Textures {
         return mask;
     }
 
+    /**
+     * Draws a face of a game layer, when that layer is the one being meshed (see {@link CubeRendererState}).
+     *
+     * @param layer the face's layer, or {@code null} to draw it in whichever game layer is meshed
+     */
     @SideOnly(Side.CLIENT)
     public static void renderFace(CCRenderState renderState, Matrix4 translation, IVertexOperation[] ops,
                                   EnumFacing face, Cuboid6 bounds, TextureAtlasSprite sprite, BlockRenderLayer layer) {
         CubeRendererState op = RENDER_STATE.get();
-        if (layer != null && op != null && op.layer != null &&
-                (op.layer != layer || !op.shouldSideBeRendered(face, bounds))) {
+        if (op != null && (!op.drawsLayer(layer) ||
+                (layer != null && op.layer != null && !op.shouldSideBeRendered(face, bounds)))) {
             return;
         }
+        drawFace(renderState, translation, ops, face, bounds, sprite);
+    }
+
+    /**
+     * Draws a face of GTCEu's emissive layer, when that layer is current (see {@link CubeRendererState}): where a
+     * renderer meshes it, it is drawn there and glows; elsewhere it is drawn with the {@code CUTOUT} faces. Its
+     * pipeline usually lights it fully.
+     */
+    @SideOnly(Side.CLIENT)
+    public static void renderEmissiveFace(CCRenderState renderState, Matrix4 translation, IVertexOperation[] ops,
+                                          EnumFacing face, Cuboid6 bounds, TextureAtlasSprite sprite) {
+        CubeRendererState op = RENDER_STATE.get();
+        if (op != null && (!op.drawsEmissive() ||
+                ((op.layer != null || EmissiveLayer.isMeshing()) && !op.shouldSideBeRendered(face, bounds)))) {
+            return;
+        }
+        drawFace(renderState, translation, ops, face, bounds, sprite);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void drawFace(CCRenderState renderState, Matrix4 translation, IVertexOperation[] ops,
+                                 EnumFacing face, Cuboid6 bounds, TextureAtlasSprite sprite) {
         BlockFace blockFace = blockFaces.get();
         blockFace.loadCuboidFace(bounds, face.getIndex());
         UVTransformationList uvList = new UVTransformationList(new IconTransformation(sprite));

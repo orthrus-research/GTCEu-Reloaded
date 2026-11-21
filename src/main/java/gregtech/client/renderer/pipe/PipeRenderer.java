@@ -12,6 +12,7 @@ import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.info.MaterialIconType;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.CubeRendererState;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.ItemRenderCompat;
 import gregtech.client.utils.RenderUtil;
@@ -195,28 +196,36 @@ public abstract class PipeRenderer implements ICCBlockRenderer, IItemRenderer {
 
         if (pipeType != null) {
             BlockRenderLayer renderLayer = MinecraftForgeClient.getRenderLayer();
+            // While a renderer meshes the emissive layer, Forge's layer is null and only emissive faces are drawn;
+            // the covers are asked about the layer emissive faces fall back to.
+            boolean meshingEmissive = EmissiveLayer.isMeshing();
             boolean[] sideMask = new boolean[EnumFacing.VALUES.length];
             for (EnumFacing side : EnumFacing.VALUES) {
                 sideMask[side.getIndex()] = state.shouldSideBeRendered(world, pos, side);
             }
-            Textures.RENDER_STATE.set(new CubeRendererState(renderLayer, sideMask, world));
-            if (canRenderInLayer(renderLayer)) {
+            Textures.RENDER_STATE.set(new CubeRendererState(renderLayer, sideMask, world, true));
+            boolean pipeLayer = !meshingEmissive && canRenderInLayer(renderLayer);
+            boolean emissiveLayer = canRenderInEmissiveLayer() && EmissiveLayer.isCurrent();
+            if (pipeLayer || emissiveLayer) {
                 renderState.lightMatrix.locate(world, pos);
                 PipeRenderContext renderContext = new PipeRenderContext(pos, renderState.lightMatrix, connectedSidesMap,
                         blockedConnections, pipeType.getThickness());
                 renderContext.color = GTUtility.convertRGBtoOpaqueRGBA_CL(getPipeColor(pipeMaterial, paintingColor));
                 buildRenderer(renderContext, blockPipe, pipeTile, pipeType, pipeMaterial);
-                if (renderLayer == BlockRenderLayer.CUTOUT) {
+                if (pipeLayer && renderLayer == BlockRenderLayer.CUTOUT) {
                     renderPipeBlock(renderState, renderContext);
                     renderFrame(pipeTile, pos, renderState, connectedSidesMap);
-                } else {
+                } else if (pipeLayer) {
                     renderOtherLayers(renderLayer, renderState, renderContext);
+                }
+                if (emissiveLayer) {
+                    renderEmissiveLayer(renderState, renderContext);
                 }
             }
 
             CoverHolder coverHolder = pipeTile.getCoverableImplementation();
             coverHolder.renderCovers(renderState, new Matrix4().translate(pos.getX(), pos.getY(), pos.getZ()),
-                    renderLayer);
+                    meshingEmissive ? EmissiveLayer.FALLBACK : renderLayer);
             Textures.RENDER_STATE.remove();
         }
         return true;
@@ -352,8 +361,8 @@ public abstract class PipeRenderer implements ICCBlockRenderer, IItemRenderer {
     public void renderBrightness(IBlockState state, float brightness) {}
 
     /**
-     * Override to render in other layers, e.g. emissive stuff
-     * {@link #canRenderInLayer} also need to be overridden
+     * Override to render in other game layers than {@code CUTOUT}; emissive geometry goes to
+     * {@link #renderEmissiveLayer}. {@link #canRenderInLayer} also need to be overridden
      */
     protected void renderOtherLayers(BlockRenderLayer layer, CCRenderState renderState,
                                      PipeRenderContext renderContext) {}
@@ -361,12 +370,25 @@ public abstract class PipeRenderer implements ICCBlockRenderer, IItemRenderer {
     /**
      * What layers can be rendered in.
      * See also {@link #renderOtherLayers}
-     * 
+     *
      * @param layer the current layer being rendered too
      * @return true if this should render in {@code layer}
      */
     protected boolean canRenderInLayer(BlockRenderLayer layer) {
         return layer == BlockRenderLayer.CUTOUT;
+    }
+
+    /**
+     * Override to render in GTCEu's emissive layer, together with {@link #canRenderInEmissiveLayer}. Called where that
+     * layer is current: while a renderer meshes it, or with the {@code CUTOUT} layer where none does.
+     */
+    protected void renderEmissiveLayer(CCRenderState renderState, PipeRenderContext renderContext) {}
+
+    /**
+     * @return whether this renderer draws anything in GTCEu's emissive layer; see {@link #renderEmissiveLayer}
+     */
+    protected boolean canRenderInEmissiveLayer() {
+        return false;
     }
 
     @Override

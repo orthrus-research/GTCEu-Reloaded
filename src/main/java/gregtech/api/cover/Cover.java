@@ -2,7 +2,6 @@ package gregtech.api.cover;
 
 import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.items.toolitem.ToolAction;
-import gregtech.client.utils.BloomEffectUtil;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -251,9 +250,14 @@ public interface Cover {
                      @NotNull IVertexOperation[] pipeline,
                      @NotNull Cuboid6 plateBox, @NotNull BlockRenderLayer layer);
 
+    /**
+     * @param renderLayer a game layer; while the emissive layer is meshed, its fallback {@code CUTOUT}, where emissive
+     *                    overlays also fall back without a renderer that meshes it
+     * @return whether this cover draws anything in the layer
+     */
     @SideOnly(Side.CLIENT)
     default boolean canRenderInLayer(@NotNull BlockRenderLayer renderLayer) {
-        return renderLayer == BlockRenderLayer.CUTOUT_MIPPED || renderLayer == BloomEffectUtil.getEffectiveBloomLayer();
+        return renderLayer == BlockRenderLayer.CUTOUT_MIPPED || renderLayer == BlockRenderLayer.CUTOUT;
     }
 
     @SideOnly(Side.CLIENT)

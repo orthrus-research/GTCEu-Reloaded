@@ -1,5 +1,6 @@
 package gregtech.common.blocks;
 
+import gregtech.api.block.IEmissiveLayerBlock;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.info.MaterialFlags;
@@ -10,7 +11,7 @@ import gregtech.api.util.GTUtility;
 import gregtech.api.util.IBlockOre;
 import gregtech.api.worldgen.config.OreConfigUtils;
 import gregtech.client.model.OreBakedModel;
-import gregtech.client.utils.BloomEffectUtil;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.common.blocks.properties.PropertyStoneType;
 import gregtech.common.creativetab.GTCreativeTabs;
 
@@ -40,7 +41,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-public class BlockOre extends Block implements IBlockOre {
+public class BlockOre extends Block implements IBlockOre, IEmissiveLayerBlock {
 
     public final PropertyStoneType STONE_TYPE;
     public final Material material;
@@ -183,7 +184,15 @@ public class BlockOre extends Block implements IBlockOre {
     @Override
     public boolean canRenderInLayer(@NotNull IBlockState state, @NotNull BlockRenderLayer layer) {
         return layer == BlockRenderLayer.CUTOUT_MIPPED ||
-                material.getProperty(PropertyKey.ORE).isEmissive() && layer == BloomEffectUtil.getEffectiveBloomLayer();
+                isInEmissiveLayer(state) && layer == EmissiveLayer.gameLayer();
+    }
+
+    /**
+     * The ore overlay of an emissive ore material is drawn in the emissive layer.
+     */
+    @Override
+    public boolean isInEmissiveLayer(@NotNull IBlockState state) {
+        return material.getProperty(PropertyKey.ORE).isEmissive();
     }
 
     private BlockStateContainer createStateContainer() {

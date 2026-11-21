@@ -1,5 +1,6 @@
 package gregtech.client.utils;
 
+import gregtech.api.util.Mods;
 import gregtech.client.model.customtexture.CustomTextureBakedModel;
 
 import net.minecraft.block.state.IBlockState;
@@ -30,5 +31,19 @@ public class BlockHooks {
             return ret;
         }
         return null;
+    }
+
+    /**
+     * @return whether the state's model has textures whose GTCEu texture metadata puts them in GTCEu's emissive layer;
+     *         never with CTM, which reads that metadata itself and knows no such layer
+     */
+    public static boolean hasEmissiveTextures(@NotNull IBlockState state) {
+        if (Mods.CTM.isModLoaded()) return false;
+        IBakedModel model = Minecraft.getMinecraft().getBlockRendererDispatcher().getModelForState(state);
+        if (model instanceof WeightedBakedModel weighted) {
+            model = weighted.baseModel;
+        }
+        return model instanceof CustomTextureBakedModel customTextureModel &&
+                customTextureModel.getModel().hasEmissiveTextures();
     }
 }

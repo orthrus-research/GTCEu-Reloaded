@@ -36,6 +36,13 @@ public class CustomTexture {
         return meta == null ? null : meta.layer;
     }
 
+    /**
+     * @return whether the texture is in GTCEu's emissive layer rather than in {@link #getLayer()}
+     */
+    public boolean isEmissive() {
+        return meta != null && meta.emissive;
+    }
+
     public BakedQuad transformQuad(BakedQuad quad) {
         if (meta == null) {
             return quad;
