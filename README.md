@@ -61,6 +61,7 @@ scripts, rebuild affected addons and test a copied world before adopting it.
 | Java | 26 | Required; qualified on Temurin 26.0.2.1 |
 | CodeChickenLib | 3.3.10 | Required; build and runtime use the same pinned release |
 | ModularUI | 3.1.6 | Required |
+| OrthLib | 0.5.0-dev or later | Required; emissive textures and bloom reach renderers through its render interface ([docs/emissive-rendering.md](docs/emissive-rendering.md)) |
 | CleanMix | Supplied by Cleanroom | No separate MixinBooter installation |
 | Applied Energistics 2 Unofficial Extended Life | Built against 0.56.4 | Optional: ME parts and pattern buffers |
 | HEI, The One Probe, HWYLA, GroovyScript, Forestry | | Optional integrations; pack configuration uses native Java and Groovy |
@@ -86,9 +87,15 @@ The ct-overhaul build requires JDK 26 and uses CleanroomGradle. Product code and
 Java 26; Java 8 and the standalone Forge development runtime are no longer supported.
 See [release validation](docs/pre-delivery-qualification.md) for the tested artifact and runtime.
 
+OrthLib is not yet published to a Maven repository. The build compiles against a JAR built from an
+OrthLib checkout beside this one, at the commit `gradle.properties` pins; `./gradlew refreshOrthLib`
+builds it into `libs/` ([docs/emissive-rendering.md](docs/emissive-rendering.md#getting-orthlib)).
+
 ```sh
+git clone https://github.com/orthrus-research/OrthLib.git
 git clone --branch ct-overhaul https://github.com/orthrus-research/GTCEu-Reloaded.git
 cd GTCEu-Reloaded
+./gradlew refreshOrthLib
 ./gradlew build
 ```
 
@@ -106,6 +113,7 @@ ModularUI development/production artifact pair and CodeChickenLib release used f
 | [docs/groovy-cache.md](docs/groovy-cache.md) | Script cache validity and restart requirements |
 | [docs/pre-delivery-qualification.md](docs/pre-delivery-qualification.md) | Tested runtime, validation scope and known limitations |
 | [docs/modern-backports.md](docs/modern-backports.md) | Features adapted from CEu Modern |
+| [docs/emissive-rendering.md](docs/emissive-rendering.md) | Emissive textures, bloom kinds and emissive contributions through OrthLib's render interface |
 | [docs/ae-processing-buffers.md](docs/ae-processing-buffers.md) | ME processing pattern buffers and proxies |
 | [docs/recipe-conditions.md](docs/recipe-conditions.md) | Recipe conditions and processing holds |
 | [docs/recipe-modifiers.md](docs/recipe-modifiers.md) | The startup recipe modifier API |
