@@ -2,6 +2,13 @@ package gregtech.client.shader.postprocessing;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * The styles of GTCEu's former bloom post-processing. A renderer that provides OrthLib's render interface now owns the
+ * bloom technique.
+ *
+ * @deprecated kept for addons built against it; no style is applied
+ */
+@Deprecated
 public enum BloomType {
 
     /**

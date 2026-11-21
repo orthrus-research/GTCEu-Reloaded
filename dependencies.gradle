@@ -25,8 +25,6 @@ dependencies {
     testImplementation deobf("curse.maven:forestry-59751:2684780") // GT tool and toolbelt dispatch tests
     testRuntimeOnly deobf("curse.maven:neverenoughanimation-1062347:6533650") // ModularUI factory class loading in tests
     compileOnly deobf("curse.maven:chisel-235279:2915375") // Chisel 1.0.2.45
-    compileOnly deobf("curse.maven:littletiles-257818:4750222") // LittleTiles 1.5.82-1.12.2
-    compileOnly deobf("curse.maven:creativecore-257814:4722163") // Creative Core 1.10.71
 
     // Mods with Soft compat but which have no need to be in code, such as isModLoaded() checks and getModItem() recipes.
     // Uncomment any of these to test them in-game.

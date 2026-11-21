@@ -43,17 +43,7 @@ public class Shaders {
     // public static ShaderObject BLACK_HOLE;
     public static ShaderObject SCANNING;
 
-    public static ShaderObject BLOOM_COMBINE;
-
     public static ShaderObject BLUR;
-
-    // Unity
-    public static ShaderObject DOWN_SAMPLING;
-    public static ShaderObject UP_SAMPLING;
-
-    // Unreal
-    public static ShaderObject S_BLUR;
-    public static ShaderObject COMPOSITE;
 
     static {
         mc = Minecraft.getMinecraft();
@@ -68,12 +58,7 @@ public class Shaders {
         IMAGE_F = initShader(IMAGE_F, FRAGMENT, "image.frag");
         // BLACK_HOLE = initShader(BLACK_HOLE, FRAGMENT, "blackhole.frag");
         SCANNING = initShader(SCANNING, FRAGMENT, "scanning.frag");
-        BLOOM_COMBINE = initShader(BLOOM_COMBINE, FRAGMENT, "bloom_combine.frag");
         BLUR = initShader(BLUR, FRAGMENT, "blur.frag");
-        DOWN_SAMPLING = initShader(DOWN_SAMPLING, FRAGMENT, "down_sampling.frag");
-        UP_SAMPLING = initShader(UP_SAMPLING, FRAGMENT, "up_sampling.frag");
-        S_BLUR = initShader(S_BLUR, FRAGMENT, "seperable_blur.frag");
-        COMPOSITE = initShader(COMPOSITE, FRAGMENT, "composite.frag");
         FULL_IMAGE_PROGRAMS.clear();
     }
 

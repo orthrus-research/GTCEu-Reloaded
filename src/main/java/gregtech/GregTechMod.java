@@ -4,14 +4,12 @@ import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.modules.ModuleContainerRegistryEvent;
 import gregtech.api.persistence.PersistentData;
-import gregtech.client.utils.BloomEffectUtil;
 import gregtech.common.covers.TransferMode;
 import gregtech.modules.GregTechModules;
 import gregtech.modules.ModuleManager;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -47,9 +45,6 @@ public class GregTechMod {
     public GregTechMod() {
         GregTechAPI.instance = this;
         FluidRegistry.enableUniversalBucket();
-        if (FMLCommonHandler.instance().getSide().isClient()) {
-            BloomEffectUtil.init();
-        }
     }
 
     @EventHandler

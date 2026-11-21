@@ -11,12 +11,6 @@ public final class GregTechMixinConnector implements IMixinConnector {
     @Override
     public void connect() {
         ConditionalMixin.of("mixins.gregtech.forge.json", "mixins.gregtech.minecraft.json").register();
-        // The bloom pass wraps the translucent renderBlockLayer call in renderWorldPass. Celeritas-based renderers
-        // (Demonica bundles Celeritas) redirect that call and draw the bloom layer in their own terrain passes; with
-        // the wrapper in place their terrain never builds. BloomEffectUtil falls back to plain layers for them.
-        ConditionalMixin.of("mixins.gregtech.bloom.json").conflicts("celeritas").conflicts("demonica")
-                .because("Celeritas draws the bloom layer itself and owns renderWorldPass's terrain layer calls")
-                .register();
         ConditionalMixin.of("mixins.gregtech.ccl.json").requires("codechickenlib").register();
         ConditionalMixin.of("mixins.gregtech.mui2.json").requires("modularui").register();
         // These mixins target GroovyScript internals; an untested version keeps stock caching instead of crashing.
@@ -27,9 +21,9 @@ public final class GregTechMixinConnector implements IMixinConnector {
                 .register();
         ConditionalMixin.of("mixins.gregtech.theoneprobe.json").requires("theoneprobe").register();
         ConditionalMixin.of("mixins.gregtech.jei.json").requires("jei").register();
-        ConditionalMixin.of("mixins.gregtech.ctm.json").requires("ctm").register();
-        ConditionalMixin.of("mixins.gregtech.littletiles.json").requires("littletiles").register();
-        ConditionalMixin.of("mixins.gregtech.vintagium.json").requires("vintagium").register();
-        ConditionalMixin.of("mixins.gregtech.nothirium.json").requires("nothirium").register();
+        // GTCEu draws no terrain pass of its own: emissive textures reach renderers through OrthLib's render
+        // interface, which a renderer provides, and fall back to CUTOUT elsewhere. mixins.gregtech.vintagium.json
+        // and mixins.gregtech.nothirium.json added a BLOOM pass for the BLOOM game layer, which no longer exists, so
+        // they stay unregistered until those renderers are served through the interface.
     }
 }
