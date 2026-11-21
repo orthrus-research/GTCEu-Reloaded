@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * An overheating cable's glow. Its geometry is emissive: a renderer that provides OrthLib's render interface draws it
- * with the heat effect bloom kind, and without one it is not drawn.
+ * with the heat effect bloom kind, and without one OrthLib draws it plainly, without glow.
  *
  * @author brachy84
  */

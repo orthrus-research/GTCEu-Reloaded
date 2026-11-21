@@ -4,9 +4,9 @@ GTCEu: Reloaded draws no bloom of its own. Its emissive textures are meshed in a
 reactor ring and cable heat glow are emissive geometry; both are declared through
 [OrthLib](https://github.com/orthrus-research/OrthLib)'s render interface. A renderer that provides that interface
 meshes the emissive layer itself, draws the emissive geometry, and computes the glow with a technique of its own.
-Without such a renderer, emissive textures are meshed in the `CUTOUT` layer at full brightness and nothing glows; the
-fusion reactor ring and cable heat glow are not drawn. GTCEu: Reloaded keeps no bloom pass, framebuffer, shader
-program or depth texture, and makes no GL call for bloom.
+Without such a renderer, emissive textures are meshed in the `CUTOUT` layer at full brightness, OrthLib draws the
+fusion reactor ring and cable heat glow plainly at the end of the world pass, and nothing glows. GTCEu: Reloaded keeps
+no bloom pass, framebuffer, shader program or depth texture, and makes no GL call for bloom.
 
 ## Getting OrthLib
 
@@ -119,9 +119,9 @@ drew terrain without its bloom pass:
 
 - Previews (`MultiblockPreviewRenderer`, `WorldSceneRenderer`) set Forge's layer themselves, so emissive textures are
   drawn in `CUTOUT` there, full-bright.
-- OptiFine shader packs and Celeritas (also bundled in Demonica) provide no render interface: emissive textures use
-  `CUTOUT` and nothing glows.
+- OptiFine shader packs and Celeritas (also bundled in Demonica) provide no render interface, so OrthLib's absence
+  answers apply: emissive textures use `CUTOUT`, OrthLib draws the emissive geometry plainly, and nothing glows.
 - Vintagium and Nothirium get no support of their own: their Mixin configurations, which added a `BLOOM` pass for
   the former `BLOOM` game layer, are removed. Under them, as under any renderer that provides no render interface,
-  emissive textures use `CUTOUT` and nothing glows.
+  OrthLib's absence answers apply.
 - The CTM and LittleTiles Mixins existed for the `BLOOM` game layer only and are removed.

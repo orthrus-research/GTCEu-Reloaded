@@ -61,7 +61,7 @@ public enum GTBloomKind {
 
     /**
      * Submits emissive geometry of this kind: the renderer draws what the source writes into the scene and into this
-     * kind's glow, and without one it is never drawn. Client thread.
+     * kind's glow, and without one OrthLib draws it plainly, without glow. Client thread.
      *
      * @param shape  the source's vertex layout, primitive and blend
      * @param source the geometry

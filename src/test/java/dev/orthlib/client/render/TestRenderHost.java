@@ -1,6 +1,7 @@
 package dev.orthlib.client.render;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.MinecraftForgeClient;
@@ -38,6 +39,24 @@ public final class TestRenderHost implements AutoCloseable {
             public void set(BlockRenderLayer layer) {
                 ForgeHooksClient.setRenderLayer(layer);
             }
+        }, new RenderHost.GameDrawing() {
+
+            // A test has no world pass: OrthLib's drawing of contributions without a provider finds no frame.
+            @Override
+            public FrameView frame(float partialTicks) {
+                return null;
+            }
+
+            @Override
+            public BufferBuilder begin(PlainState state) {
+                throw new UnsupportedOperationException("A test has no world pass to draw in");
+            }
+
+            @Override
+            public void end(boolean draw) {}
+
+            @Override
+            public void restore() {}
         }, (message, failure) -> this.failures.add(message));
         RenderInterface.host = this.host;
     }
