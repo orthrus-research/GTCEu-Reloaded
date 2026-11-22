@@ -10,8 +10,8 @@ it does not establish compatibility with every GTCEu addon, existing pack or leg
 
 ## Runtime requirements
 
-The build now targets Java 25, the runtime Cleanroom declares. The results below were recorded on
-Java 26 with Java 26 bytecode and do not qualify the Java 25 artifact; rerun this validation for it.
+The build targets Java 26. The results below were recorded on Java 26 with Java 26 bytecode for the
+artifact named above; a later artifact needs its own validation run.
 
 | Component | Tested version or artifact |
 | --- | --- |

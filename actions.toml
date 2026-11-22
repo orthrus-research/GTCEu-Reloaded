@@ -1,0 +1,33 @@
+# GTCEu: Reloaded's checks. Workbench runs them from a clean clone on Temurin 26.0.2.1+1
+# (`wb run ci.run project=gtceur`), and its pre-push hook (`wb run ci.hook project=gtceur`) refuses a commit whose
+# tree has not passed them. Without Workbench: `./gradlew spotlessCheck build` with JAVA_HOME at JDK 26.
+[settings]
+name = "gtceur"
+workflow = "ci"
+identity_files = ["{env.JAVA_HOME}/release"]
+
+[workflows]
+ci = ["format", "build"]
+
+[jobs.format]
+description = "The formatting check: Spotless with the Eclipse 4.37 formatter and the import order"
+locks = ["gradle"]
+memory = 4
+priority = 10
+# A pure check: its pass stands while the sources, the formatter settings and the build scripts are unchanged.
+inputs = [
+  "src/main/java/**/*.java", "src/test/java/**/*.java", "spotless.eclipseformat.xml", "spotless.importorder",
+  ".gitattributes", "build.gradle", "settings.gradle", "gradle.properties", "dependencies.gradle", "gradle/*.gradle",
+  "gradle/wrapper/*", "gradlew", "src/main/resources/META-INF/gregtech_at.cfg",
+]
+steps = [{ name = "spotlessCheck", run = ["bash", "gradlew", "spotlessCheck", "--no-daemon", "--console=plain"] }]
+
+[jobs.build]
+description = "Build and test on Java 26, with the definition boundary, mixin mapping, publication metadata and runtime baseline checks"
+locks = ["gradle"]
+memory = 6
+steps = [{ name = "build", run = ["bash", "gradlew", "build", "--no-daemon", "--console=plain"] }]
+
+[[quick.gtceur]]
+paths = ["docs/**", "**/*.md", "LICENSE", "**/LICENSE.txt"]
+jobs = []
