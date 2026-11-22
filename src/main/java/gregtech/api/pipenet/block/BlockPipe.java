@@ -1,6 +1,7 @@
 package gregtech.api.pipenet.block;
 
 import gregtech.api.block.BuiltInRenderBlock;
+import gregtech.api.block.IEmissiveLayerBlock;
 import gregtech.api.cover.Cover;
 import gregtech.api.cover.CoverHolder;
 import gregtech.api.cover.CoverRayTracer;
@@ -66,7 +67,7 @@ import static gregtech.api.metatileentity.MetaTileEntity.FULL_CUBE_COLLISION;
 @SuppressWarnings("deprecation")
 public abstract class BlockPipe<PipeType extends Enum<PipeType> & IPipeType<NodeDataType>, NodeDataType,
         WorldPipeNetType extends WorldPipeNet<NodeDataType, ? extends PipeNet<NodeDataType>>> extends BuiltInRenderBlock
-                               implements ITileEntityProvider, IFacadeWrapper, IBlockAppearance {
+                               implements ITileEntityProvider, IFacadeWrapper, IBlockAppearance, IEmissiveLayerBlock {
 
     protected final ThreadLocal<IPipeTile<PipeType, NodeDataType>> tileEntities = new ThreadLocal<>();
 
@@ -702,6 +703,14 @@ public abstract class BlockPipe<PipeType extends Enum<PipeType> & IPipeType<Node
 
     @Override
     public boolean canRenderInLayer(@NotNull IBlockState state, @NotNull BlockRenderLayer layer) {
+        return true;
+    }
+
+    /**
+     * Any pipe's covers may draw emissive overlays, and some pipes draw emissive textures of their own.
+     */
+    @Override
+    public boolean isInEmissiveLayer(@NotNull IBlockState state) {
         return true;
     }
 

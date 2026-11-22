@@ -6,14 +6,12 @@ import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.unification.material.Material;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
-import gregtech.client.utils.BloomEffectUtil;
 import gregtech.common.ConfigHolder;
 import gregtech.common.pipelike.laser.LaserPipeType;
 import gregtech.common.pipelike.laser.tile.TileEntityLaserPipe;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 
 import codechicken.lib.render.CCRenderState;
@@ -56,33 +54,29 @@ public class LaserPipeRenderer extends PipeRenderer {
     }
 
     @Override
-    protected void renderOtherLayers(BlockRenderLayer layer, CCRenderState renderState,
-                                     PipeRenderContext renderContext) {
-        if (active && layer == BloomEffectUtil.getEffectiveBloomLayer() &&
-                (renderContext.getConnections() & 0b111111) != 0) {
+    protected void renderEmissiveLayer(CCRenderState renderState, PipeRenderContext renderContext) {
+        if (active && (renderContext.getConnections() & 0b111111) != 0) {
             Cuboid6 innerCuboid = BlockPipe.getSideBox(null, renderContext.getPipeThickness());
-            if ((renderContext.getConnections() & 0b111111) != 0) {
-                for (EnumFacing side : EnumFacing.VALUES) {
-                    if ((renderContext.getConnections() & (1 << side.getIndex())) == 0) {
-                        int oppositeIndex = side.getOpposite().getIndex();
-                        if ((renderContext.getConnections() & (1 << oppositeIndex)) <= 0 ||
-                                (renderContext.getConnections() & 0b111111 & ~(1 << oppositeIndex)) != 0) {
-                            // render pipe side
+            for (EnumFacing side : EnumFacing.VALUES) {
+                if ((renderContext.getConnections() & (1 << side.getIndex())) == 0) {
+                    int oppositeIndex = side.getOpposite().getIndex();
+                    if ((renderContext.getConnections() & (1 << oppositeIndex)) <= 0 ||
+                            (renderContext.getConnections() & 0b111111 & ~(1 << oppositeIndex)) != 0) {
+                        // render pipe side
+                        IVertexOperation[] ops = renderContext.getBaseVertexOperation();
+                        ops = ArrayUtils.addAll(ops, new IconTransformation(Textures.LASER_PIPE_OVERLAY_EMISSIVE));
+                        renderFace(renderState, ops, side, innerCuboid);
+                    }
+                } else {
+                    // render connection cuboid
+                    Cuboid6 sideCuboid = BlockPipe.getSideBox(side, renderContext.getPipeThickness());
+                    for (EnumFacing connectionSide : EnumFacing.VALUES) {
+                        if (connectionSide.getAxis() != side.getAxis()) {
+                            // render side textures
                             IVertexOperation[] ops = renderContext.getBaseVertexOperation();
-                            ops = ArrayUtils.addAll(ops, new IconTransformation(Textures.LASER_PIPE_OVERLAY_EMISSIVE));
-                            renderFace(renderState, ops, side, innerCuboid);
-                        }
-                    } else {
-                        // render connection cuboid
-                        Cuboid6 sideCuboid = BlockPipe.getSideBox(side, renderContext.getPipeThickness());
-                        for (EnumFacing connectionSide : EnumFacing.VALUES) {
-                            if (connectionSide.getAxis() != side.getAxis()) {
-                                // render side textures
-                                IVertexOperation[] ops = renderContext.getBaseVertexOperation();
-                                ops = ArrayUtils.addAll(ops,
-                                        new IconTransformation(Textures.LASER_PIPE_OVERLAY_EMISSIVE));
-                                renderFace(renderState, ops, connectionSide, sideCuboid);
-                            }
+                            ops = ArrayUtils.addAll(ops,
+                                    new IconTransformation(Textures.LASER_PIPE_OVERLAY_EMISSIVE));
+                            renderFace(renderState, ops, connectionSide, sideCuboid);
                         }
                     }
                 }
@@ -91,8 +85,8 @@ public class LaserPipeRenderer extends PipeRenderer {
     }
 
     @Override
-    protected boolean canRenderInLayer(BlockRenderLayer layer) {
-        return super.canRenderInLayer(layer) || layer == BloomEffectUtil.getEffectiveBloomLayer();
+    protected boolean canRenderInEmissiveLayer() {
+        return true;
     }
 
     @Override

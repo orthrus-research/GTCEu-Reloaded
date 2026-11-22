@@ -3,7 +3,7 @@ package gregtech.client.model;
 import gregtech.api.GTValues;
 import gregtech.api.block.VariantActiveBlock;
 import gregtech.api.util.GTUtility;
-import gregtech.client.utils.BloomEffectUtil;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.client.utils.RenderUtil;
 
 import net.minecraft.block.state.IBlockState;
@@ -15,7 +15,6 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
-import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.common.property.IExtendedBlockState;
@@ -93,35 +92,50 @@ public class ActiveVariantBlockBakedModel implements IBakedModel {
 
         IBakedModel m = getModel(state);
 
-        // If bloom is enabled, bloom textures are rendered on bloom layer
-        // If bloom is disabled (either by model specific bloom config or the presence of O**ifine shaders)
-        // it is rendered on CUTOUT layer instead.
-        if (getBloomConfig()) {
-            return MinecraftForgeClient.getRenderLayer() == BloomEffectUtil.getBloomLayer() ?
-                    getBloomQuads(m, state, side, rand) :
-                    m.getQuads(state, side, rand);
-        } else {
-            if (MinecraftForgeClient.getRenderLayer() == BloomEffectUtil.getBloomLayer()) {
-                return Collections.emptyList();
-            } else if (MinecraftForgeClient.getRenderLayer() == BlockRenderLayer.CUTOUT) {
-                List<BakedQuad> quads = new ArrayList<>(m.getQuads(state, side, rand));
-                ForgeHooksClient.setRenderLayer(BloomEffectUtil.getBloomLayer());
-                quads.addAll(getBloomQuads(m, state, side, rand));
-                ForgeHooksClient.setRenderLayer(BlockRenderLayer.CUTOUT);
-                return quads;
-            } else return m.getQuads(state, side, rand);
+        // While a renderer meshes the emissive layer, Forge's layer is null, and only bloom textures are drawn.
+        if (EmissiveLayer.isMeshing()) {
+            return getBloomConfig() ? getBloomQuads(m, state, side, rand) : Collections.emptyList();
         }
+        // If bloom is enabled, bloom textures are drawn where the emissive layer is current: in its own pass with a
+        // renderer that meshes it, in CUTOUT without one. If bloom is disabled by the model specific bloom config,
+        // they are drawn in CUTOUT.
+        boolean bloomTextures = getBloomConfig() ? EmissiveLayer.isCurrent() :
+                MinecraftForgeClient.getRenderLayer() == BlockRenderLayer.CUTOUT;
+        List<BakedQuad> quads = withoutBloomQuads(m.getQuads(state, side, rand));
+        if (bloomTextures) {
+            quads = new ArrayList<>(quads);
+            quads.addAll(getBloomQuads(m, state, side, rand));
+        }
+        return quads;
+    }
+
+    private static boolean isBloomQuad(BakedQuad quad) {
+        String iconName = quad.getSprite().getIconName();
+        for (String bloomTextureSuffix : BLOOM_TEXTURE_SUFFIX) {
+            if (iconName.endsWith(bloomTextureSuffix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static List<BakedQuad> withoutBloomQuads(List<BakedQuad> quads) {
+        for (BakedQuad q : quads) {
+            if (isBloomQuad(q)) {
+                List<BakedQuad> list = new ArrayList<>(quads);
+                list.removeIf(ActiveVariantBlockBakedModel::isBloomQuad);
+                return list;
+            }
+        }
+        return quads;
     }
 
     private static List<BakedQuad> getBloomQuads(IBakedModel model, @Nullable IBlockState state,
                                                  @Nullable EnumFacing side, long rand) {
         List<BakedQuad> list = new ArrayList<>();
-        for (BakedQuad q : model.getQuads(state, side, rand)) {
-            for (String bloomTextureSuffix : BLOOM_TEXTURE_SUFFIX) {
-                if (q.getSprite().getIconName().endsWith(bloomTextureSuffix)) {
-                    list.add(RenderUtil.makeEmissive(q));
-                    break;
-                }
+        for (BakedQuad q : EmissiveLayer.allQuads(model, state, side, rand)) {
+            if (isBloomQuad(q)) {
+                list.add(RenderUtil.makeEmissive(q));
             }
         }
         return list;

@@ -2,7 +2,7 @@ package gregtech.client.model.lamp;
 
 import gregtech.api.GTValues;
 import gregtech.api.util.GTUtility;
-import gregtech.client.utils.BloomEffectUtil;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.client.utils.RenderUtil;
 
 import net.minecraft.block.state.IBlockState;
@@ -12,7 +12,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
-import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -61,11 +60,15 @@ public class LampBakedModel implements IBakedModel {
     public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
         BlockRenderLayer layer = MinecraftForgeClient.getRenderLayer();
 
-        if (state == null || layer == null) {
+        // Forge's layer is null while a renderer meshes the emissive layer, which holds the emissive textures. The
+        // lamp's block draws them in CUTOUT where they are not there (BlockLamp#canRenderInLayer).
+        if (EmissiveLayer.isMeshing()) {
+            return getFilteredQuads(true, false, state, side, rand);
+        } else if (state == null || layer == null) {
             return getFilteredQuads(true, true, state, side, rand);
         } else if (layer == BlockRenderLayer.SOLID) {
             return getFilteredQuads(false, true, state, side, rand);
-        } else if (layer == BloomEffectUtil.getBloomLayer() || layer == BlockRenderLayer.CUTOUT) {
+        } else if (layer == BlockRenderLayer.CUTOUT) {
             return getFilteredQuads(true, false, state, side, rand);
         } else {
             return Collections.emptyList();
@@ -76,10 +79,7 @@ public class LampBakedModel implements IBakedModel {
                                              @Nullable EnumFacing side, long rand) {
         if (!emissive && !nonEmissive) return Collections.emptyList();
         List<BakedQuad> quads = new ArrayList<>();
-        BlockRenderLayer layer = MinecraftForgeClient.getRenderLayer();
-        ForgeHooksClient.setRenderLayer(null); // ctm
-        List<BakedQuad> originalQuads = getModel().getQuads(state, side, rand);
-        ForgeHooksClient.setRenderLayer(layer);
+        List<BakedQuad> originalQuads = EmissiveLayer.allQuads(getModel(), state, side, rand);
         for (BakedQuad q : originalQuads) {
             boolean isBloomTexture = false;
             for (String bloomTextureSuffix : BLOOM_TEXTURE_SUFFIX) {

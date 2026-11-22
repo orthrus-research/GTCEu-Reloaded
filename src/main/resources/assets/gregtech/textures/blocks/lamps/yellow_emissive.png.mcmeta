@@ -2,7 +2,7 @@
   "ctm": {
     "ctm_version": 1,
     "type": "CTM",
-    "layer": "BLOOM",
+    "layer": "CUTOUT",
     "gregtech": true,
     "textures": [
       "gregtech:blocks/lamps/yellow_ctm_emissive"

@@ -169,4 +169,60 @@ public class RenderBufferHelper {
 
         }
     }
+
+    /**
+     * Writes the ring {@link #renderRing} writes, as separate quads for a buffer begun in {@code GL_QUADS} with
+     * {@code POSITION_COLOR}: each of its strip's quads, at the same vertices and in the same winding. The strip's
+     * joins between segments, which fold inside the tube, are left out.
+     */
+    public static void renderRingQuads(BufferBuilder buffer, double x, double y, double z, double r,
+                                       double tubeRadius, int sides, int segments, float red, float green, float blue,
+                                       float alpha, EnumFacing.Axis axis) {
+        double sideDelta = 2.0 * Math.PI / sides;
+        double ringDelta = 2.0 * Math.PI / segments;
+        double theta = 0;
+        double cosTheta = 1.0;
+        double sinTheta = 0.0;
+
+        for (int i = 0; i < segments; i++) {
+            double theta1 = theta + ringDelta;
+            double cosTheta1 = MathHelper.cos((float) theta1);
+            double sinTheta1 = MathHelper.sin((float) theta1);
+
+            double phi = sideDelta;
+            double cosPhi = MathHelper.cos((float) phi);
+            double sinPhi = MathHelper.sin((float) phi);
+            for (int j = 1; j <= sides; j++) {
+                phi = phi + sideDelta;
+                double nextCosPhi = MathHelper.cos((float) phi);
+                double nextSinPhi = MathHelper.sin((float) phi);
+
+                ringVertex(buffer, x, y, z, r, tubeRadius, cosTheta, sinTheta, cosPhi, sinPhi, axis)
+                        .color(red, green, blue, alpha).endVertex();
+                ringVertex(buffer, x, y, z, r, tubeRadius, cosTheta1, sinTheta1, cosPhi, sinPhi, axis)
+                        .color(red, green, blue, alpha).endVertex();
+                ringVertex(buffer, x, y, z, r, tubeRadius, cosTheta1, sinTheta1, nextCosPhi, nextSinPhi, axis)
+                        .color(red, green, blue, alpha).endVertex();
+                ringVertex(buffer, x, y, z, r, tubeRadius, cosTheta, sinTheta, nextCosPhi, nextSinPhi, axis)
+                        .color(red, green, blue, alpha).endVertex();
+
+                cosPhi = nextCosPhi;
+                sinPhi = nextSinPhi;
+            }
+            theta = theta1;
+            cosTheta = cosTheta1;
+            sinTheta = sinTheta1;
+        }
+    }
+
+    private static BufferBuilder ringVertex(BufferBuilder buffer, double x, double y, double z, double r,
+                                            double tubeRadius, double cosTheta, double sinTheta, double cosPhi,
+                                            double sinPhi, EnumFacing.Axis axis) {
+        double dist = r + (tubeRadius * cosPhi);
+        return switch (axis) {
+            case Y -> buffer.pos(x + sinTheta * dist, y + tubeRadius * sinPhi, z + cosTheta * dist);
+            case X -> buffer.pos(x + tubeRadius * sinPhi, y + sinTheta * dist, z + cosTheta * dist);
+            case Z -> buffer.pos(x + cosTheta * dist, y + sinTheta * dist, z + tubeRadius * sinPhi);
+        };
+    }
 }

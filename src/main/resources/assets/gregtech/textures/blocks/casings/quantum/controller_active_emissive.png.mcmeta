@@ -2,7 +2,7 @@
   "ctm": {
     "ctm_version": 1,
     "type": "CTM",
-    "layer": "BLOOM",
+    "layer": "CUTOUT",
     "gregtech": true,
     "textures": [
       "gregtech:blocks/casings/quantum/controller_active_emissive"

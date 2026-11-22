@@ -29,17 +29,12 @@ import gregtech.api.recipes.properties.impl.FusionEUToStartProperty;
 import gregtech.api.util.KeyUtil;
 import gregtech.api.util.RelativeDirection;
 import gregtech.api.util.interpolate.Eases;
+import gregtech.client.renderer.EmissiveContribution;
+import gregtech.client.renderer.GTBloomKind;
 import gregtech.client.renderer.ICubeRenderer;
-import gregtech.client.renderer.IRenderSetup;
 import gregtech.client.renderer.texture.Textures;
-import gregtech.client.shader.postprocessing.BloomEffect;
-import gregtech.client.shader.postprocessing.BloomType;
-import gregtech.client.utils.BloomEffectUtil;
-import gregtech.client.utils.EffectRenderContext;
-import gregtech.client.utils.IBloomEffect;
 import gregtech.client.utils.RenderBufferHelper;
 import gregtech.client.utils.RenderUtil;
-import gregtech.common.ConfigHolder;
 import gregtech.common.blocks.BlockFusionCasing;
 import gregtech.common.blocks.BlockGlassCasing;
 import gregtech.common.blocks.MetaBlocks;
@@ -47,10 +42,6 @@ import gregtech.common.metatileentities.MetaTileEntities;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
@@ -74,7 +65,6 @@ import com.cleanroommc.modularui.widgets.layout.Column;
 import com.google.common.collect.Lists;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,7 +76,7 @@ import static gregtech.api.recipes.logic.OverclockingLogic.PERFECT_HALF_VOLTAGE_
 import static gregtech.api.util.RelativeDirection.*;
 
 public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
-                                         implements IFastRenderMetaTileEntity, IBloomEffect, ProgressBarMultiblock {
+                                         implements IFastRenderMetaTileEntity, ProgressBarMultiblock {
 
     protected static final int NO_COLOR = 0;
 
@@ -95,8 +85,9 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
     private long heat = 0; // defined in TileEntityFusionReactor but serialized in FusionRecipeLogic
     private int fusionRingColor = NO_COLOR;
 
+    // The ring, submitted as emissive geometry once the reactor first works in view; closed when it goes away.
     @SideOnly(Side.CLIENT)
-    private boolean registeredBloomRenderTicket;
+    private EmissiveContribution fusionRing;
 
     public MetaTileEntityFusionReactor(ResourceLocation metaTileEntityId, int tier) {
         super(metaTileEntityId, RecipeMaps.FUSION_RECIPES);
@@ -549,18 +540,19 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
     @Override
     @SideOnly(Side.CLIENT)
     public void renderMetaTileEntity(double x, double y, double z, float partialTicks) {
-        if (this.hasFusionRingColor() && !this.registeredBloomRenderTicket) {
-            this.registeredBloomRenderTicket = true;
-            BloomEffectUtil.registerBloomRender(FusionBloomSetup.INSTANCE, getBloomType(), this, this);
+        if (this.hasFusionRingColor() && this.fusionRing == null) {
+            this.fusionRing = GTBloomKind.FUSION_REACTOR.contribute(FusionRingSource.SHAPE, new FusionRingSource(this));
         }
     }
 
-    @Override
+    /**
+     * Writes the working reactor's ring as quads in {@code POSITION_COLOR}, with positions relative to the camera.
+     */
     @SideOnly(Side.CLIENT)
-    public void renderBloomEffect(@NotNull BufferBuilder buffer, @NotNull EffectRenderContext context) {
-        if (!this.hasFusionRingColor()) return;
+    void writeFusionRing(@NotNull BufferBuilder buffer, double cameraX, double cameraY, double cameraZ,
+                         float partialTicks) {
         int color = RenderUtil.interpolateColor(this.getFusionRingColor(), -1, Eases.QUAD_IN.getInterpolation(
-                Math.abs((Math.abs(getOffsetTimer() % 50) + context.partialTicks()) - 25) / 25));
+                Math.abs((Math.abs(getOffsetTimer() % 50) + partialTicks) - 25) / 25));
         float a = (float) (color >> 24 & 255) / 255.0F;
         float r = (float) (color >> 16 & 255) / 255.0F;
         float g = (float) (color >> 8 & 255) / 255.0F;
@@ -570,20 +562,36 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
         EnumFacing.Axis axis = RelativeDirection.UP.getRelativeFacing(getFrontFacing(), getUpwardsFacing(), isFlipped())
                 .getAxis();
 
-        buffer.begin(GL11.GL_QUAD_STRIP, DefaultVertexFormats.POSITION_COLOR);
-        RenderBufferHelper.renderRing(buffer,
-                getPos().getX() - context.cameraX() + relativeBack.getXOffset() * 7 + 0.5,
-                getPos().getY() - context.cameraY() + relativeBack.getYOffset() * 7 + 0.5,
-                getPos().getZ() - context.cameraZ() + relativeBack.getZOffset() * 7 + 0.5,
+        RenderBufferHelper.renderRingQuads(buffer,
+                getPos().getX() - cameraX + relativeBack.getXOffset() * 7 + 0.5,
+                getPos().getY() - cameraY + relativeBack.getYOffset() * 7 + 0.5,
+                getPos().getZ() - cameraZ + relativeBack.getZOffset() * 7 + 0.5,
                 6, 0.2, 10, 20,
                 r, g, b, a, axis);
-        Tessellator.getInstance().draw();
     }
 
     @Override
+    public void onUnload() {
+        super.onUnload();
+        if (getWorld() != null && getWorld().isRemote) {
+            closeFusionRing();
+        }
+    }
+
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        if (getWorld() != null && getWorld().isRemote) {
+            closeFusionRing();
+        }
+    }
+
     @SideOnly(Side.CLIENT)
-    public boolean shouldRenderBloomEffect(@NotNull EffectRenderContext context) {
-        return this.hasFusionRingColor() && context.camera().isBoundingBoxInFrustum(getRenderBoundingBox());
+    private void closeFusionRing() {
+        if (this.fusionRing != null) {
+            this.fusionRing.close();
+            this.fusionRing = null;
+        }
     }
 
     @Override
@@ -606,40 +614,5 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
     @Override
     public boolean isGlobalRenderer() {
         return true;
-    }
-
-    private static BloomType getBloomType() {
-        ConfigHolder.FusionBloom fusionBloom = ConfigHolder.client.shader.fusionBloom;
-        return BloomType.fromValue(fusionBloom.useShader ? fusionBloom.bloomStyle : -1);
-    }
-
-    @SideOnly(Side.CLIENT)
-    private static final class FusionBloomSetup implements IRenderSetup {
-
-        private static final FusionBloomSetup INSTANCE = new FusionBloomSetup();
-
-        float lastBrightnessX;
-        float lastBrightnessY;
-
-        @Override
-        public void preDraw(@NotNull BufferBuilder buffer) {
-            BloomEffect.strength = (float) ConfigHolder.client.shader.fusionBloom.strength;
-            BloomEffect.baseBrightness = (float) ConfigHolder.client.shader.fusionBloom.baseBrightness;
-            BloomEffect.highBrightnessThreshold = (float) ConfigHolder.client.shader.fusionBloom.highBrightnessThreshold;
-            BloomEffect.lowBrightnessThreshold = (float) ConfigHolder.client.shader.fusionBloom.lowBrightnessThreshold;
-            BloomEffect.step = 1;
-
-            lastBrightnessX = OpenGlHelper.lastBrightnessX;
-            lastBrightnessY = OpenGlHelper.lastBrightnessY;
-            GlStateManager.color(1, 1, 1, 1);
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0F, 240.0F);
-            GlStateManager.disableTexture2D();
-        }
-
-        @Override
-        public void postDraw(@NotNull BufferBuilder buffer) {
-            GlStateManager.enableTexture2D();
-            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
-        }
     }
 }

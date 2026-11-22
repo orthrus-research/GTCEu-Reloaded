@@ -1,0 +1,117 @@
+// OrthLib carries the render interface through which emissive textures and emissive contributions reach a renderer
+// (docs/emissive-rendering.md). It is not published to a Maven repository yet, so gradle.properties pins it by version,
+// commit and the sha256 of the two JARs its build writes, and refreshOrthLib builds them from a checkout of OrthLib.
+// The production JAR is compiled against; the development (-mcp) JAR, which refers to Minecraft by development names,
+// is the one the development client and the tests run.
+def orthlibVersion = providers.gradleProperty('orthlibVersion').get()
+def orthlibCommit = providers.gradleProperty('orthlibCommit').get()
+def orthlibName = "orthlib-${orthlibVersion}-${orthlibCommit.take(8)}"
+def orthlibJar = file("libs/${orthlibName}.jar")
+def orthlibDevelopmentJar = file("libs/${orthlibName}-mcp.jar")
+def orthlibPins = [(orthlibJar): providers.gradleProperty('orthlibSha256').get(),
+                   (orthlibDevelopmentJar): providers.gradleProperty('orthlibDevelopmentSha256').get()]
+def sha256Of = { File jar ->
+    java.security.MessageDigest.getInstance('SHA-256').digest(jar.bytes).encodeHex().toString()
+}
+
+dependencies {
+    compileOnly files(orthlibJar)
+    runtimeOnly files(orthlibDevelopmentJar)
+    testCompileOnly files(orthlibDevelopmentJar)
+}
+
+// The pinned JARs are checked when something compiles against them, not when the build is configured, so that
+// refreshOrthLib can run while they are missing or out of date.
+tasks.register('verifyOrthLib') {
+    inputs.property('pins', orthlibPins.collectEntries { jar, pinned -> [(jar.name): pinned] })
+    doLast {
+        orthlibPins.each { File jar, String pinned ->
+            if (!jar.exists()) {
+                throw new GradleException("OrthLib's pinned JAR is missing at ${jar}. Run ./gradlew refreshOrthLib " +
+                    "to build it at commit ${orthlibCommit}.")
+            }
+            def found = sha256Of(jar)
+            if (found != pinned) {
+                throw new GradleException("${jar} has sha256 ${found}; gradle.properties pins ${pinned}. Run " +
+                    './gradlew refreshOrthLib to build the pinned commit, or record the new commit and hashes in ' +
+                    'gradle.properties.')
+            }
+        }
+    }
+}
+['compileJava', 'compileTestJava'].each { name -> tasks.named(name) { dependsOn 'verifyOrthLib' } }
+tasks.matching { it.name == 'runClient' || it.name == 'runServer' }.configureEach { dependsOn 'verifyOrthLib' }
+
+// Builds the pinned commit (-PorthlibCommit=<commit> to move the pin) of the OrthLib checkout beside the main
+// checkout, ../OrthLib (-PorthlibCheckout=<path> for another), in a worktree of that checkout removed afterwards, on
+// this build's Java toolchain, and copies its production and development JARs into libs/. Prints the commit and the
+// hashes to record in gradle.properties.
+tasks.register('refreshOrthLib') {
+    def root = rootDir
+    def named = providers.gradleProperty('orthlibCheckout')
+    def launcher = javaToolchains.launcherFor(java.toolchain)
+    def libs = file('libs')
+    def scratch = layout.buildDirectory.dir('orthlib-refresh').get().asFile
+    def targets = orthlibPins.keySet().toList()
+    def pinnedHashes = orthlibPins.values().toList()
+    doLast {
+        def run = { File directory, List<String> command ->
+            def process = new ProcessBuilder(command*.toString()).directory(directory).redirectErrorStream(true).start()
+            def text = process.inputStream.text.trim()
+            [process.waitFor(), text]
+        }
+        def (commonFound, commonDir) = run(root, ['git', 'rev-parse', '--path-format=absolute', '--git-common-dir'])
+        def mainCheckout = commonFound == 0 ? new File(commonDir).parentFile : root
+        def checkout = named.isPresent() ? file(named.get()) : new File(mainCheckout, '../OrthLib').canonicalFile
+        // Long paths on: OrthLib's deepest files pass Windows' 260-character limit under a deep build directory.
+        def git = { Object... arguments -> run(checkout, ['git', '-c', 'core.longpaths=true'] + arguments.toList()*.toString()) }
+        def (found, commit) = git('rev-parse', '--verify', "${orthlibCommit}^{commit}")
+        if (found != 0) {
+            throw new GradleException("${checkout} has no commit ${orthlibCommit}: fetch it there first.")
+        }
+        def javaHome = launcher.get().metadata.installationPath.asFile
+        scratch.listFiles()?.findAll { it.isDirectory() }?.each { it.deleteDir() }
+        git('worktree', 'prune')
+        scratch.mkdirs()
+        def work = new File(scratch, "${commit.take(12)}-${ProcessHandle.current().pid()}")
+        def log = new File(scratch, "${commit.take(12)}.log")
+        log.text = ''
+        def (added, addText) = git('worktree', 'add', '--detach', work.path, commit)
+        if (added != 0) {
+            throw new GradleException("git worktree add failed: ${addText}")
+        }
+        try {
+            def gradlew = new File(work, System.getProperty('os.name').startsWith('Windows') ? 'gradlew.bat' : 'gradlew')
+            def builder = new ProcessBuilder([gradlew.path, 'assemble', '--no-daemon', '--no-watch-fs',
+                                              '--console=plain', "-Porg.gradle.java.installations.paths=${javaHome}"]*.toString())
+                .directory(work).redirectErrorStream(true)
+            builder.redirectOutput(ProcessBuilder.Redirect.appendTo(log))
+            builder.environment().put('JAVA_HOME', javaHome.path)
+            builder.environment().put('ORTHLIB_JAVA_HOME', javaHome.path)
+            def code = builder.start().waitFor()
+            if (code != 0) {
+                throw new GradleException("OrthLib's build failed in ${work} (exit ${code}); see ${log}")
+            }
+            def built = [new File(work, "build/libs/orthlib-${orthlibVersion}.jar"),
+                         new File(work, "build/libs/orthlib-${orthlibVersion}-mcp.jar")]
+            built.findAll { !it.exists() }.each {
+                throw new GradleException("OrthLib's build wrote no ${it.name}; is ${orthlibVersion} its version?")
+            }
+            libs.mkdirs()
+            def hashes = [built, targets].transpose().collect { File source, File target ->
+                java.nio.file.Files.copy(source.toPath(), target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                sha256Of(target)
+            }
+            logger.lifecycle("Built OrthLib ${orthlibVersion} at commit ${commit}\n" +
+                "  ${targets[0]}\n    orthlibSha256=${hashes[0]}\n" +
+                "  ${targets[1]}\n    orthlibDevelopmentSha256=${hashes[1]}")
+            logger.lifecycle(commit == orthlibCommit && hashes == pinnedHashes ? 'This is what gradle.properties pins.' :
+                'Record orthlibCommit and the hashes above in gradle.properties to build against these JARs.')
+        } finally {
+            if (work.exists()) git('worktree', 'remove', '--force', work.path)
+            git('worktree', 'prune')
+            if (work.exists() && !work.deleteDir()) logger.lifecycle("Could not remove ${work} yet; a later run sweeps it.")
+        }
+    }
+}

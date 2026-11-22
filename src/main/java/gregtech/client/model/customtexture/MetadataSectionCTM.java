@@ -16,8 +16,15 @@ import java.lang.reflect.Type;
 public class MetadataSectionCTM implements IMetadataSection {
 
     public static final String SECTION_NAME = "ctm";
+    /**
+     * The layer name that puts a texture in GTCEu's emissive layer, which was once a game layer of this name. CTM
+     * reads the same section and knows no such layer, so GTCEu's own textures name the emissive layer's fallback.
+     */
+    public static final String EMISSIVE_LAYER = "BLOOM";
 
     public BlockRenderLayer layer = null;
+    /** Whether the texture is in GTCEu's emissive layer rather than in {@link #layer}. */
+    public boolean emissive;
     public int skyLight = -1;
     public int blockLight = -1;
 
@@ -32,7 +39,11 @@ public class MetadataSectionCTM implements IMetadataSection {
             JsonElement layerEle = obj.get("layer");
             if (layerEle.isJsonPrimitive() && layerEle.getAsJsonPrimitive().isString()) {
                 try {
-                    ret.layer = BlockRenderLayer.valueOf(layerEle.getAsString());
+                    if (EMISSIVE_LAYER.equals(layerEle.getAsString())) {
+                        ret.emissive = true;
+                    } else {
+                        ret.layer = BlockRenderLayer.valueOf(layerEle.getAsString());
+                    }
                 } catch (IllegalArgumentException e) {
                     throw new JsonParseException("Invalid block layer given: " + layerEle, e);
                 }

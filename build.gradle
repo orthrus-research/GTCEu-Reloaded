@@ -53,6 +53,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 apply from: 'dependencies.gradle'
+apply from: 'gradle/orthlib.gradle'
 // Optional-mod interfaces are compile fixtures, never bundled implementations.
 sourceSets {
     api {
@@ -68,7 +69,8 @@ sourceSets {
 }
 def constantsDirectory = layout.buildDirectory.dir('generated/sources/reloaded')
 tasks.register('generateModConstants') {
-    inputs.properties(modName: modName, modVersion: project.version, javaVersion: targetJavaFeature, modularUiVersion: modularUiVersion)
+    inputs.properties(modName: modName, modVersion: project.version, javaVersion: targetJavaFeature, modularUiVersion: modularUiVersion,
+        orthlibVersion: orthlibVersion)
     outputs.dir(constantsDirectory)
     doLast {
         def destination = constantsDirectory.get().file('gregtech/GTInternalTags.java').asFile
@@ -79,6 +81,7 @@ public final class GTInternalTags {
     public static final String VERSION = "${project.version}";
     public static final int JAVA_VERSION = ${targetJavaFeature};
     public static final String MODULAR_UI_VERSION = "${modularUiVersion}";
+    public static final String ORTHLIB_VERSION = "${orthlibVersion}";
     private GTInternalTags() {}
 }
 """, 'UTF-8')

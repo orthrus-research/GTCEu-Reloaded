@@ -2,7 +2,7 @@
     "ctm": {
         "ctm_version": 1,
         "type": "normal",
-        "layer": "BLOOM",
+        "layer": "CUTOUT",
         "gregtech": true,
         "textures": [],
         "extra": {

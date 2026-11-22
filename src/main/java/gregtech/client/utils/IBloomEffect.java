@@ -13,8 +13,12 @@ import java.util.function.Predicate;
 
 /**
  * Render callback interface for
- * {@link BloomEffectUtil#registerBloomRender(IRenderSetup, BloomType, IBloomEffect, Predicate)}.
+ * {@link BloomEffectUtil#registerBloomRender(IRenderSetup, BloomType, IBloomEffect, Predicate)}, which no longer
+ * registers it.
+ *
+ * @deprecated kept for addons built against it; submit emissive geometry through OrthLib's render interface
  */
+@Deprecated
 @FunctionalInterface
 public interface IBloomEffect {
 

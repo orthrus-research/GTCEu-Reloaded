@@ -1,7 +1,7 @@
 package gregtech.client.model.customtexture;
 
 import gregtech.api.util.GTLog;
-import gregtech.client.utils.CTMHooks;
+import gregtech.client.renderer.EmissiveLayer;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BlockPart;
@@ -39,6 +39,10 @@ import java.util.function.Function;
 @SideOnly(Side.CLIENT)
 public class CustomTextureModel implements IModel {
 
+    // The bit of layers for textures in GTCEu's emissive layer; the game layers' ordinals are below it, and the sign
+    // bit marks textures that name no layer.
+    private static final int EMISSIVE_BIT = 4;
+
     private final ModelBlock modelInfo;
     private final IModel vanillaModel;
     private Boolean uvLock;
@@ -60,9 +64,15 @@ public class CustomTextureModel implements IModel {
     }
 
     public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer) {
-        boolean canRenderInLayer = (layers < 0 && state.getBlock().getRenderLayer() == layer) ||
-                ((layers >> layer.ordinal()) & 1) == 1;
-        return CTMHooks.checkLayerWithOptiFine(canRenderInLayer, layers, layer);
+        return (layers < 0 && state.getBlock().getRenderLayer() == layer) || ((layers >> layer.ordinal()) & 1) == 1 ||
+                (hasEmissiveTextures() && layer == EmissiveLayer.gameLayer());
+    }
+
+    /**
+     * @return whether a texture of the model is in GTCEu's emissive layer
+     */
+    public boolean hasEmissiveTextures() {
+        return ((layers >> EMISSIVE_BIT) & 1) == 1;
     }
 
     @Override
@@ -78,7 +88,8 @@ public class CustomTextureModel implements IModel {
             MetadataSectionCTM finalMeta = meta;
             textures.computeIfAbsent(sprite.getIconName(), s -> {
                 CustomTexture tex = new CustomTexture(finalMeta);
-                layers |= 1 << (tex.getLayer() == null ? 7 : tex.getLayer().ordinal());
+                int bit = tex.isEmissive() ? EMISSIVE_BIT : tex.getLayer() == null ? 7 : tex.getLayer().ordinal();
+                layers |= 1 << bit;
                 return tex;
             });
             return sprite;

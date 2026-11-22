@@ -4,7 +4,6 @@ import gregtech.api.GTValues;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.cclop.LightMapOperation;
 import gregtech.client.renderer.texture.Textures;
-import gregtech.client.utils.BloomEffectUtil;
 import gregtech.client.utils.RenderUtil;
 import gregtech.common.ConfigHolder;
 
@@ -207,8 +206,8 @@ public class OrientedOverlayRenderer implements ICubeRenderer {
                     if (ConfigHolder.client.machinesEmissiveTextures) {
                         IVertexOperation[] lightPipeline = ArrayUtils.addAll(pipeline, new LightMapOperation(240, 240),
                                 rotation);
-                        Textures.renderFace(renderState, renderTranslation, lightPipeline, renderSide, bounds,
-                                emissiveSprite, BloomEffectUtil.getEffectiveBloomLayer());
+                        Textures.renderEmissiveFace(renderState, renderTranslation, lightPipeline, renderSide, bounds,
+                                emissiveSprite);
                     } else {
                         // have to still render both overlays or else textures will be broken
                         Textures.renderFace(renderState, renderTranslation, ArrayUtils.addAll(pipeline, rotation),

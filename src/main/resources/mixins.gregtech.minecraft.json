@@ -16,12 +16,9 @@
     "RecipeRepairItemMixin"
   ],
   "client": [
-    "BlockRenderLayerMixin",
     "BlockMixin",
     "LayerArmorBaseMixin",
     "LayerCustomHeadMixin",
-    "RegionRenderCacheBuilderMixin",
-    "RenderChunkMixin",
     "RenderGlobalMixin",
     "RenderItemMixin",
     "MinecraftMixin"

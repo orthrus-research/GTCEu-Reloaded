@@ -1,12 +1,13 @@
 package gregtech.common.blocks;
 
 import gregtech.api.GTValues;
+import gregtech.api.block.IEmissiveLayerBlock;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.MarkerMaterials;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.client.model.lamp.LampBakedModel;
 import gregtech.client.model.lamp.LampModelType;
-import gregtech.client.utils.BloomEffectUtil;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.common.creativetab.GTCreativeTabs;
 
 import net.minecraft.block.Block;
@@ -39,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class BlockLamp extends Block {
+public class BlockLamp extends Block implements IEmissiveLayerBlock {
 
     public static final PropertyBool BLOOM = PropertyBool.create("bloom");
     public static final PropertyBool LIGHT = PropertyBool.create("light");
@@ -182,7 +183,15 @@ public class BlockLamp extends Block {
     @Override
     public boolean canRenderInLayer(@NotNull IBlockState state, @NotNull BlockRenderLayer layer) {
         if (layer == BlockRenderLayer.SOLID) return true;
-        return layer == BloomEffectUtil.getEffectiveBloomLayer(isLightActive(state) && state.getValue(BLOOM));
+        return layer == (isInEmissiveLayer(state) ? EmissiveLayer.gameLayer() : EmissiveLayer.FALLBACK);
+    }
+
+    /**
+     * A lit lamp with bloom draws its emissive texture in the emissive layer; any other draws it in {@code CUTOUT}.
+     */
+    @Override
+    public boolean isInEmissiveLayer(@NotNull IBlockState state) {
+        return isLightActive(state) && state.getValue(BLOOM);
     }
 
     @SideOnly(Side.CLIENT)

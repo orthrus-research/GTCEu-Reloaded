@@ -5,6 +5,7 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.CubeRendererState;
+import gregtech.client.renderer.EmissiveLayer;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.ItemRenderCompat;
 import gregtech.client.utils.RenderUtil;
@@ -101,18 +102,21 @@ public class MetaTileEntityRenderer implements ICCBlockRenderer, IItemRenderer {
         renderState.bind(buffer);
         Matrix4 translation = new Matrix4().translate(pos.getX(), pos.getY(), pos.getZ());
         BlockRenderLayer renderLayer = MinecraftForgeClient.getRenderLayer();
+        // While a renderer meshes the emissive layer, Forge's layer is null and only emissive faces are drawn; the
+        // machine and its covers are asked about the layer emissive faces fall back to.
+        BlockRenderLayer partLayer = EmissiveLayer.isMeshing() ? EmissiveLayer.FALLBACK : renderLayer;
         boolean[] sideMask = new boolean[EnumFacing.VALUES.length];
         for (EnumFacing side : EnumFacing.VALUES) {
             sideMask[side.getIndex()] = state.shouldSideBeRendered(world, pos, side);
         }
-        Textures.RENDER_STATE.set(new CubeRendererState(renderLayer, sideMask, world));
-        if (metaTileEntity.canRenderInLayer(renderLayer)) {
+        Textures.RENDER_STATE.set(new CubeRendererState(renderLayer, sideMask, world, true));
+        if (metaTileEntity.canRenderInLayer(partLayer)) {
             renderState.lightMatrix.locate(world, pos);
             IVertexOperation[] pipeline = new IVertexOperation[] { renderState.lightMatrix };
             metaTileEntity.renderMetaTileEntity(renderState, translation.copy(), pipeline);
         }
 
-        metaTileEntity.renderCovers(renderState, translation.copy(), renderLayer);
+        metaTileEntity.renderCovers(renderState, translation.copy(), partLayer);
 
         Textures.RENDER_STATE.remove();
         return true;

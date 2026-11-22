@@ -4,7 +4,6 @@ import gregtech.client.renderer.cclop.LightMapOperation;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.OrientedOverlayRenderer;
 import gregtech.client.renderer.texture.cube.SidedCubeRenderer;
-import gregtech.client.utils.BloomEffectUtil;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -40,10 +39,14 @@ public class FireboxActiveRenderer extends SidedCubeRenderer {
                 TextureAtlasSprite emissiveSprite = spritesEmissive.get(overlayFace);
                 if (emissiveSprite != null && facing != frontFacing && facing != EnumFacing.UP &&
                         facing != EnumFacing.DOWN) {
-                    Textures.renderFace(renderState, translation,
-                            ArrayUtils.add(pipeline, new LightMapOperation(240, 240)), facing, bounds, emissiveSprite,
-                            BloomEffectUtil.getEffectiveBloomLayer(ConfigHolder.client.machinesEmissiveTextures,
-                                    BlockRenderLayer.CUTOUT_MIPPED));
+                    IVertexOperation[] lightPipeline = ArrayUtils.add(pipeline, new LightMapOperation(240, 240));
+                    if (ConfigHolder.client.machinesEmissiveTextures) {
+                        Textures.renderEmissiveFace(renderState, translation, lightPipeline, facing, bounds,
+                                emissiveSprite);
+                    } else {
+                        Textures.renderFace(renderState, translation, lightPipeline, facing, bounds, emissiveSprite,
+                                BlockRenderLayer.CUTOUT_MIPPED);
+                    }
                 }
             }
         }

@@ -4,14 +4,12 @@ import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.modules.ModuleContainerRegistryEvent;
 import gregtech.api.persistence.PersistentData;
-import gregtech.client.utils.BloomEffectUtil;
 import gregtech.common.covers.TransferMode;
 import gregtech.modules.GregTechModules;
 import gregtech.modules.ModuleManager;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -33,6 +31,7 @@ import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
      version = GTInternalTags.VERSION,
      dependencies = "required:cleanroom@[0.7.14-alpha,);" + "required-after:codechickenlib@[3.3.10];" +
              "required-after:modularui@[" + GTInternalTags.MODULAR_UI_VERSION + "];" +
+             "required-after:orthlib@[" + GTInternalTags.ORTHLIB_VERSION + ",);" +
              "after:appliedenergistics2;" +
              "after:forestry;" + "after:extrabees;" + "after:extratrees;" + "after:genetics;" + "after:magicbees;" +
              "after:jei@[4.15.0,);" + "after:groovyscript@[1.5.0,);" +
@@ -46,9 +45,6 @@ public class GregTechMod {
     public GregTechMod() {
         GregTechAPI.instance = this;
         FluidRegistry.enableUniversalBucket();
-        if (FMLCommonHandler.instance().getSide().isClient()) {
-            BloomEffectUtil.init();
-        }
     }
 
     @EventHandler

@@ -2,6 +2,7 @@ package gregtech.api.block.machines;
 
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.BlockCustomParticle;
+import gregtech.api.block.IEmissiveLayerBlock;
 import gregtech.api.block.UnlistedIntegerProperty;
 import gregtech.api.block.UnlistedStringProperty;
 import gregtech.api.capability.GregtechDataCodes;
@@ -80,7 +81,8 @@ import java.util.Set;
 import static gregtech.api.util.GTUtility.getMetaTileEntity;
 
 @SuppressWarnings("deprecation")
-public class BlockMachine extends BlockCustomParticle implements ITileEntityProvider, IFacadeWrapper, IBlockAppearance {
+public class BlockMachine extends BlockCustomParticle
+                          implements ITileEntityProvider, IFacadeWrapper, IBlockAppearance, IEmissiveLayerBlock {
 
     private static final List<IndexedCuboid6> EMPTY_COLLISION_BOX = Collections.emptyList();
     // used for rendering purposes of non-opaque machines like chests and tanks
@@ -526,6 +528,14 @@ public class BlockMachine extends BlockCustomParticle implements ITileEntityProv
 
     @Override
     public boolean canRenderInLayer(@NotNull IBlockState state, @NotNull BlockRenderLayer layer) {
+        return true;
+    }
+
+    /**
+     * Any machine may draw emissive overlays, and its covers too; which it draws is the machine's, not the state's.
+     */
+    @Override
+    public boolean isInEmissiveLayer(@NotNull IBlockState state) {
         return true;
     }
 
