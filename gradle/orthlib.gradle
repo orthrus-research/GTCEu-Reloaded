@@ -81,9 +81,11 @@ tasks.register('refreshOrthLib') {
             throw new GradleException("git worktree add failed: ${addText}")
         }
         try {
-            def gradlew = new File(work, System.getProperty('os.name').startsWith('Windows') ? 'gradlew.bat' : 'gradlew')
-            def builder = new ProcessBuilder([gradlew.path, 'assemble', '--no-daemon', '--no-watch-fs',
-                                              '--console=plain', "-Porg.gradle.java.installations.paths=${javaHome}"]*.toString())
+            // Off Windows the wrapper runs through sh, since OrthLib's checkout may not mark gradlew executable.
+            def windows = System.getProperty('os.name').startsWith('Windows')
+            def gradlew = windows ? [new File(work, 'gradlew.bat').path] : ['sh', new File(work, 'gradlew').path]
+            def builder = new ProcessBuilder((gradlew + ['assemble', '--no-daemon', '--no-watch-fs',
+                                              '--console=plain', "-Porg.gradle.java.installations.paths=${javaHome}"])*.toString())
                 .directory(work).redirectErrorStream(true)
             builder.redirectOutput(ProcessBuilder.Redirect.appendTo(log))
             builder.environment().put('JAVA_HOME', javaHome.path)
