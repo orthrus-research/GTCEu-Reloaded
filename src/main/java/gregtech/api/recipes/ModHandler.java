@@ -312,7 +312,7 @@ public final class ModHandler {
 
         IRecipe shapedOreRecipe = new FluidReplaceRecipe(isNBTClearing, null, result.copy(),
                 finalizeShapedRecipeInput(recipe))
-                .setMirrored(false) // make all recipes not mirrored by default;
+                .setMirrored(false); // make all recipes not mirrored by default
 
         OwnedRegistryNames.set(shapedOreRecipe, recipeLocation(regName));
 
@@ -333,7 +333,6 @@ public final class ModHandler {
         IRecipe shapedOreRecipe = new ShapedOreEnergyTransferRecipe(null, result.copy(), chargePredicate,
                 overrideCharge, transferMaxCharge, finalizeShapedRecipeInput(recipe))
                 .setMirrored(false);
-
         OwnedRegistryNames.set(shapedOreRecipe, recipeLocation(regName));
 
         registerRecipe(shapedOreRecipe);

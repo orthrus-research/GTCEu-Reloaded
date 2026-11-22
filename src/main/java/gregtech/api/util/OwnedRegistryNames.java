@@ -26,12 +26,12 @@ public final class OwnedRegistryNames {
     private OwnedRegistryNames() {}
 
     public static <V extends IForgeRegistryEntry<V>> V set(@NotNull IForgeRegistryEntry<V> entry,
-                                                          @NotNull String namespace, @NotNull String path) {
+                                                           @NotNull String namespace, @NotNull String path) {
         return set(entry, new ResourceLocation(namespace, path));
     }
 
     public static <V extends IForgeRegistryEntry<V>> V set(@NotNull IForgeRegistryEntry<V> entry,
-                                                          @NotNull ResourceLocation name) {
+                                                           @NotNull ResourceLocation name) {
         Loader loader = Loader.instance();
         ModContainer active = loader.activeModContainer();
         ModContainer owner = "minecraft".equals(name.getNamespace()) ? null :
