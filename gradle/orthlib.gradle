@@ -96,6 +96,8 @@ tasks.register('refreshOrthLib') {
             builder.environment().put('ORTHLIB_JAVA_HOME', javaHome.path)
             def code = builder.start().waitFor()
             if (code != 0) {
+                def lines = log.readLines()
+                logger.error("The last lines of OrthLib's build:\n" + lines.drop(Math.max(0, lines.size() - 80)).join('\n'))
                 throw new GradleException("OrthLib's build failed in ${work} (exit ${code}); see ${log}")
             }
             def built = [new File(work, "build/libs/orthlib-${orthlibVersion}.jar"),
