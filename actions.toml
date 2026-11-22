@@ -6,6 +6,12 @@ name = "gtceur"
 workflow = "ci"
 identity_files = ["{env.JAVA_HOME}/release"]
 
+# OrthLib is a checkout the build only takes its pinned commit from: gradle.properties pins its JARs by commit and
+# SHA-256, and refreshOrthLib builds them in a worktree of the checkout at that commit. Its own tree is not tested.
+[repositories.orthlib]
+path = "../OrthLib"
+tested = false
+
 [workflows]
 ci = ["format", "build"]
 
@@ -23,10 +29,14 @@ inputs = [
 steps = [{ name = "spotlessCheck", run = ["bash", "gradlew", "spotlessCheck", "--no-daemon", "--console=plain"] }]
 
 [jobs.build]
-description = "Build and test on Java 26, with the definition boundary, mixin mapping, publication metadata and runtime baseline checks"
+description = "Put the pinned OrthLib JARs in place, then build and test on Java 26, with the definition boundary, mixin mapping, publication metadata and runtime baseline checks"
 locks = ["gradle"]
 memory = 6
-steps = [{ name = "build", run = ["bash", "gradlew", "build", "--no-daemon", "--console=plain"] }]
+steps = [
+  # OrthLib's build takes Java 8 for its reobfuscation as well as this build's Java.
+  { name = "orthlib", run = ["bash", "gradlew", "refreshOrthLib", "--no-daemon", "--console=plain", "-PorthlibCheckout={orthlib}", "-Porg.gradle.java.installations.paths={env.JAVA_HOME},{env.JAVA_HOME_8_X64}"] },
+  { name = "build", run = ["bash", "gradlew", "build", "--no-daemon", "--console=plain"] },
+]
 
 [[quick.gtceur]]
 paths = ["docs/**", "**/*.md", "LICENSE", "**/LICENSE.txt"]
