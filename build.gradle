@@ -98,6 +98,18 @@ tasks.named('compileJava', JavaCompile) {
     outputs.file(mixinMappings)
     options.compilerArgs += ['-AmergeBehaviour=merge', "-AoutTsrgFile=${mixinMappings.get().asFile.absolutePath}"]
     doFirst { mixinMappings.get().asFile.parentFile.mkdirs() }
+    // CleanMix lists its Mixins in the order javac received the sources, which follows the file
+    // system's directory order; sorted, the archive is the same on every OS.
+    doLast {
+        def table = destinationDirectory.file('cleanmix_version_compatibility.json').get().asFile
+        if (table.isFile()) {
+            def entries = new groovy.json.JsonSlurper().parse(table) as Map
+            def lines = entries.keySet().sort().collect { name ->
+                "  ${groovy.json.JsonOutput.toJson(name)}: ${groovy.json.JsonOutput.toJson(entries[name])}"
+            }
+            table.setText("{\n${lines.join(',\n')}\n}", 'UTF-8')
+        }
+    }
 }
 tasks.named('reobfJar') {
     dependsOn tasks.compileJava
@@ -122,8 +134,7 @@ jar {
     manifest.attributes('ModType': 'CRL', 'FMLAT': 'gregtech_at.cfg',
         'MixinConnector': 'gregtech.mixins.GregTechMixinConnector',
         'Implementation-Title': modName, 'Implementation-Version': project.version)
-    from('LICENSE') { into 'META-INF' }
-    from('NOTICE.md') {
+    from(['LICENSE', 'NOTICE.md']) {
         into 'META-INF'
         filter(org.apache.tools.ant.filters.FixCrLfFilter,
             eol: org.apache.tools.ant.filters.FixCrLfFilter.CrLf.newInstance('lf'),
