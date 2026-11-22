@@ -12,6 +12,7 @@ import gregtech.api.util.FluidTooltipUtil;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.Mods;
+import gregtech.api.util.OwnedRegistryNames;
 
 import net.minecraft.block.material.MaterialLiquid;
 import net.minecraft.util.ResourceLocation;
@@ -362,7 +363,7 @@ public class FluidBuilder {
                             material.hasFlag(MaterialFlags.STICKY));
                     block = new GTFluidBlock(fluid, materialLiquid, material);
                 }
-                block.setRegistryName(modid, "fluid." + name);
+                OwnedRegistryNames.set(block, modid, "fluid." + name);
                 GTFluidRegistration.INSTANCE.registerFluidBlock(block);
                 fluid.setBlock(block);
             } else if (fluid.getBlock() instanceof BlockFluidBase fluidBlock) {

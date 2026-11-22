@@ -19,6 +19,7 @@ import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.api.util.DummyContainer;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.LocalizationUtils;
+import gregtech.api.util.OwnedRegistryNames;
 import gregtech.api.util.world.DummyWorld;
 import gregtech.common.ConfigHolder;
 import gregtech.common.crafting.FluidReplaceRecipe;
@@ -311,8 +312,9 @@ public final class ModHandler {
 
         IRecipe shapedOreRecipe = new FluidReplaceRecipe(isNBTClearing, null, result.copy(),
                 finalizeShapedRecipeInput(recipe))
-                .setMirrored(false) // make all recipes not mirrored by default
-                .setRegistryName(recipeLocation(regName));
+                .setMirrored(false) // make all recipes not mirrored by default;
+
+        OwnedRegistryNames.set(shapedOreRecipe, recipeLocation(regName));
 
         registerRecipe(shapedOreRecipe);
     }
@@ -330,8 +332,9 @@ public final class ModHandler {
 
         IRecipe shapedOreRecipe = new ShapedOreEnergyTransferRecipe(null, result.copy(), chargePredicate,
                 overrideCharge, transferMaxCharge, finalizeShapedRecipeInput(recipe))
-                .setMirrored(false)
-                .setRegistryName(recipeLocation(regName));
+                .setMirrored(false);
+
+        OwnedRegistryNames.set(shapedOreRecipe, recipeLocation(regName));
 
         registerRecipe(shapedOreRecipe);
     }
@@ -349,8 +352,8 @@ public final class ModHandler {
                                      boolean isMirrored, @NotNull Object... recipe) {
         IRecipe shapedOreRecipe = new GTShapedOreRecipe(isNBTClearing, null, result.copy(),
                 recipe)
-                .setMirrored(isMirrored)
-                .setRegistryName(recipeLocation(regName));
+                .setMirrored(isMirrored);
+        OwnedRegistryNames.set(shapedOreRecipe, recipeLocation(regName));
 
         registerRecipe(shapedOreRecipe);
         return shapedOreRecipe;
@@ -493,8 +496,8 @@ public final class ModHandler {
             }
             finalized[i] = ingredient;
         }
-        IRecipe shapelessRecipe = new GTShapelessOreRecipe(isNBTClearing, null, result.copy(), finalized)
-                .setRegistryName(recipeLocation(regName));
+        IRecipe shapelessRecipe = new GTShapelessOreRecipe(isNBTClearing, null, result.copy(), finalized);
+        OwnedRegistryNames.set(shapelessRecipe, recipeLocation(regName));
 
         registerRecipe(shapelessRecipe);
     }

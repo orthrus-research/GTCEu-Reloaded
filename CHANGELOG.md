@@ -10,6 +10,7 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 
 | Area | Change |
 | --- | --- |
+| Registries | Name the blocks, items and recipes GregTech builds for an addon's material or MTE registry under that addon's mod, so FML no longer logs a "Potentially Dangerous alternative prefix" warning for each of them; names and saves are unchanged |
 | Rendering | Render terrain under Celeritas and Demonica: the bloom pass is no longer applied with them (they draw the bloom layer in their own terrain passes), and emissive textures use their fallback layers there as with OptiFine shaders; before, wrapping their terrain layer call left the world unrendered |
 | Build | Normalize packaged text line endings so Windows checkouts and clean source exports produce identical mod JARs |
 | Recipes | Clear old recipe-viewer category lookups when HEI rebuilds, preventing duplicate machine recipe links and retained obsolete category objects after reload |

@@ -10,6 +10,7 @@ import gregtech.api.unification.material.MarkerMaterial;
 import gregtech.api.unification.material.registry.MaterialRegistry;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTLog;
+import gregtech.api.util.OwnedRegistryNames;
 import gregtech.client.renderer.handler.FacadeRenderer;
 import gregtech.common.items.armor.MetaArmor;
 
@@ -629,7 +630,7 @@ public final class MetaItems {
             for (MaterialRegistry registry : GregTechAPI.materialManager.getRegistries()) {
                 String regName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, prefix.name());
                 MetaPrefixItem metaOrePrefix = new MetaPrefixItem(registry, prefix);
-                metaOrePrefix.setRegistryName(registry.getModid(), String.format("meta_%s", regName));
+                OwnedRegistryNames.set(metaOrePrefix, registry.getModid(), String.format("meta_%s", regName));
             }
         }
     }

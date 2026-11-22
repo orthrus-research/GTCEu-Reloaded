@@ -24,6 +24,7 @@ import gregtech.api.unification.ore.StoneType;
 import gregtech.api.unification.stack.RecyclingData;
 import gregtech.api.util.AssemblyLineManager;
 import gregtech.api.util.GTLog;
+import gregtech.api.util.OwnedRegistryNames;
 import gregtech.common.blocks.BlockCompressed;
 import gregtech.common.blocks.BlockFrame;
 import gregtech.common.blocks.BlockLamp;
@@ -236,7 +237,7 @@ public class CommonProxy {
     private static void createOreBlock(Material material, StoneType[] stoneTypes, int index,
                                        OreBlockRegistryPlan names) {
         BlockOre block = new BlockOre(material, stoneTypes);
-        block.setRegistryName(names.blockName(material.getResourceLocation(), index));
+        OwnedRegistryNames.set(block, names.blockName(material.getResourceLocation(), index));
         for (StoneType stoneType : stoneTypes) {
             GregTechAPI.oreBlockTable.computeIfAbsent(material, m -> new HashMap<>()).put(stoneType, block);
         }
@@ -448,7 +449,7 @@ public class CommonProxy {
         if (registryName == null) {
             throw new IllegalArgumentException("Block " + block.getTranslationKey() + " has no registry name.");
         }
-        itemBlock.setRegistryName(registryName);
+        OwnedRegistryNames.set(itemBlock, registryName);
         return itemBlock;
     }
 
