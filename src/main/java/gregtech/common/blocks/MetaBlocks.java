@@ -191,7 +191,7 @@ public class MetaBlocks {
     public static void init() {
         for (MTERegistry registry : GregTechAPI.mteManager.getRegistries()) {
             BlockMachine machine = new BlockMachine();
-            machine.setRegistryName(registry.getModid(), "mte");
+            GTUtility.setOwnedRegistryName(machine, registry.getModid(), "mte");
             registry.setBlock(machine);
         }
 
@@ -200,21 +200,23 @@ public class MetaBlocks {
             BlockCable[] cables = new BlockCable[Insulation.VALUES.length];
             for (Insulation ins : Insulation.VALUES) {
                 cables[ins.ordinal()] = new BlockCable(ins, registry);
-                cables[ins.ordinal()].setRegistryName(modid, ins.getName());
+                GTUtility.setOwnedRegistryName(cables[ins.ordinal()], modid, ins.getName());
             }
             CABLES.put(modid, cables);
 
             BlockFluidPipe[] fluidPipes = new BlockFluidPipe[FluidPipeType.VALUES.length];
             for (FluidPipeType type : FluidPipeType.VALUES) {
                 fluidPipes[type.ordinal()] = new BlockFluidPipe(type, registry);
-                fluidPipes[type.ordinal()].setRegistryName(modid, String.format("fluid_pipe_%s", type.name));
+                GTUtility.setOwnedRegistryName(fluidPipes[type.ordinal()], modid,
+                        String.format("fluid_pipe_%s", type.name));
             }
             FLUID_PIPES.put(modid, fluidPipes);
 
             BlockItemPipe[] itemPipes = new BlockItemPipe[ItemPipeType.VALUES.length];
             for (ItemPipeType type : ItemPipeType.VALUES) {
                 itemPipes[type.ordinal()] = new BlockItemPipe(type, registry);
-                itemPipes[type.ordinal()].setRegistryName(modid, String.format("item_pipe_%s", type.name));
+                GTUtility.setOwnedRegistryName(itemPipes[type.ordinal()], modid,
+                        String.format("item_pipe_%s", type.name));
             }
             ITEM_PIPES.put(modid, itemPipes);
         }
@@ -403,7 +405,7 @@ public class MetaBlocks {
 
     private static void createCompressedBlock(String modid, Material[] materials, int index) {
         BlockCompressed block = BlockCompressed.create(materials);
-        block.setRegistryName(modid, "meta_block_compressed_" + index);
+        GTUtility.setOwnedRegistryName(block, modid, "meta_block_compressed_" + index);
         for (Material m : materials) {
             COMPRESSED.put(m, block);
         }
@@ -412,7 +414,7 @@ public class MetaBlocks {
 
     private static void createFrameBlock(String modid, Material[] materials, int index) {
         BlockFrame block = BlockFrame.create(materials);
-        block.setRegistryName(modid, "meta_block_frame_" + index);
+        GTUtility.setOwnedRegistryName(block, modid, "meta_block_frame_" + index);
         for (Material m : materials) {
             FRAMES.put(m, block);
         }
@@ -421,7 +423,7 @@ public class MetaBlocks {
 
     private static void createSurfaceRockBlock(String modid, Material[] materials, int index) {
         BlockSurfaceRock block = BlockSurfaceRock.create(materials);
-        block.setRegistryName(modid, "meta_block_surface_rock_" + index);
+        GTUtility.setOwnedRegistryName(block, modid, "meta_block_surface_rock_" + index);
         for (Material m : materials) {
             SURFACE_ROCK.put(m, block);
         }

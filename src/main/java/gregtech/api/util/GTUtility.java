@@ -51,9 +51,12 @@ import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
+import net.minecraftforge.registries.IForgeRegistryEntry;
 
 import com.google.common.util.concurrent.AtomicDouble;
 import it.unimi.dsi.fastutil.objects.ObjectOpenCustomHashSet;
@@ -910,6 +913,39 @@ public class GTUtility {
     @NotNull
     public static ResourceLocation gregtechId(@NotNull String path) {
         return new ResourceLocation(GTValues.MODID, path);
+    }
+
+    /**
+     * Name a registry entry with the owning mod as FML's active container, so content GregTech makes for another
+     * mod's registry is attributed to that mod instead of logging an alternative prefix warning. The previous
+     * container is restored afterwards. Names in the active mod's namespace, in one no loaded mod owns, or set while
+     * no mod is active are set unchanged.
+     *
+     * @param entry the entry to name
+     * @param name  the entry's registry name
+     * @return the named entry
+     */
+    @NotNull
+    public static <V extends IForgeRegistryEntry<V>> V setOwnedRegistryName(@NotNull V entry,
+                                                                            @NotNull ResourceLocation name) {
+        Loader loader = Loader.instance();
+        ModContainer active = loader.activeModContainer();
+        if (active == null || active.getModId().equals(name.getNamespace())) return entry.setRegistryName(name);
+        ModContainer owner = loader.getIndexedModList().get(name.getNamespace());
+        if (owner == null) return entry.setRegistryName(name);
+        loader.setActiveModContainer(owner);
+        try {
+            return entry.setRegistryName(name);
+        } finally {
+            loader.setActiveModContainer(active);
+        }
+    }
+
+    /** @see #setOwnedRegistryName(IForgeRegistryEntry, ResourceLocation) */
+    @NotNull
+    public static <V extends IForgeRegistryEntry<V>> V setOwnedRegistryName(@NotNull V entry, @NotNull String modid,
+                                                                            @NotNull String path) {
+        return setOwnedRegistryName(entry, new ResourceLocation(modid, path));
     }
 
     @Contract("null -> null")
