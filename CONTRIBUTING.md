@@ -23,6 +23,7 @@ what is specific to GTCEu: Reloaded. Report GTCEu: Reloaded problems here, not t
 - Upstream authorship, copyright headers and license notices stay intact. Material adapted from
   another project names its source and license in [NOTICE.md](NOTICE.md).
 - Code and tests target Java 26 through CleanroomGradle. Do not introduce a Java 8 compatibility lane.
+  The mixin configurations stay at `JAVA_25`, the highest compatibility level CleanMix 0.9.0 defines.
 
 ## Checks
 
@@ -34,7 +35,11 @@ Build with the tests and the formatting check (JDK 26):
 
 The standard `test` task includes authoring lifecycle regressions for Java and both Groovy modes,
 recipe replacement/disable/re-enable, and restoration ordering.
-CI uses Temurin 26 through the shared build setup action.
+
+CI runs the jobs in [actions.toml](actions.toml), `format` (`spotlessCheck`) and `build`, in Workbench
+on Temurin 26.0.2.1+1. `wb run ci.run project=gtceur` runs them from a clean clone of a commit
+(`commit=worktree` runs the uncommitted working tree), and the pre-push hook that
+`wb run ci.hook project=gtceur` installs refuses a push whose tree has not passed them.
 
 `./gradlew spotlessApply` applies the formatting. Follow [CODESTYLE.md](CODESTYLE.md) and
 `.editorconfig`. A change to machines, pipes, recipes or saves also needs a check in a development
