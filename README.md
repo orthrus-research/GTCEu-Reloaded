@@ -1,7 +1,7 @@
 <p align="center"><img src=".github/assets/banner.svg" alt="GTCEu: Reloaded by Orthrus Research" width="100%"></p>
 
 <p align="center">
-<a href="#status"><img alt="Status: preview" src="https://img.shields.io/badge/status-preview-000000?style=flat-square&labelColor=000000"></a>
+<a href="#status"><img alt="Status: in development" src="https://img.shields.io/badge/status-in%20development-000000?style=flat-square&labelColor=000000"></a>
 <a href="LICENSE"><img alt="License: LGPL-3.0" src="https://img.shields.io/badge/license-LGPL--3.0-000000?style=flat-square&labelColor=000000"></a>
 <a href="https://discord.gg/qCVqhXtSzR"><img alt="Discord" src="https://img.shields.io/badge/discord-join-000000?style=flat-square&labelColor=000000"></a>
 </p>
@@ -16,7 +16,7 @@ maintainers.
 
 ## Status
 
-The `ct-overhaul` branch prepares the 3.0 alpha line for Java 26 and Cleanroom 0.7.14-alpha.
+In development: the `ct-overhaul` branch prepares the 3.0 alpha line for Java 26 and Cleanroom 0.7.14-alpha.
 It replaces CraftTweaker integration with shared typed Java definitions and GroovyScript 1.5.0
 authoring. This is a breaking API/toolchain migration; existing packs and addons require review.
 Saved content retains its registry identities when declarations preserve their original IDs.
@@ -118,7 +118,8 @@ ModularUI development/production artifact pair and CodeChickenLib release used f
 
 Questions and discussion: [Discord](https://discord.gg/qCVqhXtSzR). Bugs and requests for GTCEu:
 Reloaded: this repository's issues, not upstream's. Security and private matters:
-admin@orthrus.cc. Pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+admin@orthrus.cc. Pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). More about
+GTCEu: Reloaded: [orthrus.cc/projects/gtceu-reloaded](https://orthrus.cc/projects/gtceu-reloaded).
 
 ## License
 
@@ -143,3 +144,9 @@ and it marks the ideas and the work as the community's. The repository keeps ups
 history, so every upstream author is credited in its commits.
 
 The upstream logo is not used for GTCEu: Reloaded.
+
+---
+
+<sub>GTCEu: Reloaded is an [Orthrus Research](https://orthrus.cc) project ·
+[All projects](https://orthrus.cc/projects) · [Texts](https://orthrus.cc/texts) ·
+[Discord](https://discord.gg/qCVqhXtSzR)</sub>
