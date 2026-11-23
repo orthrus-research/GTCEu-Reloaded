@@ -32,6 +32,8 @@ steps = [{ name = "spotlessCheck", run = ["bash", "gradlew", "spotlessCheck", "-
 description = "Put the pinned OrthLib JARs in place, then build and test on Java 26, with the definition boundary, mixin mapping, publication metadata and runtime baseline checks"
 locks = ["gradle"]
 memory = 6
+# What it builds: kept by Workbench with its SHA-256 once the job passes, so consumers take these bytes.
+artifacts = ["build/libs/*.jar"]
 steps = [
   # OrthLib's build takes Java 8 for its reobfuscation as well as this build's Java.
   { name = "orthlib", run = ["bash", "gradlew", "refreshOrthLib", "--no-daemon", "--console=plain", "-PorthlibCheckout={orthlib}", "-Porg.gradle.java.installations.paths={env.JAVA_HOME},{env.JAVA_HOME_8_X64}"] },
