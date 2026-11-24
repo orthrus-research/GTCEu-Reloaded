@@ -1,7 +1,8 @@
 dependencies {
     // Published dependencies
-    api(deobf("maven.modrinth:KphJPRlN:${codeChickenLibRelease}")) { transitive = false }
-    api("com.cleanroommc:modularui:${modularUiVersion}") { transitive = false }
+    // Third-party files the set names (third entries): their coordinates go into the published metadata.
+    api(deobf(set.third('codechickenlib'))) { transitive = false }
+    api(set.third('modularui')) { transitive = false }
     // Optional integrations are available in local development without being installed transitively for consumers.
     developmentOnly("com.cleanroommc:groovyscript:1.5.0") { transitive = false }
     developmentOnly("curse.maven:inventory-bogosorter-632327:7102721-deobf-6717233-sources-6717234") // Inventory BogoSorter − v1.5.0

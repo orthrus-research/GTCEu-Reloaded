@@ -1,8 +1,28 @@
 pluginManagement {
-    repositories {
-        maven { url = 'https://maven.cleanroommc.com' }
-        gradlePluginPortal()
+    def prop = { String n -> providers.gradleProperty(n).orNull }
+    def json = new groovy.json.JsonSlurper()
+    String dir = prop('set.dir')
+    if (dir == null) {
+        File mark = null
+        for (File d = settingsDir; d != null && mark == null; d = d.parentFile) { File f = new File(d, '.set'); if (f.file) mark = f }
+        if (mark == null || prop('set.home') == null) throw new GradleException('No set for this folder: run wb work sync, or pass -Pset.dir=<clone of the Set>')
+        dir = prop('set.home') + '/' + json.parse(mark).set
+    }
+    def set = json.parse(new File(dir, 'set.json'))
+    if (set.platform.logic == null && !new File(dir, 'build-logic').directory) throw new GradleException("The set at ${dir} names no build logic yet: land the Set's build-logic, then wb work sync")
+    if (new File(dir, 'build-logic').directory) includeBuild(dir + '/build-logic')
+    else repositories { maven { url = prop('set.plugins') } }
+    repositories { set.platform.plugin_repositories.each { r -> maven { url = r } }; gradlePluginPortal() }
+    resolutionStrategy.eachPlugin {
+        String id = requested.id.id
+        if (id.startsWith('set.')) useVersion(set.platform.logic)
+        else if (id == 'com.cleanroommc.cleanroomgradle.settings') useVersion(set.platform.cleanroomgradle)
     }
 }
-plugins { id 'com.cleanroommc.cleanroomgradle.settings' version '0.22.1' }
+
+plugins {
+    id 'com.cleanroommc.cleanroomgradle.settings'
+    id 'set.base'
+}
+
 rootProject.name = 'GTCEu-Reloaded'

@@ -2,12 +2,18 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'com.cleanroommc.cleanroomgradle'
+    id 'set.cleanroom'
     id 'com.diffplug.spotless' version '8.0.0'
 }
 group = 'gregtech'
 version = modVersion
 base.archivesName = modArchivesBaseName
-def targetJavaFeature = providers.gradleProperty('javaVersion').get().toInteger()
+// The platform (the JDK, Cleanroom) comes from the set; set.cleanroom sets cleanroom_version from it.
+def targetJavaFeature = set.platform().java as int
+// OrthLib's oldest version this mod runs with: its own floor, the version it declares to the loader.
+def orthlibFloor = '0.5.0-dev'
+set.since('orthlib', orthlibFloor)
+def modularUiVersion = set.thirdVersion('modularui')
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(targetJavaFeature)
     withSourcesJar()
@@ -40,7 +46,7 @@ configurations {
 dependencies {
     // Optional integrations may embed older Mixin classes; compile against the loader's API first.
     compileOnly 'com.cleanroommc:cleanmix:0.9.0'
-    developmentOnly cleanroom.userdev(cleanroomVersion) {
+    developmentOnly cleanroom.userdev(cleanroom_version) {
         accessTransformers.from('src/main/resources/META-INF/gregtech_at.cfg')
     }
     compileOnlyApi 'org.jetbrains:annotations:24.1.0'
@@ -53,7 +59,14 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 apply from: 'dependencies.gradle'
-apply from: 'gradle/orthlib.gradle'
+// OrthLib carries the render interface through which emissive textures and emissive contributions reach a renderer
+// (docs/emissive-rendering.md): the production JAR is compiled against, the development (-mcp) JAR runs the
+// development client and the tests. Both are the files the set names, from the Store by SHA-256 (or a stand-in).
+dependencies {
+    compileOnly set.jar('orthlib')
+    runtimeOnly set.jar('orthlib', 'mcp')
+    testCompileOnly set.jar('orthlib', 'mcp')
+}
 // Optional-mod interfaces are compile fixtures, never bundled implementations.
 sourceSets {
     api {
@@ -70,7 +83,7 @@ sourceSets {
 def constantsDirectory = layout.buildDirectory.dir('generated/sources/reloaded')
 tasks.register('generateModConstants') {
     inputs.properties(modName: modName, modVersion: project.version, javaVersion: targetJavaFeature, modularUiVersion: modularUiVersion,
-        orthlibVersion: orthlibVersion)
+        orthlibVersion: orthlibFloor)
     outputs.dir(constantsDirectory)
     doLast {
         def destination = constantsDirectory.get().file('gregtech/GTInternalTags.java').asFile
@@ -81,7 +94,7 @@ public final class GTInternalTags {
     public static final String VERSION = "${project.version}";
     public static final int JAVA_VERSION = ${targetJavaFeature};
     public static final String MODULAR_UI_VERSION = "${modularUiVersion}";
-    public static final String ORTHLIB_VERSION = "${orthlibVersion}";
+    public static final String ORTHLIB_VERSION = "${orthlibFloor}";
     private GTInternalTags() {}
 }
 """, 'UTF-8')

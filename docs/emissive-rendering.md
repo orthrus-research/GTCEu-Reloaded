@@ -13,19 +13,12 @@ no bloom pass, framebuffer, shader program or depth texture, and makes no GL cal
 OrthLib is a required dependency at runtime (`required-after:orthlib@[0.5.0-dev,)`): install its release JAR next to
 GTCEu: Reloaded.
 
-OrthLib is not yet published to a Maven repository. `gradle.properties` pins the version, the commit and the SHA-256
-of the two JARs its build writes: the production JAR, which the build compiles against, and the development (`-mcp`)
-JAR, which the development client and the tests run. To build them, check OrthLib out beside this repository as
-`../OrthLib` (the sibling of the main checkout when building from a worktree), fetch the pinned commit there, and run:
-
-```sh
-./gradlew refreshOrthLib
-```
-
-It builds the pinned commit in a temporary worktree of that checkout, with this build's JDK 26, copies both JARs into
-`libs/` and prints their hashes. OrthLib's build is reproducible, so the hashes match the pins. `verifyOrthLib` checks
-them before anything compiles. `-PorthlibCheckout=<path>` builds another checkout; `-PorthlibCommit=<commit>` builds
-another commit, whose commit and hashes are then recorded in `gradle.properties` to move the pin.
+OrthLib is not yet published to a Maven repository. The Set names its commit and the SHA-256 of the two JARs its
+build writes: the production JAR, which the build compiles against, and the development (`-mcp`) JAR, which the
+development client and the tests run. In a Workbench worktree both come from the Store, re-hashed before anything
+compiles (`setVerify`); a new OrthLib reaches this mod by landing in the Set, with no commit here. In a plain clone,
+build OrthLib beside this repository and name it: `./gradlew build -Pset.dir=../orthrus-set
+-Pset.with.orthlib=../OrthLib` takes each JAR from that build by its glob.
 
 ## The emissive layer
 

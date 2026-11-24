@@ -87,17 +87,23 @@ The ct-overhaul build requires JDK 26 and uses CleanroomGradle. Product code and
 Java 26; Java 8 and the standalone Forge development runtime are no longer supported.
 See [release validation](docs/pre-delivery-qualification.md) for the tested artifact and runtime.
 
-OrthLib is not yet published to a Maven repository. The build compiles against a JAR built from an
-OrthLib checkout beside this one, at the commit `gradle.properties` pins; `./gradlew refreshOrthLib`
-builds it into `libs/` ([docs/emissive-rendering.md](docs/emissive-rendering.md#getting-orthlib)).
+The build reads the set: [orthrus-set](https://github.com/orthrus-research/orthrus-set)'s `set.json` names the
+platform (the JDK, Cleanroom, CleanroomGradle), the OrthLib files this mod compiles against and the ModularUI and
+CodeChickenLib releases, each by SHA-256. In a Workbench worktree the folder's `.set` says which revision and
+`./gradlew build` just works. In a plain clone, clone the Set and OrthLib beside it and pass them
+([docs/emissive-rendering.md](docs/emissive-rendering.md#getting-orthlib)):
 
 ```sh
+git clone https://github.com/orthrus-research/orthrus-set.git
 git clone https://github.com/orthrus-research/OrthLib.git
-git clone --branch ct-overhaul https://github.com/orthrus-research/GTCEu-Reloaded.git
+git clone --branch feat/render-interface-release https://github.com/orthrus-research/GTCEu-Reloaded.git
+python orthrus-set/tools/checkout.py orthlib
+(cd OrthLib && ./gradlew rootBuild)
 cd GTCEu-Reloaded
-./gradlew refreshOrthLib
-./gradlew build
+./gradlew build -Pset.dir=../orthrus-set -Pset.with.orthlib=../OrthLib
 ```
+
+A plain-clone build is a development build: its bytes are not checked against the set.
 
 The build writes the mod JAR to `build/libs`. [CONTRIBUTING.md](CONTRIBUTING.md) lists the checks a
 change must pass.

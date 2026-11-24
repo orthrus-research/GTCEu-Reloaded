@@ -1,0 +1,44 @@
+# GTCEu: Reloaded's checks and the files its build makes. Workbench runs them from a clean clone with the set's Gradle
+# and JDKs ({gradle}); a push needs the gate's checks passed, and this project's set-named branch moves only by
+# landing. OrthLib, ModularUI and CodeChickenLib reach the build as the files the set names, checked by SHA-256.
+schema = 1
+gate = ["format", "build"]
+
+[project]
+name = "gtceur"
+
+[uses]
+orthlib = { artifacts = ["mod", "mcp"] }
+modularui = "compile"
+codechickenlib = "compile"
+
+# What its build makes, kept by Workbench with their SHA-256 once the check passes.
+[artifacts.mod]
+check = "build"
+file = "build/libs/gtceu-reloaded-*-alpha.1.jar"
+
+[artifacts.mcp]
+check = "build"
+file = "build/libs/gtceu-reloaded-*-mcp.jar"
+
+[artifacts.sources]
+check = "build"
+file = "build/libs/gtceu-reloaded-*-sources.jar"
+
+[checks.format]
+description = "The formatting check: Spotless with the Eclipse 4.37 formatter and the import order"
+locks = ["gradle"]
+memory = 4
+priority = 10
+inputs = [
+  "src/main/java/**/*.java", "src/test/java/**/*.java", "spotless.eclipseformat.xml", "spotless.importorder",
+  ".gitattributes", "build.gradle", "settings.gradle", "gradle.properties", "dependencies.gradle", "gradle/*.gradle",
+  "gradle/wrapper/*", "gradlew", "src/main/resources/META-INF/gregtech_at.cfg",
+]
+steps = [["{gradle}", "spotlessCheck", "--no-daemon", "--console=plain"]]
+
+[checks.build]
+description = "Build and test on Java 26, with the definition boundary, mixin mapping, publication metadata and runtime baseline checks"
+locks = ["gradle"]
+memory = 6
+steps = [["{gradle}", "build", "--no-daemon", "--console=plain"]]

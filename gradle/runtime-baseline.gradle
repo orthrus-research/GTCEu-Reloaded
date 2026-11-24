@@ -1,20 +1,28 @@
-// Export the exact supported MUI pair for native qualification and verify both build classpaths.
+// Export the exact supported MUI pair for native qualification and verify both build classpaths against the hashes
+// the set records for its third entries.
 configurations {
     codeChickenLibRuntime { canBeConsumed = false; transitive = false }
     modularUiRuntime { canBeConsumed = false; transitive = false }
     modularUiDevelopment { canBeConsumed = false; transitive = false }
 }
+def codeChickenLib = set.thirdEntry('codechickenlib')
+def modularUi = set.thirdEntry('modularui')
+def codeChickenLibRelease = set.thirdVersion('codechickenlib')
+def modularUiVersion = set.thirdVersion('modularui')
+def codeChickenLibRuntimeSha256 = codeChickenLib.files.runtime
+def modularUiRuntimeSha256 = modularUi.files.runtime
+def modularUiDevelopmentSha256 = modularUi.files.dev
 dependencies {
-    codeChickenLibRuntime "maven.modrinth:KphJPRlN:${codeChickenLibRelease}"
-    modularUiRuntime "com.cleanroommc:modularui:${modularUiVersion}@jar"
-    modularUiDevelopment "com.cleanroommc:modularui:${modularUiVersion}:dev"
+    codeChickenLibRuntime set.third('codechickenlib')
+    modularUiRuntime "${set.third('modularui')}@jar"
+    modularUiDevelopment "${set.third('modularui')}:dev"
 }
 
 tasks.register('verifyRuntimeBaseline') {
     dependsOn tasks.reobfJar
     inputs.files(configurations.modularUiRuntime, configurations.modularUiDevelopment, configurations.codeChickenLibRuntime)
     inputs.properties(version: modularUiVersion, runtimeSha256: modularUiRuntimeSha256,
-        developmentSha256: modularUiDevelopmentSha256, javaFeature: project.property('javaVersion'),
+        developmentSha256: modularUiDevelopmentSha256, javaFeature: set.platform().java,
         cclRelease: codeChickenLibRelease, cclSha256: codeChickenLibRuntimeSha256)
     doLast {
         def record = { File file ->
@@ -50,7 +58,7 @@ tasks.register('verifyRuntimeBaseline') {
             classpaths[name] = artifacts.collect { record(it.file) + [component: it.moduleVersion.id.toString()] }
         }
         def launcher = javaToolchains.launcherFor(java.toolchain).get()
-        def feature = project.property('javaVersion').toInteger()
+        def feature = set.platform().java as int
         if (launcher.metadata.languageVersion.asInt() != feature) {
             throw new GradleException('Java toolchain differs from the declared runtime feature')
         }
@@ -58,10 +66,10 @@ tasks.register('verifyRuntimeBaseline') {
         report.parentFile.mkdirs()
         report.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
             schema: 1, javaFeature: feature, java: record(launcher.executablePath.asFile),
-            javaRuntime: launcher.metadata.javaRuntimeVersion, cleanroomVersion: cleanroomVersion,
+            javaRuntime: launcher.metadata.javaRuntimeVersion, cleanroomVersion: cleanroom_version,
             candidate: record(tasks.reobfJar.outputs.files.singleFile),
             modularUi: [version: modularUiVersion, runtime: runtime, development: development, classpaths: classpaths],
-            codeChickenLib: [version: codeChickenLibVersion, release: codeChickenLibRelease, runtime: ccl],
+            codeChickenLib: [release: codeChickenLibRelease, runtime: ccl],
             scope: 'Java, ModularUI and CodeChickenLib; native launch additionally inventories the full stack'
         ]))
     }

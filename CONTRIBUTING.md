@@ -36,10 +36,10 @@ Build with the tests and the formatting check (JDK 26):
 The standard `test` task includes authoring lifecycle regressions for Java and both Groovy modes,
 recipe replacement/disable/re-enable, and restoration ordering.
 
-CI runs the jobs in [actions.toml](actions.toml), `format` (`spotlessCheck`) and `build`, in Workbench
-on Temurin 26.0.2.1+1. `wb run ci.run project=gtceur` runs them from a clean clone of a commit
-(`commit=worktree` runs the uncommitted working tree), and the pre-push hook that
-`wb run ci.hook project=gtceur` installs refuses a push whose tree has not passed them.
+CI runs the gate's checks in [project.toml](project.toml), `format` (`spotlessCheck`) and `build`, in Workbench
+on the set's Gradle and JDK. `wb check` in a worktree runs them from a clean clone (the uncommitted working tree
+included), and the pre-push hook refuses a push whose tree has not passed them. This project's set-named branch
+moves only by landing (`wb land`), which records its commit and the SHA-256 of its JARs in the Set.
 
 `./gradlew spotlessApply` applies the formatting. Follow [CODESTYLE.md](CODESTYLE.md) and
 `.editorconfig`. A change to machines, pipes, recipes or saves also needs a check in a development
