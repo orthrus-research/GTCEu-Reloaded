@@ -107,13 +107,7 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = targetJavaFeature
 }
-// CleanMix emits shadow/overwrite member mappings separately from the injection refmap.
-// Merge them with the loader mappings so the production JAR uses both sets.
-def mixinMappings = layout.buildDirectory.file('generated/mixin/mcp2srg.tsrg')
 tasks.named('compileJava', JavaCompile) {
-    outputs.file(mixinMappings)
-    options.compilerArgs += ['-AmergeBehaviour=merge', "-AoutTsrgFile=${mixinMappings.get().asFile.absolutePath}"]
-    doFirst { mixinMappings.get().asFile.parentFile.mkdirs() }
     // CleanMix lists its Mixins in the order javac received the sources, which follows the file
     // system's directory order; sorted, the archive is the same on every OS.
     doLast {
@@ -127,6 +121,9 @@ tasks.named('compileJava', JavaCompile) {
         }
     }
 }
+// CleanMix's shadow/overwrite member mappings, merged by the convention's compile options, join the loader mappings
+// so the production JAR uses both sets.
+def mixinMappings = set.mixinMappings()
 tasks.named('reobfJar') {
     dependsOn tasks.compileJava
     map.setFrom(mixinMappings)
