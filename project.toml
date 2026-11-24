@@ -35,10 +35,10 @@ inputs = [
   ".gitattributes", "build.gradle", "settings.gradle", "gradle.properties", "dependencies.gradle", "gradle/*.gradle",
   "gradle/wrapper/*", "gradlew", "src/main/resources/META-INF/gregtech_at.cfg",
 ]
-steps = [["{gradle}", "spotlessCheck", "--no-daemon", "--console=plain"]]
+steps = [["{gradle}", "spotlessCheck", "--console=plain"]]
 
 [checks.build]
 description = "Build and test on Java 26, with the definition boundary, mixin mapping, publication metadata and runtime baseline checks"
 locks = ["gradle"]
 memory = 6
-steps = [["{gradle}", "build", "--no-daemon", "--console=plain"]]
+steps = [["{gradle}", "build", "--console=plain"]]
