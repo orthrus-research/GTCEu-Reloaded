@@ -1,43 +1,68 @@
-# Publishes the project to GitHub Releases
-name: Publish Project
+# Checks a published release against the Set. Releases are not built here: they are published from the bytes the Set
+# names for this project's line, the ones its gate tested. When a release is published, this workflow fails unless
+# every asset's name and SHA-256 are those a Set revision names for GTCEuR at the release's tagged commit.
+name: Check Release
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+-reloaded.[0-9]+' # e.g. v2.8.10-reloaded.1; upstream's own tags never match
-      # Pre-releases such as v3.0.0-reloaded.1-alpha.1 (gradle.properties modVersion). Filter patterns must match the
-      # whole tag, so the line above alone never matches a suffixed tag; '*' matches any suffix without '/'.
-      - 'v[0-9]+.[0-9]+.[0-9]+-reloaded.[0-9]+-*'
+  release:
+    types: [published]
 
-concurrency:
-  group: publish-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+permissions:
+  contents: read
 
 jobs:
-  publish:
-    name: Publish
+  check:
+    name: Check against the Set
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write # needed to create GitHub releases
-
-    env:
-      DISABLE_BUILDSCRIPT_UPDATE_CHECK: true
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v5
-
-      - name: Setup Build
-        uses: ./.github/actions/build_setup
-
-      - name: Build Project
-        run: ./gradlew build --warning-mode all --build-cache
-
-      - name: Publish to GitHub
-        uses: softprops/action-gh-release@v2
         with:
-          files: "build/libs/*.jar"
-          generate_release_notes: true
-          fail_on_unmatched_files: true
-          prerelease: true
+          fetch-depth: 0
+
+      - name: Clone the Set
+        run: git clone --quiet https://github.com/orthrus-research/orthrus-set.git "$RUNNER_TEMP/set"
+
+      - name: Download the release's assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release download "$TAG" --dir "$RUNNER_TEMP/assets"
+
+      - name: Compare with the Set
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python3 - "$RUNNER_TEMP/set" "$RUNNER_TEMP/assets" <<'EOF'
+          import hashlib, json, os, subprocess, sys
+          set_repo, assets = sys.argv[1], sys.argv[2]
+          tag = os.environ["TAG"]
+          commit = subprocess.run(["git", "rev-parse", f"{tag}^{{commit}}"], capture_output=True, text=True,
+                                  check=True).stdout.strip()
+          revisions = subprocess.run(["git", "-C", set_repo, "log", "--format=%H", "--", "set.json"],
+                                     capture_output=True, text=True, check=True).stdout.split()
+          named = {}  # (file name, sha256) -> the Set revision that names it for this commit
+          for revision in revisions:
+              text = subprocess.run(["git", "-C", set_repo, "show", f"{revision}:set.json"], capture_output=True,
+                                    text=True).stdout
+              line = (json.loads(text or "{}").get("projects") or {}).get("gtceur") or {}
+              if line.get("commit") != commit:
+                  continue
+              for artifact in (line.get("artifacts") or {}).values():
+                  named.setdefault((artifact.get("file"), artifact.get("sha256")), revision)
+          if not named:
+              sys.exit(f"no Set revision names GTCEuR at {commit[:12]} ({tag}): publish from the Store with "
+                       "release.publish set=gtceur@<revision>")
+          wrong = []
+          for name in sorted(os.listdir(assets)):
+              with open(os.path.join(assets, name), "rb") as handle:
+                  digest = hashlib.sha256(handle.read()).hexdigest()
+              revision = named.get((name, digest))
+              print(f"{name} {digest[:12]}: " + (f"named by set {revision[:12]}" if revision else "NOT in the Set"))
+              if revision is None:
+                  wrong.append(name)
+          if wrong:
+              sys.exit(f"{len(wrong)} asset(s) of {tag} are not the bytes the Set names for {commit[:12]}: "
+                       + ", ".join(wrong))
+          EOF

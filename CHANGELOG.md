@@ -28,7 +28,7 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 | Authoring | Degrade script-cache persistence failures (locked or unreadable `cache/groovy`, link loops) to a session-only cache with a warning; unverified bytecode is still never reused |
 | Recipes | Let `clear()` and `/gs reload` release furnace XP, recycling metadata and recovery baselines that outside code now relies on, instead of failing every later reload |
 | Recipes | Restore every published participant when a later registration step fails, and keep new crafting names out of the vanilla registry snapshot |
-| Build | Publish pre-release tags such as `v3.0.0-reloaded.1-alpha.1` |
+| Build | Publish releases from the bytes the Set names for GTCEuR's line instead of rebuilding on a tag; a published release is checked against the Set, and fails when an asset is not the name and SHA-256 a Set revision names at its tagged commit |
 | Dependencies | Align CodeChickenLib compilation, tests and runtime on the pinned 3.3.10 release; verify its production artifact hash during the build |
 | Inventory | Reject out-of-range slots in combined item handlers before dispatch, preserving input stacks and avoiding missing-handler exceptions |
 | Authoring | Replace CT/Zen adapters with shared typed Java definitions, source diagnostics and GroovyScript 1.5.0 authoring |
