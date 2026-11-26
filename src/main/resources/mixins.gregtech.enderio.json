@@ -1,0 +1,15 @@
+{
+  "package": "gregtech.mixins.enderio",
+  "refmap": "mixins.gregtech.refmap.json",
+  "target": "@env(DEFAULT)",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_25",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "EnderIOToolMixin"
+  ],
+  "client": [],
+  "server": []
+}

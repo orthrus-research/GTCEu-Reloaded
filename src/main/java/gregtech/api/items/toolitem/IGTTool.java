@@ -22,7 +22,6 @@ import gregtech.api.unification.material.properties.ToolProperty;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.api.util.GTUtility;
-import gregtech.api.util.Mods;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.utils.ToolChargeBarRenderer;
 import gregtech.client.utils.TooltipHelper;
@@ -60,13 +59,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.Constants;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import appeng.api.implementations.items.IAEWrench;
-import buildcraft.api.tools.IToolWrench;
-import cofh.api.item.IToolHammer;
 import com.cleanroommc.modularui.api.drawable.IKey;
 import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.factory.HandGuiData;
@@ -78,15 +73,10 @@ import com.cleanroommc.modularui.value.sync.IntSyncValue;
 import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
-import com.enderio.core.common.interfaces.IOverlayRenderAware;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import crazypants.enderio.api.tool.ITool;
-import forestry.api.arboriculture.IToolGrafter;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import mods.railcraft.api.items.IToolCrowbar;
-import mrtjp.projectred.api.IScrewdriver;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -103,27 +93,15 @@ import static gregtech.api.items.armor.IArmorLogic.ATTACK_SPEED_MODIFIER;
 import static gregtech.api.items.toolitem.ToolHelper.*;
 
 /**
- * Backing of every variation of a GT Tool
+ * Backing of every variation of a GT Tool.
+ * <p>
+ * The methods after {@link #getToolClasses(ItemStack)} implement other mods' tool interfaces: AE2's and
+ * BuildCraft's wrenches, CoFH's hammer, Ender IO's tool, Forestry's grafter, Project Red's screwdriver, Railcraft's
+ * crowbar and EnderCore's item overlay. This interface names none of those types, so an addon compiles against GT
+ * without them. While such a mod is loaded, a mixin adds its interface to {@link ItemGTTool}, {@link ItemGTAxe},
+ * {@link ItemGTSword} and {@link ItemGTHoe} (and so to their subclasses), and these methods implement it.
  */
-@Optional.InterfaceList({
-        @Optional.Interface(modid = Mods.Names.APPLIED_ENERGISTICS2,
-                            iface = "appeng.api.implementations.items.IAEWrench"),
-        @Optional.Interface(modid = Mods.Names.BUILD_CRAFT_CORE,
-                            iface = "buildcraft.api.tools.IToolWrench"),
-        @Optional.Interface(modid = Mods.Names.COFH_CORE,
-                            iface = "cofh.api.item.IToolHammer"),
-        @Optional.Interface(modid = Mods.Names.ENDER_IO,
-                            iface = "crazypants.enderio.api.tool.ITool"),
-        @Optional.Interface(modid = Mods.Names.FORESTRY,
-                            iface = "forestry.api.arboriculture.IToolGrafter"),
-        @Optional.Interface(modid = Mods.Names.PROJECT_RED_CORE,
-                            iface = "mrtjp.projectred.api.IScrewdriver"),
-        @Optional.Interface(modid = Mods.Names.RAILCRAFT,
-                            iface = "mods.railcraft.api.items.IToolCrowbar"),
-        @Optional.Interface(modid = Mods.Names.ENDER_CORE,
-                            iface = "com.enderio.core.common.interfaces.IOverlayRenderAware") })
-public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHammer, ITool, IToolGrafter,
-                         IOverlayRenderAware, IScrewdriver, IToolCrowbar {
+public interface IGTTool extends ItemUIFactory {
 
     /**
      * @return the modid of the tool
@@ -996,7 +974,7 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
 
     Set<String> getToolClasses(ItemStack stack);
 
-    // Extended Interfaces
+    // Other mods' tool interfaces, which the mixins in gregtech.mixins add to GT's tool classes
 
     // IAEWrench
 
@@ -1007,7 +985,6 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
      * @param pos    of block.
      * @return true if wrench can be used
      */
-    @Override
     default boolean canWrench(ItemStack wrench, EntityPlayer player, BlockPos pos) {
         return get().getToolClasses(wrench).contains(ToolClasses.WRENCH);
     }
@@ -1024,7 +1001,6 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
      *
      * @return true if wrenching is allowed, false if not
      */
-    @Override
     default boolean canWrench(EntityPlayer player, EnumHand hand, ItemStack wrench, RayTraceResult rayTrace) {
         return get().getToolClasses(wrench).contains(ToolClasses.WRENCH);
     }
@@ -1037,24 +1013,20 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
      * @param wrench   - The item stack that holds the wrench
      * @param rayTrace - The object that is being wrenched
      */
-    @Override
     default void wrenchUsed(EntityPlayer player, EnumHand hand, ItemStack wrench, RayTraceResult rayTrace) {
         damageItem(player.getHeldItem(hand), player);
         playSound(player);
     }
 
     // IToolHammer
-    @Override
     default boolean isUsable(ItemStack item, EntityLivingBase user, BlockPos pos) {
         return get().getToolClasses(item).contains(ToolClasses.WRENCH);
     }
 
-    @Override
     default boolean isUsable(ItemStack item, EntityLivingBase user, Entity entity) {
         return get().getToolClasses(item).contains(ToolClasses.WRENCH);
     }
 
-    @Override
     default void toolUsed(ItemStack item, EntityLivingBase user, BlockPos pos) {
         damageItem(item, user);
         if (user instanceof EntityPlayer) {
@@ -1062,25 +1034,21 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
         }
     }
 
-    @Override
     default void toolUsed(ItemStack item, EntityLivingBase user, Entity entity) {
         damageItem(item, user);
     }
 
     // ITool
-    @Override
     default boolean canUse(@NotNull EnumHand hand, @NotNull EntityPlayer player, @NotNull BlockPos pos) {
         return get().getToolClasses(player.getHeldItem(hand)).contains(ToolClasses.WRENCH);
     }
 
-    @Override
     default void used(@NotNull EnumHand hand, @NotNull EntityPlayer player, @NotNull BlockPos pos) {
         damageItem(player.getHeldItem(hand), player);
         playSound(player);
     }
 
     // IHideFacades
-    @Override
     default boolean shouldHideFacades(@NotNull ItemStack stack, @NotNull EntityPlayer player) {
         return get().getToolClasses(stack).contains(ToolClasses.WRENCH);
     }
@@ -1095,56 +1063,46 @@ public interface IGTTool extends ItemUIFactory, IAEWrench, IToolWrench, IToolHam
      * @param pos   Coordinate of the broken leaf block.
      * @return Float representing the factor the usual drop chance is to be multiplied by.
      */
-    @Override
     default float getSaplingModifier(ItemStack stack, World world, EntityPlayer player, BlockPos pos) {
         return getToolClasses(stack).contains(ToolClasses.GRAFTER) ? 100F : 1.0F;
     }
 
     // IOverlayRenderAware
-    @Override
     default void renderItemOverlayIntoGUI(@NotNull ItemStack stack, int xPosition, int yPosition) {
         ToolChargeBarRenderer.renderBarsTool(this, stack, xPosition, yPosition);
     }
 
     // IScrewdriver
-    @Override
     default boolean canUse(EntityPlayer player, ItemStack stack) {
         return get().getToolClasses(stack).contains(ToolClasses.SCREWDRIVER);
     }
 
-    @Override
     default void damageScrewdriver(EntityPlayer player, ItemStack stack) {
         damageItem(stack, player);
     }
 
     // IToolCrowbar
 
-    @Override
     default boolean canWhack(EntityPlayer player, EnumHand hand, ItemStack crowbar, BlockPos pos) {
         return get().getToolClasses(crowbar).contains(ToolClasses.CROWBAR);
     }
 
-    @Override
     default void onWhack(EntityPlayer player, EnumHand hand, ItemStack crowbar, BlockPos pos) {
         damageItem(crowbar, player);
     }
 
-    @Override
     default boolean canLink(EntityPlayer player, EnumHand hand, ItemStack crowbar, EntityMinecart cart) {
         return get().getToolClasses(crowbar).contains(ToolClasses.CROWBAR);
     }
 
-    @Override
     default void onLink(EntityPlayer player, EnumHand hand, ItemStack crowbar, EntityMinecart cart) {
         damageItem(crowbar, player);
     }
 
-    @Override
     default boolean canBoost(EntityPlayer player, EnumHand hand, ItemStack crowbar, EntityMinecart cart) {
         return get().getToolClasses(crowbar).contains(ToolClasses.CROWBAR);
     }
 
-    @Override
     default void onBoost(EntityPlayer player, EnumHand hand, ItemStack crowbar, EntityMinecart cart) {
         damageItem(crowbar, player);
     }

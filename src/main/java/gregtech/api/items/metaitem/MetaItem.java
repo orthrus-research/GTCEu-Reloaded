@@ -20,7 +20,6 @@ import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.RecyclingData;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
-import gregtech.api.util.Mods;
 import gregtech.client.utils.ToolChargeBarRenderer;
 import gregtech.common.ConfigHolder;
 import gregtech.common.covers.filter.IFilter;
@@ -57,13 +56,11 @@ import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.IFluidTankProperties;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.oredict.OreDictionary;
 
-import com.enderio.core.common.interfaces.IOverlayRenderAware;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
@@ -102,11 +99,7 @@ import java.util.Set;
  * {@code addItem(0, "test_item").addStats(new ElectricStats(10000, 1,  false)) } This will add single-use (not
  * rechargeable) LV battery with initial capacity 10000 EU
  */
-@Optional.Interface(
-                    modid = Mods.Names.ENDER_CORE,
-                    iface = "com.enderio.core.common.interfaces.IOverlayRenderAware")
-public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
-                              implements ItemUIFactory, IOverlayRenderAware {
+public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item implements ItemUIFactory {
 
     private static final List<MetaItem<?>> META_ITEMS = new ArrayList<>();
 
@@ -749,8 +742,10 @@ public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
         return uiFactory == null ? null : uiFactory.createUI(holder, entityPlayer);
     }
 
-    // IOverlayRenderAware
-    @Override
+    /**
+     * Draws this item's charge and durability bars. It implements EnderCore's item overlay interface, which a mixin
+     * adds to this class while EnderCore is loaded; this class does not name it, so addons compile without EnderCore.
+     */
     public void renderItemOverlayIntoGUI(@NotNull ItemStack stack, int xPosition, int yPosition) {
         ToolChargeBarRenderer.renderBarsItem(this, stack, xPosition, yPosition);
     }

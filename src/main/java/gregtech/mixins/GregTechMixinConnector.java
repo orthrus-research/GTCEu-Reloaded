@@ -47,6 +47,17 @@ public final class GregTechMixinConnector implements IMixinConnector {
                 .because("GTCEu's HEI transfer, tooltip and category mixins are verified only for these versions")
                 .orWarn()
                 .register();
+        // GT's tool classes and meta items implement these mods' tool and overlay interfaces only while the mod is
+        // loaded, so the published classes name none of them. Each mixin only adds an interface whose methods the
+        // classes already have, so every version of the mod qualifies.
+        ConditionalMixin.of("mixins.gregtech.ae2.json").requires("appliedenergistics2").register();
+        ConditionalMixin.of("mixins.gregtech.buildcraft.json").requires("buildcraftcore").register();
+        ConditionalMixin.of("mixins.gregtech.cofh.json").requires("cofhcore").register();
+        ConditionalMixin.of("mixins.gregtech.endercore.json").requires("endercore").register();
+        ConditionalMixin.of("mixins.gregtech.enderio.json").requires("enderio").register();
+        ConditionalMixin.of("mixins.gregtech.forestry.json").requires("forestry").register();
+        ConditionalMixin.of("mixins.gregtech.projectred.json").requires("projred-core").register();
+        ConditionalMixin.of("mixins.gregtech.railcraft.json").requires("railcraft").register();
         // GTCEu draws no terrain pass of its own: emissive textures reach renderers through OrthLib's render
         // interface, which a renderer provides, and fall back to CUTOUT elsewhere.
     }
