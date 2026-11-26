@@ -6,7 +6,6 @@ import gregtech.api.util.Mods;
 import gregtech.integration.IntegrationSubmodule;
 import gregtech.integration.hwyla.provider.AEMultiblockHatchProvider;
 import gregtech.integration.hwyla.provider.ActiveTransformerDataProvider;
-import gregtech.integration.hwyla.provider.BatteryBufferDataProvider;
 import gregtech.integration.hwyla.provider.BlockOreDataProvider;
 import gregtech.integration.hwyla.provider.ElectricContainerDataProvider;
 import gregtech.integration.hwyla.provider.LampDataProvider;
@@ -14,6 +13,7 @@ import gregtech.integration.hwyla.provider.PrimitivePumpDataProvider;
 import gregtech.integration.hwyla.provider.QuantumStorageProvider;
 import gregtech.integration.hwyla.provider.SteamBoilerDataProvider;
 import gregtech.integration.probe.ProbeInfoProducer;
+import gregtech.integration.probe.producer.BatteryBufferProbeInfo;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.ConverterProbeInfo;
 import gregtech.integration.probe.producer.DiodeProbeInfo;
@@ -60,7 +60,7 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         BlockOreDataProvider.INSTANCE.register(registrar);
         LampDataProvider.INSTANCE.register(registrar);
         ActiveTransformerDataProvider.INSTANCE.register(registrar);
-        BatteryBufferDataProvider.INSTANCE.register(registrar);
+        fromServer(registrar, "gregtech.battery-buffer", TileEntity.class, new BatteryBufferProbeInfo());
         QuantumStorageProvider.INSTANCE.register(registrar);
         AEMultiblockHatchProvider.INSTANCE.register(registrar);
     }
