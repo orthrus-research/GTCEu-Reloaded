@@ -73,7 +73,8 @@ public class BatteryRecipes {
                 VA[ZPM]);
 
         // Battery Filling Recipes, each with its recycling back to the hull: the LV to HV batteries of each
-        // chemistry, then the vanadium and naquadria ones
+        // chemistry, then the vanadium and naquadria ones, each canned at about twice the voltage of the one below,
+        // which puts the IV and ZPM ones at half the EV and IV voltage
         battery(BATTERY_HULL_LV, BATTERY_LV_CADMIUM, Cadmium, 2, 100, 2);
         battery(BATTERY_HULL_LV, BATTERY_LV_LITHIUM, Lithium, 2, 100, 2);
         battery(BATTERY_HULL_LV, BATTERY_LV_SODIUM, Sodium, 2, 100, 2);
@@ -84,9 +85,9 @@ public class BatteryRecipes {
         battery(BATTERY_HULL_HV, BATTERY_HV_LITHIUM, Lithium, 16, 1600, 2);
         battery(BATTERY_HULL_HV, BATTERY_HV_SODIUM, Sodium, 16, 1600, 2);
         battery(BATTERY_HULL_SMALL_VANADIUM, BATTERY_EV_VANADIUM, Vanadium, 2, 100, VA[HV]);
-        battery(BATTERY_HULL_MEDIUM_VANADIUM, BATTERY_IV_VANADIUM, Vanadium, 8, 150, 1024);
+        battery(BATTERY_HULL_MEDIUM_VANADIUM, BATTERY_IV_VANADIUM, Vanadium, 8, 150, VH[EV]);
         battery(BATTERY_HULL_LARGE_VANADIUM, BATTERY_LUV_VANADIUM, Vanadium, 16, 200, VA[EV]);
-        battery(BATTERY_HULL_MEDIUM_NAQUADRIA, BATTERY_ZPM_NAQUADRIA, Naquadria, 8, 250, 4096);
+        battery(BATTERY_HULL_MEDIUM_NAQUADRIA, BATTERY_ZPM_NAQUADRIA, Naquadria, 8, 250, VH[IV]);
         battery(BATTERY_HULL_LARGE_NAQUADRIA, BATTERY_UV_NAQUADRIA, Naquadria, 16, 300, VA[IV]);
     }
 

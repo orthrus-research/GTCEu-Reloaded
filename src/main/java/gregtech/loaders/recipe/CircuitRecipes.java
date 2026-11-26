@@ -102,7 +102,8 @@ public class CircuitRecipes {
                 .duration(2400).EUt(VA[IV]).buildAndRegister();
 
         // Wafer engraving: each product on the first wafer that takes it and on every better one, faster and in more
-        // pieces, the given counts in order; every wafer but silicon is engraved in a cleanroom
+        // pieces, the given counts in order; every wafer but silicon is engraved in a cleanroom. The counts follow
+        // GregTech 5 Unofficial's, where the advanced SoC yields two on its second wafer, not four
         engrave(Color.Red, INTEGRATED_LOGIC_CIRCUIT_WAFER, SILICON, 1, 4, 8, 16);
         engrave(Color.Green, RANDOM_ACCESS_MEMORY_WAFER, SILICON, 1, 4, 8, 16);
         engrave(Color.LightBlue, CENTRAL_PROCESSING_UNIT_WAFER, SILICON, 1, 4, 8, 16);

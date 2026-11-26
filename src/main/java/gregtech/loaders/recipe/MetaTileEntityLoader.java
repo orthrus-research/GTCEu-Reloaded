@@ -792,7 +792,8 @@ public class MetaTileEntityLoader {
                 'P', new UnificationEntry(OrePrefix.plate, Materials.Gold), 'R',
                 new UnificationEntry(OrePrefix.stickLong, Materials.Gold));
 
-        // Hermetic Casings: the tier's plates around a large pipe; the UHV casing's recipe is named for MAX
+        // Hermetic Casings: the tier's plates around a large pipe; the UHV casing's recipe is named for MAX. The MV
+        // pipe is a polyvinyl chloride item pipe, as polyvinyl chloride has no fluid pipe
         Object[] hermeticPipes = { null, new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Polyethylene),
                 new UnificationEntry(OrePrefix.pipeLargeItem, Materials.PolyvinylChloride),
                 new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Polytetrafluoroethylene),
@@ -841,7 +842,8 @@ public class MetaTileEntityLoader {
         // Super / Quantum Chests and Tanks: the super ones, LV to IV, from the tier's crate or hermetic casing and
         // plates, with a field generator of two tiers below from HV; the quantum ones, IV to UHV, from the tier's hull
         // or hermetic casing and dense plates, with a field generator of the tier below. The UHV ones take plain
-        // plates, and the UHV quantum tank takes the UV pump.
+        // plates, as neutronium has no dense plate, and the UHV quantum tank takes the UV pump, as GregTech has no
+        // recipe for the UHV pump, which is hidden unless high-tier content is on.
         MetaTileEntity[] crates = { MetaTileEntities.STEEL_CRATE, MetaTileEntities.ALUMINIUM_CRATE,
                 MetaTileEntities.STAINLESS_STEEL_CRATE, MetaTileEntities.TITANIUM_CRATE,
                 MetaTileEntities.TUNGSTENSTEEL_CRATE };

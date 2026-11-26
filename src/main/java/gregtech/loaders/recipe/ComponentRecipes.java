@@ -308,7 +308,8 @@ public class ComponentRecipes {
 
     private static void fluidRegulators() {
         for (int tier = LV; tier <= UV; tier++) {
-            // only the LV to IV regulators carry recycling data
+            // only the LV to IV regulators carry recycling data: the LuV to UV pumps, made in the assembly line,
+            // carry none and circuits carry none, so those regulators would have nothing to recycle into
             var builder = ASSEMBLER_RECIPES.recipeBuilder()
                     .inputs(pump(tier).getStackForm())
                     .input(circuit, circuitTier(tier), 2)
