@@ -21,6 +21,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
@@ -46,7 +47,8 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
 
     private SoundEvent selectedSound;
     private boolean isActive;
-    private int radius = 64;
+    private static final int DEFAULT_RADIUS = 64;
+    private int radius = DEFAULT_RADIUS;
     public static final int BASE_EU_CONSUMPTION = 4;
     private static final int MAX_RADIUS = 128;
 
@@ -186,7 +188,7 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
             this.isActive = buf.readBoolean();
             this.scheduleRenderUpdate();
         } else if (dataId == GregtechDataCodes.UPDATE_SOUND) {
-            this.selectedSound = SoundEvent.REGISTRY.getObject(buf.readResourceLocation());
+            this.selectedSound = soundOrDefault(buf.readResourceLocation());
             GregTechAPI.soundManager.stopTileSound(getPos());
         } else if (dataId == GregtechDataCodes.UPDATE_RADIUS) {
             this.radius = buf.readInt();
@@ -203,7 +205,7 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
     public void receiveInitialSyncData(PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
         this.isActive = buf.readBoolean();
-        this.selectedSound = SoundEvent.REGISTRY.getObject(buf.readResourceLocation());
+        this.selectedSound = soundOrDefault(buf.readResourceLocation());
         this.radius = buf.readInt();
     }
 
@@ -226,9 +228,19 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
     @Override
     public void readFromNBT(NBTTagCompound data) {
         this.isActive = data.getBoolean("isActive");
-        this.selectedSound = SoundEvent.REGISTRY.getObject(new ResourceLocation(data.getString("selectedSound")));
-        this.radius = data.getInteger("radius");
+        this.selectedSound = soundOrDefault(new ResourceLocation(data.getString("selectedSound")));
+        this.radius = data.hasKey("radius", Constants.NBT.TAG_ANY_NUMERIC) ?
+                MathHelper.clamp(data.getInteger("radius"), 0, MAX_RADIUS) : DEFAULT_RADIUS;
         super.readFromNBT(data);
+    }
+
+    /**
+     * @return the registered sound of that name, or the default alarm for one that is not registered (saved without
+     *         a sound, or from a mod no longer installed), which the alarm could neither sync nor save
+     */
+    private static @NotNull SoundEvent soundOrDefault(@NotNull ResourceLocation name) {
+        SoundEvent sound = SoundEvent.REGISTRY.getObject(name);
+        return sound != null ? sound : GTSoundEvents.DEFAULT_ALARM;
     }
 
     public String getNameOfSound(SoundEvent sound) {
