@@ -7,6 +7,7 @@ import gregtech.api.pipenet.tile.TileEntityPipeBase;
 import gregtech.api.unification.material.properties.FluidPipeProperties;
 import gregtech.api.unification.material.registry.MaterialRegistry;
 import gregtech.api.util.EntityDamageUtil;
+import gregtech.api.util.GTLog;
 import gregtech.client.renderer.pipe.FluidPipeRenderer;
 import gregtech.client.renderer.pipe.PipeRenderer;
 import gregtech.common.creativetab.GTCreativeTabs;
@@ -20,6 +21,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumBlockRenderType;
 import net.minecraft.util.EnumFacing;
@@ -30,8 +32,10 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BlockFluidPipe extends BlockMaterialPipe<FluidPipeType, FluidPipeProperties, WorldFluidPipeNet> {
 
@@ -60,8 +64,27 @@ public class BlockFluidPipe extends BlockMaterialPipe<FluidPipeType, FluidPipePr
 
     @Override
     public void breakBlock(@NotNull World worldIn, @NotNull BlockPos pos, @NotNull IBlockState state) {
+        if (!worldIn.isRemote) warnUnresolvedTransferOnRemoval(worldIn, pos, worldIn.getTileEntity(pos));
         super.breakBlock(worldIn, pos, state);
         // TODO insert to neighbours
+    }
+
+    /**
+     * Logs the uncertain transfer record of a pipe that is being removed.
+     *
+     * @return the logged record, or null if the tile has none
+     */
+    @VisibleForTesting
+    @Nullable
+    public static NBTBase warnUnresolvedTransferOnRemoval(@NotNull World world, @NotNull BlockPos pos,
+                                                          @Nullable TileEntity tile) {
+        if (!(tile instanceof TileEntityFluidPipeTickable pipe)) return null;
+        NBTBase record = pipe.getUncertainFluidTransfer();
+        if (record != null) {
+            GTLog.logger.warn("Removing fluid pipe with an unresolved transfer at dimension {} position {}: {}",
+                    world.provider.getDimension(), pos, record);
+        }
+        return record;
     }
 
     @Override
