@@ -51,7 +51,7 @@ import static gregtech.common.blocks.BlockWarningSign.SignType.*;
 import static gregtech.common.blocks.BlockWarningSign1.SignType.*;
 import static gregtech.common.blocks.BlockWireCoil.CoilType.CUPRONICKEL;
 import static gregtech.loaders.recipe.CraftingComponent.*;
-import static gregtech.loaders.recipe.RecipeTiers.tierName;
+import static gregtech.loaders.recipe.RecipeTiers.*;
 
 public class MetaTileEntityLoader {
 
@@ -182,36 +182,16 @@ public class MetaTileEntityLoader {
                     MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), MetaBlocks.WARNING_SIGN.getItemVariant(type));
         }
 
-        ModHandler.addShapedRecipe(true, "rotor_holder_hv", MetaTileEntities.ROTOR_HOLDER[GTValues.HV].getStackForm(),
-                "SGS",
-                "GHG", "SGS", 'H', MetaTileEntities.HULL[GTValues.HV].getStackForm(), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.BlackSteel), 'S',
-                new UnificationEntry(OrePrefix.gearSmall, Materials.StainlessSteel));
-        ModHandler.addShapedRecipe(true, "rotor_holder_ev", MetaTileEntities.ROTOR_HOLDER[GTValues.EV].getStackForm(),
-                "SGS",
-                "GHG", "SGS", 'H', MetaTileEntities.HULL[GTValues.EV].getStackForm(), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.Ultimet), 'S',
-                new UnificationEntry(OrePrefix.gearSmall, Materials.Titanium));
-        ModHandler.addShapedRecipe(true, "rotor_holder_iv", MetaTileEntities.ROTOR_HOLDER[GTValues.IV].getStackForm(),
-                "SGS",
-                "GHG", "SGS", 'H', MetaTileEntities.HULL[GTValues.IV].getStackForm(), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.HSSG), 'S',
-                new UnificationEntry(OrePrefix.gearSmall, Materials.TungstenSteel));
-        ModHandler.addShapedRecipe(true, "rotor_holder_luv", MetaTileEntities.ROTOR_HOLDER[GTValues.LuV].getStackForm(),
-                "SGS",
-                "GHG", "SGS", 'H', MetaTileEntities.HULL[GTValues.LuV].getStackForm(), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.Ruthenium), 'S',
-                new UnificationEntry(OrePrefix.gearSmall, Materials.RhodiumPlatedPalladium));
-        ModHandler.addShapedRecipe(true, "rotor_holder_zpm", MetaTileEntities.ROTOR_HOLDER[GTValues.ZPM].getStackForm(),
-                "SGS",
-                "GHG", "SGS", 'H', MetaTileEntities.HULL[GTValues.ZPM].getStackForm(), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.Trinium), 'S',
-                new UnificationEntry(OrePrefix.gearSmall, Materials.NaquadahAlloy));
-        ModHandler.addShapedRecipe(true, "rotor_holder_uv", MetaTileEntities.ROTOR_HOLDER[GTValues.UV].getStackForm(),
-                "SGS",
-                "GHG", "SGS", 'H', MetaTileEntities.HULL[GTValues.UV].getStackForm(), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.Tritanium), 'S',
-                new UnificationEntry(OrePrefix.gearSmall, Materials.Darmstadtium));
+        // rotor holders: the tier's hull among gears and the small gears of the tier's metal
+        Material[] rotorHolderGears = { Materials.BlackSteel, Materials.Ultimet, Materials.HSSG, Materials.Ruthenium,
+                Materials.Trinium, Materials.Tritanium };
+        for (int tier = GTValues.HV; tier <= GTValues.UV; tier++) {
+            ModHandler.addShapedRecipe(true, "rotor_holder_" + tierName(tier),
+                    MetaTileEntities.ROTOR_HOLDER[tier].getStackForm(), "SGS", "GHG", "SGS",
+                    'H', MetaTileEntities.HULL[tier].getStackForm(),
+                    'G', new UnificationEntry(OrePrefix.gear, rotorHolderGears[tier - GTValues.HV]),
+                    'S', new UnificationEntry(OrePrefix.gearSmall, material(PLATE, tier)));
+        }
 
         ModHandler.addShapedRecipe(true, "maintenance_hatch", MetaTileEntities.MAINTENANCE_HATCH.getStackForm(), "dwx",
                 "hHc", "fsr", 'H', MetaTileEntities.HULL[GTValues.LV].getStackForm());
@@ -855,113 +835,71 @@ public class MetaTileEntityLoader {
                 'C', new UnificationEntry(OrePrefix.pipeSmallItem, Materials.SterlingSilver),
                 'H', MetaTileEntities.HULL[GTValues.MV].getStackForm());
 
-        // Super / Quantum Chests
-        ModHandler.addShapedRecipe(true, "super_chest_lv", MetaTileEntities.QUANTUM_CHEST[0].getStackForm(), "CPC",
-                "PFP", "CPC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.LV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.Steel), 'F',
-                MetaTileEntities.STEEL_CRATE.getStackForm());
-        ModHandler.addShapedRecipe(true, "super_chest_mv", MetaTileEntities.QUANTUM_CHEST[1].getStackForm(), "CPC",
-                "PFP", "CPC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.MV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.Aluminium), 'F',
-                MetaTileEntities.ALUMINIUM_CRATE.getStackForm());
-        ModHandler.addShapedRecipe(true, "super_chest_hv", MetaTileEntities.QUANTUM_CHEST[2].getStackForm(), "CPC",
-                "PFP", "CGC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.HV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.StainlessSteel), 'F',
-                MetaTileEntities.STAINLESS_STEEL_CRATE.getStackForm(), 'G',
-                MetaItems.FIELD_GENERATOR_LV.getStackForm());
-        ModHandler.addShapedRecipe(true, "super_chest_ev", MetaTileEntities.QUANTUM_CHEST[3].getStackForm(), "CPC",
-                "PFP", "CGC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.EV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.Titanium), 'F',
-                MetaTileEntities.TITANIUM_CRATE.getStackForm(), 'G', MetaItems.FIELD_GENERATOR_MV.getStackForm());
-        ModHandler.addShapedRecipe(true, "super_chest_iv", MetaTileEntities.QUANTUM_CHEST[4].getStackForm(), "CPC",
-                "PFP", "CGC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.IV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel), 'F',
-                MetaTileEntities.TUNGSTENSTEEL_CRATE.getStackForm(), 'G', MetaItems.FIELD_GENERATOR_HV.getStackForm());
+        // Super / Quantum Chests and Tanks: the super ones, LV to IV, from the tier's crate or hermetic casing and
+        // plates, with a field generator of two tiers below from HV; the quantum ones, IV to UHV, from the tier's hull
+        // or hermetic casing and dense plates, with a field generator of the tier below. The UHV ones take plain
+        // plates, and the UHV quantum tank takes the UV pump.
+        MetaTileEntity[] crates = { MetaTileEntities.STEEL_CRATE, MetaTileEntities.ALUMINIUM_CRATE,
+                MetaTileEntities.STAINLESS_STEEL_CRATE, MetaTileEntities.TITANIUM_CRATE,
+                MetaTileEntities.TUNGSTENSTEEL_CRATE };
+        for (int tier = GTValues.LV; tier <= GTValues.IV; tier++) {
+            ItemStack chest = MetaTileEntities.QUANTUM_CHEST[tier - 1].getStackForm();
+            Object circuit = new UnificationEntry(OrePrefix.circuit, circuitTier(tier));
+            Object plate = new UnificationEntry(OrePrefix.plate, material(PLATE, tier));
+            ItemStack crate = crates[tier - GTValues.LV].getStackForm();
+            if (tier < GTValues.HV) {
+                ModHandler.addShapedRecipe(true, "super_chest_" + tierName(tier), chest, "CPC", "PFP", "CPC",
+                        'C', circuit, 'P', plate, 'F', crate);
+            } else {
+                ModHandler.addShapedRecipe(true, "super_chest_" + tierName(tier), chest, "CPC", "PFP", "CGC",
+                        'C', circuit, 'P', plate, 'F', crate, 'G', fieldGenerator(tier - 2).getStackForm());
+            }
+        }
 
-        ModHandler.addShapedRecipe(true, "quantum_chest_iv", MetaTileEntities.QUANTUM_CHEST[5].getStackForm(), "CPC",
-                "PHP", "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.IV), 'P',
-                new UnificationEntry(OrePrefix.plateDense, Materials.TungstenSteel), 'F',
-                MetaItems.FIELD_GENERATOR_EV.getStackForm(), 'H', MetaTileEntities.HULL[5].getStackForm());
-        ModHandler.addShapedRecipe(true, "quantum_chest_luv", MetaTileEntities.QUANTUM_CHEST[6].getStackForm(), "CPC",
-                "PHP", "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.LuV), 'P',
-                new UnificationEntry(OrePrefix.plateDense, Materials.RhodiumPlatedPalladium), 'F',
-                MetaItems.FIELD_GENERATOR_IV.getStackForm(), 'H', MetaTileEntities.HULL[6].getStackForm());
-        ModHandler.addShapedRecipe(true, "quantum_chest_zpm", MetaTileEntities.QUANTUM_CHEST[7].getStackForm(), "CPC",
-                "PHP", "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.ZPM), 'P',
-                new UnificationEntry(OrePrefix.plateDense, Materials.NaquadahAlloy), 'F',
-                MetaItems.FIELD_GENERATOR_LuV.getStackForm(), 'H', MetaTileEntities.HULL[7].getStackForm());
-        ModHandler.addShapedRecipe(true, "quantum_chest_uv", MetaTileEntities.QUANTUM_CHEST[8].getStackForm(), "CPC",
-                "PHP", "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.UV), 'P',
-                new UnificationEntry(OrePrefix.plateDense, Materials.Darmstadtium), 'F',
-                MetaItems.FIELD_GENERATOR_ZPM.getStackForm(), 'H', MetaTileEntities.HULL[8].getStackForm());
-        ModHandler.addShapedRecipe(true, "quantum_chest_uhv", MetaTileEntities.QUANTUM_CHEST[9].getStackForm(), "CPC",
-                "PHP", "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.UHV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.Neutronium), 'F',
-                MetaItems.FIELD_GENERATOR_UV.getStackForm(), 'H', MetaTileEntities.HULL[9].getStackForm());
+        for (int tier = GTValues.IV; tier <= GTValues.UHV; tier++) {
+            OrePrefix plate = tier == GTValues.UHV ? OrePrefix.plate : OrePrefix.plateDense;
+            ModHandler.addShapedRecipe(true, "quantum_chest_" + tierName(tier),
+                    MetaTileEntities.QUANTUM_CHEST[tier].getStackForm(), "CPC", "PHP", "CFC",
+                    'C', new UnificationEntry(OrePrefix.circuit, circuitTier(tier)),
+                    'P', new UnificationEntry(plate, material(PLATE, tier)),
+                    'F', fieldGenerator(tier - 1).getStackForm(), 'H', MetaTileEntities.HULL[tier].getStackForm());
+        }
 
-        // Super / Quantum Tanks
-        ModHandler.addShapedRecipe(true, "super_tank_lv", MetaTileEntities.QUANTUM_TANK[0].getStackForm(), "CPC", "PHP",
-                "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.LV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.Steel), 'F', MetaItems.ELECTRIC_PUMP_LV.getStackForm(),
-                'H', MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_LV));
-        ModHandler.addShapedRecipe(true, "super_tank_mv", MetaTileEntities.QUANTUM_TANK[1].getStackForm(), "CPC", "PHP",
-                "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.MV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.Aluminium), 'F',
-                MetaItems.ELECTRIC_PUMP_MV.getStackForm(), 'H', MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_MV));
-        ModHandler.addShapedRecipe(true, "super_tank_hv", MetaTileEntities.QUANTUM_TANK[2].getStackForm(), "CGC", "PHP",
-                "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.HV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.StainlessSteel), 'F',
-                MetaItems.ELECTRIC_PUMP_HV.getStackForm(), 'H', MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_HV),
-                'G', MetaItems.FIELD_GENERATOR_LV.getStackForm());
-        ModHandler.addShapedRecipe(true, "super_tank_ev", MetaTileEntities.QUANTUM_TANK[3].getStackForm(), "CGC", "PHP",
-                "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.EV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.Titanium), 'F',
-                MetaItems.ELECTRIC_PUMP_EV.getStackForm(), 'H', MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_EV),
-                'G', MetaItems.FIELD_GENERATOR_MV.getStackForm());
-        ModHandler.addShapedRecipe(true, "super_tank_iv", MetaTileEntities.QUANTUM_TANK[4].getStackForm(), "CGC", "PHP",
-                "CFC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.IV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel), 'F',
-                MetaItems.ELECTRIC_PUMP_IV.getStackForm(), 'H', MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_IV),
-                'G', MetaItems.FIELD_GENERATOR_HV.getStackForm());
+        for (int tier = GTValues.LV; tier <= GTValues.IV; tier++) {
+            ItemStack tank = MetaTileEntities.QUANTUM_TANK[tier - 1].getStackForm();
+            Object circuit = new UnificationEntry(OrePrefix.circuit, circuitTier(tier));
+            Object plate = new UnificationEntry(OrePrefix.plate, material(PLATE, tier));
+            ItemStack pump = pump(tier).getStackForm();
+            ItemStack casing = MetaBlocks.HERMETIC_CASING.getItemVariant(HermeticCasingsType.values()[tier - 1]);
+            if (tier < GTValues.HV) {
+                ModHandler.addShapedRecipe(true, "super_tank_" + tierName(tier), tank, "CPC", "PHP", "CFC",
+                        'C', circuit, 'P', plate, 'F', pump, 'H', casing);
+            } else {
+                ModHandler.addShapedRecipe(true, "super_tank_" + tierName(tier), tank, "CGC", "PHP", "CFC",
+                        'C', circuit, 'P', plate, 'F', pump, 'H', casing, 'G',
+                        fieldGenerator(tier - 2).getStackForm());
+            }
+        }
 
-        ModHandler.addShapedRecipe(true, "quantum_tank_iv", MetaTileEntities.QUANTUM_TANK[5].getStackForm(), "CGC",
-                "PHP", "CUC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.IV), 'P',
-                new UnificationEntry(OrePrefix.plateDense, Materials.TungstenSteel), 'U',
-                MetaItems.ELECTRIC_PUMP_IV.getStackForm(), 'G', MetaItems.FIELD_GENERATOR_EV.getStackForm(), 'H',
-                MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_IV));
-        ModHandler.addShapedRecipe(true, "quantum_tank_luv", MetaTileEntities.QUANTUM_TANK[6].getStackForm(), "CGC",
-                "PHP", "CUC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.LuV), 'P',
-                new UnificationEntry(OrePrefix.plateDense, Materials.RhodiumPlatedPalladium), 'U',
-                MetaItems.ELECTRIC_PUMP_LuV.getStackForm(), 'G', MetaItems.FIELD_GENERATOR_IV.getStackForm(), 'H',
-                MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_LUV));
-        ModHandler.addShapedRecipe(true, "quantum_tank_zpm", MetaTileEntities.QUANTUM_TANK[7].getStackForm(), "CGC",
-                "PHP", "CUC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.ZPM), 'P',
-                new UnificationEntry(OrePrefix.plateDense, Materials.NaquadahAlloy), 'U',
-                MetaItems.ELECTRIC_PUMP_ZPM.getStackForm(), 'G', MetaItems.FIELD_GENERATOR_LuV.getStackForm(), 'H',
-                MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_ZPM));
-        ModHandler.addShapedRecipe(true, "quantum_tank_uv", MetaTileEntities.QUANTUM_TANK[8].getStackForm(), "CGC",
-                "PHP", "CUC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.UV), 'P',
-                new UnificationEntry(OrePrefix.plateDense, Materials.Darmstadtium), 'U',
-                MetaItems.ELECTRIC_PUMP_UV.getStackForm(), 'G', MetaItems.FIELD_GENERATOR_ZPM.getStackForm(), 'H',
-                MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_UV));
-        ModHandler.addShapedRecipe(true, "quantum_tank_uhv", MetaTileEntities.QUANTUM_TANK[9].getStackForm(), "CGC",
-                "PHP", "CUC", 'C', new UnificationEntry(OrePrefix.circuit, Tier.UHV), 'P',
-                new UnificationEntry(OrePrefix.plate, Materials.Neutronium), 'U',
-                MetaItems.ELECTRIC_PUMP_UV.getStackForm(), 'G', MetaItems.FIELD_GENERATOR_UV.getStackForm(), 'H',
-                MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_UHV));
+        for (int tier = GTValues.IV; tier <= GTValues.UHV; tier++) {
+            OrePrefix plate = tier == GTValues.UHV ? OrePrefix.plate : OrePrefix.plateDense;
+            ModHandler.addShapedRecipe(true, "quantum_tank_" + tierName(tier),
+                    MetaTileEntities.QUANTUM_TANK[tier].getStackForm(), "CGC", "PHP", "CUC",
+                    'C', new UnificationEntry(OrePrefix.circuit, circuitTier(tier)),
+                    'P', new UnificationEntry(plate, material(PLATE, tier)),
+                    'U', pump(Math.min(tier, GTValues.UV)).getStackForm(),
+                    'G', fieldGenerator(tier - 1).getStackForm(),
+                    'H', MetaBlocks.HERMETIC_CASING.getItemVariant(HermeticCasingsType.values()[tier - 1]));
+        }
 
-        ModHandler.addShapedRecipe(true, "buffer_lv", MetaTileEntities.BUFFER[0].getStackForm(), "HP", "CV", 'H',
-                MetaTileEntities.HULL[GTValues.LV].getStackForm(), 'P', MetaItems.ELECTRIC_PUMP_LV.getStackForm(), 'V',
-                MetaItems.CONVEYOR_MODULE_LV.getStackForm(), 'C',
-                new UnificationEntry(OrePrefix.circuit, MarkerMaterials.Tier.LV));
-        ModHandler.addShapedRecipe(true, "buffer_mv", MetaTileEntities.BUFFER[1].getStackForm(), "HP", "CV", 'H',
-                MetaTileEntities.HULL[GTValues.MV].getStackForm(), 'P', MetaItems.ELECTRIC_PUMP_MV.getStackForm(), 'V',
-                MetaItems.CONVEYOR_MODULE_MV.getStackForm(), 'C',
-                new UnificationEntry(OrePrefix.circuit, MarkerMaterials.Tier.LV));
-        ModHandler.addShapedRecipe(true, "buffer_hv", MetaTileEntities.BUFFER[2].getStackForm(), "HP", "CV", 'H',
-                MetaTileEntities.HULL[GTValues.HV].getStackForm(), 'P', MetaItems.ELECTRIC_PUMP_HV.getStackForm(), 'V',
-                MetaItems.CONVEYOR_MODULE_HV.getStackForm(), 'C',
-                new UnificationEntry(OrePrefix.circuit, MarkerMaterials.Tier.LV));
+        // buffers: the tier's hull, pump and conveyor, each with an LV circuit
+        for (int tier = GTValues.LV; tier <= GTValues.HV; tier++) {
+            ModHandler.addShapedRecipe(true, "buffer_" + tierName(tier),
+                    MetaTileEntities.BUFFER[tier - 1].getStackForm(), "HP", "CV",
+                    'H', MetaTileEntities.HULL[tier].getStackForm(), 'P', pump(tier).getStackForm(),
+                    'V', conveyor(tier).getStackForm(),
+                    'C', new UnificationEntry(OrePrefix.circuit, MarkerMaterials.Tier.LV));
+        }
 
         if (ConfigHolder.recipes.harderEBFControllerRecipe) {
             ModHandler.addShapedRecipe(true, "electric_blast_furnace",
