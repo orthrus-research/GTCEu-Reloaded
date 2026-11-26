@@ -56,7 +56,9 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         fromServer(registrar, "gregtech.diode", TileEntity.class, new DiodeProbeInfo());
         fromServer(registrar, "gregtech.multiblock", TileEntity.class, new MultiblockProbeInfo());
         fromServer(registrar, "gregtech.maintenance", TileEntity.class, new MaintenanceProbeInfo());
-        fromServer(registrar, "gregtech.multi_recipemap", TileEntity.class, new MultiRecipeMapProbeInfo());
+        // the client's copy holds the modes and the quantum lines, which HWYLA showed without it on the server
+        HWYLADataAdapter.fromServerOrClient("gregtech.multi_recipemap", TileEntity.class, new MultiRecipeMapProbeInfo())
+                .register(registrar);
         fromServer(registrar, "gregtech.converter", TileEntity.class, new ConverterProbeInfo());
         fromServer(registrar, "gregtech.recipe_logic", TileEntity.class, new RecipeLogicProbeInfo());
         fromServer(registrar, "gregtech.steam_boiler", IGregTechTileEntity.class, new SteamBoilerProbeInfo());
@@ -67,7 +69,8 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         fromServer(registrar, "gregtech.multiblock.activetransformer", TileEntity.class,
                 new ActiveTransformerProbeInfo());
         fromServer(registrar, "gregtech.battery-buffer", TileEntity.class, new BatteryBufferProbeInfo());
-        fromServer(registrar, "gregtech.quantum_storage", IGregTechTileEntity.class, new QuantumStorageProbeInfo());
+        HWYLADataAdapter.fromServerOrClient("gregtech.quantum_storage", IGregTechTileEntity.class,
+                new QuantumStorageProbeInfo()).register(registrar);
         fromServer(registrar, "gregtech.ae_multiblock_hatch_provider", IGregTechTileEntity.class,
                 new AEHatchProbeInfo());
     }

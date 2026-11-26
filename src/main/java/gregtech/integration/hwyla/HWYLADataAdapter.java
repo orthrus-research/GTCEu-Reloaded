@@ -24,32 +24,46 @@ import java.util.List;
 
 /**
  * Shows a shared producer's lines in HWYLA. Lines about a tile entity are produced on the server, sent in HWYLA's NBT
- * data and drawn on the client; lines that need only the block state are produced on the client.
+ * data and drawn on the client; lines that need only the block state are produced on the client. A producer whose lines
+ * the client's copy of the tile entity can also give falls back to the client when the server sends nothing, as on a
+ * server without HWYLA.
  */
 public final class HWYLADataAdapter implements IWailaDataProvider {
 
     private final String configKey;
     private final Class<?> target;
     private final boolean fromServer;
+    private final boolean clientFallback;
     private final ProbeInfoProducer producer;
     private final String nbtKey;
 
-    private HWYLADataAdapter(String configKey, Class<?> target, boolean fromServer, ProbeInfoProducer producer) {
+    private HWYLADataAdapter(String configKey, Class<?> target, boolean fromServer, boolean clientFallback,
+                             ProbeInfoProducer producer) {
         this.configKey = configKey;
         this.target = target;
         this.fromServer = fromServer;
+        this.clientFallback = clientFallback;
         this.producer = producer;
         this.nbtKey = "gregtech.probe." + configKey;
     }
 
     /** Information about a tile entity, which the server produces for the client to draw. */
     public static HWYLADataAdapter fromServer(String configKey, Class<?> target, ProbeInfoProducer producer) {
-        return new HWYLADataAdapter(configKey, target, true, producer);
+        return new HWYLADataAdapter(configKey, target, true, false, producer);
+    }
+
+    /**
+     * Information about a tile entity that the server produces, and that the client produces from its own copy when
+     * the server sends none: when only the client has HWYLA, these lines are shown as they were before the server
+     * produced them.
+     */
+    public static HWYLADataAdapter fromServerOrClient(String configKey, Class<?> target, ProbeInfoProducer producer) {
+        return new HWYLADataAdapter(configKey, target, true, true, producer);
     }
 
     /** Information the block state holds, which the client produces itself. */
     public static HWYLADataAdapter fromClient(String configKey, Class<?> target, ProbeInfoProducer producer) {
-        return new HWYLADataAdapter(configKey, target, false, producer);
+        return new HWYLADataAdapter(configKey, target, false, false, producer);
     }
 
     public void register(@NotNull IWailaRegistrar registrar) {
@@ -64,7 +78,8 @@ public final class HWYLADataAdapter implements IWailaDataProvider {
         if (!fromServer || te == null) return tag;
         List<ProbeLine> lines = new ArrayList<>();
         producer.addInfo(new ProbeContext(world, pos, world.getBlockState(pos), te, player.isSneaking()), lines);
-        if (!lines.isEmpty()) tag.setTag(nbtKey, ProbeLine.writeList(lines));
+        // written even without lines, so the client knows the server answered
+        tag.setTag(nbtKey, ProbeLine.writeList(lines));
         return tag;
     }
 
@@ -74,10 +89,11 @@ public final class HWYLADataAdapter implements IWailaDataProvider {
         if (!config.getConfig(configKey)) return tooltip;
 
         List<ProbeLine> lines;
-        if (fromServer) {
-            NBTTagCompound data = accessor.getNBTData();
-            if (data == null || !data.hasKey(nbtKey)) return tooltip;
+        NBTTagCompound data = fromServer ? accessor.getNBTData() : null;
+        if (data != null && data.hasKey(nbtKey)) {
             lines = ProbeLine.readList(data.getTagList(nbtKey, Constants.NBT.TAG_COMPOUND));
+        } else if (fromServer && !clientFallback) {
+            return tooltip;
         } else {
             lines = new ArrayList<>();
             producer.addInfo(new ProbeContext(accessor.getWorld(), accessor.getPosition(), accessor.getBlockState(),
