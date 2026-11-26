@@ -187,10 +187,20 @@ public class ConverterTraitTest {
         resetEnergyStorage();
         converter_1A.setFeToEu(true);
 
-        // Change two ratios to different value
+        // Change two ratios to different value, restoring them however the test ends
+        int feToEuRatio = ConfigHolder.compat.energy.feToEuRatio;
+        int euToFeRatio = ConfigHolder.compat.energy.euToFeRatio;
         ConfigHolder.compat.energy.feToEuRatio = 4;
         ConfigHolder.compat.energy.euToFeRatio = 1;
+        try {
+            assertNonIdenticalRatioConversion();
+        } finally {
+            ConfigHolder.compat.energy.feToEuRatio = feToEuRatio;
+            ConfigHolder.compat.energy.euToFeRatio = euToFeRatio;
+        }
+    }
 
+    private static void assertNonIdenticalRatioConversion() {
         IEnergyStorage storage = converter_1A.getCapability(CapabilityEnergy.ENERGY, EnumFacing.SOUTH);
         IEnergyContainer container = converter_1A.getCapability(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER,
                 EnumFacing.NORTH);
@@ -209,9 +219,6 @@ public class ConverterTraitTest {
         // according to config value.
         MatcherAssert.assertThat(storage.getEnergyStored(), is(32));
         MatcherAssert.assertThat(container.getEnergyStored(), is(32L));
-
-        ConfigHolder.compat.energy.feToEuRatio = 4;
-        ConfigHolder.compat.energy.euToFeRatio = 4;
     }
 
     private static void resetEnergyStorage() {

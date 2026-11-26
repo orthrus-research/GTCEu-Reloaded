@@ -102,7 +102,7 @@ public class IParallelableRecipeLogicTest {
 
             setParallelLimitMethod.invoke(recipeMapWorkableField, 4);
         } catch (NoSuchFieldException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         // isValid() check in the dirtying logic requires both a metatileentity and a holder
@@ -111,7 +111,7 @@ public class IParallelableRecipeLogicTest {
             field.setAccessible(true);
             field.set(mbt, new MetaTileEntityHolder());
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         try {
@@ -119,7 +119,7 @@ public class IParallelableRecipeLogicTest {
             field.setAccessible(true);
             field.set(mbt.getHolder(), mbt);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         ((MetaTileEntityHolder) mbt.getHolder()).setWorld(world);
@@ -195,7 +195,7 @@ public class IParallelableRecipeLogicTest {
             field.set(importFluidBus, mbt);
             field.set(exportFluidBus, mbt);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         return (MetaTileEntityElectricBlastFurnace) mbt;
@@ -249,8 +249,9 @@ public class IParallelableRecipeLogicTest {
                 hashStrategy.equals(new ItemStack(Blocks.STONE, 4), parallelRecipe.getOutputs().get(0)), is(true));
 
         // Check the recipe inputs
-        // assertEquals(CountableIngredient.from(new ItemStack(Blocks.COBBLESTONE), 4),
-        // parallelRecipe.getInputs().get(0));
+        MatcherAssert.assertThat(parallelRecipe.getInputs().get(0).getAmount(), is(4));
+        MatcherAssert.assertThat(parallelRecipe.getInputs().get(0).acceptsStack(new ItemStack(Blocks.COBBLESTONE)),
+                is(true));
     }
 
     @Test

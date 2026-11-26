@@ -93,7 +93,7 @@ public class MultiblockRecipeLogicTest {
             field.setAccessible(true);
             field.set(mbt, new MetaTileEntityHolder());
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         try {
@@ -101,7 +101,7 @@ public class MultiblockRecipeLogicTest {
             field.setAccessible(true);
             field.set(mbt.getHolder(), mbt);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         ((MetaTileEntityHolder) mbt.getHolder()).setWorld(world);
@@ -167,7 +167,7 @@ public class MultiblockRecipeLogicTest {
             field.set(importFluidBus, mbt);
             field.set(exportFluidBus, mbt);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         MultiblockRecipeLogic mbl = new MultiblockRecipeLogic(mbt) {
@@ -318,7 +318,7 @@ public class MultiblockRecipeLogicTest {
             field.setAccessible(true);
             field.set(mbt, new MetaTileEntityHolder());
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         try {
@@ -326,7 +326,7 @@ public class MultiblockRecipeLogicTest {
             field.setAccessible(true);
             field.set(mbt.getHolder(), mbt);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         ((MetaTileEntityHolder) mbt.getHolder()).setWorld(world);
@@ -405,7 +405,7 @@ public class MultiblockRecipeLogicTest {
             field.set(importFluidBus, mbt);
             field.set(exportFluidBus, mbt);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         MultiblockRecipeLogic mbl = new MultiblockRecipeLogic(mbt) {
@@ -583,7 +583,7 @@ public class MultiblockRecipeLogicTest {
             field.setAccessible(true);
             field.set(mbt, new MetaTileEntityHolder());
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         try {
@@ -591,7 +591,7 @@ public class MultiblockRecipeLogicTest {
             field.setAccessible(true);
             field.set(mbt.getHolder(), mbt);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         ((MetaTileEntityHolder) mbt.getHolder()).setWorld(DummyWorld.INSTANCE);
@@ -632,7 +632,7 @@ public class MultiblockRecipeLogicTest {
             field.set(exportItemBus, mbt);
             field.set(maintenanceHatch, mbt);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
+            throw new AssertionError("Test setup failed", e);
         }
 
         MultiblockRecipeLogic mbl = new MultiblockRecipeLogic(mbt) {

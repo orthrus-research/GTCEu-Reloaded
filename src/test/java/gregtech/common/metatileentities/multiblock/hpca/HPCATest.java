@@ -83,7 +83,8 @@ public class HPCATest {
         assertThat(maxCoolingDemand, is(2 * 4));
         assertThat(maxCoolingAmount, is(2 * 4));
 
-        Random r = new Random();
+        // a fixed seed, so a failure reproduces
+        Random r = new Random(0x48504341L);
         for (int i = 0; i < 100; i++) {
             requested = Math.max(1, r.nextInt(maxCWUt + 1));
             allocated = handler.allocateCWUt(requested, true);
@@ -169,11 +170,15 @@ public class HPCATest {
                 handler.tick();
             }
         };
+        // seeds drawn from a fixed seed, so a failure reproduces; the failing seed is in the message
+        Random seeds = new Random(0x48504341L);
         for (int i = 0; i < 10000; i++) {
-            Random r = new Random();
-            long seed = r.nextLong();
-            r.setSeed(seed);
-            testRunner.accept(r);
+            long seed = seeds.nextLong();
+            try {
+                testRunner.accept(new Random(seed));
+            } catch (AssertionError failure) {
+                throw new AssertionError("HPCA grid with seed " + seed + " failed", failure);
+            }
         }
     }
 }
