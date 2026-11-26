@@ -128,10 +128,25 @@ public class TankWidget extends Widget implements IIngredientSlot {
     @Nullable
     public TextComponentTranslation getFluidTextComponent() {
         if (lastFluidInTank == null) return null;
-        if (lastFluidInTank.getFluid() instanceof GTFluid.GTMaterialFluid materialFluid) {
-            return materialFluid.toTextComponentTranslation();
+        return fluidTextComponent(lastFluidInTank);
+    }
+
+    /**
+     * Name a fluid in text the server sends, translated on the client. A material fluid is named as
+     * {@link GTFluid.GTMaterialFluid#getLocalizedKey()} names it: the material's name, under the fluid's
+     * {@link GTFluid.GTMaterialFluid#getNameTranslationKey() translation key} when it has one.
+     */
+    protected static @NotNull TextComponentTranslation fluidTextComponent(@NotNull FluidStack stack) {
+        if (!(stack.getFluid() instanceof GTFluid.GTMaterialFluid materialFluid)) {
+            return new TextComponentTranslation(stack.getUnlocalizedName());
         }
-        return new TextComponentTranslation(lastFluidInTank.getUnlocalizedName());
+        String materialKey = materialFluid.getMaterial().getUnlocalizedName();
+        String customMaterialKey = "fluid." + materialKey;
+        TextComponentTranslation materialName = new TextComponentTranslation(
+                net.minecraft.util.text.translation.I18n.canTranslate(customMaterialKey) ? customMaterialKey :
+                        materialKey);
+        String translationKey = materialFluid.getNameTranslationKey();
+        return translationKey == null ? materialName : new TextComponentTranslation(translationKey, materialName);
     }
 
     @Override

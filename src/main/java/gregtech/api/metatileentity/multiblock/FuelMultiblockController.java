@@ -9,7 +9,6 @@ import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
 import gregtech.api.mui.sync.FixedIntArraySyncValue;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
-import gregtech.api.util.TextComponentUtil;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.common.ConfigHolder;
 
@@ -143,40 +142,6 @@ public abstract class FuelMultiblockController extends RecipeMapMultiblockContro
             }
         }
         return new int[] { fluidAmount, fluidCapacity };
-    }
-
-    @Deprecated
-    protected void addFuelText(List<ITextComponent> textList) {
-        // Fuel
-        int fuelStored = 0;
-        int fuelCapacity = 0;
-        FluidStack fuelStack = null;
-        MultiblockFuelRecipeLogic recipeLogic = (MultiblockFuelRecipeLogic) recipeMapWorkable;
-        if (isStructureFormed() && recipeLogic.getInputFluidStack() != null && getInputFluidInventory() != null) {
-            fuelStack = recipeLogic.getInputFluidStack().copy();
-            fuelStack.amount = Integer.MAX_VALUE;
-            int[] fuelAmount = getTotalFluidAmount(fuelStack, getInputFluidInventory());
-            fuelStored = fuelAmount[0];
-            fuelCapacity = fuelAmount[1];
-        }
-
-        if (fuelStack != null) {
-            ITextComponent fuelName = TextComponentUtil.setColor(GTUtility.getFluidTranslation(fuelStack),
-                    TextFormatting.GOLD);
-            ITextComponent fuelInfo = new TextComponentTranslation("%s / %s L (%s)",
-                    TextFormattingUtil.formatNumbers(fuelStored),
-                    TextFormattingUtil.formatNumbers(fuelCapacity),
-                    fuelName);
-            textList.add(TextComponentUtil.translationWithColor(
-                    TextFormatting.GRAY,
-                    "gregtech.multiblock.large_combustion_engine.fuel_amount",
-                    TextComponentUtil.setColor(fuelInfo, TextFormatting.GOLD)));
-        } else {
-            textList.add(TextComponentUtil.translationWithColor(
-                    TextFormatting.GRAY,
-                    "gregtech.multiblock.large_combustion_engine.fuel_amount",
-                    "0 / 0 L"));
-        }
     }
 
     /**

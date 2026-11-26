@@ -5,7 +5,6 @@ import gregtech.api.fluids.attribute.FluidAttribute;
 import gregtech.api.unification.material.Material;
 
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
@@ -13,7 +12,6 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import com.cleanroommc.modularui.api.drawable.IKey;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -63,22 +61,12 @@ public class GTFluid extends Fluid implements AttributedFluid {
             return this.material;
         }
 
-        @Deprecated
-        @ApiStatus.ScheduledForRemoval(inVersion = "2.10")
-        public @NotNull TextComponentTranslation toTextComponentTranslation() {
-            TextComponentTranslation localizedName;
-            String customMaterialTranslation = "fluid." + material.getUnlocalizedName();
-
-            if (net.minecraft.util.text.translation.I18n.canTranslate(customMaterialTranslation)) {
-                localizedName = new TextComponentTranslation(customMaterialTranslation);
-            } else {
-                localizedName = new TextComponentTranslation(material.getUnlocalizedName());
-            }
-
-            if (translationKey != null) {
-                return new TextComponentTranslation(translationKey, localizedName);
-            }
-            return localizedName;
+        /**
+         * @return the translation key this fluid's name formats its material's name into, or {@code null} when the
+         *         fluid is named by its material's name alone
+         */
+        public @Nullable String getNameTranslationKey() {
+            return this.translationKey;
         }
 
         public @NotNull IKey getLocalizedKey() {

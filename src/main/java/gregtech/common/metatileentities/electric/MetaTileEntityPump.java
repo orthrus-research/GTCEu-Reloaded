@@ -326,12 +326,8 @@ public class MetaTileEntityPump extends TieredMetaTileEntity {
 
     private Consumer<List<ITextComponent>> getFluidNameText(TankWidget tankWidget) {
         return (list) -> {
+            // the phantom tank names the locked fluid when the tank is empty
             TextComponentTranslation translation = tankWidget.getFluidTextComponent();
-            // If there is no fluid in the tank, but there is a locked fluid
-            if (translation == null) {
-                translation = GTUtility.getFluidTranslation(this.lockedFluid);
-            }
-
             if (translation != null) {
                 list.add(translation);
             }

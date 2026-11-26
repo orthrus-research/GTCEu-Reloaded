@@ -197,15 +197,11 @@ public class PhantomTankWidget extends TankWidget implements IGhostIngredientTar
 
     @Nullable
     public TextComponentTranslation getFluidTextComponent() {
-        if (lastFluidInTank != null && lastFluidInTank.getFluid() instanceof GTFluid.GTMaterialFluid materialFluid) {
-            return materialFluid.toTextComponentTranslation();
+        if (lastFluidInTank != null && lastFluidInTank.getFluid() instanceof GTFluid.GTMaterialFluid) {
+            return fluidTextComponent(lastFluidInTank);
         }
 
         FluidStack stack = phantomFluidGetter.get();
-        if (stack == null) return null;
-        if (stack.getFluid() instanceof GTFluid.GTMaterialFluid materialFluid) {
-            return materialFluid.toTextComponentTranslation();
-        }
-        return new TextComponentTranslation(stack.getUnlocalizedName());
+        return stack == null ? null : fluidTextComponent(stack);
     }
 }
