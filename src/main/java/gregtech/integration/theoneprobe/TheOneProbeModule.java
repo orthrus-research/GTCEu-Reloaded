@@ -5,6 +5,7 @@ import gregtech.api.modules.GregTechModule;
 import gregtech.api.util.Mods;
 import gregtech.integration.IntegrationSubmodule;
 import gregtech.integration.probe.ProbeInfoProducer;
+import gregtech.integration.probe.producer.AEHatchProbeInfo;
 import gregtech.integration.probe.producer.ActiveTransformerProbeInfo;
 import gregtech.integration.probe.producer.BatteryBufferProbeInfo;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
@@ -63,7 +64,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         register(oneProbe, ":quantum_storage_provider", new QuantumStorageProbeInfo());
         register(oneProbe, GTValues.MODID + ":active_transformer_info_provider", new ActiveTransformerProbeInfo());
         register(oneProbe, GTValues.MODID + ":battery_buffer_provider", new BatteryBufferProbeInfo());
-        oneProbe.registerProvider(new AEMultiblockHatchProvider());
+        register(oneProbe, ":ae_multiblock_hatch_provider", new AEHatchProbeInfo());
 
         // Dev environment debug providers
         oneProbe.registerProvider(new DebugPipeNetInfoProvider());

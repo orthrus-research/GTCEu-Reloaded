@@ -5,10 +5,10 @@ import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.util.Mods;
 import gregtech.integration.IntegrationSubmodule;
-import gregtech.integration.hwyla.provider.AEMultiblockHatchProvider;
 import gregtech.integration.hwyla.provider.BlockOreDataProvider;
 import gregtech.integration.hwyla.provider.LampDataProvider;
 import gregtech.integration.probe.ProbeInfoProducer;
+import gregtech.integration.probe.producer.AEHatchProbeInfo;
 import gregtech.integration.probe.producer.ActiveTransformerProbeInfo;
 import gregtech.integration.probe.producer.BatteryBufferProbeInfo;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
@@ -66,7 +66,8 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
                 new ActiveTransformerProbeInfo());
         fromServer(registrar, "gregtech.battery-buffer", TileEntity.class, new BatteryBufferProbeInfo());
         fromServer(registrar, "gregtech.quantum_storage", IGregTechTileEntity.class, new QuantumStorageProbeInfo());
-        AEMultiblockHatchProvider.INSTANCE.register(registrar);
+        fromServer(registrar, "gregtech.ae_multiblock_hatch_provider", IGregTechTileEntity.class,
+                new AEHatchProbeInfo());
     }
 
     /** Registers a shared producer whose lines the server sends under a HWYLA configuration key. */
