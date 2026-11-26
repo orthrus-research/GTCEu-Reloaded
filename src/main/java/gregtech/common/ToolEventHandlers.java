@@ -58,7 +58,11 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import codechicken.lib.vec.*;
+import codechicken.lib.vec.Rotation;
+import codechicken.lib.vec.Scale;
+import codechicken.lib.vec.Transformation;
+import codechicken.lib.vec.Translation;
+import codechicken.lib.vec.Vector3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.opengl.GL11;

@@ -17,7 +17,11 @@ import codechicken.lib.raytracer.IndexedCuboid6;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
-import codechicken.lib.vec.*;
+import codechicken.lib.vec.Cuboid6;
+import codechicken.lib.vec.Matrix4;
+import codechicken.lib.vec.Rotation;
+import codechicken.lib.vec.Transformation;
+import codechicken.lib.vec.Vector3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -25,7 +25,11 @@ gregtech/api/cover/CoverHolder.java codechicken.lib.raytracer.IndexedCuboid6
 gregtech/api/cover/CoverHolder.java codechicken.lib.render.CCRenderState
 gregtech/api/cover/CoverHolder.java codechicken.lib.render.pipeline.ColourMultiplier
 gregtech/api/cover/CoverHolder.java codechicken.lib.render.pipeline.IVertexOperation
-gregtech/api/cover/CoverHolder.java codechicken.lib.vec.*
+gregtech/api/cover/CoverHolder.java codechicken.lib.vec.Cuboid6
+gregtech/api/cover/CoverHolder.java codechicken.lib.vec.Matrix4
+gregtech/api/cover/CoverHolder.java codechicken.lib.vec.Rotation
+gregtech/api/cover/CoverHolder.java codechicken.lib.vec.Transformation
+gregtech/api/cover/CoverHolder.java codechicken.lib.vec.Vector3
 gregtech/api/cover/CoverRayTracer.java codechicken.lib.raytracer.CuboidRayTraceResult
 gregtech/api/cover/CoverRayTracer.java codechicken.lib.raytracer.RayTracer
 gregtech/api/cover/CoverUtil.java codechicken.lib.raytracer.IndexedCuboid6
@@ -225,7 +229,11 @@ gregtech/client/utils/PipelineUtil.java codechicken.lib.render.pipeline.ColourMu
 gregtech/client/utils/PipelineUtil.java codechicken.lib.render.pipeline.IVertexOperation
 gregtech/client/utils/RenderBufferHelper.java codechicken.lib.vec.Cuboid6
 gregtech/client/utils/RenderUtil.java codechicken.lib.vec.Matrix4
-gregtech/common/ToolEventHandlers.java codechicken.lib.vec.*
+gregtech/common/ToolEventHandlers.java codechicken.lib.vec.Rotation
+gregtech/common/ToolEventHandlers.java codechicken.lib.vec.Scale
+gregtech/common/ToolEventHandlers.java codechicken.lib.vec.Transformation
+gregtech/common/ToolEventHandlers.java codechicken.lib.vec.Translation
+gregtech/common/ToolEventHandlers.java codechicken.lib.vec.Vector3
 gregtech/common/covers/CoverConveyor.java codechicken.lib.raytracer.CuboidRayTraceResult
 gregtech/common/covers/CoverConveyor.java codechicken.lib.render.CCRenderState
 gregtech/common/covers/CoverConveyor.java codechicken.lib.render.pipeline.IVertexOperation
