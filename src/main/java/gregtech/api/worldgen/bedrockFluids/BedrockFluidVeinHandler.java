@@ -19,7 +19,9 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.UnmodifiableView;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,7 +31,7 @@ public class BedrockFluidVeinHandler {
 
     public final static LinkedHashMap<BedrockFluidDepositDefinition, Integer> veinList = new LinkedHashMap<>();
     private final static Map<Integer, HashMap<Integer, Integer>> totalWeightMap = new HashMap<>();
-    public static HashMap<ChunkPosDimension, FluidVeinWorldEntry> veinCache = new HashMap<>();
+    private static final Map<ChunkPosDimension, FluidVeinWorldEntry> veinCache = new HashMap<>();
 
     /**
      * 1: Original version
@@ -170,12 +172,34 @@ public class BedrockFluidVeinHandler {
         veinList.put(definition, definition.getWeight());
     }
 
+    /**
+     * The veins of the loaded world, keyed by vein position and dimension: those read from the world's save data when
+     * the server started and those generated since as chunks were queried. Empty while no server runs.
+     *
+     * @return a read-only view of the vein cache
+     */
+    public static @NotNull @UnmodifiableView Map<ChunkPosDimension, FluidVeinWorldEntry> getVeinCache() {
+        return Collections.unmodifiableMap(veinCache);
+    }
+
+    /**
+     * Forgets every cached vein. GTCEu calls this when a server starts, before the world's vein data is read, and when
+     * it stops, so one world's veins never reach another world's save.
+     */
+    public static void clearVeinCache() {
+        veinCache.clear();
+    }
+
+    /** Caches a vein read from the world's save data. */
+    static void cacheVein(@NotNull ChunkPosDimension coords, @NotNull FluidVeinWorldEntry entry) {
+        veinCache.put(coords, entry);
+    }
+
     public static void recalculateChances(boolean mutePackets) {
         totalWeightMap.clear();
         if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER && !mutePackets) {
             HashMap<FluidVeinWorldEntry, Integer> packetMap = new HashMap<>();
-            for (Map.Entry<ChunkPosDimension, FluidVeinWorldEntry> entry : BedrockFluidVeinHandler.veinCache
-                    .entrySet()) {
+            for (Map.Entry<ChunkPosDimension, FluidVeinWorldEntry> entry : veinCache.entrySet()) {
                 if (entry.getKey() != null && entry.getValue() != null)
                     packetMap.put(entry.getValue(), entry.getValue().getDefinition().getWeight());
             }

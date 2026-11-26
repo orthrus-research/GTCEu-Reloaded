@@ -24,14 +24,14 @@ public class BedrockFluidVeinSaveData extends WorldSavedData {
     @Override
     public void readFromNBT(NBTTagCompound nbt) {
         NBTTagList veinList = nbt.getTagList("veinInfo", 10);
-        BedrockFluidVeinHandler.veinCache.clear();
+        BedrockFluidVeinHandler.clearVeinCache();
         for (int i = 0; i < veinList.tagCount(); i++) {
             NBTTagCompound tag = veinList.getCompoundTagAt(i);
             ChunkPosDimension coords = ChunkPosDimension.readFromNBT(tag);
             if (coords != null) {
                 BedrockFluidVeinHandler.FluidVeinWorldEntry info = BedrockFluidVeinHandler.FluidVeinWorldEntry
                         .readFromNBT(tag.getCompoundTag("info"));
-                BedrockFluidVeinHandler.veinCache.put(coords, info);
+                BedrockFluidVeinHandler.cacheVein(coords, info);
             }
         }
 
@@ -49,8 +49,8 @@ public class BedrockFluidVeinSaveData extends WorldSavedData {
     @Override
     public @NotNull NBTTagCompound writeToNBT(@NotNull NBTTagCompound nbt) {
         NBTTagList oilList = new NBTTagList();
-        for (Map.Entry<ChunkPosDimension, BedrockFluidVeinHandler.FluidVeinWorldEntry> e : BedrockFluidVeinHandler.veinCache
-                .entrySet()) {
+        for (Map.Entry<ChunkPosDimension, BedrockFluidVeinHandler.FluidVeinWorldEntry> e : BedrockFluidVeinHandler
+                .getVeinCache().entrySet()) {
             if (e.getKey() != null && e.getValue() != null) {
                 NBTTagCompound tag = e.getKey().writeToNBT();
                 tag.setTag("info", e.getValue().writeToNBT());

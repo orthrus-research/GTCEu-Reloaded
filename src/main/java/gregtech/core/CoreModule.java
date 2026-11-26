@@ -336,7 +336,7 @@ public class CoreModule implements IGregTechModule {
             World world = FMLCommonHandler.instance().getMinecraftServerInstance().getEntityWorld();
             if (!world.isRemote) {
                 // the cache is static: a new world without a vein file must not inherit the last world's veins
-                BedrockFluidVeinHandler.veinCache.clear();
+                BedrockFluidVeinHandler.clearVeinCache();
                 BedrockFluidVeinSaveData saveData = (BedrockFluidVeinSaveData) world
                         .loadData(BedrockFluidVeinSaveData.class, BedrockFluidVeinSaveData.dataName);
                 if (saveData == null) {
@@ -352,7 +352,7 @@ public class CoreModule implements IGregTechModule {
 
     @Override
     public void serverStopped(FMLServerStoppedEvent event) {
-        BedrockFluidVeinHandler.veinCache.clear();
+        BedrockFluidVeinHandler.clearVeinCache();
         VirtualEnderRegistry.clearMaps();
         CapesRegistry.clearMaps();
     }
