@@ -7,8 +7,6 @@ import gregtech.api.util.Mods;
 import gregtech.api.worldgen.config.OreDepositDefinition;
 import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.api.worldgen.filler.FillerEntry;
-import gregtech.common.gui.widget.prospector.ProspectingTexture;
-import gregtech.common.gui.widget.prospector.ProspectorMode;
 import gregtech.core.network.packets.PacketProspecting;
 import gregtech.integration.xaero.ColorUtility;
 

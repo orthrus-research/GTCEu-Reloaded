@@ -8,10 +8,10 @@ import gregtech.api.items.metaitem.stats.IItemBehaviour;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.mui.factory.MetaItemGuiFactory;
 import gregtech.api.util.GTUtility;
-import gregtech.common.gui.widget.prospector.ProspectorMode;
 import gregtech.common.mui.widget.prospector.ProspectingMapWidget;
 import gregtech.common.mui.widget.prospector.ProspectingOreListWidget;
 import gregtech.common.mui.widget.prospector.ProspectingSyncHandler;
+import gregtech.common.mui.widget.prospector.ProspectorMode;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;

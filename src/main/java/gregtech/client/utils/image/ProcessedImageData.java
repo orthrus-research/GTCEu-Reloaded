@@ -1,4 +1,4 @@
-package gregtech.api.gui.resources.utils;
+package gregtech.client.utils.image;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;

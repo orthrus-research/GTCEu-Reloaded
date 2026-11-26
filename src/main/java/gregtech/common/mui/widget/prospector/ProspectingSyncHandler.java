@@ -7,7 +7,6 @@ import gregtech.api.unification.stack.MaterialStack;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
-import gregtech.common.gui.widget.prospector.ProspectorMode;
 import gregtech.core.network.packets.PacketProspecting;
 
 import net.minecraft.block.state.IBlockState;

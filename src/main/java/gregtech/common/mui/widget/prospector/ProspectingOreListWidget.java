@@ -3,8 +3,6 @@ package gregtech.common.mui.widget.prospector;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.stack.MaterialStack;
-import gregtech.common.gui.widget.prospector.ProspectingTexture;
-import gregtech.common.gui.widget.prospector.ProspectorMode;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.Fluid;

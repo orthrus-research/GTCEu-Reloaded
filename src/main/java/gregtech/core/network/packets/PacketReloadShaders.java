@@ -1,6 +1,5 @@
 package gregtech.core.network.packets;
 
-import gregtech.api.gui.resources.ShaderTexture;
 import gregtech.api.network.IClientExecutor;
 import gregtech.api.network.IPacket;
 import gregtech.client.shader.Shaders;
@@ -23,7 +22,6 @@ public class PacketReloadShaders implements IPacket, IClientExecutor {
     public void executeClient(NetHandlerPlayClient handler) {
         if (Shaders.allowedShader()) {
             Shaders.initShaders();
-            ShaderTexture.clear();
         }
     }
 }

@@ -1,10 +1,10 @@
-package gregtech.api.gui.resources.utils;
+package gregtech.client.utils.image;
 
-import gregtech.api.gui.resources.picturetexture.AnimatedPictureTexture;
-import gregtech.api.gui.resources.picturetexture.OrdinaryTexture;
-import gregtech.api.gui.resources.picturetexture.PictureTexture;
-import gregtech.api.gui.resources.picturetexture.VideoTexture;
 import gregtech.api.util.GTLog;
+import gregtech.client.renderer.texture.picture.AnimatedPictureTexture;
+import gregtech.client.renderer.texture.picture.OrdinaryTexture;
+import gregtech.client.renderer.texture.picture.PictureTexture;
+import gregtech.client.renderer.texture.picture.VideoTexture;
 
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;

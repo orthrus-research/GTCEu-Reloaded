@@ -1,6 +1,6 @@
-package gregtech.api.gui.resources.picturetexture;
+package gregtech.client.renderer.texture.picture;
 
-import gregtech.api.gui.resources.utils.ProcessedImageData;
+import gregtech.client.utils.image.ProcessedImageData;
 
 import net.minecraft.client.renderer.GlStateManager;
 

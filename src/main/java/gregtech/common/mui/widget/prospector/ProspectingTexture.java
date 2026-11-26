@@ -1,4 +1,4 @@
-package gregtech.common.gui.widget.prospector;
+package gregtech.common.mui.widget.prospector;
 
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.stack.MaterialStack;

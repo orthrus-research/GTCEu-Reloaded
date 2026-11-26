@@ -1,10 +1,10 @@
 package gregtech.common.items.behaviors.monitorplugin;
 
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.resources.picturetexture.PictureTexture;
-import gregtech.api.gui.resources.utils.DownloadThread;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
+import gregtech.client.renderer.texture.picture.PictureTexture;
 import gregtech.client.utils.RenderUtil;
+import gregtech.client.utils.image.DownloadThread;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.client.resources.I18n;

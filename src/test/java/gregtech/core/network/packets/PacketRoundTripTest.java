@@ -5,7 +5,7 @@ import gregtech.api.network.IPacket;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler.FluidVeinWorldEntry;
 import gregtech.api.worldgen.config.BedrockFluidDepositDefinition;
-import gregtech.common.gui.widget.prospector.ProspectorMode;
+import gregtech.common.mui.widget.prospector.ProspectorMode;
 
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
