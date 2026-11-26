@@ -39,7 +39,6 @@ import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.impl.CleanroomProperty;
 import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.recipes.properties.impl.DimensionProperty;
-import gregtech.api.util.GTLog;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
@@ -70,21 +69,10 @@ import static gregtech.api.recipes.logic.OverclockingLogic.*;
 
 public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable, IParallelableRecipeLogic {
 
-    private static final String ALLOW_OVERCLOCKING = "AllowOverclocking";
-    private static final String OVERCLOCK_VOLTAGE = "OverclockVoltage";
-
     private final RecipeMap<?> recipeMap;
 
-    private double euDiscount = -1;
-    private double speedBonus = -1;
-
     protected Recipe previousRecipe;
-    private boolean allowOverclocking = true;
     protected int parallelRecipesPerformed;
-    private long overclockVoltage;
-    private final OCParams ocParams = new OCParams();
-    private final OCResult ocResult = new OCResult();
-    private final RecipeModifierScope modifierScope = new RecipeModifierScope();
 
     protected boolean canRecipeProgress = true;
 
@@ -100,20 +88,21 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected boolean workingEnabled = true;
     protected boolean hasNotEnoughEnergy;
     protected boolean wasActiveAndNeedsUpdate;
-    private boolean awaitingOutputs;
-    private final RecipeConditionState conditions = new RecipeConditionState();
     protected boolean isOutputsFull;
     protected boolean invalidInputsForRecipes;
-    private final RecipeSearchScheduler scheduler;
-    private final RecipeFailureTracker failures = new RecipeFailureTracker();
 
     protected boolean hasPerfectOC;
 
-    /**
-     * DO NOT use the parallelLimit field directly, EVER
-     * use {@link AbstractRecipeLogic#setParallelLimit(int)} instead
-     */
-    private int parallelLimit = 1;
+    private boolean awaitingOutputs;
+    private final OCParams ocParams = new OCParams();
+    private final OCResult ocResult = new OCResult();
+
+    // Each holds the state of one concern. The methods of this class that use them remain the override points.
+    private final RecipeRunSettings settings = new RecipeRunSettings();
+    private final RecipeSearchScheduler scheduler;
+    private final RecipeFailureTracker failures = new RecipeFailureTracker();
+    private final RecipeConditionState conditions = new RecipeConditionState();
+    private final RecipeModifierScope modifierScope = new RecipeModifierScope();
 
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap) {
         this(tileEntity, recipeMap, false);
@@ -889,21 +878,9 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                         metaTileEntity.getFluidOutputLimit());
         if (recipe == null || !checkModifiedRecipeInputs(recipe, inputInventory, inputFluidInventory)) return false;
 
-        // apply EU/speed discount (if any) before parallel
-        if (euDiscount > 0 || speedBonus > 0) { // if-statement to avoid unnecessarily creating RecipeBuilder object
-            RecipeBuilder<?> builder = new RecipeBuilder<>(recipe, recipeMap);
-            if (euDiscount > 0) {
-                long newEUt = Math.round(recipe.getEUt() * euDiscount);
-                if (newEUt <= 0) newEUt = 1;
-                builder.EUt(newEUt);
-            }
-            if (speedBonus > 0) {
-                int duration = recipe.getDuration();
-                int newDuration = (int) Math.round(duration * speedBonus);
-                if (newDuration <= 0) newDuration = 1;
-                builder.duration(newDuration);
-            }
-            Recipe built = builder.build().getResult();
+        // apply EU/speed discount (if any) before parallel; without one, the recipe is not rebuilt
+        if (settings.hasRecipeBonuses()) {
+            Recipe built = settings.applyRecipeBonuses(recipe, recipeMap);
             recipe = retainRecipeModifierMetadata(built, recipe);
         }
 
@@ -946,12 +923,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     /**
-     * DO NOT use the parallelLimit field directly, EVER
-     *
      * @return the current parallel limit of the logic
      */
     public int getParallelLimit() {
-        return parallelLimit;
+        return settings.getParallelLimit();
     }
 
     /**
@@ -960,7 +935,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * @param amount the amount to set
      */
     public void setParallelLimit(int amount) {
-        parallelLimit = amount;
+        settings.setParallelLimit(amount);
         requestRecipeLogicWakeup();
     }
 
@@ -976,19 +951,14 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      *                 </strong>
      */
     public void setEUDiscount(double discount) {
-        if (discount <= 0) {
-            GTLog.logger.warn("Cannot set EU discount for recipe logic to {}, discount must be > 0", discount);
-            return;
-        }
-        euDiscount = discount;
-        requestRecipeLogicWakeup();
+        if (settings.setEUDiscount(discount)) requestRecipeLogicWakeup();
     }
 
     /**
      * @return the EU/t discount, or -1 if no discount.
      */
     public double getEUtDiscount() {
-        return euDiscount;
+        return settings.getEUDiscount();
     }
 
     /**
@@ -1000,19 +970,14 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      *              If bonus is > 1, then the recipe will be slower than the normal duration.
      */
     public void setSpeedBonus(double bonus) {
-        if (bonus <= 0) {
-            GTLog.logger.warn("Cannot set speed bonus for recipe logic to {}, bonus must be > 0", bonus);
-            return;
-        }
-        speedBonus = bonus;
-        requestRecipeLogicWakeup();
+        if (settings.setSpeedBonus(bonus)) requestRecipeLogicWakeup();
     }
 
     /**
      * @return the speed bonus, or -1 if no bonus.
      */
     public double getSpeedBonus() {
-        return speedBonus;
+        return settings.getSpeedBonus();
     }
 
     /**
@@ -1654,8 +1619,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     public void setAllowOverclocking(boolean allowOverclocking) {
         requestRecipeLogicWakeup();
-        this.allowOverclocking = allowOverclocking;
-        this.overclockVoltage = allowOverclocking ? getMaximumOverclockVoltage() : GTValues.V[GTValues.ULV];
+        settings.setOverclockingAllowed(allowOverclocking);
+        settings.setOverclockVoltage(allowOverclocking ? getMaximumOverclockVoltage() : GTValues.V[GTValues.ULV]);
         metaTileEntity.markDirty();
     }
 
@@ -1663,7 +1628,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * @return Whether Overclocking is allowed for the current machine/multiblock
      */
     public boolean isAllowOverclocking() {
-        return allowOverclocking;
+        return settings.isOverclockingAllowed();
     }
 
     /**
@@ -1675,16 +1640,15 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      */
     public void setMaximumOverclockVoltage(final long overclockVoltage) {
         requestRecipeLogicWakeup();
-        this.overclockVoltage = overclockVoltage;
         // Overclocking is not allowed if the passed voltage is <= LV
-        this.allowOverclocking = (overclockVoltage > GTValues.V[GTValues.LV]);
+        settings.limitOverclockVoltage(overclockVoltage);
     }
 
     /**
      * @return The maximum voltage the machine/multiblock can overclock to
      */
     public long getMaximumOverclockVoltage() {
-        return overclockVoltage;
+        return settings.getOverclockVoltage();
     }
 
     /**
@@ -1739,8 +1703,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         NBTTagCompound compound = new NBTTagCompound();
         compound.setBoolean("WorkEnabled", workingEnabled);
         compound.setBoolean("CanRecipeProgress", canRecipeProgress);
-        compound.setBoolean(ALLOW_OVERCLOCKING, allowOverclocking);
-        compound.setLong(OVERCLOCK_VOLTAGE, this.overclockVoltage);
+        settings.writeToNBT(compound);
         if (progressTime > 0) {
             compound.setBoolean("AwaitingOutputs", awaitingOutputs);
             conditions.writeToNBT(compound);
@@ -1775,8 +1738,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         this.progressTime = compound.getInteger("Progress");
         this.awaitingOutputs = progressTime > 0 && compound.getBoolean("AwaitingOutputs");
         conditions.readFromNBT(compound, progressTime > 0, awaitingOutputs);
-        this.allowOverclocking = compound.getBoolean(ALLOW_OVERCLOCKING);
-        this.overclockVoltage = compound.getLong(OVERCLOCK_VOLTAGE);
+        settings.readFromNBT(compound);
         this.isActive = false;
         if (progressTime > 0) {
             this.isActive = !awaitingOutputs && !conditions.isPaused();
