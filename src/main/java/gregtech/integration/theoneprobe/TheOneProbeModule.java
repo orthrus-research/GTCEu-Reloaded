@@ -16,6 +16,7 @@ import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
 import gregtech.integration.probe.producer.MultiblockProbeInfo;
 import gregtech.integration.probe.producer.PrimitivePumpProbeInfo;
+import gregtech.integration.probe.producer.QuantumStorageProbeInfo;
 import gregtech.integration.probe.producer.RecipeLogicProbeInfo;
 import gregtech.integration.probe.producer.SteamBoilerProbeInfo;
 import gregtech.integration.probe.producer.TransformerProbeInfo;
@@ -59,7 +60,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         oneProbe.registerProvider(new LampInfoProvider());
         oneProbe.registerProvider(new LDPipeProvider());
         register(oneProbe, GTValues.MODID + ":laser_container_provider", new LaserContainerProbeInfo());
-        oneProbe.registerProvider(new QuantumStorageProvider());
+        register(oneProbe, ":quantum_storage_provider", new QuantumStorageProbeInfo());
         register(oneProbe, GTValues.MODID + ":active_transformer_info_provider", new ActiveTransformerProbeInfo());
         register(oneProbe, GTValues.MODID + ":battery_buffer_provider", new BatteryBufferProbeInfo());
         oneProbe.registerProvider(new AEMultiblockHatchProvider());
