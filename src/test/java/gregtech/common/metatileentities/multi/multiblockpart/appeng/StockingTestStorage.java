@@ -25,8 +25,11 @@ final class StockingTestStorage<T extends IAEStack<T>> {
     long extractionLimit = Long.MAX_VALUE;
     ToLongFunction<T> extractionRule = stack -> Long.MAX_VALUE;
     boolean mutateRequests;
+    /** Stocking parts never insert; ordinary parts may when this is set. */
+    boolean acceptsInjections;
     int simulations;
     int modulations;
+    int injections;
     int listScans;
 
     @SuppressWarnings("unchecked")
@@ -59,6 +62,20 @@ final class StockingTestStorage<T extends IAEStack<T>> {
                             if (!simulate) stored.decStackSize(amount);
                             return result;
                         }
+                        return null;
+                    }
+                    if (method.getName().equals("injectItems") && acceptsInjections) {
+                        assertSame(actionSource, args[2], "insertion must preserve its action source");
+                        T input = (T) args[0];
+                        if (args[1] == Actionable.SIMULATE) return null;
+                        injections++;
+                        for (T stored : contents) {
+                            if (sameType.test(stored, input)) {
+                                stored.incStackSize(input.getStackSize());
+                                return null;
+                            }
+                        }
+                        contents.add(input.copy());
                         return null;
                     }
                     throw new AssertionError("Unexpected monitor operation: " + method.getName());
