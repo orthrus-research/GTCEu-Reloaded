@@ -1,13 +1,18 @@
 package gregtech.loaders.recipe;
 
+import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.metatileentity.multiblock.CleanroomType;
 import gregtech.api.recipes.ModHandler;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTCondition;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTMatcher;
 import gregtech.api.unification.material.MarkerMaterials.Color;
 import gregtech.api.unification.material.MarkerMaterials.Tier;
+import gregtech.api.unification.material.Material;
+import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.common.blocks.BlockBatteryPart.BatteryPartType;
+
+import net.minecraftforge.fluids.FluidStack;
 
 import static gregtech.api.GTValues.*;
 import static gregtech.api.recipes.RecipeMaps.*;
@@ -17,6 +22,10 @@ import static gregtech.common.blocks.MetaBlocks.BATTERY_BLOCK;
 import static gregtech.common.items.MetaItems.*;
 
 public class BatteryRecipes {
+
+    // a crystal grows from water, faster from distilled water, then from two molten steels, the better one fastest
+    private static final int[] CRYSTAL_DURATIONS = { 1800, 1200, 300, 150 };
+    private static final int[] CRYSTAL_VOLTAGES = { VA[HV], 320, 256, 192 };
 
     public static void init() {
         standardBatteries();
@@ -40,216 +49,45 @@ public class BatteryRecipes {
                 'D', new UnificationEntry(dust, Tantalum),
                 'B', new UnificationEntry(bolt, Iron));
 
-        // Battery Hull Recipes
-
-        // LV
+        // Battery Hull Recipes: the LV and MV hulls by hand, and each hull in the assembler from its cables, plates
+        // and plastic
         ModHandler.addShapedRecipe("battery_hull_lv", BATTERY_HULL_LV.getStackForm(),
                 "C", "P", "P",
                 'C', new UnificationEntry(cableGtSingle, Tin),
                 'P', new UnificationEntry(plate, BatteryAlloy));
-
-        ASSEMBLER_RECIPES.recipeBuilder()
-                .input(cableGtSingle, Tin)
-                .input(plate, BatteryAlloy)
-                .fluidInputs(Polyethylene.getFluid(L))
-                .output(BATTERY_HULL_LV)
-                .duration(400).EUt(1).buildAndRegister();
-
-        // MV
         ModHandler.addShapedRecipe("battery_hull_mv", BATTERY_HULL_MV.getStackForm(),
                 "C C", "PPP", "PPP",
                 'C', new UnificationEntry(cableGtSingle, Copper),
                 'P', new UnificationEntry(plate, BatteryAlloy));
 
-        ASSEMBLER_RECIPES.recipeBuilder()
-                .input(cableGtSingle, Copper, 2)
-                .input(plate, BatteryAlloy, 3)
-                .fluidInputs(Polyethylene.getFluid(L * 3))
-                .output(BATTERY_HULL_MV)
-                .duration(200).EUt(2).buildAndRegister();
+        batteryHull(BATTERY_HULL_LV, Tin, 1, BatteryAlloy, 1, Polyethylene, L, 400, 1);
+        batteryHull(BATTERY_HULL_MV, Copper, 2, BatteryAlloy, 3, Polyethylene, L * 3, 200, 2);
+        batteryHull(BATTERY_HULL_MV, AnnealedCopper, 2, BatteryAlloy, 3, Polyethylene, L * 3, 200, 2);
+        batteryHull(BATTERY_HULL_HV, Gold, 4, BatteryAlloy, 9, Polyethylene, 1296, 300, 4);
+        batteryHull(BATTERY_HULL_SMALL_VANADIUM, Aluminium, 2, RedSteel, 2, Polytetrafluoroethylene, 144, 100, VA[HV]);
+        batteryHull(BATTERY_HULL_MEDIUM_VANADIUM, Platinum, 2, RoseGold, 6, Polytetrafluoroethylene, 288, 200, VA[EV]);
+        batteryHull(BATTERY_HULL_LARGE_VANADIUM, NiobiumTitanium, 2, BlueSteel, 18, Polybenzimidazole, 144, 300,
+                VA[IV]);
+        batteryHull(BATTERY_HULL_MEDIUM_NAQUADRIA, Naquadah, 2, Europium, 6, Polybenzimidazole, 288, 200, VA[LuV]);
+        batteryHull(BATTERY_HULL_LARGE_NAQUADRIA, YttriumBariumCuprate, 2, Americium, 18, Polybenzimidazole, 576, 300,
+                VA[ZPM]);
 
-        ASSEMBLER_RECIPES.recipeBuilder()
-                .input(cableGtSingle, AnnealedCopper, 2)
-                .input(plate, BatteryAlloy, 3)
-                .fluidInputs(Polyethylene.getFluid(L * 3))
-                .output(BATTERY_HULL_MV)
-                .duration(200).EUt(2).buildAndRegister();
-
-        // HV
-        ASSEMBLER_RECIPES.recipeBuilder().duration(300).EUt(4)
-                .input(cableGtSingle, Gold, 4)
-                .input(plate, BatteryAlloy, 9)
-                .fluidInputs(Polyethylene.getFluid(1296))
-                .output(BATTERY_HULL_HV)
-                .buildAndRegister();
-
-        // EV
-        ASSEMBLER_RECIPES.recipeBuilder().duration(100).EUt(VA[HV])
-                .input(cableGtSingle, Aluminium, 2)
-                .input(plate, RedSteel, 2)
-                .fluidInputs(Polytetrafluoroethylene.getFluid(144))
-                .output(BATTERY_HULL_SMALL_VANADIUM)
-                .buildAndRegister();
-
-        // IV
-        ASSEMBLER_RECIPES.recipeBuilder().duration(200).EUt(VA[EV])
-                .input(cableGtSingle, Platinum, 2)
-                .input(plate, RoseGold, 6)
-                .fluidInputs(Polytetrafluoroethylene.getFluid(288))
-                .output(BATTERY_HULL_MEDIUM_VANADIUM)
-                .buildAndRegister();
-
-        // LuV
-        ASSEMBLER_RECIPES.recipeBuilder().duration(300).EUt(VA[IV])
-                .input(cableGtSingle, NiobiumTitanium, 2)
-                .input(plate, BlueSteel, 18)
-                .fluidInputs(Polybenzimidazole.getFluid(144))
-                .output(BATTERY_HULL_LARGE_VANADIUM)
-                .buildAndRegister();
-
-        // ZPM
-        ASSEMBLER_RECIPES.recipeBuilder().duration(200).EUt(VA[LuV])
-                .input(cableGtSingle, Naquadah, 2)
-                .input(plate, Europium, 6)
-                .fluidInputs(Polybenzimidazole.getFluid(288))
-                .output(BATTERY_HULL_MEDIUM_NAQUADRIA)
-                .buildAndRegister();
-
-        // UV
-        ASSEMBLER_RECIPES.recipeBuilder().duration(300).EUt(VA[ZPM])
-                .input(cableGtSingle, YttriumBariumCuprate, 2)
-                .input(plate, Americium, 18)
-                .fluidInputs(Polybenzimidazole.getFluid(576))
-                .output(BATTERY_HULL_LARGE_NAQUADRIA)
-                .buildAndRegister();
-
-        // Battery Filling Recipes
-
-        // LV
-        CANNER_RECIPES.recipeBuilder().duration(100).EUt(2)
-                .input(BATTERY_HULL_LV)
-                .input(dust, Cadmium, 2)
-                .output(BATTERY_LV_CADMIUM)
-                .buildAndRegister();
-
-        CANNER_RECIPES.recipeBuilder().duration(100).EUt(2)
-                .input(BATTERY_HULL_LV)
-                .input(dust, Lithium, 2)
-                .output(BATTERY_LV_LITHIUM)
-                .buildAndRegister();
-
-        CANNER_RECIPES.recipeBuilder().duration(100).EUt(2)
-                .input(BATTERY_HULL_LV)
-                .input(dust, Sodium, 2)
-                .output(BATTERY_LV_SODIUM)
-                .buildAndRegister();
-
-        // MV
-        CANNER_RECIPES.recipeBuilder().duration(400).EUt(2)
-                .input(BATTERY_HULL_MV)
-                .input(dust, Cadmium, 8)
-                .output(BATTERY_MV_CADMIUM)
-                .buildAndRegister();
-
-        CANNER_RECIPES.recipeBuilder().duration(400).EUt(2)
-                .input(BATTERY_HULL_MV)
-                .input(dust, Lithium, 8)
-                .output(BATTERY_MV_LITHIUM)
-                .buildAndRegister();
-
-        CANNER_RECIPES.recipeBuilder().duration(400).EUt(2)
-                .input(BATTERY_HULL_MV)
-                .input(dust, Sodium, 8)
-                .output(BATTERY_MV_SODIUM)
-                .buildAndRegister();
-
-        // HV
-        CANNER_RECIPES.recipeBuilder().duration(1600).EUt(2)
-                .input(BATTERY_HULL_HV)
-                .input(dust, Cadmium, 16)
-                .output(BATTERY_HV_CADMIUM)
-                .buildAndRegister();
-
-        CANNER_RECIPES.recipeBuilder().duration(1600).EUt(2)
-                .input(BATTERY_HULL_HV)
-                .input(dust, Lithium, 16)
-                .output(BATTERY_HV_LITHIUM)
-                .buildAndRegister();
-
-        CANNER_RECIPES.recipeBuilder().duration(1600).EUt(2)
-                .input(BATTERY_HULL_HV)
-                .input(dust, Sodium, 16)
-                .output(BATTERY_HV_SODIUM)
-                .buildAndRegister();
-
-        // EV
-        CANNER_RECIPES.recipeBuilder().duration(100).EUt(VA[HV])
-                .input(BATTERY_HULL_SMALL_VANADIUM)
-                .input(dust, Vanadium, 2)
-                .output(BATTERY_EV_VANADIUM)
-                .buildAndRegister();
-
-        // IV
-        CANNER_RECIPES.recipeBuilder().duration(150).EUt(1024)
-                .input(BATTERY_HULL_MEDIUM_VANADIUM)
-                .input(dust, Vanadium, 8)
-                .output(BATTERY_IV_VANADIUM)
-                .buildAndRegister();
-
-        // LuV
-        CANNER_RECIPES.recipeBuilder().duration(200).EUt(VA[EV])
-                .input(BATTERY_HULL_LARGE_VANADIUM)
-                .input(dust, Vanadium, 16)
-                .output(BATTERY_LUV_VANADIUM)
-                .buildAndRegister();
-
-        // ZPM
-        CANNER_RECIPES.recipeBuilder().duration(250).EUt(4096)
-                .input(BATTERY_HULL_MEDIUM_NAQUADRIA)
-                .input(dust, Naquadria, 8)
-                .output(BATTERY_ZPM_NAQUADRIA)
-                .buildAndRegister();
-
-        // UV
-        CANNER_RECIPES.recipeBuilder().duration(300).EUt(VA[IV])
-                .input(BATTERY_HULL_LARGE_NAQUADRIA)
-                .input(dust, Naquadria, 16)
-                .output(BATTERY_UV_NAQUADRIA)
-                .buildAndRegister();
-
-        // Battery Recycling Recipes
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_LV_CADMIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_LV).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_LV_LITHIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_LV).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_LV_SODIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_LV).buildAndRegister();
-
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_MV_CADMIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_MV).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_MV_LITHIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_MV).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_MV_SODIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_MV).buildAndRegister();
-
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_HV_CADMIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_HV).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_HV_LITHIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_HV).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_HV_SODIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_HV).buildAndRegister();
-
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_EV_VANADIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_SMALL_VANADIUM).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_IV_VANADIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_MEDIUM_VANADIUM).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_LUV_VANADIUM, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_LARGE_VANADIUM).buildAndRegister();
-
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_ZPM_NAQUADRIA, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_MEDIUM_NAQUADRIA).buildAndRegister();
-        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(BATTERY_UV_NAQUADRIA, NBTMatcher.ANY, NBTCondition.ANY)
-                .output(BATTERY_HULL_LARGE_NAQUADRIA).buildAndRegister();
+        // Battery Filling Recipes, each with its recycling back to the hull: the LV to HV batteries of each
+        // chemistry, then the vanadium and naquadria ones
+        battery(BATTERY_HULL_LV, BATTERY_LV_CADMIUM, Cadmium, 2, 100, 2);
+        battery(BATTERY_HULL_LV, BATTERY_LV_LITHIUM, Lithium, 2, 100, 2);
+        battery(BATTERY_HULL_LV, BATTERY_LV_SODIUM, Sodium, 2, 100, 2);
+        battery(BATTERY_HULL_MV, BATTERY_MV_CADMIUM, Cadmium, 8, 400, 2);
+        battery(BATTERY_HULL_MV, BATTERY_MV_LITHIUM, Lithium, 8, 400, 2);
+        battery(BATTERY_HULL_MV, BATTERY_MV_SODIUM, Sodium, 8, 400, 2);
+        battery(BATTERY_HULL_HV, BATTERY_HV_CADMIUM, Cadmium, 16, 1600, 2);
+        battery(BATTERY_HULL_HV, BATTERY_HV_LITHIUM, Lithium, 16, 1600, 2);
+        battery(BATTERY_HULL_HV, BATTERY_HV_SODIUM, Sodium, 16, 1600, 2);
+        battery(BATTERY_HULL_SMALL_VANADIUM, BATTERY_EV_VANADIUM, Vanadium, 2, 100, VA[HV]);
+        battery(BATTERY_HULL_MEDIUM_VANADIUM, BATTERY_IV_VANADIUM, Vanadium, 8, 150, 1024);
+        battery(BATTERY_HULL_LARGE_VANADIUM, BATTERY_LUV_VANADIUM, Vanadium, 16, 200, VA[EV]);
+        battery(BATTERY_HULL_MEDIUM_NAQUADRIA, BATTERY_ZPM_NAQUADRIA, Naquadria, 8, 250, 4096);
+        battery(BATTERY_HULL_LARGE_NAQUADRIA, BATTERY_UV_NAQUADRIA, Naquadria, 16, 300, VA[IV]);
     }
 
     private static void gemBatteries() {
@@ -261,29 +99,15 @@ public class BatteryRecipes {
                 .output(ENERGIUM_DUST, 9)
                 .buildAndRegister();
 
-        AUTOCLAVE_RECIPES.recipeBuilder()
-                .input(ENERGIUM_DUST, 9)
-                .fluidInputs(Water.getFluid(1000))
-                .output(ENERGIUM_CRYSTAL)
-                .duration(1800).EUt(VA[HV]).buildAndRegister();
-
-        AUTOCLAVE_RECIPES.recipeBuilder()
-                .input(ENERGIUM_DUST, 9)
-                .fluidInputs(DistilledWater.getFluid(1000))
-                .output(ENERGIUM_CRYSTAL)
-                .duration(1200).EUt(320).buildAndRegister();
-
-        AUTOCLAVE_RECIPES.recipeBuilder()
-                .input(ENERGIUM_DUST, 9)
-                .fluidInputs(BlackSteel.getFluid(L * 2))
-                .output(ENERGIUM_CRYSTAL)
-                .duration(300).EUt(256).buildAndRegister();
-
-        AUTOCLAVE_RECIPES.recipeBuilder()
-                .input(ENERGIUM_DUST, 9)
-                .fluidInputs(RedSteel.getFluid(L / 2))
-                .output(ENERGIUM_CRYSTAL)
-                .duration(150).EUt(192).buildAndRegister();
+        FluidStack[] energiumFluids = { Water.getFluid(1000), DistilledWater.getFluid(1000), BlackSteel.getFluid(L * 2),
+                RedSteel.getFluid(L / 2) };
+        for (int i = 0; i < energiumFluids.length; i++) {
+            AUTOCLAVE_RECIPES.recipeBuilder()
+                    .input(ENERGIUM_DUST, 9)
+                    .fluidInputs(energiumFluids[i])
+                    .output(ENERGIUM_CRYSTAL)
+                    .duration(CRYSTAL_DURATIONS[i]).EUt(CRYSTAL_VOLTAGES[i]).buildAndRegister();
+        }
 
         // Lapotron Crystal
         MIXER_RECIPES.recipeBuilder()
@@ -293,29 +117,15 @@ public class BatteryRecipes {
                 .output(dust, Lapotron, 5)
                 .duration(200).EUt(VA[HV]).buildAndRegister();
 
-        AUTOCLAVE_RECIPES.recipeBuilder()
-                .input(dust, Lapotron, 15)
-                .fluidInputs(Water.getFluid(1000))
-                .output(gem, Lapotron)
-                .duration(1800).EUt(VA[HV]).buildAndRegister();
-
-        AUTOCLAVE_RECIPES.recipeBuilder()
-                .input(dust, Lapotron, 15)
-                .fluidInputs(DistilledWater.getFluid(1000))
-                .output(gem, Lapotron)
-                .duration(1200).EUt(320).buildAndRegister();
-
-        AUTOCLAVE_RECIPES.recipeBuilder()
-                .input(dust, Lapotron, 15)
-                .fluidInputs(RedSteel.getFluid(L * 2))
-                .output(gem, Lapotron)
-                .duration(300).EUt(256).buildAndRegister();
-
-        AUTOCLAVE_RECIPES.recipeBuilder()
-                .input(dust, Lapotron, 15)
-                .fluidInputs(BlueSteel.getFluid(L / 2))
-                .output(gem, Lapotron)
-                .duration(150).EUt(192).buildAndRegister();
+        FluidStack[] lapotronFluids = { Water.getFluid(1000), DistilledWater.getFluid(1000), RedSteel.getFluid(L * 2),
+                BlueSteel.getFluid(L / 2) };
+        for (int i = 0; i < lapotronFluids.length; i++) {
+            AUTOCLAVE_RECIPES.recipeBuilder()
+                    .input(dust, Lapotron, 15)
+                    .fluidInputs(lapotronFluids[i])
+                    .output(gem, Lapotron)
+                    .duration(CRYSTAL_DURATIONS[i]).EUt(CRYSTAL_VOLTAGES[i]).buildAndRegister();
+        }
 
         ASSEMBLER_RECIPES.recipeBuilder()
                 .input(gem, Lapotron)
@@ -436,111 +246,66 @@ public class BatteryRecipes {
     }
 
     private static void batteryBlocks() {
-        // Empty Tier I
+        // the empty battery casing of each grade, then the cells filled from it and emptied back in the packer
+        batteryCasing(BatteryPartType.EMPTY_TIER_I, Ultimet, VA[HV]);
+        batteryCell(BatteryPartType.EMPTY_TIER_I, BatteryPartType.LAPOTRONIC_EV, LAPOTRON_CRYSTAL, 200, VA[HV]);
+        batteryCell(BatteryPartType.EMPTY_TIER_I, BatteryPartType.LAPOTRONIC_IV, ENERGY_LAPOTRONIC_ORB, 400, VA[HV]);
+
+        batteryCasing(BatteryPartType.EMPTY_TIER_II, Ruridit, VA[IV]);
+        batteryCell(BatteryPartType.EMPTY_TIER_II, BatteryPartType.LAPOTRONIC_LuV, ENERGY_LAPOTRONIC_ORB_CLUSTER, 200,
+                VA[EV]);
+        batteryCell(BatteryPartType.EMPTY_TIER_II, BatteryPartType.LAPOTRONIC_ZPM, ENERGY_MODULE, 400, VA[EV]);
+
+        batteryCasing(BatteryPartType.EMPTY_TIER_III, Neutronium, VA[ZPM]);
+        batteryCell(BatteryPartType.EMPTY_TIER_III, BatteryPartType.LAPOTRONIC_UV, ENERGY_CLUSTER, 200, VA[IV]);
+        batteryCell(BatteryPartType.EMPTY_TIER_III, BatteryPartType.ULTIMATE_UHV, ULTIMATE_BATTERY, 400, VA[IV]);
+    }
+
+    private static void batteryHull(MetaItem<?>.MetaValueItem hull, Material cable, int cables, Material plate,
+                                    int plates, Material plastic, int plasticAmount, int duration, int voltage) {
         ASSEMBLER_RECIPES.recipeBuilder()
-                .input(frameGt, Ultimet)
-                .input(plate, Ultimet, 6)
-                .input(screw, Ultimet, 24)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_I))
-                .duration(400).EUt(VA[HV]).buildAndRegister();
+                .input(cableGtSingle, cable, cables)
+                .input(OrePrefix.plate, plate, plates)
+                .fluidInputs(plastic.getFluid(plasticAmount))
+                .output(hull)
+                .duration(duration).EUt(voltage).buildAndRegister();
+    }
 
-        // Lapotronic EV
-        CANNER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_I))
-                .inputNBT(LAPOTRON_CRYSTAL, NBTMatcher.ANY, NBTCondition.ANY)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_EV))
-                .duration(200).EUt(VA[HV]).buildAndRegister();
+    /** A battery canned from its hull and dust, and extracted back to the hull whatever its charge. */
+    private static void battery(MetaItem<?>.MetaValueItem hull, MetaItem<?>.MetaValueItem battery, Material dust,
+                                int dusts, int duration, int voltage) {
+        CANNER_RECIPES.recipeBuilder().duration(duration).EUt(voltage)
+                .input(hull)
+                .input(OrePrefix.dust, dust, dusts)
+                .output(battery)
+                .buildAndRegister();
 
-        PACKER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_EV))
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_I))
-                .output(LAPOTRON_CRYSTAL)
-                .circuitMeta(2)
-                .duration(200).EUt(VA[LV]).buildAndRegister();
+        EXTRACTOR_RECIPES.recipeBuilder().inputNBT(battery, NBTMatcher.ANY, NBTCondition.ANY)
+                .output(hull).buildAndRegister();
+    }
 
-        // Lapotronic IV
-        CANNER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_I))
-                .inputNBT(ENERGY_LAPOTRONIC_ORB, NBTMatcher.ANY, NBTCondition.ANY)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_IV))
-                .duration(400).EUt(VA[HV]).buildAndRegister();
-
-        PACKER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_IV))
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_I))
-                .output(ENERGY_LAPOTRONIC_ORB)
-                .circuitMeta(2)
-                .duration(200).EUt(VA[LV]).buildAndRegister();
-
-        // Empty Tier II
+    private static void batteryCasing(BatteryPartType casing, Material material, int voltage) {
         ASSEMBLER_RECIPES.recipeBuilder()
-                .input(frameGt, Ruridit)
-                .input(plate, Ruridit, 6)
-                .input(screw, Ruridit, 24)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_II))
-                .duration(400).EUt(VA[IV]).buildAndRegister();
+                .input(frameGt, material)
+                .input(plate, material, 6)
+                .input(screw, material, 24)
+                .outputs(BATTERY_BLOCK.getItemVariant(casing))
+                .duration(400).EUt(voltage).buildAndRegister();
+    }
 
-        // Lapotronic LuV
+    /** A battery cell canned from an empty casing and a charged item, which the packer gives back. */
+    private static void batteryCell(BatteryPartType casing, BatteryPartType cell, MetaItem<?>.MetaValueItem item,
+                                    int duration, int voltage) {
         CANNER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_II))
-                .inputNBT(ENERGY_LAPOTRONIC_ORB_CLUSTER, NBTMatcher.ANY, NBTCondition.ANY)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_LuV))
-                .duration(200).EUt(VA[EV]).buildAndRegister();
+                .inputs(BATTERY_BLOCK.getItemVariant(casing))
+                .inputNBT(item, NBTMatcher.ANY, NBTCondition.ANY)
+                .outputs(BATTERY_BLOCK.getItemVariant(cell))
+                .duration(duration).EUt(voltage).buildAndRegister();
 
         PACKER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_LuV))
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_II))
-                .output(ENERGY_LAPOTRONIC_ORB_CLUSTER)
-                .circuitMeta(2)
-                .duration(200).EUt(VA[LV]).buildAndRegister();
-
-        // Lapotronic ZPM
-        CANNER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_II))
-                .inputNBT(ENERGY_MODULE, NBTMatcher.ANY, NBTCondition.ANY)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_ZPM))
-                .duration(400).EUt(VA[EV]).buildAndRegister();
-
-        PACKER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_ZPM))
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_II))
-                .output(ENERGY_MODULE)
-                .circuitMeta(2)
-                .duration(200).EUt(VA[LV]).buildAndRegister();
-
-        // Empty Tier III
-        ASSEMBLER_RECIPES.recipeBuilder()
-                .input(frameGt, Neutronium)
-                .input(plate, Neutronium, 6)
-                .input(screw, Neutronium, 24)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_III))
-                .duration(400).EUt(VA[ZPM]).buildAndRegister();
-
-        // Lapotronic UV
-        CANNER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_III))
-                .inputNBT(ENERGY_CLUSTER, NBTMatcher.ANY, NBTCondition.ANY)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_UV))
-                .duration(200).EUt(VA[IV]).buildAndRegister();
-
-        PACKER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.LAPOTRONIC_UV))
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_III))
-                .output(ENERGY_CLUSTER)
-                .circuitMeta(2)
-                .duration(200).EUt(VA[LV]).buildAndRegister();
-
-        // Ultimate UHV
-        CANNER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_III))
-                .inputNBT(ULTIMATE_BATTERY, NBTMatcher.ANY, NBTCondition.ANY)
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.ULTIMATE_UHV))
-                .duration(400).EUt(VA[IV]).buildAndRegister();
-
-        PACKER_RECIPES.recipeBuilder()
-                .inputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.ULTIMATE_UHV))
-                .outputs(BATTERY_BLOCK.getItemVariant(BatteryPartType.EMPTY_TIER_III))
-                .output(ULTIMATE_BATTERY)
+                .inputs(BATTERY_BLOCK.getItemVariant(cell))
+                .outputs(BATTERY_BLOCK.getItemVariant(casing))
+                .output(item)
                 .circuitMeta(2)
                 .duration(200).EUt(VA[LV]).buildAndRegister();
     }
