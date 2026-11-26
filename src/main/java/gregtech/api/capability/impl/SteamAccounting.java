@@ -53,21 +53,20 @@ final class SteamAccounting {
     }
 
     /**
-     * Only for a recipe that consumes steam. It needs the steam for its whole run, or a full buffer when its run needs
-     * more than the buffer holds. As both logics always have, this compares the run's steam in millibuckets with the
-     * stored energy in EU; the two agree only at one EU per millibucket.
+     * Only for a recipe that consumes steam. It needs the steam for its whole run, or a full tank when its run needs
+     * more than the tanks hold. The run's steam is what {@link #drawEnergy} takes each tick, for every tick.
      *
-     * @param energyStored   the logic's stored energy
-     * @param energyCapacity the logic's energy capacity
+     * @param steamStored   the steam the tanks hold, in millibuckets
+     * @param steamCapacity the steam the tanks can hold, in millibuckets
      */
-    boolean hasSteamForRecipe(long eut, int duration, long energyStored, long energyCapacity) {
-        long totalSteam = getRecipeSteam(eut, duration);
-        // if the required steam is larger than the full buffer, just require the full buffer
-        if (energyCapacity < totalSteam) {
-            return energyCapacity == energyStored;
+    boolean hasSteamForRecipe(long eut, int duration, long steamStored, long steamCapacity) {
+        long totalSteam = (long) Math.ceil(eut / conversionRate) * duration;
+        // if the required steam is larger than the full tanks, just require the full tanks
+        if (steamCapacity < totalSteam) {
+            return steamStored >= steamCapacity;
         }
         // otherwise require the full amount of steam for the recipe
-        return energyStored >= totalSteam;
+        return steamStored >= totalSteam;
     }
 
     private long getRecipeSteam(long eut, int duration) {

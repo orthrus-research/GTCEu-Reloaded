@@ -92,10 +92,17 @@ class SteamAccountingTest {
     }
 
     @Test
-    void theRunsSteamIsComparedWithTheStoredEnergyAsBefore() {
+    void theRunsSteamIsComparedWithTheStoredSteam() {
         SteamAccounting half = new SteamAccounting(0.5);
-        // 1 EU/t for 100 ticks is 200 millibuckets; the stored energy, at 0.5 EU each, must reach 200 as well
-        assertFalse(half.hasSteamForRecipe(1, 100, half.getEnergyStored(200), half.getEnergyCapacity(16000)));
-        assertTrue(half.hasSteamForRecipe(1, 100, half.getEnergyStored(400), half.getEnergyCapacity(16000)));
+        // 1 EU/t for 100 ticks draws 2 millibuckets a tick, 200 in all; before, the stored energy (100 EU for 200
+        // millibuckets) was compared with the 200 millibuckets, so the run needed twice its steam
+        assertFalse(half.hasSteamForRecipe(1, 100, 199, 16000));
+        assertTrue(half.hasSteamForRecipe(1, 100, 200, 16000));
+        // a tick's draw is rounded up to whole millibuckets, as drawEnergy takes it
+        SteamAccounting third = new SteamAccounting(0.3);
+        assertFalse(third.hasSteamForRecipe(1, 100, 399, 16000));
+        assertTrue(third.hasSteamForRecipe(1, 100, 400, 16000));
+        assertTrue(half.hasSteamForRecipe(1, 100_000, 16000, 16000), "A run larger than the tanks needs them full");
+        assertFalse(half.hasSteamForRecipe(1, 100_000, 15999, 16000));
     }
 }

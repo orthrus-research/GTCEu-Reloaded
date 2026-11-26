@@ -216,7 +216,7 @@ public class RecipeLogicSteam extends AbstractRecipeLogic implements IVentable {
     protected boolean hasEnoughPower(long eut, int duration) {
         // generation case unchanged
         if (!steam.consumesSteam(eut, duration)) return super.hasEnoughPower(eut, duration);
-        return steam.hasSteamForRecipe(eut, duration, getEnergyStored(), getEnergyCapacity());
+        return steam.hasSteamForRecipe(eut, duration, steamFluidTank.getFluidAmount(), steamFluidTank.getCapacity());
     }
 
     @NotNull
