@@ -1,6 +1,5 @@
 package gregtech.client.renderer.texture.custom;
 
-import gregtech.api.gui.resources.TextTexture;
 import gregtech.api.metatileentity.ITieredMetaTileEntity;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.renderer.texture.Textures;
@@ -12,6 +11,7 @@ import gregtech.common.metatileentities.storage.MetaTileEntityQuantumChest;
 import gregtech.common.metatileentities.storage.MetaTileEntityQuantumStorage;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderItem;
@@ -39,14 +39,13 @@ import codechicken.lib.vec.Matrix4;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.EnumMap;
+import java.util.List;
 
 public class QuantumStorageRenderer implements IconRegistrar {
 
     private static final Cuboid6 glassBox = new Cuboid6(1 / 16.0, 1 / 16.0, 1 / 16.0, 15 / 16.0, 15 / 16.0, 15 / 16.0);
 
     private static final EnumMap<EnumFacing, Cuboid6> boxFacingMap = new EnumMap<>(EnumFacing.class);
-
-    private static final TextTexture textRenderer = new TextTexture().setWidth(32);
 
     @SideOnly(Side.CLIENT)
     private TextureAtlasSprite glassTexture;
@@ -229,10 +228,22 @@ public class QuantumStorageRenderer implements IconRegistrar {
         GlStateManager.scale(1f / 64, 1f / 64, 0);
         GlStateManager.translate(-32, -32, 0);
         GlStateManager.disableLighting();
-        textRenderer.setText(amountText);
-        textRenderer.draw(0, 24, 64, 28);
+        drawAmountText(amountText);
         GlStateManager.enableLighting();
         GlStateManager.popMatrix();
+    }
+
+    /** Draws the text in white, wrapped at 32 pixels and centred in the 64 by 28 area 24 pixels down the face. */
+    private static void drawAmountText(String text) {
+        FontRenderer font = Minecraft.getMinecraft().fontRenderer;
+        List<String> lines = font.listFormattedStringToWidth(text, 32);
+        int textHeight = font.FONT_HEIGHT * lines.size();
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            font.drawString(line, (64 - font.getStringWidth(line)) / 2f,
+                    24 + (28 - textHeight) / 2f + i * font.FONT_HEIGHT, 0xFFFFFF, false);
+        }
+        GlStateManager.color(1, 1, 1, 1);
     }
 
     public static void setLightingCorrectly(IBlockAccess world, BlockPos pos) {

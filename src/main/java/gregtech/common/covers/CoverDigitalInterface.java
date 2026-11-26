@@ -6,7 +6,6 @@ import gregtech.api.cover.CoverBase;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverWithUI;
 import gregtech.api.cover.CoverableView;
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.metatileentity.IFastRenderMetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -1161,10 +1160,10 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
         }
         if (this.isProxy()) {
             if (isWorkingEnabled) {
-                RenderUtil.renderTextureArea(GuiTextures.COVER_INTERFACE_MACHINE_ON_PROXY, -7f / 16, 1f / 16, 14f / 16,
-                        3f / 16, 0.002f);
+                RenderUtil.renderTextureArea(GTGuiTextures.COVER_INTERFACE_MACHINE_ON_PROXY, -7f / 16, 1f / 16,
+                        14f / 16, 3f / 16, 0.002f);
             } else {
-                RenderUtil.renderTextureArea(GuiTextures.COVER_INTERFACE_MACHINE_OFF_PROXY, -7f / 16, -1f / 16,
+                RenderUtil.renderTextureArea(GTGuiTextures.COVER_INTERFACE_MACHINE_OFF_PROXY, -7f / 16, -1f / 16,
                         14f / 16, 5f / 16, 0.002f);
             }
         }

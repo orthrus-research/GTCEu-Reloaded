@@ -816,6 +816,19 @@ public class GTGuiTextures {
     public static final SteamTexture PROGRESS_BAR_SOLAR_STEAM = new SteamTexture(PROGRESS_BAR_SOLAR_BRONZE,
             PROGRESS_BAR_SOLAR_STEEL);
 
+    // RECIPE VIEWER CATEGORY ICONS
+    public static final UITexture MULTIBLOCK_CATEGORY = fullImage("textures/gui/icon/multiblock_category.png");
+    public static final UITexture ARC_FURNACE_RECYCLING_CATEGORY = fullImage(
+            "textures/gui/icon/arc_furnace_recycling.png");
+    public static final UITexture MACERATOR_RECYCLING_CATEGORY = fullImage(
+            "textures/gui/icon/macerator_recycling.png");
+    public static final UITexture EXTRACTOR_RECYCLING_CATEGORY = fullImage(
+            "textures/gui/icon/extractor_recycling.png");
+
+    // ITEM OVERLAYS
+    public static final UITexture LAMP_NO_BLOOM = fullImage("textures/gui/item_overlay/lamp_no_bloom.png");
+    public static final UITexture LAMP_NO_LIGHT = fullImage("textures/gui/item_overlay/lamp_no_light.png");
+
     // MISC
 
     public static void init() {/**/}

@@ -1,7 +1,7 @@
 package gregtech.integration.jei.multiblock;
 
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.client.renderer.scene.ImmediateWorldSceneRenderer;
 import gregtech.client.renderer.scene.WorldSceneRenderer;
 import gregtech.client.utils.TrackedDummyWorld;
@@ -131,7 +131,7 @@ final class EditableMultiblockInfoRecipeWrapper extends MultiblockInfoRecipeWrap
     public void setRecipeLayout(RecipeLayout layout, IGuiHelper helper) {
         boolean refresh = this.layout != null;
         this.layout = layout;
-        this.slot = helper.drawableBuilder(GuiTextures.SLOT.imageLocation, 0, 0, 18, 18).setTextureSize(18, 18).build();
+        this.slot = helper.drawableBuilder(GTGuiTextures.SLOT.location, 0, 0, 18, 18).setTextureSize(18, 18).build();
         for (int i = 0; i < PARTS_PER_PAGE; i++) layout.getItemStacks().init(i, true, 7 + (i % 9) * 18,
                 SCENE_HEIGHT + (i / 9) * 18);
         ensureRenderer();

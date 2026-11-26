@@ -96,8 +96,9 @@ public final class GTRecipeCategory {
     }
 
     /**
-     * The icon can be an {@link net.minecraft.item.ItemStack} or an {@link gregtech.api.gui.resources.TextureArea},
-     * or any other format supported by JEI.
+     * The icon can be an {@link net.minecraft.item.ItemStack}, a ModularUI 2
+     * {@link com.cleanroommc.modularui.drawable.UITexture} such as a {@link gregtech.api.mui.GTGuiTextures} icon, drawn
+     * 18 by 18 from its whole image, or any other format supported by JEI.
      *
      * @param icon the icon to use as a JEI category
      * @return this

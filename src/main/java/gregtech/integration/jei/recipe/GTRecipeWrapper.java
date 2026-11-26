@@ -1,12 +1,10 @@
 package gregtech.integration.jei.recipe;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.resources.TextTexture;
-import gregtech.api.gui.widgets.TankWidget;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IDataItem;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMaps;
@@ -24,6 +22,7 @@ import gregtech.api.recipes.properties.impl.ScanProperty;
 import gregtech.api.recipes.properties.impl.TotalComputationProperty;
 import gregtech.api.util.AssemblyLineManager;
 import gregtech.api.util.ClipboardUtil;
+import gregtech.api.util.FluidTooltipUtil;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.api.util.TextFormattingUtil;
@@ -86,16 +85,12 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
         this.overclockPreview.reset();
         if (overclockButton != null) this.buttons.remove(overclockButton);
 
-        TextTexture label = new TextTexture().setColor(0x111111).setWidth(recipeWidth - 4)
-                .setType(TextTexture.TextType.HIDE).setText(getOverclockLabel());
         this.overclockButton = new JeiButton(0, recipeHeight - 12, recipeWidth, 12)
-                .setTextures(GuiTextures.BUTTON, label)
+                .setTextures(JeiButton.texture(GTGuiTextures.BUTTON),
+                        JeiButton.label(this::getOverclockLabel, 0x111111))
                 .setTooltipBuilder(this::addOverclockTooltip)
-                .setClickAction((minecraft, mouseX, mouseY, mouseButton) -> {
-                    if (!overclockPreview.click(mouseButton, GuiScreen.isShiftKeyDown())) return false;
-                    label.setText(getOverclockLabel());
-                    return true;
-                });
+                .setClickAction((minecraft, mouseX, mouseY, mouseButton) -> overclockPreview.click(mouseButton,
+                        GuiScreen.isShiftKeyDown()));
         this.buttons.add(overclockButton);
     }
 
@@ -231,7 +226,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
     public void addFluidTooltip(int slotIndex, boolean input, Object ingredient, List<String> tooltip) {
         FluidStack fluidStack = (FluidStack) ingredient;
-        TankWidget.addIngotMolFluidTooltip(fluidStack, tooltip);
+        FluidTooltipUtil.addIngotMolFluidTooltip(tooltip, fluidStack);
 
         boolean notConsumed = input && isNotConsumedFluid(slotIndex);
 
@@ -386,7 +381,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
         // X Button
         buttons.add(new JeiButton(166, 2, 10, 10)
-                .setTextures(GuiTextures.BUTTON_CLEAR_GRID)
+                .setTextures(GTGuiTextures.BUTTON_CLEAR_GRID)
                 .setTooltipBuilder(lines -> lines.add(
                         LocalizationUtils.format("gregtech.jei.remove_recipe.tooltip",
                                 RecipeCompatUtil.getTweakerName())))
@@ -406,7 +401,7 @@ public class GTRecipeWrapper extends AdvancedRecipeWrapper {
 
         // Authoring provenance
         buttons.add(new JeiButton(166, 2, 10, 10)
-                .setTextures(GuiTextures.INFO_ICON)
+                .setTextures(GTGuiTextures.INFO_ICON)
                 .setTooltipBuilder(lines -> lines.add(recipe.isGroovyRecipe() ?
                         LocalizationUtils.format("gregtech.jei.gs_recipe.tooltip") :
                         LocalizationUtils.format("gregtech.jei.authored_recipe.tooltip")))

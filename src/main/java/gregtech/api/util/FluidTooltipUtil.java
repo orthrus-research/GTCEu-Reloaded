@@ -134,15 +134,25 @@ public class FluidTooltipUtil {
     }
 
     public static void addIngotMolFluidTooltip(@NotNull RichTooltip tooltip, @NotNull FluidStack fluidStack) {
-        // Add tooltip showing how many "ingot moles" (increments of 144) this fluid is if shift is held
-        if (ModifierKeys.isShiftDown() && fluidStack.amount > GTValues.L) {
-            int numIngots = fluidStack.amount / GTValues.L;
-            int extra = fluidStack.amount % GTValues.L;
-            String fluidAmount = String.format(" %,d L = %,d * %d L", fluidStack.amount, numIngots, GTValues.L);
-            if (extra != 0) {
-                fluidAmount += String.format(" + %d L", extra);
-            }
-            tooltip.addLine(TextFormatting.GRAY + LocalizationUtils.format("gregtech.gui.amount_raw") + fluidAmount);
+        String line = ingotMolLine(fluidStack);
+        if (line != null) tooltip.addLine(line);
+    }
+
+    /** Adds the line {@link #addIngotMolFluidTooltip(RichTooltip, FluidStack)} adds to a plain tooltip. */
+    public static void addIngotMolFluidTooltip(@NotNull List<String> tooltip, @NotNull FluidStack fluidStack) {
+        String line = ingotMolLine(fluidStack);
+        if (line != null) tooltip.add(line);
+    }
+
+    /** How many "ingot moles" (increments of 144 L) the fluid is, while shift is held and it is more than one. */
+    private static @Nullable String ingotMolLine(@NotNull FluidStack fluidStack) {
+        if (!ModifierKeys.isShiftDown() || fluidStack.amount <= GTValues.L) return null;
+        int numIngots = fluidStack.amount / GTValues.L;
+        int extra = fluidStack.amount % GTValues.L;
+        String fluidAmount = String.format(" %,d L = %,d * %d L", fluidStack.amount, numIngots, GTValues.L);
+        if (extra != 0) {
+            fluidAmount += String.format(" + %d L", extra);
         }
+        return TextFormatting.GRAY + LocalizationUtils.format("gregtech.gui.amount_raw") + fluidAmount;
     }
 }

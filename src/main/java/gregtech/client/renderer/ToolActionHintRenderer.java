@@ -1,7 +1,6 @@
 package gregtech.client.renderer;
 
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.resources.TextureArea;
+import gregtech.api.GTValues;
 import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.items.toolitem.ToolActionHints;
 import gregtech.api.items.toolitem.ToolGrid;
@@ -21,22 +20,21 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import com.cleanroommc.modularui.drawable.UITexture;
 import org.lwjgl.opengl.GL11;
 
 @SideOnly(Side.CLIENT)
 public final class ToolActionHintRenderer {
 
-    private static final TextureArea ROTATE = TextureArea
-            .fullImage("textures/gui/terminal/icon/system/rotate_normal.png");
-    private static final TextureArea SOUND = TextureArea.fullImage("textures/gui/terminal/icon/sound_normal.png");
-    private static final TextureArea SETTINGS = TextureArea
-            .fullImage("textures/gui/overlay/filter_settings_overlay.png");
-    static final TextureArea CROSS = TextureArea.fullImage("textures/gui/widget/button_cross.png");
-    private static final TextureArea OUTPUT = TextureArea.fullImage("textures/gui/widget/button_output.png");
-    private static final TextureArea INPUT = TextureArea
-            .fullImage("textures/blocks/overlay/machine/overlay_item_hatch_input.png");
-    private static final TextureArea ENABLE = GuiTextures.BUTTON_WORKING_ENABLE.getSubArea(0, 0, 1, 0.5);
-    private static final TextureArea DISABLE = GuiTextures.BUTTON_WORKING_ENABLE.getSubArea(0, 0.5, 1, 0.5);
+    private static final UITexture ROTATE = texture("textures/gui/terminal/icon/system/rotate_normal.png");
+    private static final UITexture SOUND = texture("textures/gui/terminal/icon/sound_normal.png");
+    private static final UITexture SETTINGS = texture("textures/gui/overlay/filter_settings_overlay.png");
+    static final UITexture CROSS = texture("textures/gui/widget/button_cross.png");
+    private static final UITexture OUTPUT = texture("textures/gui/widget/button_output.png");
+    private static final UITexture INPUT = texture("textures/blocks/overlay/machine/overlay_item_hatch_input.png");
+    private static final UITexture WORKING = texture("textures/gui/widget/button_working_enable.png");
+    private static final UITexture ENABLE = WORKING.getSubArea(0, 0, 1, 0.5f);
+    private static final UITexture DISABLE = WORKING.getSubArea(0, 0.5f, 1, 1);
 
     private ToolActionHintRenderer() {}
 
@@ -78,7 +76,11 @@ public final class ToolActionHintRenderer {
         }
     }
 
-    static TextureArea textureFor(ToolAction action) {
+    private static UITexture texture(String path) {
+        return UITexture.fullImage(GTValues.MODID, path);
+    }
+
+    static UITexture textureFor(ToolAction action) {
         return switch (action) {
             case ROTATE_FRONT -> ROTATE;
             case ROTATE_OUTPUT -> OUTPUT;
@@ -91,19 +93,19 @@ public final class ToolActionHintRenderer {
         };
     }
 
-    private static void drawTexture(TextureArea texture, Vec3d origin, EnumFacing face,
+    private static void drawTexture(UITexture texture, Vec3d origin, EnumFacing face,
                                     double right, double up, double outward) {
-        Minecraft.getMinecraft().getTextureManager().bindTexture(texture.imageLocation);
+        Minecraft.getMinecraft().getTextureManager().bindTexture(texture.location);
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
         buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
         vertex(buffer, origin.add(ToolGrid.pointOnFace(face, right - 0.09, up - 0.09, outward)),
-                texture.offsetX, texture.offsetY + texture.imageHeight);
+                texture.u0, texture.v1);
         vertex(buffer, origin.add(ToolGrid.pointOnFace(face, right + 0.09, up - 0.09, outward)),
-                texture.offsetX + texture.imageWidth, texture.offsetY + texture.imageHeight);
+                texture.u1, texture.v1);
         vertex(buffer, origin.add(ToolGrid.pointOnFace(face, right + 0.09, up + 0.09, outward)),
-                texture.offsetX + texture.imageWidth, texture.offsetY);
+                texture.u1, texture.v0);
         vertex(buffer, origin.add(ToolGrid.pointOnFace(face, right - 0.09, up + 0.09, outward)),
-                texture.offsetX, texture.offsetY);
+                texture.u0, texture.v0);
         Tessellator.getInstance().draw();
     }
 

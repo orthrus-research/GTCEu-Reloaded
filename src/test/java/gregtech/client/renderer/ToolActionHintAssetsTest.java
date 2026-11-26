@@ -1,9 +1,9 @@
 package gregtech.client.renderer;
 
 import gregtech.Bootstrap;
-import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.items.toolitem.ToolAction;
 
+import com.cleanroommc.modularui.drawable.UITexture;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -30,16 +30,16 @@ public class ToolActionHintAssetsTest {
         assertVisible(ToolActionHintRenderer.CROSS, "MUFFLE overlay");
     }
 
-    private static void assertVisible(TextureArea texture, String action) throws IOException {
-        String path = "/assets/" + texture.imageLocation.getNamespace() + "/" + texture.imageLocation.getPath();
+    private static void assertVisible(UITexture texture, String action) throws IOException {
+        String path = "/assets/" + texture.location.getNamespace() + "/" + texture.location.getPath();
         try (InputStream input = ToolActionHintAssetsTest.class.getResourceAsStream(path)) {
             assertNotNull(input, action + " missing " + path);
             BufferedImage image = ImageIO.read(input);
             assertNotNull(image, action + " unreadable " + path);
-            int x0 = (int) Math.round(texture.offsetX * image.getWidth());
-            int y0 = (int) Math.round(texture.offsetY * image.getHeight());
-            int x1 = (int) Math.round((texture.offsetX + texture.imageWidth) * image.getWidth());
-            int y1 = (int) Math.round((texture.offsetY + texture.imageHeight) * image.getHeight());
+            int x0 = Math.round(texture.u0 * image.getWidth());
+            int y0 = Math.round(texture.v0 * image.getHeight());
+            int x1 = Math.round(texture.u1 * image.getWidth());
+            int y1 = Math.round(texture.v1 * image.getHeight());
             assertTrue(x0 >= 0 && y0 >= 0 && x1 <= image.getWidth() && y1 <= image.getHeight() && x0 < x1 && y0 < y1,
                     action + " invalid subarea " + path);
             int visible = 0;

@@ -1,8 +1,8 @@
 package gregtech.integration.jei.multiblock;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.util.GTLog;
 
 import net.minecraft.client.resources.I18n;
@@ -33,7 +33,7 @@ public class MultiblockInfoCategory implements IRecipeCategory<MultiblockInfoRec
         this.guiHelper = helpers.getGuiHelper();
         this.background = this.guiHelper.createBlankDrawable(176, 186);
         PreviewLifecycle.register();
-        this.icon = guiHelper.drawableBuilder(GuiTextures.MULTIBLOCK_CATEGORY.imageLocation, 0, 0, 16, 16)
+        this.icon = guiHelper.drawableBuilder(GTGuiTextures.MULTIBLOCK_CATEGORY.location, 0, 0, 16, 16)
                 .setTextureSize(16, 16).build();
     }
 
