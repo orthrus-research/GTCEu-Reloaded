@@ -151,7 +151,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         this.recipeBuilderSample = defaultRecipeBuilder;
         RECIPE_MAP_REGISTRY.put(unlocalizedName, this);
 
-        this.grsVirtualizedRecipeMap = GregTechAPI.moduleManager.isModuleEnabled(GregTechModules.MODULE_GRS) ?
+        this.grsVirtualizedRecipeMap = GregTechAPI.moduleManager().isModuleEnabled(GregTechModules.MODULE_GRS) ?
                 new VirtualizedRecipeMap(this) : null;
     }
 

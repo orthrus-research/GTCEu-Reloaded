@@ -33,31 +33,62 @@ import net.minecraftforge.fml.common.eventhandler.GenericEvent;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class GregTechAPI {
 
-    /** Will always be available */
+    /** Set by GTCEu's mod constructor, before any lifecycle event. */
     public static Object instance;
-    /** Will be available at the Construction stage */
+    /**
+     * Set during GTCEu's construction ({@code FMLConstructionEvent}), before its modules are created.
+     * {@link #moduleManager()} reads it and fails clearly when it is not set yet.
+     */
     public static IModuleManager moduleManager;
-    /** Will be available at the Pre-Initialization stage */
+    /**
+     * Set during GTCEu's construction ({@code FMLConstructionEvent}), when the core module is created.
+     * {@link #networkHandler()} reads it and fails clearly when it is not set yet.
+     */
     public static INetworkHandler networkHandler;
-    /** Will be available at the Server-Starting stage */
+    /**
+     * Set when a server starts ({@code FMLServerStartingEvent}) and kept afterwards; never set during mod loading,
+     * so add commands from a server-starting handler. {@link #commandManager()} reads it and fails clearly when it
+     * is not set yet.
+     */
     public static ICommandManager commandManager;
-    /** Will be available at the Pre-Initialization stage */
+    /**
+     * Set during GTCEu's pre-initialization ({@code FMLPreInitializationEvent}).
+     * {@link #advancementManager()} reads it and fails clearly when it is not set yet.
+     */
     public static IAdvancementManager advancementManager;
-    /** Will be available at the Pre-Initialization stage */
+    /**
+     * Set during GTCEu's pre-initialization ({@code FMLPreInitializationEvent}).
+     * {@link #soundManager()} reads it and fails clearly when it is not set yet.
+     */
     public static ISoundManager soundManager;
-    /** Will be available at the Construction stage */
+    /**
+     * Set during GTCEu's construction ({@code FMLConstructionEvent}), when the core module is created; materials are
+     * registered during its pre-initialization. {@link #materialManager()} reads it and fails clearly when it is not
+     * set yet.
+     */
     public static IMaterialRegistryManager materialManager;
-    /** Will be available at the Pre-Initialization stage */
+    /**
+     * Set during GTCEu's pre-initialization ({@code FMLPreInitializationEvent}), before materials are registered.
+     * {@link #markerMaterialRegistry()} reads it and fails clearly when it is not set yet.
+     */
     public static MarkerMaterialRegistry markerMaterialRegistry;
-    /** Will be available at the Pre-Initialization stage */
+    /**
+     * Set during GTCEu's pre-initialization ({@code FMLPreInitializationEvent}), after materials are frozen and
+     * before the MTE registry event. {@link #mteManager()} reads it and fails clearly when it is not set yet.
+     */
     public static MTEManager mteManager;
-    /** Will be available at the Pre-Initialization stage */
+    /**
+     * Set during GTCEu's pre-initialization ({@code FMLPreInitializationEvent}), together with {@link #mteManager}.
+     * {@link #coilManager()} reads it and fails clearly when it is not set yet.
+     */
     public static CoilManager coilManager;
     /** GT's data migrations API */
     public static final MigrationAPI MIGRATIONS = new MigrationAPI();
@@ -67,7 +98,11 @@ public class GregTechAPI {
      */
     public static final RecyclingManager RECYCLING_MANAGER = new RecyclingManager();
 
-    /** Will be available at the Pre-Initialization stage */
+    private static final String CONSTRUCTION = "during its construction (FMLConstructionEvent)";
+    private static final String PRE_INIT = "during its pre-initialization (FMLPreInitializationEvent)";
+    private static final String SERVER_STARTING = "when a server starts (FMLServerStartingEvent)";
+
+    /** Decided at the start of GTCEu's pre-initialization; see {@link #isHighTier()}. */
     private static boolean highTier;
     private static boolean highTierInitialized;
 
@@ -82,8 +117,99 @@ public class GregTechAPI {
     public static final Object2ObjectMap<IBlockState, IBatteryData> PSS_BATTERIES = new Object2ObjectOpenHashMap<>();
     public static final Object2ObjectMap<IBlockState, ICleanroomFilter> CLEANROOM_FILTERS = new Object2ObjectOpenHashMap<>();
 
-    /** Will be available at the Pre-Initialization stage */
+    /**
+     * @return the module manager
+     * @throws IllegalStateException before GTCEu's construction ({@code FMLConstructionEvent}) sets it
+     */
+    public static @NotNull IModuleManager moduleManager() {
+        return requireSet(moduleManager, "moduleManager", CONSTRUCTION);
+    }
+
+    /**
+     * @return the network handler
+     * @throws IllegalStateException before GTCEu's construction ({@code FMLConstructionEvent}) sets it
+     */
+    public static @NotNull INetworkHandler networkHandler() {
+        return requireSet(networkHandler, "networkHandler", CONSTRUCTION);
+    }
+
+    /**
+     * @return the command manager
+     * @throws IllegalStateException until the first server start ({@code FMLServerStartingEvent}) sets it
+     */
+    public static @NotNull ICommandManager commandManager() {
+        return requireSet(commandManager, "commandManager", SERVER_STARTING);
+    }
+
+    /**
+     * @return the advancement manager
+     * @throws IllegalStateException before GTCEu's pre-initialization ({@code FMLPreInitializationEvent}) sets it
+     */
+    public static @NotNull IAdvancementManager advancementManager() {
+        return requireSet(advancementManager, "advancementManager", PRE_INIT);
+    }
+
+    /**
+     * @return the sound manager
+     * @throws IllegalStateException before GTCEu's pre-initialization ({@code FMLPreInitializationEvent}) sets it
+     */
+    public static @NotNull ISoundManager soundManager() {
+        return requireSet(soundManager, "soundManager", PRE_INIT);
+    }
+
+    /**
+     * @return the material registry manager
+     * @throws IllegalStateException before GTCEu's construction ({@code FMLConstructionEvent}) sets it
+     */
+    public static @NotNull IMaterialRegistryManager materialManager() {
+        return requireSet(materialManager, "materialManager", CONSTRUCTION);
+    }
+
+    /**
+     * @return the marker material registry
+     * @throws IllegalStateException before GTCEu's pre-initialization ({@code FMLPreInitializationEvent}) sets it
+     */
+    public static @NotNull MarkerMaterialRegistry markerMaterialRegistry() {
+        return requireSet(markerMaterialRegistry, "markerMaterialRegistry", PRE_INIT);
+    }
+
+    /**
+     * @return the MetaTileEntity registry manager
+     * @throws IllegalStateException before GTCEu's pre-initialization ({@code FMLPreInitializationEvent}) sets it
+     */
+    public static @NotNull MTEManager mteManager() {
+        return requireSet(mteManager, "mteManager", PRE_INIT);
+    }
+
+    /**
+     * @return the heating coil registry manager
+     * @throws IllegalStateException before GTCEu's pre-initialization ({@code FMLPreInitializationEvent}) sets it
+     */
+    public static @NotNull CoilManager coilManager() {
+        return requireSet(coilManager, "coilManager", PRE_INIT);
+    }
+
+    private static <T> @NotNull T requireSet(@Nullable T value, @NotNull String name, @NotNull String stage) {
+        if (value == null) {
+            throw new IllegalStateException("GregTechAPI." + name + " is not available yet: GTCEu sets it " + stage);
+        }
+        return value;
+    }
+
+    /**
+     * Whether content above UV is registered: the {@code highTierContent} config or any {@link HighTierEvent}
+     * listener enables it.
+     * <p>
+     * Decided at the start of GTCEu's pre-initialization ({@code FMLPreInitializationEvent}), before GTCEu registers
+     * its materials, blocks, items and machines. Inside a {@link HighTierEvent} listener, ask the event instead.
+     *
+     * @throws IllegalStateException when read before it is decided; before, it answered {@code false} then
+     */
     public static boolean isHighTier() {
+        if (!highTierInitialized) {
+            throw new IllegalStateException("GregTechAPI.isHighTier() is not decided yet: GTCEu decides it at the " +
+                    "start of its pre-initialization (FMLPreInitializationEvent)");
+        }
         return highTier;
     }
 

@@ -263,8 +263,8 @@ public class GroovyScriptModule extends IntegrationSubmodule implements GroovyPl
                 .completerOfNamed(RecipeMap::getRecipeMaps, RecipeMap::getUnlocalizedName)
                 .register();
         container.objectMapperBuilder("material", Material.class)
-                .parser(IObjectParser.wrapStringGetter(GregTechAPI.materialManager::getMaterial))
-                .completerOfNamed(GregTechAPI.materialManager::getRegisteredMaterials,
+                .parser(IObjectParser.wrapStringGetter(GregTechAPI.materialManager()::getMaterial))
+                .completerOfNamed(GregTechAPI.materialManager()::getRegisteredMaterials,
                         mat -> mat.getResourceLocation().toString())
                 .register();
 

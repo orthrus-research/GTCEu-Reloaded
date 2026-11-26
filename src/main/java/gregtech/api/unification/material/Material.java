@@ -156,11 +156,11 @@ public class Material implements Comparable<Material> {
 
     protected void registerMaterial() {
         verifyMaterial();
-        GregTechAPI.materialManager.getRegistry(getModid()).register(this);
+        GregTechAPI.materialManager().getRegistry(getModid()).register(this);
     }
 
     public void addFlags(MaterialFlag... flags) {
-        if (GregTechAPI.materialManager.canModifyMaterials()) {
+        if (GregTechAPI.materialManager().canModifyMaterials()) {
             this.flags.addFlags(flags).verify(this);
         } else throw new IllegalStateException("Cannot add flag to material when registry is frozen!");
     }
@@ -466,7 +466,7 @@ public class Material implements Comparable<Material> {
     }
 
     public <T extends IMaterialProperty> void setProperty(PropertyKey<T> key, T property) {
-        if (!GregTechAPI.materialManager.canModifyMaterials()) {
+        if (!GregTechAPI.materialManager().canModifyMaterials()) {
             throw new IllegalStateException("Cannot add properties to a Material when registry is frozen!");
         }
         properties.setProperty(key, property);
@@ -490,7 +490,7 @@ public class Material implements Comparable<Material> {
 
     @NotNull
     public MaterialRegistry getRegistry() {
-        return GregTechAPI.materialManager.getRegistry(getModid());
+        return GregTechAPI.materialManager().getRegistry(getModid());
     }
 
     /**
@@ -1162,7 +1162,7 @@ public class Material implements Comparable<Material> {
             materialInfo.componentList = ImmutableList.copyOf(composition);
             materialInfo.verifyInfo(properties, averageRGB);
             Material m = new Material(materialInfo, properties, flags, false);
-            GregTechAPI.materialManager.getRegistry(m.getModid()).registerReplacement(m, replacement);
+            GregTechAPI.materialManager().getRegistry(m.getModid()).registerReplacement(m, replacement);
             if (!postProcessors.isEmpty()) postProcessors.forEach(p -> p.accept(m));
             return m;
         }

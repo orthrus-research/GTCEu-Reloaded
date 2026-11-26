@@ -26,7 +26,7 @@ public final class MarkerMaterial extends Material {
      */
     public static @NotNull MarkerMaterial create(@NotNull String name) {
         MarkerMaterial markerMaterial = new MarkerMaterial(name);
-        return GregTechAPI.markerMaterialRegistry.registerMarkerMaterial(markerMaterial);
+        return GregTechAPI.markerMaterialRegistry().registerMarkerMaterial(markerMaterial);
     }
 
     @Override

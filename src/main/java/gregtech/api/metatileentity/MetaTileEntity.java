@@ -179,7 +179,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
 
     protected MetaTileEntity(@NotNull ResourceLocation metaTileEntityId) {
         this.metaTileEntityId = metaTileEntityId;
-        this.registry = GregTechAPI.mteManager.getRegistry(metaTileEntityId.getNamespace());
+        this.registry = GregTechAPI.mteManager().getRegistry(metaTileEntityId.getNamespace());
         initializeInventory();
     }
 

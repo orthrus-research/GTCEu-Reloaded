@@ -2,6 +2,7 @@ package gregtech;
 
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
+import gregtech.api.GregTechAPIInternal;
 import gregtech.api.fluids.GTFluidRegistration;
 import gregtech.api.metatileentity.registry.MTEManager;
 import gregtech.api.unification.material.Materials;
@@ -76,6 +77,8 @@ public final class Bootstrap {
         meta.modId = GTValues.MODID;
         Loader.instance().setupTestHarness(new DummyModContainer(meta));
         GregTechAPI.moduleManager = ModuleManager.getInstance();
+        // as at the start of the core module's pre-initialization: content registration reads the high-tier switch
+        GregTechAPIInternal.preInit();
 
         MaterialRegistryManager managerInternal = MaterialRegistryManager.getInstance();
         GregTechAPI.materialManager = managerInternal;
