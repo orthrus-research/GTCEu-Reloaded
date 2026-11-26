@@ -7,21 +7,16 @@ import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.ILaserContainer;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ClickButtonWidget;
-import gregtech.api.gui.widgets.CycleButtonWidget;
-import gregtech.api.gui.widgets.ImageWidget;
-import gregtech.api.gui.widgets.TextFieldWidget2;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.TooltipHelper;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -37,13 +32,24 @@ import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.LongSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
+import com.cleanroommc.modularui.widgets.CycleButtonWidget;
+import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.function.Function;
 
 import static gregtech.api.GTValues.MAX;
 import static gregtech.api.GTValues.V;
@@ -104,54 +110,106 @@ public class MetaTileEntityCreativeEnergy extends MetaTileEntity implements ILas
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        ModularUI.Builder builder = ModularUI.defaultBuilder()
-                .widget(new CycleButtonWidget(7, 7, 30, 20, GTValues.VNF, () -> setTier, tier -> {
-                    setTier = tier;
-                    voltage = GTValues.V[setTier];
-                }));
-        builder.label(7, 32, "gregtech.creative.energy.voltage");
-        builder.widget(new ImageWidget(7, 44, 156, 20, GuiTextures.DISPLAY));
-        builder.widget(new TextFieldWidget2(9, 50, 152, 16, () -> String.valueOf(voltage), value -> {
-            // the text comes from the client; its number checks ran only there
-            try {
-                voltage = Math.max(0, Long.parseLong(value.trim()));
-                setTier = GTUtility.getTierByVoltage(voltage);
-            } catch (NumberFormatException ignored) {}
-        }).setAllowedChars(TextFieldWidget2.NATURAL_NUMS).setMaxLength(19).setValidator(getTextFieldValidator()));
+    public boolean usesMui2() {
+        return true;
+    }
 
-        builder.label(7, 74, "gregtech.creative.energy.amperage");
-        builder.widget(new ClickButtonWidget(7, 87, 20, 20, "-", data -> amps = --amps == -1 ? 0 : amps));
-        builder.widget(new ImageWidget(29, 87, 118, 20, GuiTextures.DISPLAY));
-        builder.widget(new TextFieldWidget2(31, 93, 114, 16, () -> String.valueOf(amps), value -> {
-            try {
-                amps = Math.max(0, Integer.parseInt(value.trim()));
-            } catch (NumberFormatException ignored) {}
-        }).setMaxLength(10).setNumbersOnly(0, Integer.MAX_VALUE));
-        builder.widget(new ClickButtonWidget(149, 87, 20, 20, "+", data -> {
-            if (amps < Integer.MAX_VALUE) {
-                amps++;
-            }
-        }));
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        // every value comes from the client, so each setter keeps it within what the old screen allowed
+        IntSyncValue tier = new IntSyncValue(() -> setTier, this::setTier);
+        LongSyncValue voltage = new LongSyncValue(() -> this.voltage, this::setVoltage);
+        IntSyncValue amperage = new IntSyncValue(() -> amps, value -> this.amps = Math.max(0, value));
+        LongSyncValue energyIO = new LongSyncValue(() -> lastEnergyIOPerSec);
+        BooleanSyncValue activity = new BooleanSyncValue(() -> active, this::setActive);
+        BooleanSyncValue sourcing = new BooleanSyncValue(() -> source, this::setSource);
+        guiSyncManager.syncValue("creative_energy_tier", tier);
+        guiSyncManager.syncValue("creative_energy_voltage", voltage);
+        guiSyncManager.syncValue("creative_energy_amperage", amperage);
+        guiSyncManager.syncValue("creative_energy_io", energyIO);
+        guiSyncManager.syncValue("creative_energy_active", activity);
+        guiSyncManager.syncValue("creative_energy_source", sourcing);
 
-        builder.dynamicLabel(7, 110, () -> "Energy I/O per sec: " + this.lastEnergyIOPerSec, 0x232323);
+        CycleButtonWidget tierButton = new CycleButtonWidget()
+                .stateCount(GTValues.VNF.length)
+                .value(tier);
+        for (int i = 0; i < GTValues.VNF.length; i++) {
+            tierButton.stateOverlay(i, IKey.str(GTValues.VNF[i]));
+        }
 
-        builder.widget(new CycleButtonWidget(7, 139, 77, 20, () -> active, this::setActive,
-                "gregtech.creative.activity.off", "gregtech.creative.activity.on"));
-        builder.widget(new CycleButtonWidget(85, 139, 77, 20, () -> source, value -> {
-            source = value;
-            if (source) {
-                voltage = 0;
-                amps = 0;
-                setTier = 0;
-            } else {
-                voltage = V[MAX];
-                amps = Integer.MAX_VALUE;
-                setTier = MAX;
-            }
-        }, "gregtech.creative.energy.sink", "gregtech.creative.energy.source"));
+        return GTGuis.createPanel(this, 176, 166)
+                .child(tierButton.pos(7, 7).size(30, 20))
+                .child(IKey.lang("gregtech.creative.energy.voltage").asWidget().pos(7, 32))
+                .child(new TextFieldWidget()
+                        .pos(7, 44).size(156, 20)
+                        .background(GTGuiTextures.DISPLAY)
+                        .setTextColor(Color.WHITE.main)
+                        .setMaxLength(19)
+                        .setNumbersLong(value -> Math.max(0L, value))
+                        .value(voltage))
+                .child(IKey.lang("gregtech.creative.energy.amperage").asWidget().pos(7, 74))
+                .child(new ButtonWidget<>()
+                        .pos(7, 87).size(20)
+                        .overlay(IKey.str("-"))
+                        .onMousePressed(mouseButton -> {
+                            amperage.setIntValue(Math.max(0, amperage.getIntValue() - 1), true, true);
+                            return true;
+                        }))
+                .child(new TextFieldWidget()
+                        .pos(29, 87).size(118, 20)
+                        .background(GTGuiTextures.DISPLAY)
+                        .setTextColor(Color.WHITE.main)
+                        .setMaxLength(10)
+                        .setNumbers(0, Integer.MAX_VALUE)
+                        .value(amperage))
+                .child(new ButtonWidget<>()
+                        .pos(149, 87).size(20)
+                        .overlay(IKey.str("+"))
+                        .onMousePressed(mouseButton -> {
+                            int amps = amperage.getIntValue();
+                            if (amps < Integer.MAX_VALUE) amperage.setIntValue(amps + 1, true, true);
+                            return true;
+                        }))
+                .child(IKey.lang("gregtech.creative.energy.io_per_sec",
+                        () -> new Object[] { energyIO.getLongValue() })
+                        .color(0x232323)
+                        .asWidget().pos(7, 110))
+                .child(new CycleButtonWidget()
+                        .stateCount(2)
+                        .value(activity)
+                        .stateOverlay(0, IKey.lang("gregtech.creative.activity.off"))
+                        .stateOverlay(1, IKey.lang("gregtech.creative.activity.on"))
+                        .pos(7, 139).size(77, 20))
+                .child(new CycleButtonWidget()
+                        .stateCount(2)
+                        .value(sourcing)
+                        .stateOverlay(0, IKey.lang("gregtech.creative.energy.sink"))
+                        .stateOverlay(1, IKey.lang("gregtech.creative.energy.source"))
+                        .pos(85, 139).size(77, 20));
+    }
 
-        return builder.build(getHolder(), entityPlayer);
+    private void setTier(int tier) {
+        this.setTier = Math.max(0, Math.min(GTValues.V.length - 1, tier));
+        this.voltage = GTValues.V[this.setTier];
+    }
+
+    private void setVoltage(long voltage) {
+        this.voltage = Math.max(0, voltage);
+        this.setTier = GTUtility.getTierByVoltage(this.voltage);
+    }
+
+    /** A source starts with nothing to emit; a sink starts accepting everything. */
+    private void setSource(boolean source) {
+        this.source = source;
+        if (source) {
+            this.voltage = 0;
+            this.amps = 0;
+            this.setTier = 0;
+        } else {
+            this.voltage = V[MAX];
+            this.amps = Integer.MAX_VALUE;
+            this.setTier = MAX;
+        }
     }
 
     public void setActive(boolean active) {
@@ -334,24 +392,6 @@ public class MetaTileEntityCreativeEnergy extends MetaTileEntity implements ILas
     public void receiveInitialSyncData(@NotNull PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
         this.active = buf.readBoolean();
-    }
-
-    public static Function<String, String> getTextFieldValidator() {
-        return val -> {
-            if (val.isEmpty()) {
-                return "0";
-            }
-            long num;
-            try {
-                num = Long.parseLong(val);
-            } catch (NumberFormatException ignored) {
-                return "0";
-            }
-            if (num < 0) {
-                return "0";
-            }
-            return val;
-        };
     }
 
     @Override

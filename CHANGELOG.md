@@ -74,7 +74,7 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 | API | The API has its own helpers for what it borrowed from the implementation: `ModifierKeys.isShiftDown()` and `isCtrlDown()` (`gregtech.api.util.input`) and `BlockUtility.statePropertiesToString`, and `GTFluidRegistration` keeps the fluid blocks it registers. `TooltipHelper`'s key checks, `MetaBlocks.statePropertiesToString` and `MetaBlocks.FLUID_BLOCKS` stay and answer the same |
 | Breaking | `MonitorPluginBaseBehavior.customUI` is replaced by `getConfigWidth`, `getConfigHeight` and `buildConfigUI`, which build a plugin's settings in ModularUI 2; the legacy `WidgetPluginConfig`, `WidgetCoverList`, `WidgetMonitorScreen`, `WidgetScreenGrid`, `WidgetScrollBar` and `WidgetARGB` are removed |
 | Breaking | Remove the legacy item screen path now that every item screen is a ModularUI 2 screen: `PlayerInventoryHolder`, `PlayerInventoryUIFactory` and its UI factory registration, `ItemUIFactory.createUI`, `MetaItem.createUI` and `IntCircuitIngredient.adjustConfiguration(PlayerInventoryHolder, int)`. An item screen implements `ItemUIFactory.buildUI` and opens with `MetaItemGuiFactory.open` |
-| Breaking | Remove the old-GUI code that only the screens moved to ModularUI 2 used: the terminal's `SelectorWidget`. An addon that used it must keep its own copy |
+| Breaking | Remove the old-GUI code that only the screens moved to ModularUI 2 used: the terminal's `SelectorWidget` and `MetaTileEntityCreativeEnergy.getTextFieldValidator`. An addon that used it must keep its own copy |
 
 See [the migration guide](docs/ct-migration.md). Alpha qualification does not imply arbitrary pack compatibility.
 
@@ -298,6 +298,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Monitors | Online Picture plugins show their pictures only to players who turn on the new `monitorOnlinePictures` client option, which is off by default: a picture is downloaded by each player's own game, so an address another player chose learns that player's IP address. The server accepts only http and https addresses, and the download refuses addresses inside the player's own network, including after a redirect; with the option off the plugin says so on the screen |
 | GUI | A fluid dropped from a recipe viewer on a fluid tank that locks, such as an output fluid hatch's, locks the tank; before, only the screen showed the lock, which the server never had |
 | GUI | The alarm, charger, item collector and pump open ModularUI 2 screens with the controls they had. The alarm's sounds are a drop-down list, and a sound or radius chosen on its screen is saved even when nothing else about the alarm changes; the item collector's screen drops the empty space its unused filter took; the pump's tank can be drained into a held container, as an output fluid hatch's can |
+| GUI | The creative energy source opens a ModularUI 2 screen with the controls it had; its energy rate line can be translated |
 
 ### Earlier fork changes
 
