@@ -3,18 +3,15 @@ package gregtech.common.items.behaviors;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.impl.ModularUIContainer;
-import gregtech.api.gui.widgets.LabelWidget;
 import gregtech.api.items.gui.ItemUIFactory;
-import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
+import gregtech.api.mui.GTGuis;
+import gregtech.api.mui.factory.MetaItemGuiFactory;
 import gregtech.api.util.GTUtility;
 import gregtech.common.gui.widget.prospector.ProspectorMode;
-import gregtech.common.gui.widget.prospector.widget.WidgetOreList;
-import gregtech.common.gui.widget.prospector.widget.WidgetProspectingMap;
-import gregtech.common.gui.widget.terminal.SearchComponent;
+import gregtech.common.mui.widget.prospector.ProspectingMapWidget;
+import gregtech.common.mui.widget.prospector.ProspectingOreListWidget;
+import gregtech.common.mui.widget.prospector.ProspectingSyncHandler;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.Entity;
@@ -28,22 +25,27 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.HandGuiData;
+import com.cleanroommc.modularui.screen.ModularContainer;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.TextWidget;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.function.Consumer;
 
-public class ProspectorScannerBehavior implements IItemBehaviour, ItemUIFactory, SearchComponent.IWidgetSearch<String> {
+public class ProspectorScannerBehavior implements IItemBehaviour, ItemUIFactory {
 
     private static final long VOLTAGE_FACTOR = 16L;
     private static final int FLUID_PROSPECTION_THRESHOLD = GTValues.HV;
+    private static final int WIDTH = 332;
+    private static final int HEIGHT = 200;
 
     private final int radius;
     private final int tier;
-
-    private WidgetOreList widgetOreList;
 
     public ProspectorScannerBehavior(int radius, int tier) {
         this.radius = radius + 1;
@@ -68,7 +70,7 @@ public class ProspectorScannerBehavior implements IItemBehaviour, ItemUIFactory,
                     player.sendStatusMessage(new TextComponentTranslation("metaitem.prospector.mode.ores"), true);
                 }
             } else if (checkCanUseScanner(heldItem, player, true)) {
-                new PlayerInventoryHolder(player, hand).openUI();
+                MetaItemGuiFactory.open(player, hand);
             } else {
                 player.sendMessage(new TextComponentTranslation("behavior.prospector.not_enough_energy"));
             }
@@ -108,20 +110,31 @@ public class ProspectorScannerBehavior implements IItemBehaviour, ItemUIFactory,
     }
 
     @Override
-    public ModularUI createUI(PlayerInventoryHolder holder, @NotNull EntityPlayer entityPlayer) {
-        ProspectorMode mode = getMode(entityPlayer.getHeldItem(EnumHand.MAIN_HAND));
-        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 332, 200);
-        this.widgetOreList = new WidgetOreList(32 * radius - 6, 18, 332 - 32 * radius, 176);
-        builder.widget(this.widgetOreList);
-        builder.widget(new WidgetProspectingMap(6, 18, radius, this.widgetOreList, mode, 1));
-        // Cardinal directions
-        builder.widget(new LabelWidget(3 + (16 * (radius * 2 - 1)) / 2, 14, "N", 0xAAAAAA).setShadow(true));
-        builder.widget(new LabelWidget(3 + (16 * (radius * 2 - 1)) / 2, 14 + 16 * (radius * 2 - 1), "S", 0xAAAAAA)
-                .setShadow(true));
-        builder.widget(new LabelWidget(3, 15 + (16 * (radius * 2 - 1)) / 2, "W", 0xAAAAAA).setShadow(true));
-        builder.widget(new LabelWidget(3 + 16 * (radius * 2 - 1), 15 + (16 * (radius * 2 - 1)) / 2, "E", 0xAAAAAA)
-                .setShadow(true));
-        return builder.label(6, 6, getTranslationKey()).build(holder, entityPlayer);
+    public ModularPanel buildUI(HandGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
+        ProspectorMode mode = getMode(guiData.getUsedItemStack());
+        int mapSize = 16 * (radius * 2 - 1);
+        ProspectingSyncHandler scanner = new ProspectingSyncHandler(radius, mode);
+        syncManager.syncValue("prospecting", scanner);
+
+        ProspectingOreListWidget oreList = new ProspectingOreListWidget()
+                .pos(32 * radius - 6, 18)
+                .size(WIDTH - 32 * radius, 176);
+        ProspectingMapWidget map = new ProspectingMapWidget(radius, mode, oreList).pos(6, 18);
+        scanner.setReceiver(map::addPacket);
+
+        return GTGuis.createPanel(guiData.getUsedItemStack(), WIDTH, HEIGHT)
+                .child(IKey.lang(getTranslationKey()).asWidget().pos(6, 6))
+                .child(map)
+                .child(oreList)
+                // cardinal directions
+                .child(direction("N").pos(3 + mapSize / 2, 14))
+                .child(direction("S").pos(3 + mapSize / 2, 14 + mapSize))
+                .child(direction("W").pos(3, 15 + mapSize / 2))
+                .child(direction("E").pos(3 + mapSize, 15 + mapSize / 2));
+    }
+
+    private static TextWidget<?> direction(String name) {
+        return IKey.str(name).color(0xFFAAAAAA).shadow(true).asWidget();
     }
 
     private String getTranslationKey() {
@@ -141,50 +154,15 @@ public class ProspectorScannerBehavior implements IItemBehaviour, ItemUIFactory,
     }
 
     @Override
-    public String resultDisplay(String result) {
-        if (widgetOreList != null) {
-            return widgetOreList.ores.get(result);
-        }
-        return "";
-    }
-
-    @Override
-    public void selectResult(String result) {
-        if (widgetOreList != null) {
-            widgetOreList.setSelected(result);
-        }
-    }
-
-    @Override
-    public void search(String word, Consumer<String> find) {
-        if (widgetOreList != null) {
-            word = word.toLowerCase(Locale.ROOT);
-            for (Map.Entry<String, String> entry : widgetOreList.ores.entrySet()) {
-                if (entry.getKey().toLowerCase(Locale.ROOT).contains(word) ||
-                        entry.getValue().toLowerCase(Locale.ROOT).contains(word)) {
-                    find.accept(entry.getKey());
-                }
-            }
-        }
-    }
-
-    @Override
     public void onUpdate(ItemStack itemStack, Entity entity) {
-        if (entity instanceof EntityPlayer) {
-            EntityPlayer player = (EntityPlayer) entity;
-            if (player.openContainer instanceof ModularUIContainer) {
-                ModularUIContainer modularUIContainer = (ModularUIContainer) player.openContainer;
-                if (modularUIContainer.getModularUI().holder instanceof PlayerInventoryHolder) {
-                    if (((PlayerInventoryHolder) (modularUIContainer).getModularUI().holder).getCurrentItem() ==
-                            itemStack) {
-                        if (!player.isCreative()) {
-                            if (checkCanUseScanner(itemStack, player, true))
-                                drainEnergy(itemStack, GTValues.V[tier] / VOLTAGE_FACTOR, false);
-                            else
-                                player.closeScreen();
-                        }
-                    }
-                }
+        // the open screen scans every tick, and stops when the scanner runs out of energy
+        if (entity instanceof EntityPlayer player && !player.world.isRemote && !player.isCreative() &&
+                player.openContainer instanceof ModularContainer container &&
+                container.getGuiData() instanceof HandGuiData data && data.getUsedItemStack() == itemStack) {
+            if (checkCanUseScanner(itemStack, player, true)) {
+                drainEnergy(itemStack, GTValues.V[tier] / VOLTAGE_FACTOR, false);
+            } else {
+                player.closeScreen();
             }
         }
     }

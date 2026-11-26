@@ -289,6 +289,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Saves | Machine items held in chests, machines, entities and player inventories are carried through the machine ID migrations, as placed machines are; before, only stacks saved with a large count were, so in a world older than a migration an ordinary stack could keep an ID that no longer names its machine. A world already saved at a migration's version keeps the items it has |
 | API | `SimpleItemFilterReader.deserializeNBT` reads back the damage and NBT settings `serializeNBT` writes; before, a filter that respected damage or NBT read its own saved tag as ignoring them |
 | Multiblocks | A large boiler forms with a water hatch and a fuel bus wherever they sit in its firebox layer; before, an import fluid hatch also counted as its one allowed item input, because the hatch offers its circuit slot as one, so the boiler refused to form when the pattern reached the bus after the hatch |
+| GUI | The prospector's screen is a ModularUI 2 screen, with the same map, resource list, tooltips and waypoints; it no longer leaks its map texture each time it closes. Screens opened from an item in hand close when that item leaves the hand |
 
 ### Earlier fork changes
 

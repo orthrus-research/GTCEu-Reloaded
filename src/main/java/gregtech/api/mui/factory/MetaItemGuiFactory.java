@@ -12,6 +12,9 @@ import com.cleanroommc.modularui.api.IGuiHolder;
 import com.cleanroommc.modularui.factory.AbstractUIFactory;
 import com.cleanroommc.modularui.factory.GuiManager;
 import com.cleanroommc.modularui.factory.HandGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -42,6 +45,15 @@ public class MetaItemGuiFactory extends AbstractUIFactory<HandGuiData> {
             throw new IllegalArgumentException("Found MetaItem is not a gui holder!");
         }
         return valueItem.getUIManager();
+    }
+
+    /** Keeps the screen open only while the hand still holds the item it was opened for. */
+    @Override
+    public ModularPanel createPanel(HandGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
+        ItemStack opened = guiData.getUsedItemStack().copy();
+        settings.canInteractWith(player -> player == guiData.getPlayer() &&
+                ItemStack.areItemsEqual(opened, guiData.getUsedItemStack()));
+        return super.createPanel(guiData, syncManager, settings);
     }
 
     @Override

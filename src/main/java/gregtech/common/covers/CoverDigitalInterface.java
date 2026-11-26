@@ -19,9 +19,9 @@ import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.RenderUtil;
-import gregtech.common.gui.widget.prospector.widget.WidgetOreList;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityPowerSubstation;
 import gregtech.common.mui.widget.GTTextFieldWidget;
+import gregtech.common.mui.widget.prospector.ProspectingOreListWidget;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -1222,7 +1222,7 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
         assert fluidStack != null;
         float height = 10f / 16 * Math.max(fluidStack.amount * 1.0f / fluids[slot].getCapacity(), 0.001f);
         RenderUtil.renderFluidOverLay(-7f / 16, 0.4375f - height, 14f / 16, height, 0.002f, fluidStack, 0.8f);
-        int fluidColor = WidgetOreList.getFluidColor(fluidStack.getFluid());
+        int fluidColor = ProspectingOreListWidget.getFluidColor(fluidStack.getFluid());
         int textColor = ((fluidColor & 0xff) + ((fluidColor >> 8) & 0xff) + ((fluidColor >> 16) & 0xff)) / 3 >
                 (255 / 2) ? 0X0 : 0XFFFFFFFF;
         RenderUtil.renderRect(-7f / 16, -7f / 16, 14f / 16, 3f / 16, 0.002f, fluidColor | (255 << 24));
