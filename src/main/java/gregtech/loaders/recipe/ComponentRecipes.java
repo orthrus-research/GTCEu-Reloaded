@@ -683,7 +683,7 @@ public class ComponentRecipes {
                 .output(EMITTER_ZPM)
                 .stationResearch(b -> b
                         .researchStack(EMITTER_LuV)
-                        .CWUt(8))
+                        .CWUt(4))
                 .duration(600).EUt(24000).buildAndRegister();
 
         ASSEMBLY_LINE_RECIPES.recipeBuilder()
