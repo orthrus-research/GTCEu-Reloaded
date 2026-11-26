@@ -1,6 +1,7 @@
 package gregtech.datafix.migration.impl;
 
 import gregtech.api.GregTechAPI;
+import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.datafix.migration.api.MTEMigrator;
@@ -128,7 +129,10 @@ public class MigrateMTEBlockTE implements IFixableData {
                     continue;
                 }
 
-                int newStateID = blockStateIDMap.get(mte.getBlock().getDefaultState());
+                // Keep the opacity the machine was placed with; the default state is opaque, which a quantum
+                // chest or tank is not.
+                int newStateID = blockStateIDMap.get(mte.getBlock().getDefaultState()
+                        .withProperty(BlockMachine.OPAQUE, mte.isOpaqueCube()));
                 byte newBlockID = (byte) (newStateID >> 4 & 0xFF);
                 byte newBlockIDExt = (byte) (newStateID >> 12 & 0x0F);
                 byte newBlockData = (byte) (newStateID & 0x0F);

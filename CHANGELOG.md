@@ -279,6 +279,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Saves | Transformers, pumps and the creative energy source carried over from a world older than the machine ID reallocation keep their identity; before, the reallocation moved them to IDs nothing registers and they became unknown items |
 | Configuration | The `loginMessage` (Miscellaneous Options), `terminalRootPath` and `coilsActiveEmissiveTextures` (Client Options) settings are removed because nothing read them; Forge ignores their old lines in existing config files |
 | API | `GregTechAPI` has checked accessors for its managers (`materialManager()`, `mteManager()`, `commandManager()` and the others) that throw an `IllegalStateException` naming the manager and the stage that sets it; the fields remain. `GregTechAPI.isHighTier()` throws the same way when read before GTCEu's pre-initialization decides it; before, it answered false. `BedrockFluidVeinHandler.veinCache` is private: read it through `getVeinCache()` and clear it with `clearVeinCache()` |
+| Saves | The datafix passes that move machine blocks keep a quantum chest's, quantum tank's or clipboard's block see-through; before, each pass made every machine block in the chunk opaque |
 
 ### Earlier fork changes
 
