@@ -17,12 +17,12 @@ import gregtech.integration.hwyla.provider.QuantumStorageProvider;
 import gregtech.integration.hwyla.provider.RecipeLogicDataProvider;
 import gregtech.integration.hwyla.provider.SteamBoilerDataProvider;
 import gregtech.integration.hwyla.provider.TransformerDataProvider;
-import gregtech.integration.hwyla.provider.WorkableDataProvider;
 import gregtech.integration.probe.ProbeInfoProducer;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
 import gregtech.integration.probe.producer.MultiblockProbeInfo;
+import gregtech.integration.probe.producer.WorkableProbeInfo;
 import gregtech.modules.GregTechModules;
 
 import net.minecraft.item.ItemStack;
@@ -45,7 +45,7 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
     @Override
     public void register(IWailaRegistrar registrar) {
         ElectricContainerDataProvider.INSTANCE.register(registrar);
-        WorkableDataProvider.INSTANCE.register(registrar);
+        fromServer(registrar, "gregtech.workable", TileEntity.class, new WorkableProbeInfo());
         fromServer(registrar, "gregtech.controllable", TileEntity.class, new ControllableProbeInfo());
         TransformerDataProvider.INSTANCE.register(registrar);
         DiodeDataProvider.INSTANCE.register(registrar);

@@ -9,6 +9,7 @@ import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
 import gregtech.integration.probe.producer.MultiblockProbeInfo;
+import gregtech.integration.probe.producer.WorkableProbeInfo;
 import gregtech.integration.theoneprobe.provider.*;
 import gregtech.integration.theoneprobe.provider.debug.DebugPipeNetInfoProvider;
 import gregtech.integration.theoneprobe.provider.debug.DebugTickTimeProvider;
@@ -32,7 +33,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         getLogger().info("TheOneProbe found. Enabling integration...");
         ITheOneProbe oneProbe = TheOneProbe.theOneProbeImp;
         oneProbe.registerProvider(new ElectricContainerInfoProvider());
-        oneProbe.registerProvider(new WorkableInfoProvider());
+        register(oneProbe, GTValues.MODID + ":workable_provider", new WorkableProbeInfo());
         register(oneProbe, GTValues.MODID + ":controllable_provider", new ControllableProbeInfo());
         oneProbe.registerProvider(new TransformerInfoProvider());
         oneProbe.registerProvider(new DiodeInfoProvider());
