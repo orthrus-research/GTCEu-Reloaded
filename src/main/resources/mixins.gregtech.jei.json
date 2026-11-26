@@ -9,8 +9,6 @@
     "StackHelperMixin"
   ],
   "client": [
-    "DragManagerAccessor",
-    "GhostDragAccessor",
     "IngredientGridMixin",
     "JEITooltipMixin",
     "ModRegistryMixin"

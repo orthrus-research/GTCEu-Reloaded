@@ -15,11 +15,11 @@ public final class GregTechMixinConnector implements IMixinConnector {
     public void connect() {
         ConditionalMixin.of("mixins.gregtech.forge.json", "mixins.gregtech.minecraft.json").register();
         ConditionalMixin.of("mixins.gregtech.ccl.json").requires("codechickenlib").register();
-        // These mixins name an anonymous class by index and overwrite TextWidget.checkString; a ModularUI update
-        // can move either silently, so an untested version keeps stock ModularUI behaviour instead.
+        // This mixin hooks LangKey.get and getFormatted; a ModularUI update can change either silently,
+        // so an untested version keeps stock ModularUI behaviour instead.
         ConditionalMixin.of("mixins.gregtech.mui2.json").requires("modularui")
                 .version(MODULARUI_TESTED_RANGE)
-                .because("GTCEu's ModularUI number, text and newline mixins are verified only for these versions")
+                .because("GTCEu's ModularUI newline mixin is verified only for these versions")
                 .orWarn()
                 .register();
         // These mixins target GroovyScript internals; an untested version keeps stock caching instead of crashing.
