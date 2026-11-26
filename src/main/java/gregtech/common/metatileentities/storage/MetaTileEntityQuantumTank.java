@@ -27,7 +27,6 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -166,32 +165,8 @@ public class MetaTileEntityQuantumTank extends MetaTileEntityQuantumStorage<IFlu
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
-        if (data.hasKey("ContainerInventory")) {
-            legacyTankItemHandlerNBTReading(this, data.getCompoundTag("ContainerInventory"), 0, 1);
-        }
         this.fluidTank.readFromNBT(data.getCompoundTag("FluidInventory"));
         this.lockedFluid = this.locked ? FluidStack.loadFluidStackFromNBT(data.getCompoundTag("LockedFluid")) : null;
-    }
-
-    public static void legacyTankItemHandlerNBTReading(MetaTileEntity mte, NBTTagCompound nbt, int inputSlot,
-                                                       int outputSlot) {
-        if (mte == null || nbt == null) {
-            return;
-        }
-        NBTTagList items = nbt.getTagList("Items", Constants.NBT.TAG_COMPOUND);
-        if (mte.getExportItems().getSlots() < 1 || mte.getImportItems().getSlots() < 1 || inputSlot < 0 ||
-                outputSlot < 0 || inputSlot == outputSlot) {
-            return;
-        }
-        for (int i = 0; i < items.tagCount(); ++i) {
-            NBTTagCompound itemTags = items.getCompoundTagAt(i);
-            int slot = itemTags.getInteger("Slot");
-            if (slot == inputSlot) {
-                mte.getImportItems().setStackInSlot(0, new ItemStack(itemTags));
-            } else if (slot == outputSlot) {
-                mte.getExportItems().setStackInSlot(0, new ItemStack(itemTags));
-            }
-        }
     }
 
     @Override
@@ -200,7 +175,9 @@ public class MetaTileEntityQuantumTank extends MetaTileEntityQuantumStorage<IFlu
         if (tag.hasKey(FLUID_NBT_KEY, Constants.NBT.TAG_COMPOUND)) {
             this.fluidTank.setFluid(FluidStack.loadFluidStackFromNBT(tag.getCompoundTag(FLUID_NBT_KEY)));
         }
-        if (tag.getBoolean("IsVoiding") || tag.getBoolean("IsPartialVoiding")) { // legacy save support
+        // Item data is not reached by the datafixers, so tanks kept as items before voiding modes were merged
+        // still carry the old partial-voiding key.
+        if (tag.getBoolean("IsVoiding") || tag.getBoolean("IsPartialVoiding")) {
             setVoiding(true);
         }
 
@@ -305,7 +282,7 @@ public class MetaTileEntityQuantumTank extends MetaTileEntityQuantumStorage<IFlu
                             fluidStack.amount));
                 }
             }
-            if (tag.getBoolean("IsVoiding") || tag.getBoolean("IsPartialVoiding")) { // legacy save support
+            if (tag.getBoolean("IsVoiding") || tag.getBoolean("IsPartialVoiding")) { // as initFromItemStackData
                 tooltip.add(I18n.format("gregtech.machine.quantum_tank.tooltip.voiding_enabled"));
             }
         }

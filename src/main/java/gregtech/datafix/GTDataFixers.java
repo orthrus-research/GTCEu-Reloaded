@@ -2,10 +2,13 @@ package gregtech.datafix;
 
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
+import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.datafix.impl.MigrateRecipeBook;
 import gregtech.datafix.impl.V2PostMTEReallocFixer;
 import gregtech.datafix.impl.V4WorldAcceleratorIdFixer;
 import gregtech.datafix.impl.V5ReallocatedMachineIdFixer;
+import gregtech.datafix.impl.V6LegacyDataFixer;
 import gregtech.datafix.migration.impl.MigrateMTEBlockTE;
 import gregtech.datafix.migration.impl.MigrateMTEItems;
 import gregtech.datafix.migration.lib.MTEDataMigrator;
@@ -22,6 +25,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import static gregtech.api.GTValues.*;
@@ -75,8 +80,23 @@ public final class GTDataFixers {
                     .apply(new MTEDataMigrator(fixer, version.ordinal()));
             case V5_REALLOCATED_MACHINE_IDS -> V5ReallocatedMachineIdFixer
                     .apply(new MTEDataMigrator(fixer, version.ordinal()));
+            case V6_LEGACY_MACHINE_AND_COVER_DATA -> V6LegacyDataFixer
+                    .apply(new MTEDataMigrator(fixer, version.ordinal()), fixer, registeredMetaTileEntities());
             default -> {}
         }
+    }
+
+    /**
+     * @return every registered MTE of every mod, so that fixes keyed by machine class also reach addon subclasses
+     */
+    private static @NotNull List<@NotNull MetaTileEntity> registeredMetaTileEntities() {
+        List<MetaTileEntity> machines = new ArrayList<>();
+        for (MTERegistry registry : GregTechAPI.mteManager().getRegistries()) {
+            for (MetaTileEntity machine : registry) {
+                machines.add(machine);
+            }
+        }
+        return machines;
     }
 
     /**

@@ -204,18 +204,6 @@ public abstract class BaseFilterContainer extends ItemStackHandler {
             this.transferSize = nbt.getInteger("TransferStackSize");
     }
 
-    public void handleLegacyNBT(NBTTagCompound nbt) {
-        // for filters as covers, the stack is set manually, and "FilterInventory" doesn't exist to be deserialized
-        // also, ItemStackHandler's deserialization doesn't use setStackInSlot, so I have to do that manually here
-        if (nbt.hasKey("FilterInventory")) {
-            super.deserializeNBT(nbt.getCompoundTag("FilterInventory"));
-            setFilter(BaseFilter.getFilterFromStack(getFilterStack()));
-        }
-
-        if (hasFilter())
-            getFilter().getFilterReader().handleLegacyNBT(nbt);
-    }
-
     /** Uses Cleanroom MUI */
     public IWidget initUI(GuiData data, PanelSyncManager manager) {
         return initUI(data, manager, "update_filter_panel");

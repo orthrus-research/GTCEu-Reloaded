@@ -467,11 +467,7 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
         SETTINGS.readFromNBT(this, tagCompound);
-        var filterTag = tagCompound.getCompoundTag("Filter");
-        if (filterTag.hasKey("IsBlacklist"))
-            this.fluidFilterContainer.handleLegacyNBT(filterTag);
-        else
-            this.fluidFilterContainer.deserializeNBT(filterTag);
+        this.fluidFilterContainer.deserializeNBT(tagCompound.getCompoundTag("Filter"));
     }
 
     @Override

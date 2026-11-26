@@ -9,7 +9,6 @@ import gregtech.api.util.GTTransferUtils;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import gregtech.common.covers.filter.FluidFilterContainer;
-import gregtech.common.covers.filter.SimpleFluidFilter;
 import gregtech.common.mui.widget.GTTextFieldWidget;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -340,7 +339,6 @@ public class CoverFluidRegulator extends CoverPump {
     public void writeToNBT(@NotNull NBTTagCompound tagCompound) {
         super.writeToNBT(tagCompound);
         tagCompound.setInteger("TransferMode", transferMode.ordinal());
-        tagCompound.setTag("filterv2", new NBTTagCompound());
     }
 
     @Override
@@ -348,13 +346,6 @@ public class CoverFluidRegulator extends CoverPump {
         this.transferMode = TransferMode.byOrdinal(tagCompound.getInteger("TransferMode"));
         this.fluidFilterContainer.setMaxTransferSize(this.transferMode.maxStackSize);
         super.readFromNBT(tagCompound);
-        // legacy NBT tag
-        if (!tagCompound.hasKey("filterv2") && tagCompound.hasKey("TransferAmount")) {
-            if (this.fluidFilterContainer.getFilter() instanceof SimpleFluidFilter simpleFluidFilter) {
-                simpleFluidFilter
-                        .configureFilterTanks(tagCompound.getInteger("TransferAmount"));
-            }
-        }
     }
 
     @Override

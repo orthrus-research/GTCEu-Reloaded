@@ -105,19 +105,4 @@ public class OreDictFilterReader extends SimpleItemFilterReader {
         if (nbt.hasKey(MATCH_ALL))
             this.setMatchAll(nbt.getBoolean(MATCH_ALL));
     }
-
-    @Override
-    public void handleLegacyNBT(NBTTagCompound tag) {
-        super.handleLegacyNBT(tag);
-
-        var legacyFilter = tag.getCompoundTag(KEY_LEGACY_FILTER);
-        if (legacyFilter.hasKey(EXPRESSION))
-            this.setExpression(legacyFilter.getString(EXPRESSION));
-
-        if (legacyFilter.hasKey(CASE_SENSITIVE))
-            this.setCaseSensitive(legacyFilter.getBoolean(CASE_SENSITIVE));
-
-        if (legacyFilter.hasKey(MATCH_ALL))
-            this.setMatchAll(legacyFilter.getBoolean(MATCH_ALL));
-    }
 }

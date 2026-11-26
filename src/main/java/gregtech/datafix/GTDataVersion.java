@@ -25,6 +25,11 @@ public enum GTDataVersion {
     V4_WORLD_ACCELERATOR_IDS,
     /** Transformer, pump and creative energy items that the ID reallocation moved to unregistered IDs. */
     V5_REALLOCATED_MACHINE_IDS,
+    /**
+     * Cover filters, fluid regulator amounts, tank item slots, quantum tank partial voiding, power substation banks,
+     * maintenance hatch tape and creative chest items saved in the formats that loading used to convert every time.
+     */
+    V6_LEGACY_MACHINE_AND_COVER_DATA,
     ;
 
     static final @NotNull GTDataVersion @NotNull [] VALUES = values();

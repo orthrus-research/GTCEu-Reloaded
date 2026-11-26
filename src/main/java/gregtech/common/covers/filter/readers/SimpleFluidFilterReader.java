@@ -2,8 +2,6 @@ package gregtech.common.covers.filter.readers;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidTank;
@@ -14,8 +12,6 @@ public class SimpleFluidFilterReader extends BaseFilterReader {
 
     protected WritableFluidTank[] fluidTanks;
     protected static final String CAPACITY = "Capacity";
-
-    protected static final String LEGACY_FLUIDFILTER_KEY = "FluidFilter";
 
     public SimpleFluidFilterReader(ItemStack container, int slots) {
         super(container, slots);
@@ -63,21 +59,6 @@ public class SimpleFluidFilterReader extends BaseFilterReader {
             getFluidTank(i).setFluidAmount(Math.min(stack.amount, getMaxTransferRate()));
         }
         setCapacity(getMaxTransferRate());
-    }
-
-    @Override
-    public void handleLegacyNBT(NBTTagCompound tag) {
-        super.handleLegacyNBT(tag);
-        NBTTagCompound legacyFilter = tag.getCompoundTag(KEY_LEGACY_FILTER);
-
-        NBTTagList filterSlots = legacyFilter.getTagList(LEGACY_FLUIDFILTER_KEY, Constants.NBT.TAG_COMPOUND);
-        for (int i = 0; i < filterSlots.tagCount(); i++) {
-            NBTTagCompound stackTag = filterSlots.getCompoundTagAt(i);
-            FluidStack fluidStack = FluidStack.loadFluidStackFromNBT(stackTag);
-            if (fluidStack == null) continue;
-            int slot = stackTag.getInteger("Slot");
-            getFluidTank(slot).setFluid(fluidStack);
-        }
     }
 
     public class WritableFluidTank implements IFluidTank {

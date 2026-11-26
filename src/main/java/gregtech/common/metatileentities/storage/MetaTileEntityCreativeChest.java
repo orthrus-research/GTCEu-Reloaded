@@ -149,8 +149,6 @@ public class MetaTileEntityCreativeChest extends MetaTileEntityQuantumChest {
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
-        if (virtualItemStack.isEmpty())
-            creativeHandler.deserializeNBT(data.getCompoundTag("ItemStackHandler"));
         itemsPerCycle = data.getInteger("ItemsPerCycle");
         ticksPerCycle = data.getInteger("TicksPerCycle");
         active = data.getBoolean("Active");
@@ -262,12 +260,6 @@ public class MetaTileEntityCreativeChest extends MetaTileEntityQuantumChest {
         @Override
         public ItemStack getStackInSlot(int slot) {
             return modifiableHandler.getStackInSlot(slot);
-        }
-
-        @Override
-        public void deserializeNBT(NBTTagCompound nbt) {
-            super.deserializeNBT(nbt);
-            modifiableHandler.setStackInSlot(0, stacks.get(0)); // legacy nbt
         }
     }
 }

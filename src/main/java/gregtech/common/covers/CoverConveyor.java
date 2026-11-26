@@ -761,12 +761,7 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
         SETTINGS.readFromNBT(this, tagCompound);
-        var filterTag = tagCompound.getCompoundTag("Filter");
-        if (filterTag.hasKey("IsBlacklist")) {
-            this.itemFilterContainer.handleLegacyNBT(filterTag);
-        } else {
-            this.itemFilterContainer.deserializeNBT(filterTag);
-        }
+        this.itemFilterContainer.deserializeNBT(tagCompound.getCompoundTag("Filter"));
     }
 
     @Override

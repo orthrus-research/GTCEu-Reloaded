@@ -45,7 +45,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -601,9 +600,7 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
 
     public static class PowerStationEnergyBank {
 
-        private static final String NBT_SIZE = "Size";
         private static final String NBT_STORED = "Stored";
-        private static final String NBT_MAX = "Max";
         // the following two fields represent ((a[0] << 63) | a[1])
         private final long[] stored = new long[2];
         private final long[] max = new long[2];
@@ -619,23 +616,12 @@ public class MetaTileEntityPowerSubstation extends MultiblockWithDisplayBase
             capacity = summarize(max);
         }
 
+        /** The capacity stays zero until {@link #rebuild(List)} gives the bank its batteries. */
         public PowerStationEnergyBank(NBTTagCompound storageTag) {
-            // legacy nbt handling
-            if (storageTag.hasKey(NBT_SIZE, Constants.NBT.TAG_INT)) {
-                int size = storageTag.getInteger(NBT_SIZE);
-                for (int i = 0; i < size; i++) {
-                    NBTTagCompound tag = storageTag.getCompoundTag(String.valueOf(i));
-                    if (tag.hasKey(NBT_STORED)) add(stored, tag.getLong(NBT_STORED));
-                    long store = tag.getLong(NBT_MAX);
-                    add(max, store);
-                    updateDrain(store);
-                }
-            } else {
-                stored[0] = storageTag.getLong(NBT_STORED + "0");
-                stored[1] = storageTag.getLong(NBT_STORED + "1");
-                drain = storageTag.getLong("drain");
-                drainMod = storageTag.getLong("drainMod");
-            }
+            stored[0] = storageTag.getLong(NBT_STORED + "0");
+            stored[1] = storageTag.getLong(NBT_STORED + "1");
+            drain = storageTag.getLong("drain");
+            drainMod = storageTag.getLong("drainMod");
             capacity = summarize(max);
         }
 

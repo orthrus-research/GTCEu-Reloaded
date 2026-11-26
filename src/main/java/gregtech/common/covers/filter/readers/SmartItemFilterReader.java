@@ -31,13 +31,6 @@ public class SmartItemFilterReader extends SimpleItemFilterReader {
         this.setFilteringMode(modeOf(nbt.getInteger(FILTER_MODE)));
     }
 
-    @Override
-    public void handleLegacyNBT(NBTTagCompound tag) {
-        super.handleLegacyNBT(tag);
-        var legacyFilter = tag.getCompoundTag(KEY_LEGACY_FILTER);
-        this.setFilteringMode(modeOf(legacyFilter.getInteger(FILTER_MODE)));
-    }
-
     /** The mode saved at {@code ordinal}, or the default electrolyzer mode for a value that names none. */
     private static SmartItemFilter.SmartFilteringMode modeOf(int ordinal) {
         var values = SmartItemFilter.SmartFilteringMode.VALUES;

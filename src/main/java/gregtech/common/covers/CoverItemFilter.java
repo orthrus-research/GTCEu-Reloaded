@@ -205,13 +205,7 @@ public class CoverItemFilter extends CoverBase implements CoverWithUI {
         super.readFromNBT(tagCompound);
         this.filterMode = GTUtility.enumByOrdinal(ItemFilterMode.VALUES, tagCompound.getInteger("FilterMode"),
                 ItemFilterMode.FILTER_INSERT);
-        if (tagCompound.hasKey("IsBlacklist")) {
-            this.itemFilterContainer.setFilterStack(getDefinition().getDropItemStack());
-            this.itemFilterContainer.handleLegacyNBT(tagCompound);
-            this.itemFilterContainer.setBlacklistFilter(tagCompound.getBoolean("IsBlacklist"));
-        } else {
-            this.itemFilterContainer.deserializeNBT(tagCompound.getCompoundTag("Filter"));
-        }
+        this.itemFilterContainer.deserializeNBT(tagCompound.getCompoundTag("Filter"));
         this.allowFlow = tagCompound.getBoolean("allowFlow");
     }
 

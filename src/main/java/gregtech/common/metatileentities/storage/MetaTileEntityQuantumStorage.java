@@ -481,8 +481,7 @@ public abstract class MetaTileEntityQuantumStorage<T> extends MetaTileEntity imp
             else if (data.hasKey(INPUT_FROM_OUTPUT_FLUID))
                 this.allowInputFromOutputSide = data.getBoolean(INPUT_FROM_OUTPUT_FLUID);
 
-            // todo remove legacy save support "IsPartialVoiding" post 2.9
-            this.voiding = data.getBoolean(IS_VOIDING) || data.getBoolean("IsPartialVoiding");
+            this.voiding = data.getBoolean(IS_VOIDING);
 
             this.locked = data.getBoolean(IS_LOCKED);
         }
