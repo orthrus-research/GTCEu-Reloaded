@@ -5,10 +5,11 @@ import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.impl.FluidHandlerDelegate;
 import gregtech.api.configuration.ConfigurationAdapter;
-import gregtech.api.configuration.ConfigurationData;
-import gregtech.api.configuration.ScalarConfigurationAdapter;
 import gregtech.api.cover.CoverBase;
 import gregtech.api.cover.CoverDefinition;
+import gregtech.api.cover.CoverSetting;
+import gregtech.api.cover.CoverSettingType;
+import gregtech.api.cover.CoverSettings;
 import gregtech.api.cover.CoverWithUI;
 import gregtech.api.cover.CoverableView;
 import gregtech.api.items.toolitem.ToolAction;
@@ -16,7 +17,6 @@ import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
-import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import gregtech.common.covers.filter.FluidFilterContainer;
@@ -67,6 +67,45 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Set;
 
 public class CoverPump extends CoverBase implements CoverWithUI, ITickable, IControllable {
+
+    /** Millibuckets moved per second, from 1 to the pump's maximum, which is also the default. */
+    public static final CoverSetting<CoverPump, Integer> TRANSFER_RATE = CoverSetting
+            .of("throughput_millibuckets", CoverSettingType.<CoverPump>integer(pump -> 1,
+                    pump -> pump.maxFluidTransferRate), pump -> pump.maxFluidTransferRate,
+                    CoverPump::getTransferRateMilliBuckets, (pump, rate) -> pump.setTransferRateMilliBuckets(rate))
+            .saved("TransferRate", (pump, rate) -> pump.transferRate = rate)
+            .card("Rate");
+    public static final CoverSetting<CoverPump, PumpMode> PUMP_MODE = CoverSetting
+            .of("pump_mode", CoverSettingType.<CoverPump, PumpMode>enumeration(PumpMode.VALUES),
+                    pump -> PumpMode.EXPORT, CoverPump::getPumpMode, CoverPump::setPumpMode)
+            .saved("PumpMode", (pump, mode) -> pump.pumpMode = mode)
+            .card("Mode");
+    public static final CoverSetting<CoverPump, ManualImportExportMode> MANUAL_IMPORT_EXPORT_MODE = CoverSetting
+            .of("manual_io", CoverSettingType.<CoverPump, ManualImportExportMode>enumeration(
+                    ManualImportExportMode.VALUES), pump -> ManualImportExportMode.DISABLED,
+                    CoverPump::getManualImportExportMode, CoverPump::setManualImportExportMode)
+            .saved("ManualImportExportMode", (pump, mode) -> pump.manualImportExportMode = mode)
+            .card("Manual");
+    public static final CoverSetting<CoverPump, DistributionMode> DISTRIBUTION_MODE = CoverSetting
+            .of("distribution_mode", CoverSettingType.<CoverPump, DistributionMode>enumeration(
+                    DistributionMode.VALUES), pump -> DistributionMode.INSERT_FIRST, pump -> pump.distributionMode,
+                    (pump, mode) -> pump.distributionMode = mode)
+            .saved("DistributionMode", (pump, mode) -> pump.distributionMode = mode)
+            .card("Distribution");
+    public static final CoverSetting<CoverPump, Boolean> WORKING_ENABLED = CoverSetting
+            .of("working_enabled", CoverSettingType.<CoverPump>bool(), pump -> true,
+                    CoverPump::isWorkingEnabled, CoverPump::setWorkingEnabled)
+            .saved("WorkingAllowed", (pump, working) -> pump.isWorkingAllowed = working)
+            .card("Working");
+    /** The unit the screen shows the rate in; the rate itself is always kept in millibuckets. */
+    public static final CoverSetting<CoverPump, BucketMode> BUCKET_MODE = CoverSetting
+            .of("throughput_units", CoverSettingType.<CoverPump, BucketMode>enumeration(BucketMode.VALUES),
+                    pump -> BucketMode.MILLI_BUCKET, CoverPump::getBucketMode, CoverPump::setBucketMode)
+            .saved("BucketMode", (pump, mode) -> pump.bucketMode = mode)
+            .card("Bucket");
+    /** Everything a pump saves and its configuration card copies, apart from its filter. */
+    public static final CoverSettings<CoverPump> SETTINGS = CoverSettings.of(TRANSFER_RATE, PUMP_MODE,
+            MANUAL_IMPORT_EXPORT_MODE, DISTRIBUTION_MODE, WORKING_ENABLED, BUCKET_MODE);
 
     public final int tier;
     public final int maxFluidTransferRate;
@@ -122,53 +161,12 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
      */
     @Override
     public @Nullable ConfigurationAdapter getConfigurationAdapter() {
-        return new ScalarConfigurationAdapter("gregtech:pump/1") {
-
-            @Override
-            public NBTTagCompound capture() {
-                NBTTagCompound data = new NBTTagCompound();
-                data.setInteger("Rate", transferRate);
-                data.setInteger("Mode", pumpMode.ordinal());
-                data.setInteger("Manual", manualImportExportMode.ordinal());
-                data.setInteger("Distribution", distributionMode.ordinal());
-                data.setBoolean("Working", isWorkingEnabled());
-                data.setInteger("Bucket", bucketMode.ordinal());
-                return data;
-            }
-
-            @Override
-            protected void validate(NBTTagCompound data) {
-                ConfigurationData.keys(data, "Rate", "Mode", "Manual", "Distribution", "Working", "Bucket");
-                ConfigurationData.integer(data, "Rate", 1, maxFluidTransferRate);
-                ConfigurationData.integer(data, "Mode", 0, PumpMode.VALUES.length - 1);
-                ConfigurationData.integer(data, "Manual", 0, ManualImportExportMode.VALUES.length - 1);
-                ConfigurationData.integer(data, "Distribution", 0, DistributionMode.VALUES.length - 1);
-                ConfigurationData.bool(data, "Working");
-                ConfigurationData.integer(data, "Bucket", 0, BucketMode.VALUES.length - 1);
-            }
-
-            @Override
-            protected void apply(NBTTagCompound data) {
-                ConfigurationData.require(getWorld() != null && !getWorld().isRemote);
-                // The UI setters convert units and round; the card stores the actual mB rate independently.
-                setConfigurationTransferRate(data.getInteger("Rate"), BucketMode.VALUES[data.getInteger("Bucket")]);
-                setPumpMode(PumpMode.VALUES[data.getInteger("Mode")]);
-                setManualImportExportMode(ManualImportExportMode.VALUES[data.getInteger("Manual")]);
-                CoverPump.this.distributionMode = DistributionMode.VALUES[data.getInteger("Distribution")];
-                setWorkingEnabled(data.getBoolean("Working"));
-                markDirty();
-            }
-        };
+        // The card stores the actual mB rate; the unit only changes how the screen shows it.
+        return SETTINGS.adapter(this, "gregtech:pump/1");
     }
 
     public int getTransferRate() {
         return bucketMode == BucketMode.BUCKET ? transferRate / 1000 : transferRate;
-    }
-
-    private void setConfigurationTransferRate(int rate, BucketMode bucket) {
-        this.transferRate = rate;
-        this.bucketMode = bucket;
-        markDirty();
     }
 
     protected void adjustTransferRate(int amount) {
@@ -258,20 +256,19 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     }
 
     protected Flow createUI(GuiData data, PanelSyncManager syncManager) {
-        var manualIOmode = new EnumSyncValue<>(ManualImportExportMode.class,
-                this::getManualImportExportMode, this::setManualImportExportMode);
+        EnumSyncValue<ManualImportExportMode> manualIOmode = MANUAL_IMPORT_EXPORT_MODE.syncValue(this);
 
-        var throughput = new IntSyncValue(this::getTransferRateMilliBuckets, this::setTransferRateMilliBuckets);
-        var units = new EnumSyncValue<>(BucketMode.class, this::getBucketMode, this::setBucketMode);
+        IntSyncValue throughput = TRANSFER_RATE.syncValue(this);
+        EnumSyncValue<BucketMode> units = BUCKET_MODE.syncValue(this);
         throughput.updateCacheFromSource(true);
         units.updateCacheFromSource(true);
-        syncManager.syncValue("throughput_millibuckets", throughput);
-        syncManager.syncValue("throughput_units", units);
+        syncManager.syncValue(TRANSFER_RATE.getName(), throughput);
+        syncManager.syncValue(BUCKET_MODE.getName(), units);
 
-        var pumpMode = new EnumSyncValue<>(PumpMode.class, this::getPumpMode, this::setPumpMode);
+        EnumSyncValue<PumpMode> pumpMode = PUMP_MODE.syncValue(this);
 
-        syncManager.syncValue("manual_io", manualIOmode);
-        syncManager.syncValue("pump_mode", pumpMode);
+        syncManager.syncValue(MANUAL_IMPORT_EXPORT_MODE.getName(), manualIOmode);
+        syncManager.syncValue(PUMP_MODE.getName(), pumpMode);
 
         var column = Flow.column().top(24).margin(7, 0)
                 .widthRel(1f).coverChildrenHeight();
@@ -462,27 +459,14 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     @Override
     public void writeToNBT(@NotNull NBTTagCompound tagCompound) {
         super.writeToNBT(tagCompound);
-        tagCompound.setInteger("TransferRate", transferRate);
-        tagCompound.setInteger("PumpMode", pumpMode.ordinal());
-        tagCompound.setInteger("DistributionMode", distributionMode.ordinal());
-        tagCompound.setBoolean("WorkingAllowed", isWorkingAllowed);
-        tagCompound.setInteger("ManualImportExportMode", manualImportExportMode.ordinal());
-        tagCompound.setInteger("BucketMode", bucketMode.ordinal());
+        SETTINGS.writeToNBT(this, tagCompound);
         tagCompound.setTag("Filter", fluidFilterContainer.serializeNBT());
     }
 
     @Override
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
-        this.transferRate = tagCompound.getInteger("TransferRate");
-        this.pumpMode = GTUtility.enumByOrdinal(PumpMode.VALUES, tagCompound.getInteger("PumpMode"), PumpMode.EXPORT);
-        this.distributionMode = GTUtility.enumByOrdinal(DistributionMode.VALUES,
-                tagCompound.getInteger("DistributionMode"), DistributionMode.INSERT_FIRST);
-        this.isWorkingAllowed = tagCompound.getBoolean("WorkingAllowed");
-        this.manualImportExportMode = GTUtility.enumByOrdinal(ManualImportExportMode.VALUES,
-                tagCompound.getInteger("ManualImportExportMode"), ManualImportExportMode.DISABLED);
-        this.bucketMode = GTUtility.enumByOrdinal(BucketMode.VALUES, tagCompound.getInteger("BucketMode"),
-                BucketMode.MILLI_BUCKET);
+        SETTINGS.readFromNBT(this, tagCompound);
         var filterTag = tagCompound.getCompoundTag("Filter");
         if (filterTag.hasKey("IsBlacklist"))
             this.fluidFilterContainer.handleLegacyNBT(filterTag);

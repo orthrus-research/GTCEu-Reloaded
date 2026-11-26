@@ -5,10 +5,11 @@ import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IControllable;
 import gregtech.api.capability.impl.ItemHandlerDelegate;
 import gregtech.api.configuration.ConfigurationAdapter;
-import gregtech.api.configuration.ConfigurationData;
-import gregtech.api.configuration.ScalarConfigurationAdapter;
 import gregtech.api.cover.CoverBase;
 import gregtech.api.cover.CoverDefinition;
+import gregtech.api.cover.CoverSetting;
+import gregtech.api.cover.CoverSettingType;
+import gregtech.api.cover.CoverSettings;
 import gregtech.api.cover.CoverWithUI;
 import gregtech.api.cover.CoverableView;
 import gregtech.api.items.toolitem.ToolAction;
@@ -16,7 +17,6 @@ import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
-import gregtech.api.util.GTUtility;
 import gregtech.api.util.ItemStackHashStrategy;
 import gregtech.api.util.ItemTransferException;
 import gregtech.client.renderer.texture.Textures;
@@ -78,6 +78,39 @@ import java.util.Set;
 
 public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, IControllable {
 
+    /** Items moved per second, from 1 to the conveyor's maximum, which is also the default. */
+    public static final CoverSetting<CoverConveyor, Integer> TRANSFER_RATE = CoverSetting
+            .of("transfer_rate", CoverSettingType.<CoverConveyor>integer(conveyor -> 1,
+                    conveyor -> conveyor.maxItemTransferRate), conveyor -> conveyor.maxItemTransferRate,
+                    CoverConveyor::getTransferRate, CoverConveyor::setTransferRate)
+            .saved("TransferRate", (conveyor, rate) -> conveyor.transferRate = rate)
+            .card("Rate");
+    public static final CoverSetting<CoverConveyor, ConveyorMode> CONVEYOR_MODE = CoverSetting
+            .of("conveyor_mode", CoverSettingType.<CoverConveyor, ConveyorMode>enumeration(ConveyorMode.VALUES),
+                    conveyor -> ConveyorMode.EXPORT, CoverConveyor::getConveyorMode, CoverConveyor::setConveyorMode)
+            .saved("ConveyorMode", (conveyor, mode) -> conveyor.conveyorMode = mode)
+            .card("Mode");
+    public static final CoverSetting<CoverConveyor, ManualImportExportMode> MANUAL_IMPORT_EXPORT_MODE = CoverSetting
+            .of("manual_io", CoverSettingType.<CoverConveyor, ManualImportExportMode>enumeration(
+                    ManualImportExportMode.VALUES), conveyor -> ManualImportExportMode.DISABLED,
+                    CoverConveyor::getManualImportExportMode, CoverConveyor::setManualImportExportMode)
+            .saved("ManualImportExportMode", (conveyor, mode) -> conveyor.manualImportExportMode = mode)
+            .card("Manual");
+    public static final CoverSetting<CoverConveyor, DistributionMode> DISTRIBUTION_MODE = CoverSetting
+            .of("distribution_mode", CoverSettingType.<CoverConveyor, DistributionMode>enumeration(
+                    DistributionMode.VALUES), conveyor -> DistributionMode.INSERT_FIRST,
+                    CoverConveyor::getDistributionMode, CoverConveyor::setDistributionMode)
+            .saved("DistributionMode", (conveyor, mode) -> conveyor.distributionMode = mode)
+            .card("Distribution");
+    public static final CoverSetting<CoverConveyor, Boolean> WORKING_ENABLED = CoverSetting
+            .of("working_enabled", CoverSettingType.<CoverConveyor>bool(), conveyor -> true,
+                    CoverConveyor::isWorkingEnabled, CoverConveyor::setWorkingEnabled)
+            .saved("WorkingAllowed", (conveyor, working) -> conveyor.isWorkingAllowed = working)
+            .card("Working");
+    /** Everything a conveyor saves and its configuration card copies, apart from its filter. */
+    public static final CoverSettings<CoverConveyor> SETTINGS = CoverSettings.of(TRANSFER_RATE, CONVEYOR_MODE,
+            MANUAL_IMPORT_EXPORT_MODE, DISTRIBUTION_MODE, WORKING_ENABLED);
+
     public final int tier;
     public final int maxItemTransferRate;
     private int transferRate;
@@ -126,40 +159,7 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
      */
     @Override
     public @Nullable ConfigurationAdapter getConfigurationAdapter() {
-        return new ScalarConfigurationAdapter("gregtech:conveyor/1") {
-
-            @Override
-            public NBTTagCompound capture() {
-                NBTTagCompound data = new NBTTagCompound();
-                data.setInteger("Rate", getTransferRate());
-                data.setInteger("Mode", conveyorMode.ordinal());
-                data.setInteger("Manual", manualImportExportMode.ordinal());
-                data.setInteger("Distribution", distributionMode.ordinal());
-                data.setBoolean("Working", isWorkingEnabled());
-                return data;
-            }
-
-            @Override
-            protected void validate(NBTTagCompound data) {
-                ConfigurationData.keys(data, "Rate", "Mode", "Manual", "Distribution", "Working");
-                ConfigurationData.integer(data, "Rate", 1, maxItemTransferRate);
-                ConfigurationData.integer(data, "Mode", 0, ConveyorMode.VALUES.length - 1);
-                ConfigurationData.integer(data, "Manual", 0, ManualImportExportMode.VALUES.length - 1);
-                ConfigurationData.integer(data, "Distribution", 0, DistributionMode.VALUES.length - 1);
-                ConfigurationData.bool(data, "Working");
-            }
-
-            @Override
-            protected void apply(NBTTagCompound data) {
-                ConfigurationData.require(getWorld() != null && !getWorld().isRemote);
-                setTransferRate(data.getInteger("Rate"));
-                setConveyorMode(ConveyorMode.VALUES[data.getInteger("Mode")]);
-                setManualImportExportMode(ManualImportExportMode.VALUES[data.getInteger("Manual")]);
-                setDistributionMode(DistributionMode.VALUES[data.getInteger("Distribution")]);
-                setWorkingEnabled(data.getBoolean("Working"));
-                markDirty();
-            }
-        };
+        return SETTINGS.adapter(this, "gregtech:conveyor/1");
     }
 
     public int getTransferRate() {
@@ -612,20 +612,14 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
         var column = Flow.column().top(24).margin(7, 0)
                 .widthRel(1f).coverChildrenHeight();
 
-        EnumSyncValue<ManualImportExportMode> manualIOmode = new EnumSyncValue<>(ManualImportExportMode.class,
-                this::getManualImportExportMode, this::setManualImportExportMode);
+        EnumSyncValue<ManualImportExportMode> manualIOmode = MANUAL_IMPORT_EXPORT_MODE.syncValue(this);
+        EnumSyncValue<ConveyorMode> conveyorMode = CONVEYOR_MODE.syncValue(this);
+        IntSyncValue throughput = TRANSFER_RATE.syncValue(this);
+        EnumSyncValue<DistributionMode> distributionMode = DISTRIBUTION_MODE.syncValue(this);
 
-        EnumSyncValue<ConveyorMode> conveyorMode = new EnumSyncValue<>(ConveyorMode.class,
-                this::getConveyorMode, this::setConveyorMode);
-
-        IntSyncValue throughput = new IntSyncValue(this::getTransferRate, this::setTransferRate);
-
-        EnumSyncValue<DistributionMode> distributionMode = new EnumSyncValue<>(DistributionMode.class,
-                this::getDistributionMode, this::setDistributionMode);
-
-        guiSyncManager.syncValue("manual_io", manualIOmode);
-        guiSyncManager.syncValue("conveyor_mode", conveyorMode);
-        guiSyncManager.syncValue("distribution_mode", distributionMode);
+        guiSyncManager.syncValue(MANUAL_IMPORT_EXPORT_MODE.getName(), manualIOmode);
+        guiSyncManager.syncValue(CONVEYOR_MODE.getName(), conveyorMode);
+        guiSyncManager.syncValue(DISTRIBUTION_MODE.getName(), distributionMode);
 
         if (createThroughputRow())
             column.child(Flow.row().coverChildrenHeight()
@@ -759,25 +753,14 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
     @Override
     public void writeToNBT(@NotNull NBTTagCompound tagCompound) {
         super.writeToNBT(tagCompound);
-        tagCompound.setInteger("TransferRate", transferRate);
-        tagCompound.setInteger("ConveyorMode", conveyorMode.ordinal());
-        tagCompound.setInteger("DistributionMode", distributionMode.ordinal());
-        tagCompound.setBoolean("WorkingAllowed", isWorkingAllowed);
-        tagCompound.setInteger("ManualImportExportMode", manualImportExportMode.ordinal());
+        SETTINGS.writeToNBT(this, tagCompound);
         tagCompound.setTag("Filter", this.itemFilterContainer.serializeNBT());
     }
 
     @Override
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
-        this.transferRate = tagCompound.getInteger("TransferRate");
-        this.conveyorMode = GTUtility.enumByOrdinal(ConveyorMode.VALUES, tagCompound.getInteger("ConveyorMode"),
-                ConveyorMode.EXPORT);
-        this.distributionMode = GTUtility.enumByOrdinal(DistributionMode.VALUES,
-                tagCompound.getInteger("DistributionMode"), DistributionMode.INSERT_FIRST);
-        this.isWorkingAllowed = tagCompound.getBoolean("WorkingAllowed");
-        this.manualImportExportMode = GTUtility.enumByOrdinal(ManualImportExportMode.VALUES,
-                tagCompound.getInteger("ManualImportExportMode"), ManualImportExportMode.DISABLED);
+        SETTINGS.readFromNBT(this, tagCompound);
         var filterTag = tagCompound.getCompoundTag("Filter");
         if (filterTag.hasKey("IsBlacklist")) {
             this.itemFilterContainer.handleLegacyNBT(filterTag);

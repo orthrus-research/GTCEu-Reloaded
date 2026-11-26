@@ -68,6 +68,7 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 | API | Let native addons register exact preparation-safe builder classes and typed descriptor codecs/setters; preserve source diagnostics and owned recipe transactions |
 | Breaking | Remove classes that nothing in GTCEu used: `BlockableSlotWidget`, `DrawableWidget`, `ImageTextFieldWidget`, `IncrementButtonWidget`, `IndicatorImageWidget`, `PhantomFluidWidget`, `PhantomSlotWidget`, `ServerWidgetGroup`, `SortingButtonWidget`, `SuppliedImageWidget`, `SyncableColorRectWidget` and `tab.IGuiTextureTabInfo` in `gregtech.api.gui.widgets`, `gregtech.api.mui.InputAccessor`, and outside the API `CycleItemStackHandler`, `ModeSwitchBehavior` and `OreGlobCompileStatusWidget`. An addon that used one must keep its own copy |
 | API | Laser and optical pipes extend shared beam pipe bases in `gregtech.common.pipelike.beam` (block, item, tile, net, world net, handler, walker and route), which an addon can extend for a pipe family of its own; their methods keep their names and types, and addons built against an earlier version must be rebuilt |
+| API | A cover declares each configurable setting once as a `CoverSetting` (name, saved key, card key, type with bounds or constants, default, getter and setter) and lists them in `CoverSettings`, which saves, loads and card-copies them and builds their sync values. `CoverConveyor.SETTINGS` and `CoverPump.SETTINGS` and their settings are public; saved keys and card keys are unchanged |
 
 See [the migration guide](docs/ct-migration.md). Alpha qualification does not imply arbitrary pack compatibility.
 
@@ -280,6 +281,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Configuration | The `loginMessage` (Miscellaneous Options), `terminalRootPath` and `coilsActiveEmissiveTextures` (Client Options) settings are removed because nothing read them; Forge ignores their old lines in existing config files |
 | API | `GregTechAPI` has checked accessors for its managers (`materialManager()`, `mteManager()`, `commandManager()` and the others) that throw an `IllegalStateException` naming the manager and the stage that sets it; the fields remain. `GregTechAPI.isHighTier()` throws the same way when read before GTCEu's pre-initialization decides it; before, it answered false. `BedrockFluidVeinHandler.veinCache` is private: read it through `getVeinCache()` and clear it with `clearVeinCache()` |
 | Saves | The datafix passes that move machine blocks keep a quantum chest's, quantum tank's or clipboard's block see-through; before, each pass made every machine block in the chunk opaque |
+| Covers | A conveyor or pump whose saved transfer rate is missing or outside its range loads at its full rate; before, it loaded as saved, so a missing rate moved nothing |
 
 ### Earlier fork changes
 
