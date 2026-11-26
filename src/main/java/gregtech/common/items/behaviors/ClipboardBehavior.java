@@ -89,7 +89,8 @@ public class ClipboardBehavior implements IItemBehaviour, ItemUIFactory {
                         .setMaxLength(MAX_TITLE_LENGTH)
                         .setTextAlignment(Alignment.Center)
                         .setTextColor(TEXT_COLOR)
-                        .background(GTGuiTextures.CLIPBOARD_TEXT_BOX));
+                        .background(GTGuiTextures.CLIPBOARD_TEXT_BOX)
+                        .hoverBackground(GTGuiTextures.CLIPBOARD_TEXT_BOX));
 
         for (int i = 0; i < TASKS; i++) {
             final int line = i;
@@ -118,7 +119,8 @@ public class ClipboardBehavior implements IItemBehaviour, ItemUIFactory {
                             .value(task)
                             .setMaxLength(MAX_TASK_LENGTH)
                             .setTextColor(TEXT_COLOR)
-                            .background(GTGuiTextures.CLIPBOARD_TEXT_BOX));
+                            .background(GTGuiTextures.CLIPBOARD_TEXT_BOX)
+                            .hoverBackground(GTGuiTextures.CLIPBOARD_TEXT_BOX));
         }
 
         return panel
