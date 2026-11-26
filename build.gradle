@@ -35,18 +35,19 @@ repositories {
     maven { url = 'https://maven.gtceu.com' }
     maven { url = 'https://nexus.gtnewhorizons.com/repository/public/' }
 }
-// Local game/tooling inputs are not dependencies of the published mod.
+// Local game/tooling inputs are not dependencies of the published mod. Neither is the loader with Minecraft, but an
+// addon's own build supplies it, so the consumer check below compiles against it too.
 configurations {
+    loader
     developmentOnly
-    compileClasspath.extendsFrom developmentOnly
-    runtimeClasspath.extendsFrom developmentOnly
-    testCompileClasspath.extendsFrom developmentOnly
-    testRuntimeClasspath.extendsFrom developmentOnly
+    [compileClasspath, runtimeClasspath, testCompileClasspath, testRuntimeClasspath].each {
+        it.extendsFrom loader, developmentOnly
+    }
 }
 dependencies {
     // Optional integrations may embed older Mixin classes; compile against the loader's API first.
     compileOnly 'com.cleanroommc:cleanmix:0.9.0'
-    developmentOnly cleanroom.userdev(cleanroom_version) {
+    loader cleanroom.userdev(cleanroom_version) {
         accessTransformers.from('src/main/resources/META-INF/gregtech_at.cfg')
     }
     compileOnlyApi 'org.jetbrains:annotations:24.1.0'
@@ -323,4 +324,31 @@ tasks.register('verifyPublicationMetadata') {
     }
 }
 tasks.named('check') { dependsOn 'verifyPublicationMetadata' }
+
+// An addon compiles against what this mod publishes: the development (-mcp) artifact, the dependencies its metadata
+// names and the loader its own build supplies. Optional integrations, compile-only mods and the src/api stubs are not
+// there, so a public type that names one fails this fixture as it fails the addon ("class file for ... not found").
+// The loader here carries this mod's access transformer, which an addon's would not. The fixture is never run.
+sourceSets {
+    consumer
+}
+configurations {
+    consumerCompileOnly.extendsFrom loader, api, compileOnlyApi
+}
+dependencies {
+    consumerCompileOnly files(tasks.named('jar'))
+}
+tasks.named('compileConsumerJava', JavaCompile) {
+    def internal = files(sourceSets.main.output, sourceSets.api.output)
+    doFirst {
+        def entries = classpath.files
+        def report = layout.buildDirectory.file('reports/consumer-classpath.json').get().asFile
+        report.parentFile.mkdirs()
+        report.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(entries*.name))
+        logger.info("Consumer classpath: ${entries*.name.join(', ')}")
+        def leaked = entries.findAll { it in internal.files }
+        if (leaked) throw new GradleException("The consumer classpath holds unpublished classes: ${leaked}")
+    }
+}
+tasks.named('check') { dependsOn 'compileConsumerJava' }
 apply from: 'gradle/runtime-baseline.gradle'

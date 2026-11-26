@@ -260,3 +260,37 @@ unpatched 4.36.1 has a completion lock conflict. See
 
 Pack and addon compatibility must be tested against the selected production dependencies,
 including reload and copied-world migration where those features are used.
+
+## Optional mods and the published API
+
+An addon compiles against the published artifact, the dependencies its metadata names and its own loader
+setup. The recipe, material, meta item, machine and tool types name no optional mod, so an addon using them
+compiles without GroovyScript, AE2, BuildCraft, CoFH Core, Ender IO, EnderCore, Forestry, Project Red or
+Railcraft. Forge's `@Optional` annotations strip interfaces and methods only at runtime; an addon's compiler
+still needed the classes they named ("class file for ... not found"). The build checks the boundary:
+`compileConsumerJava`, part of `check`, compiles a small addon in `src/consumer` that uses those APIs against
+only those inputs.
+
+| Before | Now |
+| --- | --- |
+| `RecipeBuilder.inputs(IIngredient)`, `inputs(IIngredient...)`, `inputs(Collection<IIngredient>)` and `notConsumable(IIngredient)`, which took GroovyScript ingredients | Scripts call them as before: the GroovyScript integration adds them to each recipe map's builder class. Java passes a `GTRecipeInput` (`new GTRecipeOreInput(oreName, amount)`, `new GTRecipeItemInput(stack)` or `new GTRecipeFluidInput(fluidStack)`) to `input`, `inputs` or `notConsumable` |
+| A builder subclass overriding `validateGroovy(GroovyLog.Msg)` | Override `validateScripted(List<String> problems)`, add one line for each problem and call `super`. Any line skips a script's recipe and goes to GroovyScript's error report |
+| `GroovyScriptModule.isCurrentlyRunning()` to ask whether a script is running | `RecipeScripting.isRunning()`. The recipe API reaches the GroovyScript integration only through `RecipeScripting`, which that integration installs |
+| `BlastProperty.validateGasTier` reporting an unknown name to GroovyScript's log while a script ran | It throws for an unknown name; GroovyScript's material property helpers still report it to the script's log |
+| `IGTTool` extending `IAEWrench`, `IToolWrench`, `IToolHammer`, `ITool`, `IToolGrafter`, `IOverlayRenderAware`, `IScrewdriver` and `IToolCrowbar` | `IGTTool` extends none of them and keeps their methods as its own default methods. While a mod is loaded, a mixin adds its interface to `ItemGTTool`, `ItemGTAxe`, `ItemGTSword` and `ItemGTHoe`, so GT's tools, the toolbelt and addon subclasses of those classes still work as that mod's tool |
+| `MetaItem` implementing EnderCore's `IOverlayRenderAware` | A mixin adds the interface while EnderCore is loaded; `renderItemOverlayIntoGUI` is unchanged |
+
+The mixins add only interfaces: the methods are `IGTTool`'s and `MetaItem`'s. The interfaces moved to mixins
+rather than to the four tool classes because an addon calls and extends those classes as well; with the
+interfaces on them, a call such as `ItemGTTool.Builder.of(...).build().getToolClasses(stack)` again needs every
+mod's classes to compile. An addon item that implements `IGTTool` without extending one of the four classes
+declares the mod's interface itself, compiling against that mod, and `IGTTool`'s default methods implement it.
+Code that needs a tool as one of those types tests `instanceof` at runtime rather than relying on `IGTTool`'s
+supertypes.
+
+These members still name optional mods' types, so an addon that calls or overrides them, or uses the class,
+compiles with that mod: `MetaTileEntity.getProxy`, `getCableConnectionType` and `gridChanged` and
+`MetaTileEntityHolder`'s interfaces (AE2), and the older GUI's HEI hooks (`IGhostIngredientTarget`,
+`IRecipeTransferHandlerWidget`, the `getPhantomTargets` methods of the widgets implementing them, and
+`GregTechGuiTransferHandler`). Subclassing `MetaTileEntity` or building an older widget screen does not need
+those mods.
