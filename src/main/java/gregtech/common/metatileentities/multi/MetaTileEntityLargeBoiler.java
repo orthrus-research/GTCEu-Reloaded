@@ -20,6 +20,7 @@ import gregtech.api.mui.GTGuis;
 import gregtech.api.pattern.BlockPattern;
 import gregtech.api.pattern.FactoryBlockPattern;
 import gregtech.api.pattern.PatternMatchContext;
+import gregtech.api.pattern.TraceabilityPredicate;
 import gregtech.api.util.KeyUtil;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.utils.TooltipHelper;
@@ -289,11 +290,32 @@ public class MetaTileEntityLargeBoiler extends MultiblockWithDisplayBase impleme
                 .where('P', states(boilerType.pipeState))
                 .where('X', states(boilerType.fireboxState).setMinGlobalLimited(4)
                         .or(abilities(MultiblockAbility.IMPORT_FLUIDS).setMinGlobalLimited(1))
-                        .or(abilities(MultiblockAbility.IMPORT_ITEMS).setMaxGlobalLimited(1))
+                        .or(fuelItemInputs().setMaxGlobalLimited(1))
                         .or(autoAbilities())) // muffler, maintenance
                 .where('C', states(boilerType.casingState).setMinGlobalLimited(20)
                         .or(abilities(MultiblockAbility.EXPORT_FLUIDS).setMinGlobalLimited(1)))
                 .build();
+    }
+
+    /**
+     * Parts that take fuel items. An import fluid hatch also offers its circuit slot as an item import, but it is not
+     * a fuel input, so it does not count toward the one the pattern allows; a part that takes both items and fluids
+     * does.
+     */
+    private static @NotNull TraceabilityPredicate fuelItemInputs() {
+        // the candidates are collected when the preview asks, as abilities() does, after every part has registered
+        return tilePredicate((state, machine) -> isFuelItemInput(machine),
+                () -> getCandidates(MultiblockAbility.REGISTRY
+                        .getOrDefault(MultiblockAbility.IMPORT_ITEMS, Collections.emptyList()).stream()
+                        .filter(MetaTileEntityLargeBoiler::isFuelItemInput)
+                        .toArray(MetaTileEntity[]::new)).get());
+    }
+
+    private static boolean isFuelItemInput(MetaTileEntity machine) {
+        if (!(machine instanceof IMultiblockAbilityPart<?> part)) return false;
+        List<MultiblockAbility<?>> abilities = part.getAbilities();
+        return abilities.contains(MultiblockAbility.IMPORT_ITEMS) &&
+                (!abilities.contains(MultiblockAbility.IMPORT_FLUIDS) || part.requiresAllAbilityLimits());
     }
 
     @Override

@@ -286,6 +286,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Covers | A conveyor or pump whose saved transfer rate is missing or outside its range loads at its full rate; before, it loaded as saved, so a missing rate moved nothing |
 | Saves | Machine items held in chests, machines, entities and player inventories are carried through the machine ID migrations, as placed machines are; before, only stacks saved with a large count were, so in a world older than a migration an ordinary stack could keep an ID that no longer names its machine. A world already saved at a migration's version keeps the items it has |
 | API | `SimpleItemFilterReader.deserializeNBT` reads back the damage and NBT settings `serializeNBT` writes; before, a filter that respected damage or NBT read its own saved tag as ignoring them |
+| Multiblocks | A large boiler forms with a water hatch and a fuel bus wherever they sit in its firebox layer; before, an import fluid hatch also counted as its one allowed item input, because the hatch offers its circuit slot as one, so the boiler refused to form when the pattern reached the bus after the hatch |
 
 ### Earlier fork changes
 

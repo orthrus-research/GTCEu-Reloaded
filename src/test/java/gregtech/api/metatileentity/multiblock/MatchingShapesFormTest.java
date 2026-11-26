@@ -38,18 +38,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(GameStateExtension.class)
 class MatchingShapesFormTest {
 
-    private static final String BOILER_IMPORTS = "an import fluid hatch is also an import item part, so its water " +
-            "hatch and fuel bus exceed the one import item part the pattern allows";
-
     /**
      * Controllers whose examples are known not to form, with the reason. Each must still fail, so an entry is
      * removed when the controller is fixed.
      */
-    private static final Map<String, String> KNOWN_UNFORMED = Map.of(
-            "gregtech:large_boiler.bronze", BOILER_IMPORTS,
-            "gregtech:large_boiler.steel", BOILER_IMPORTS,
-            "gregtech:large_boiler.titanium", BOILER_IMPORTS,
-            "gregtech:large_boiler.tungstensteel", BOILER_IMPORTS);
+    private static final Map<String, String> KNOWN_UNFORMED = Map.of();
 
     static Stream<Named<MultiblockControllerBase>> controllers() {
         List<MultiblockControllerBase> controllers = new ArrayList<>();

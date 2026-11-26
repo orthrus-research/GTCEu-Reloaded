@@ -216,7 +216,8 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
                 getCandidates(metaTileEntities));
     }
 
-    private static Supplier<BlockInfo[]> getCandidates(MetaTileEntity... metaTileEntities) {
+    /** @return the preview blocks of these machines, each facing south */
+    protected static Supplier<BlockInfo[]> getCandidates(MetaTileEntity... metaTileEntities) {
         return () -> Arrays.stream(metaTileEntities).filter(Objects::nonNull).map(tile -> {
             // TODO
             MetaTileEntityHolder holder = new MetaTileEntityHolder();
