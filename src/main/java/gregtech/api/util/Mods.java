@@ -129,7 +129,8 @@ public enum Mods {
         public static final String GREGTECH_FOOD_OPTION = "gregtechfoodoption";
         public static final String GROOVY_SCRIPT = "groovyscript";
         public static final String GTCE_2_OC = "gtce2oc";
-        public static final String HWYLA = "hwyla";
+        /** HWYLA, a fork of WAILA, keeps WAILA's mod ID. */
+        public static final String HWYLA = "waila";
         public static final String IMMERSIVE_ENGINEERING = "immersiveengineering";
         public static final String INDUSTRIAL_CRAFT2 = "ic2";
         public static final String INVENTORY_TWEAKS = "inventorytweaks";

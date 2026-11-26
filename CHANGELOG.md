@@ -323,6 +323,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Pipes | An optical cable in use stays lit, as a laser line does, and shows its glow to a player who loads its chunk; before, it went dark every five seconds while carrying computation and lit again a moment later, and a newly loaded chunk showed it dark |
 | Integration | With HWYLA on the client only, HWYLA shows a machine's modes and a quantum controller's or storage's lines again, worked out from the client's copy as before; the server's lines are used whenever the server has HWYLA. Before, these lines needed HWYLA on the server too |
 | API | `Materials.Phosphate` is no longer scheduled for removal: it stays registered, deprecated and unused, so phosphate dust in existing worlds keeps its identity, as no material is the same substance to migrate it to |
+| Integration | GregTech recognises HWYLA by its mod ID `waila`, so its HWYLA module loads and `Mods.HWYLA.isModLoaded()` answers true while HWYLA is installed; before, both named a mod ID `hwyla` that HWYLA never registers, and only HWYLA's own plugin scan kept GregTech's lines showing |
 
 ### Earlier fork changes
 
