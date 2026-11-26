@@ -1,6 +1,5 @@
 package gregtech.api.recipes.ingredients;
 
-import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTCondition;
 import gregtech.api.recipes.ingredients.nbtmatch.NBTMatcher;
 import gregtech.common.items.MetaItems;
@@ -142,11 +141,6 @@ public class IntCircuitIngredient extends GTRecipeInput {
      */
     public static boolean isIntegratedCircuit(ItemStack itemStack) {
         return MetaItems.INTEGRATED_CIRCUIT.isItemEqual(itemStack);
-    }
-
-    public static void adjustConfiguration(PlayerInventoryHolder holder, int amount) {
-        adjustConfiguration(holder.getCurrentItem(), amount);
-        holder.markAsDirty();
     }
 
     public static void adjustConfiguration(ItemStack stack, int amount) {

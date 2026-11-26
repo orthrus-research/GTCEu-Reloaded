@@ -85,7 +85,7 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
     public void buildConfigUI(ParentWidget<?> parent, PanelSyncManager syncManager) {}
 
     /***
-     * Can player using item (right-click) to open the customUI.
+     * Whether right-clicking with the plugin item opens its settings screen.
      */
     public boolean hasUI() {
         return false;

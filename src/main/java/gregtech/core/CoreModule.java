@@ -6,7 +6,6 @@ import gregtech.api.GregTechAPIInternal;
 import gregtech.api.block.IHeatingCoilBlockStats;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.gui.UIFactory;
-import gregtech.api.items.gui.PlayerInventoryUIFactory;
 import gregtech.api.metatileentity.MetaTileEntityUIFactory;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.modules.GregTechModule;
@@ -134,7 +133,6 @@ public class CoreModule implements IGregTechModule {
         UI_FACTORY_REGISTRY.unfreeze();
         logger.info("Registering GTCEu UI Factories");
         MetaTileEntityUIFactory.INSTANCE.init();
-        PlayerInventoryUIFactory.INSTANCE.init();
         logger.info("Registering addon UI Factories");
         MinecraftForge.EVENT_BUS.post(new GregTechAPI.RegisterEvent<>(UI_FACTORY_REGISTRY, UIFactory.class));
         UI_FACTORY_REGISTRY.freeze();
