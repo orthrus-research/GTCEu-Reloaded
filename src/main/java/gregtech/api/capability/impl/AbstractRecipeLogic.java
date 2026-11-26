@@ -10,9 +10,6 @@ import gregtech.api.capability.IWorkable;
 import gregtech.api.metatileentity.IVoidable;
 import gregtech.api.metatileentity.MTETrait;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.multiblock.CleanroomType;
-import gregtech.api.metatileentity.multiblock.ICleanroomProvider;
-import gregtech.api.metatileentity.multiblock.ICleanroomReceiver;
 import gregtech.api.metatileentity.multiblock.ParallelLogicType;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeBuilder;
@@ -36,9 +33,7 @@ import gregtech.api.recipes.modifiers.RecipeModifierCopies;
 import gregtech.api.recipes.modifiers.RecipeModifierList;
 import gregtech.api.recipes.modifiers.RecipeModifierResult;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
-import gregtech.api.recipes.properties.impl.CleanroomProperty;
 import gregtech.api.recipes.properties.impl.ConditionProperty;
-import gregtech.api.recipes.properties.impl.DimensionProperty;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
@@ -824,30 +819,15 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * @return if the cleanroom requirement is met
      */
     protected boolean checkCleanroomRequirement(@NotNull Recipe recipe) {
-        CleanroomType requiredType = recipe.getProperty(CleanroomProperty.getInstance(), null);
-        if (requiredType == null) return true;
-
-        MetaTileEntity mte = getMetaTileEntity();
-        if (mte instanceof ICleanroomReceiver receiver) {
-            if (ConfigHolder.machines.cleanMultiblocks && mte instanceof IMultiblockController) return true;
-
-            ICleanroomProvider cleanroomProvider = receiver.getCleanroom();
-            if (cleanroomProvider == null) return recordRecipeFailure(RecipeFailureReason.CLEANROOM_MISSING);
-            if (!cleanroomProvider.isClean()) return recordRecipeFailure(RecipeFailureReason.CLEANROOM_DIRTY);
-            return cleanroomProvider.checkCleanroomType(requiredType) ||
-                    recordRecipeFailure(RecipeFailureReason.CLEANROOM_TYPE);
-        }
-
-        return recordRecipeFailure(RecipeFailureReason.CLEANROOM_MISSING);
+        return meetsRequirement(RecipeEnvironmentChecks.checkCleanroom(recipe, getMetaTileEntity()));
     }
 
     protected boolean checkDimensionRequirement(@NotNull Recipe recipe) {
-        DimensionProperty.DimensionPropertyList list = recipe.getProperty(DimensionProperty.getInstance(), null);
-        if (list == null) {
-            return true;
-        }
-        return list.checkDimension(this.getMetaTileEntity().getWorld().provider.getDimension()) ||
-                recordRecipeFailure(RecipeFailureReason.DIMENSION);
+        return meetsRequirement(RecipeEnvironmentChecks.checkDimension(recipe, getMetaTileEntity()));
+    }
+
+    private boolean meetsRequirement(RecipeFailureReason failure) {
+        return failure == RecipeFailureReason.NONE || recordRecipeFailure(failure);
     }
 
     /**
