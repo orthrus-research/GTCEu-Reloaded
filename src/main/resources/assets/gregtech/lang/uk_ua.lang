@@ -901,9 +901,6 @@ metaitem.clipboard.name=Блокнот
 metaitem.clipboard.tooltip=Можна писати (без будь-якого інструменту для письма). Клацніть ПКМ на стіні, щоб розмістити, і клацніть Shift-ПКМ, щоб підібрати
 
 
-metaitem.behavior.mode_switch.tooltip=SHIFT-ПКМ для змінення режиму
-metaitem.behavior.mode_switch.mode_switched=§eРежим змінено на: %s
-metaitem.behavior.mode_switch.current_mode=Режим: %s
 metaitem.tool.tooltip.primary_material=§fМатеріал: §e%s
 metaitem.tool.tooltip.durability=§fМіцність: §a%,d / %,d
 metaitem.tool.tooltip.rotor.efficiency=Ефективність турбіни: §9%,d%%
@@ -1114,7 +1111,6 @@ cover.ore_dictionary_filter.compile.error.invalid_char=Неприпустими�
 cover.ore_dictionary_filter.compile.warn.nested_negation=Вкладені заперечення можуть бути неінтуїтивно зрозумілими. Подумайте про використання груп ( () ) для усунення неоднозначності.
 cover.ore_dictionary_filter.compile.warn.consecutive_negation=Послідовні заперечення можуть бути неінтуїтивно зрозумілими. Будь ласка, перевірте, чи бажаний результат оцінювання.
 cover.fluid_filter.title=Фільтр для рідини
-cover.fluid_filter.config_amount=Колесо прокрутки вгору збільшує кількість, вниз - зменшує./nShift[§6x10§r],Ctrl[§ex100§r],Shift+Ctrl[§ax1000§r]/nПКМ збільшує кількість, ЛКМ зменшує./nТримайте SHIFT щоб збільшити/зменшити вдвічі./nСКМ для очищення
 cover.item_filter.title=Фільтр предметів
 cover.filter.mode.title=Режим фільтрації
 cover.filter.mode.filter_insert=Фільтрує вхідні предмети

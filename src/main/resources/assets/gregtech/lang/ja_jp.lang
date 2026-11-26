@@ -1089,9 +1089,6 @@ metaitem.clipboard.name=クリップボード
 metaitem.clipboard.tooltip=筆記具なしで書くことができます。壁に右クリックして配置、Shiftキーを押しながら右クリックして撤去。
 
 
-metaitem.behavior.mode_switch.tooltip=スニーク中に使うことでモード変更
-metaitem.behavior.mode_switch.mode_switched=§eモード設定: %s
-metaitem.behavior.mode_switch.current_mode=モード: %s
 
 metaitem.tool.tooltip.primary_material=§f素材: §e%s
 metaitem.tool.tooltip.durability=§f耐久値: §a%,d/%,d
@@ -1287,7 +1284,6 @@ cover.ore_dictionary_filter.compile.warn.nested_negation=入れ子の否定は�
 cover.ore_dictionary_filter.compile.warn.consecutive_negation=連続否定は直感的でない場合があります。評価結果が望ましいかどうか確認してください。
 
 cover.fluid_filter.title=液体フィルター
-cover.fluid_filter.config_amount=スクロールで量を調整できる。/nShift[§6x10§r],Ctrl[§ex100§r],Shift+Ctrl[§ax1000§r]/n右クリックで増加して左クリックで減少です。/nShiftで倍/半分。/nホイールクリックで消去。
 cover.fluid_filter.mode.filter_fill=搬入フィルター
 cover.fluid_filter.mode.filter_drain=搬出フィルター
 cover.fluid_filter.mode.filter_both=搬入/搬出フィルター

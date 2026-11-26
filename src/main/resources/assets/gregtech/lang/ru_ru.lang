@@ -948,9 +948,6 @@ metaitem.clipboard.name=Планёр
 metaitem.clipboard.tooltip=На нем можно писать (без какого-либо пишущего инструмента). Щелкните пкм на стене, чтобы разместить ее, и Shift-щелчок пкм, чтобы снять ее
 
 
-metaitem.behavior.mode_switch.tooltip=Используйте зажав кнопку "присесть" для переключения режима
-metaitem.behavior.mode_switch.mode_switched=§eРежим изменен на: %s
-metaitem.behavior.mode_switch.current_mode=Режим: %s
 metaitem.tool.tooltip.primary_material=§fМатериал: §e%s
 metaitem.tool.tooltip.durability=§fПрочность: §a%,d / %,d
 metaitem.tool.tooltip.rotor.efficiency=Эффективность ротора: §9%,d%%
@@ -1070,7 +1067,6 @@ cover.ore_dictionary_filter.status.warn=§7%s предупреждение(я)
 cover.ore_dictionary_filter.status.no_issues=§aНет проблем
 cover.ore_dictionary_filter.status.explain=Объяснение фильтра руды:
 cover.fluid_filter.title=Жидкостный фильтр
-cover.fluid_filter.config_amount=Колесо прокрутки вверх увеличивает количество, вниз уменьшает./nShift[§6x10§r],Ctrl[§ex100§r],Shift+Ctrl[§ax1000§r]/nПравый клик увеличивает кол-во, левый уменьшает./nУдерживайте Shift, чтобы удвоить/уполовинить./nЩелкните средней кнопкой, чтобы очистить
 cover.fluid_filter.mode.filter_fill=Фильтрует при наполнении
 cover.fluid_filter.mode.filter_drain=Фильтрует при сливе
 cover.fluid_filter.mode.filter_both=Фильтрует при сливе и наполнении

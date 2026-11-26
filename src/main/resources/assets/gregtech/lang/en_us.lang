@@ -1118,9 +1118,6 @@ metaitem.clipboard.name=Clipboard
 metaitem.clipboard.tooltip=Can be written on (without any writing Instrument). Right-click on Wall to place, and Shift-Right-Click to remove
 
 
-metaitem.behavior.mode_switch.tooltip=Use while sneaking to switch mode
-metaitem.behavior.mode_switch.mode_switched=§eMode Set to: %s
-metaitem.behavior.mode_switch.current_mode=Mode: %s
 
 metaitem.tool.tooltip.primary_material=§fMaterial: §e%s
 metaitem.tool.tooltip.durability=§fDurability: §a%,d / %,d
@@ -1320,7 +1317,6 @@ cover.ore_dictionary_filter.compile.warn.nested_negation=Nested negations can be
 cover.ore_dictionary_filter.compile.warn.consecutive_negation=Consecutive negations can be unintuitive. Please check if the evaluation result is desirable.
 
 cover.fluid_filter.title=Fluid Filter
-cover.fluid_filter.config_amount=Scroll wheel up increases amount, down decreases./nShift[§6x10§r],Ctrl[§ex100§r],Shift+Ctrl[§ax1000§r]/nRight click increases amount, left click decreases./nHold shift to double/halve./nMiddle click to clear
 cover.fluid_filter.mode.filter_fill=Filter Fill
 cover.fluid_filter.mode.filter_drain=Filter Drain
 cover.fluid_filter.mode.filter_both=Filter Fill & Drain

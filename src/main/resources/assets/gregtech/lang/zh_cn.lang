@@ -1105,9 +1105,6 @@ metaitem.clipboard.name=写字板
 metaitem.clipboard.tooltip=可以在上面写东西。手持写字板右击墙面可放置，按住SHIFT后鼠标右击则可取下
 
 
-metaitem.behavior.mode_switch.tooltip=按住SHIFT鼠标右击以切换模式
-metaitem.behavior.mode_switch.mode_switched=§e模式设置为：%s
-metaitem.behavior.mode_switch.current_mode=模式：%s
 
 metaitem.tool.tooltip.primary_material=§f材料：§e%s
 metaitem.tool.tooltip.durability=§f耐久度：§a%,d / %,d
@@ -1307,7 +1304,6 @@ cover.ore_dictionary_filter.compile.warn.nested_negation=嵌套否定可能不�
 cover.ore_dictionary_filter.compile.warn.consecutive_negation=连续否定可能不够直观。请检查评估结果是否理想。
 
 cover.fluid_filter.title=流体过滤
-cover.fluid_filter.config_amount=向上或向下滚动鼠标滚轮以增加或减少流体量。/nShift[§6x10§r]，Ctrl[§ex100§r]，Shift+Ctrl[§ax1000§r]/n亦可通过右击或左击来增减流体量。/n按住Shift时点击鼠标则将使流体量翻倍或减半。/n点击中键以清除
 cover.fluid_filter.mode.filter_fill=过滤输入
 cover.fluid_filter.mode.filter_drain=过滤输出
 cover.fluid_filter.mode.filter_both=过滤两者
