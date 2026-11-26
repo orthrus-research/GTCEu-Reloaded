@@ -104,8 +104,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected boolean hasNotEnoughEnergy;
     protected boolean wasActiveAndNeedsUpdate;
     private boolean awaitingOutputs;
-    private RecipeConditionSet activeRecipeConditions = RecipeConditionSet.EMPTY;
-    private boolean recipeConditionPaused;
+    private final RecipeConditionState conditions = new RecipeConditionState();
     protected boolean isOutputsFull;
     protected boolean invalidInputsForRecipes;
     private final RecipeSearchScheduler scheduler;
@@ -300,7 +299,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                 if (awaitingOutputs) {
                     tryCompleteRecipe();
                 } else {
-                    boolean resumingConditions = recipeConditionPaused;
+                    boolean resumingConditions = conditions.isPaused();
                     if (progressTime <= 0 || canProcessActiveRecipeConditions()) {
                         // Some legacy predicates cancel work or query consumable resources. A hold must precede them.
                         if (getMetaTileEntity().getOffsetTimer() % 20 == 0 || resumingConditions) {
@@ -531,8 +530,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         return position == null ? null : new WorldRecipeConditionContext(metaTileEntity.getWorld(), position);
     }
 
-    private ConditionEvaluation evaluateConditions(RecipeConditionSet conditions) {
-        return conditions.isEmpty() ? ConditionEvaluation.PASS : conditions.evaluate(createRecipeConditionContext());
+    private ConditionEvaluation evaluateConditions(RecipeConditionSet set) {
+        return set.isEmpty() ? ConditionEvaluation.PASS : set.evaluate(createRecipeConditionContext());
     }
 
     private boolean checkRecipeConditions(Recipe recipe) {
@@ -542,16 +541,15 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     private boolean canProcessActiveRecipeConditions() {
-        ConditionEvaluation result = evaluateConditions(activeRecipeConditions);
+        ConditionEvaluation result = evaluateConditions(conditions.getActive());
         if (!result.isSuccess()) {
-            this.recipeConditionPaused = true;
+            conditions.pause();
             this.wasActiveAndNeedsUpdate = false;
             setActive(false);
             setRecipeFailure(RecipeFailure.condition(result));
             return false;
         }
-        if (recipeConditionPaused) {
-            this.recipeConditionPaused = false;
+        if (conditions.resume()) {
             this.wasActiveAndNeedsUpdate = false;
             clearRecipeFailure();
             setActive(true);
@@ -561,7 +559,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
 
     /** Last observed processing hold, not a fresh world check. Completed-output retries bypass this state. */
     public final boolean isRecipeConditionPaused() {
-        return recipeConditionPaused;
+        return conditions.isPaused();
     }
 
     protected boolean checkRecipeForStart(Recipe recipe) {
@@ -1450,8 +1448,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     @MustBeInvokedByOverriders
     protected void setupRecipe(@NotNull Recipe recipe) {
         clearRecipeFailure();
-        this.activeRecipeConditions = recipe.getProperty(ConditionProperty.getInstance(), RecipeConditionSet.EMPTY);
-        this.recipeConditionPaused = false;
+        conditions.start(recipe.getProperty(ConditionProperty.getInstance(), RecipeConditionSet.EMPTY));
         failures.clearProgressFailure();
         this.progressTime = 1;
         setMaxProgress(ocResult.duration());
@@ -1521,8 +1518,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     /** Completes an admitted recipe and performs its completion actions exactly once. */
     protected void completeRecipe() {
         clearRecipeFailure();
-        this.activeRecipeConditions = RecipeConditionSet.EMPTY;
-        this.recipeConditionPaused = false;
+        conditions.clear();
         outputRecipeOutputs();
         this.progressTime = 0;
         setMaxProgress(0);
@@ -1711,8 +1707,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         scheduler.clearDeferral();
         previousRecipe = null;
         awaitingOutputs = false;
-        this.activeRecipeConditions = RecipeConditionSet.EMPTY;
-        this.recipeConditionPaused = false;
+        conditions.clear();
         progressTime = 0;
         maxProgressTime = 0;
         recipeEUt = 0;
@@ -1758,8 +1753,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         compound.setLong(OVERCLOCK_VOLTAGE, this.overclockVoltage);
         if (progressTime > 0) {
             compound.setBoolean("AwaitingOutputs", awaitingOutputs);
-            if (!activeRecipeConditions.isEmpty())
-                compound.setTag("ActiveRecipeConditions", activeRecipeConditions.serialize());
+            conditions.writeToNBT(compound);
             compound.setInteger("Progress", progressTime);
             compound.setInteger("MaxProgress", maxProgressTime);
             compound.setLong("RecipeEUt", this.recipeEUt);
@@ -1790,14 +1784,12 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         this.canRecipeProgress = compound.getBoolean("CanRecipeProgress");
         this.progressTime = compound.getInteger("Progress");
         this.awaitingOutputs = progressTime > 0 && compound.getBoolean("AwaitingOutputs");
-        this.activeRecipeConditions = progressTime > 0 && compound.hasKey("ActiveRecipeConditions") ?
-                RecipeConditionSet.deserialize(compound.getTag("ActiveRecipeConditions")) : RecipeConditionSet.EMPTY;
-        this.recipeConditionPaused = !awaitingOutputs && !activeRecipeConditions.isEmpty();
+        conditions.readFromNBT(compound, progressTime > 0, awaitingOutputs);
         this.allowOverclocking = compound.getBoolean(ALLOW_OVERCLOCKING);
         this.overclockVoltage = compound.getLong(OVERCLOCK_VOLTAGE);
         this.isActive = false;
         if (progressTime > 0) {
-            this.isActive = !awaitingOutputs && !recipeConditionPaused;
+            this.isActive = !awaitingOutputs && !conditions.isPaused();
             this.maxProgressTime = compound.getInteger("MaxProgress");
             if (awaitingOutputs) {
                 this.maxProgressTime = Math.max(1, maxProgressTime);
