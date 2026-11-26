@@ -5,6 +5,8 @@ import gregtech.api.GregTechAPI;
 import gregtech.api.GregTechAPIInternal;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.GregtechTileCapabilities;
+import gregtech.api.persistence.PersistentData;
+import gregtech.api.recipes.GTRecipeInputCache;
 import gregtech.api.util.GTLog;
 import gregtech.api.worldgen.generator.GTWorldGenCapability;
 import gregtech.common.CommonProxy;
@@ -16,6 +18,7 @@ import gregtech.modules.ModuleManager;
 import net.minecraft.block.Block;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.Locale;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.network.INetHandler;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.server.MinecraftServer;
@@ -52,6 +55,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -65,6 +69,8 @@ public final class Bootstrap {
 
     private static boolean bootstrapped = false;
     private static @Nullable Throwable failure;
+    private static boolean recipesRegistered = false;
+    private static @Nullable Throwable recipeFailure;
 
     private Bootstrap() {}
 
@@ -85,6 +91,49 @@ public final class Bootstrap {
             bootstrapped = true;
         } catch (RuntimeException | Error e) {
             failure = e;
+            throw e;
+        }
+    }
+
+    /**
+     * Runs {@link #perform()}, then once the recipe registry event through GregTech's own handlers in the order Forge
+     * calls them, as the game's loading does after the item event: the crafting components, the ore dictionary and
+     * material info with the recipe loaders, then the material handlers early and late with the recycling recipes.
+     * The input cache the event leaves on is turned off again, as the game's load completion does.
+     * <p>
+     * The bootstrap itself leaves this out: tests build the recipes they need. A test that needs the whole recipe set
+     * runs this in a class loader of its own, as {@code RecipeSetDigestTest} does, so that the recipes do not reach
+     * the tests that share this JVM.
+     */
+    public static void registerRecipes() {
+        perform();
+        if (recipesRegistered) {
+            return;
+        }
+        if (recipeFailure != null) {
+            throw new IllegalStateException("The recipe registration failed earlier in this JVM", recipeFailure);
+        }
+        try {
+            // the game points GregTech's persistent data at its configuration directory when the mod is
+            // constructed; the input cache keeps its size there, so give it a file of this JVM's own
+            Field persistentPath = PersistentData.class.getDeclaredField("path");
+            persistentPath.setAccessible(true);
+            persistentPath.set(PersistentData.instance(),
+                    Files.createTempDirectory("gregtech").resolve("persistent_data.dat"));
+
+            RegistryEvent.Register<IRecipe> recipes = new RegistryEvent.Register<>(GameData.RECIPES,
+                    ForgeRegistries.RECIPES);
+            CommonProxy.initComponents(recipes);
+            CommonProxy.registerRecipes(recipes);
+            CommonProxy.runEarlyMaterialHandlers(recipes);
+            CommonProxy.registerRecipesLowest(recipes);
+            GTRecipeInputCache.disableCache();
+            recipesRegistered = true;
+        } catch (NoSuchFieldException | IllegalAccessException | IOException e) {
+            recipeFailure = e;
+            throw new IllegalStateException("Unexpected exception on the test recipe registration", e);
+        } catch (RuntimeException | Error e) {
+            recipeFailure = e;
             throw e;
         }
     }
