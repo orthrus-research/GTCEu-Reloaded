@@ -15,6 +15,7 @@ import gregtech.integration.probe.producer.LaserContainerProbeInfo;
 import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
 import gregtech.integration.probe.producer.MultiblockProbeInfo;
+import gregtech.integration.probe.producer.PrimitivePumpProbeInfo;
 import gregtech.integration.probe.producer.RecipeLogicProbeInfo;
 import gregtech.integration.probe.producer.SteamBoilerProbeInfo;
 import gregtech.integration.probe.producer.TransformerProbeInfo;
@@ -52,7 +53,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         register(oneProbe, GTValues.MODID + ":converter_info_provider", new ConverterProbeInfo());
         register(oneProbe, GTValues.MODID + ":recipe_logic_provider", new RecipeLogicProbeInfo());
         register(oneProbe, GTValues.MODID + ":steam_boiler_provider", new SteamBoilerProbeInfo());
-        oneProbe.registerProvider(new PrimitivePumpInfoProvider());
+        register(oneProbe, GTValues.MODID + ":primitive_pump_provider", new PrimitivePumpProbeInfo());
         oneProbe.registerProvider(new CoverInfoProvider());
         oneProbe.registerProvider(new BlockOreInfoProvider());
         oneProbe.registerProvider(new LampInfoProvider());
