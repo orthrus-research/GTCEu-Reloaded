@@ -892,13 +892,13 @@ public class MetaTileEntityLoader {
                     'H', MetaBlocks.HERMETIC_CASING.getItemVariant(HermeticCasingsType.values()[tier - 1]));
         }
 
-        // buffers: the tier's hull, pump and conveyor, each with an LV circuit
+        // buffers: the tier's hull, pump, conveyor and circuit
         for (int tier = GTValues.LV; tier <= GTValues.HV; tier++) {
             ModHandler.addShapedRecipe(true, "buffer_" + tierName(tier),
                     MetaTileEntities.BUFFER[tier - 1].getStackForm(), "HP", "CV",
                     'H', MetaTileEntities.HULL[tier].getStackForm(), 'P', pump(tier).getStackForm(),
                     'V', conveyor(tier).getStackForm(),
-                    'C', new UnificationEntry(OrePrefix.circuit, MarkerMaterials.Tier.LV));
+                    'C', new UnificationEntry(OrePrefix.circuit, circuitTier(tier)));
         }
 
         if (ConfigHolder.recipes.harderEBFControllerRecipe) {
