@@ -2,18 +2,14 @@ package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.widgets.ImageWidget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.AbilityInstances;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
-import gregtech.common.gui.widget.appeng.AEFluidConfigWidget;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAEFluidList;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAEFluidSlot;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.stack.WrappedFluidStack;
@@ -24,9 +20,12 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.IFluidTank;
 
 import appeng.api.storage.data.IAEFluidStack;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -125,19 +124,17 @@ public class MetaTileEntityMEInputHatch extends MetaTileEntityMEInputPart<IAEFlu
     }
 
     @Override
-    protected Widget createConfigWidget(int x, int y) {
-        return new AEFluidConfigWidget(x, y, this.getAEFluidHandler());
+    MEConfigSyncHandler<IAEFluidStack, FluidStack> createConfigSync() {
+        ExportOnlyAEFluidList handler = getAEFluidHandler();
+        return new MEConfigSyncHandler<>(MEStackType.FLUIDS, handler.getInventory(), handler.isStocking(),
+                handler::isAutoPull, stack -> handler.hasStackInConfig(stack, true), this::markDirty);
     }
 
     @Override
-    protected void addSideWidgets(ModularUI.Builder builder) {
-        // Arrow image
-        builder.image(7 + 18 * 4, 25 + 18, 18, 18, GuiTextures.ARROW_DOUBLE);
-
-        // GT Logo, cause there's some free real estate
-        builder.widget(new ImageWidget(7 + 18 * 4, 25 + 18 * 3, 17, 17,
-                GTValues.XMAS.get() ? GuiTextures.GREGTECH_LOGO_XMAS : GuiTextures.GREGTECH_LOGO)
-                .setIgnoreColor(true));
+    protected void addSideWidgets(ModularPanel panel, PanelSyncManager syncManager) {
+        panel.child(GTGuiTextures.ARROW_DOUBLE.asWidget().pos(7 + 18 * 4, 25 + 18).size(18))
+                // GT Logo, cause there's some free real estate
+                .child(GTGuiTextures.getLogo(getUITheme()).asWidget().pos(7 + 18 * 4, 25 + 18 * 3).size(17));
     }
 
     @Override

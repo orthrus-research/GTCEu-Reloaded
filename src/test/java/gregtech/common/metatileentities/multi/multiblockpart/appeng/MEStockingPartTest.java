@@ -389,8 +389,9 @@ class MEStockingPartTest {
         calls.clear();
         assertTrue(hatch.shouldUpdateME());
         assertEquals(Arrays.asList("sync", "status"), calls);
-        assertEquals(0, bus.getUIExtraHeight());
-        assertEquals(0, hatch.getUIExtraHeight());
+        // the ordinary parts' screens add one row below the slots, for the selected slot's amount
+        assertEquals(18, bus.getUIExtraHeight());
+        assertEquals(18, hatch.getUIExtraHeight());
         bus.setWorkingEnabled(false);
         hatch.setWorkingEnabled(false);
         calls.clear();

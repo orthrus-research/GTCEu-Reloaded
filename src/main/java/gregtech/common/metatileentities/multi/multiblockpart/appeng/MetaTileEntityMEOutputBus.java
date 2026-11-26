@@ -1,12 +1,10 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
-import gregtech.api.gui.Widget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.*;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
-import gregtech.common.gui.widget.appeng.AEItemGridWidget;
 import gregtech.common.inventory.appeng.SerializableItemList;
 
 import net.minecraft.client.resources.I18n;
@@ -40,11 +38,6 @@ public class MetaTileEntityMEOutputBus extends MetaTileEntityMEOutputPart<IAEIte
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity iGregTechTileEntity) {
         return new MetaTileEntityMEOutputBus(this.metaTileEntityId);
-    }
-
-    @Override
-    protected Widget createBufferWidget(int x, int y, int rows, SerializableItemList buffer) {
-        return new AEItemGridWidget(x, y, rows, buffer);
     }
 
     @Override

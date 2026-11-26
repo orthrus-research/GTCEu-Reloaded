@@ -2,14 +2,10 @@ package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
 import gregtech.Bootstrap;
 import gregtech.api.capability.IControllable;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.widgets.DynamicLabelWidget;
-import gregtech.api.gui.widgets.LabelWidget;
 import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.mui.widget.GhostCircuitSlotWidget;
 import gregtech.api.util.world.DummyWorld;
 import gregtech.common.ConfigHolder;
-import gregtech.common.gui.widget.appeng.AEConfigWidget;
 import gregtech.common.inventory.appeng.SerializableFluidList;
 import gregtech.common.inventory.appeng.SerializableItemList;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAESlot;
@@ -35,18 +31,26 @@ import appeng.api.storage.data.IAEItemStack;
 import appeng.api.storage.data.IAEStack;
 import appeng.fluids.util.AEFluidStack;
 import appeng.util.item.AEItemStack;
+import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.TreeUtil;
+import com.cleanroommc.modularui.value.sync.ModularSyncManager;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.WidgetTree;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import com.mojang.authlib.GameProfile;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static gregtech.api.util.GTUtility.gregtechId;
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,43 +64,138 @@ class MEPartPairTest {
     }
 
     @Test
-    void inputScreensKeepTheirWidgetsInOrder() {
-        EntityPlayer player = player();
-        List<String> bus = new ArrayList<>(Arrays.asList("176x184", "LabelWidget@10,5", "DynamicLabelWidget@10,15",
-                "AEItemConfigWidget@7,25 288x36 [18]", "GhostCircuitSlotWidget@79,79 18x18",
-                "SlotWidget@79,61 18x18", "ImageWidget@79,43 18x18"));
-        bus.addAll(playerInventory(102));
-        List<String> hatch = new ArrayList<>(Arrays.asList("176x184", "LabelWidget@10,5", "DynamicLabelWidget@10,15",
-                "AEFluidConfigWidget@7,25 288x36 [18]", "ImageWidget@79,43 18x18", "ImageWidget@79,79 17x17"));
-        hatch.addAll(playerInventory(102));
-        assertEquals(bus, layout(new MetaTileEntityMEInputBus(gregtechId("layout_bus")).createUI(player)));
-        assertEquals(hatch, layout(new MetaTileEntityMEInputHatch(gregtechId("layout_hatch")).createUI(player)));
-
-        List<String> stockingBus = new ArrayList<>(bus.subList(0, 7));
-        stockingBus.set(0, "176x228");
-        stockingBus.set(3, "AEItemConfigWidget@7,25 288x36 [16]");
-        stockingBus.addAll(playerInventory(146));
-        stockingBus.addAll(stockingWidgets());
-        List<String> stockingHatch = new ArrayList<>(hatch.subList(0, 6));
-        stockingHatch.set(0, "176x228");
-        stockingHatch.set(3, "AEFluidConfigWidget@7,25 288x36 [16]");
-        stockingHatch.addAll(playerInventory(146));
-        stockingHatch.addAll(stockingWidgets());
-        assertEquals(stockingBus, layout(new StockingTestBus().createUI(player)));
-        assertEquals(stockingHatch, layout(new StockingTestHatch().createUI(player)));
+    void inputScreensOfferSixteenConfigSlotsAndTheirSideWidgets() {
+        MetaTileEntityMEInputBus bus = new MetaTileEntityMEInputBus(gregtechId("layout_bus"));
+        MetaTileEntityMEInputHatch hatch = new MetaTileEntityMEInputHatch(gregtechId("layout_hatch"));
+        for (MetaTileEntityMEInputPart<?, ?> part : Arrays.asList(bus, hatch, new StockingTestBus(),
+                new StockingTestHatch())) {
+            PanelSyncManager manager = manager();
+            ModularPanel panel = part.buildUI(null, manager, new UISettings());
+            assertDoesNotThrow(() -> WidgetTree.collectSyncValues(manager, panel));
+            assertEquals(16, widgets(panel, MEConfigSlotWidget.class).size());
+            assertEquals(16, widgets(panel, MEStackDisplayWidget.class).size());
+            assertNotNull(manager.findSyncHandlerNullable("me_config"));
+            assertNotNull(manager.findSyncHandlerNullable("me_online"));
+            boolean stocking = part instanceof StockingTestBus || part instanceof StockingTestHatch;
+            // stocking parts have their settings below the slots, the others the amount of the selected slot
+            assertEquals(stocking, manager.findSyncHandlerNullable("me_auto_pull") != null);
+            assertEquals(stocking, manager.findSyncHandlerNullable("me_stocking_minimum") != null);
+            assertEquals(stocking, manager.findSyncHandlerNullable("me_stocking_refresh") != null);
+            assertEquals(stocking, manager.findSyncHandlerNullable("me_stocking_abundant") != null);
+            boolean items = part instanceof MetaTileEntityMEInputBus;
+            assertEquals(items ? 1 : 0, widgets(panel, GhostCircuitSlotWidget.class).size());
+            long extraSlots = widgets(panel, ItemSlot.class).stream()
+                    .filter(slot -> slot.isSynced()).count();
+            assertEquals(items ? 1 : 0, extraSlots, "the bus's extra slot is its only own item slot");
+        }
     }
 
     @Test
-    void outputScreensKeepTheirWidgetsInOrder() {
-        EntityPlayer player = player();
-        List<String> bus = new ArrayList<>(Arrays.asList("176x184", "LabelWidget@10,5", "DynamicLabelWidget@10,15",
-                "LabelWidget@10,25", "AEItemGridWidget@10,35 158x54"));
-        bus.addAll(playerInventory(102));
-        List<String> hatch = new ArrayList<>(bus);
-        hatch.set(4, "AEFluidGridWidget@10,35 158x54");
-        assertEquals(bus, layout(new MetaTileEntityMEOutputBus(gregtechId("layout_output_bus")).createUI(player)));
-        assertEquals(hatch,
-                layout(new MetaTileEntityMEOutputHatch(gregtechId("layout_output_hatch")).createUI(player)));
+    void outputScreensShowTheirWaitingBuffer() {
+        for (MetaTileEntityMEOutputPart<?, ?> part : Arrays.asList(
+                new MetaTileEntityMEOutputBus(gregtechId("layout_output_bus")),
+                new MetaTileEntityMEOutputHatch(gregtechId("layout_output_hatch")))) {
+            PanelSyncManager manager = manager();
+            ModularPanel panel = part.buildUI(null, manager, new UISettings());
+            assertDoesNotThrow(() -> WidgetTree.collectSyncValues(manager, panel));
+            assertEquals(1, widgets(panel, MEBufferListWidget.class).size());
+            assertNotNull(manager.findSyncHandlerNullable("me_buffer"));
+            assertNotNull(manager.findSyncHandlerNullable("me_online"));
+        }
+    }
+
+    @Test
+    void outputBuffersReachTheScreenWithAmountsBeyondAnInt() {
+        MetaTileEntityMEOutputBus bus = new MetaTileEntityMEOutputBus(gregtechId("buffer_bus"));
+        MetaTileEntityMEOutputHatch hatch = new MetaTileEntityMEOutputHatch(gregtechId("buffer_hatch"));
+        bus.getInternalBuffer().add(AEItemStack.fromItemStack(new ItemStack(Items.IRON_INGOT))
+                .setStackSize(5_000_000_000L));
+        hatch.getInternalBuffer().add(AEFluidStack.fromFluidStack(new FluidStack(FluidRegistry.WATER, 1))
+                .setStackSize(5_000_000_000L));
+        MEBufferSyncHandler<IAEItemStack> itemServer = new MEBufferSyncHandler<>(MEStackType.ITEMS,
+                bus.getInternalBuffer());
+        MEBufferSyncHandler<IAEItemStack> itemClient = new MEBufferSyncHandler<>(MEStackType.ITEMS,
+                new SerializableItemList());
+        MEBufferSyncHandler<IAEFluidStack> fluidServer = new MEBufferSyncHandler<>(MEStackType.FLUIDS,
+                hatch.getInternalBuffer());
+        MEBufferSyncHandler<IAEFluidStack> fluidClient = new MEBufferSyncHandler<>(MEStackType.FLUIDS,
+                new SerializableFluidList());
+        sendBuffer(itemServer, itemClient);
+        sendBuffer(fluidServer, fluidClient);
+        assertEquals(Items.IRON_INGOT, itemClient.getEntries().get(0).createItemStack().getItem());
+        assertEquals(5_000_000_000L, itemClient.getEntries().get(0).getStackSize());
+        assertEquals(FluidRegistry.WATER, fluidClient.getEntries().get(0).getFluid());
+        assertEquals(5_000_000_000L, fluidClient.getEntries().get(0).getStackSize());
+        assertFalse(itemServer.collectChanges(false), "an unchanged buffer sends nothing");
+
+        bus.getInternalBuffer().findPrecise(itemClient.getEntries().get(0)).setStackSize(0);
+        assertTrue(itemServer.collectChanges(false));
+        sendEntries(itemServer, itemClient);
+        assertTrue(itemClient.getEntries().isEmpty(), "an entry the network took leaves the screen");
+    }
+
+    @Test
+    void configEditsFromTheScreenAreCheckedByTheServer() throws Exception {
+        MetaTileEntityMEInputBus bus = new MetaTileEntityMEInputBus(gregtechId("edit_bus"));
+        MetaTileEntityMEInputHatch hatch = new MetaTileEntityMEInputHatch(gregtechId("edit_hatch"));
+        MEConfigSyncHandler<IAEItemStack, ItemStack> items = bus.createConfigSync();
+        MEConfigSyncHandler<IAEFluidStack, FluidStack> fluids = hatch.createConfigSync();
+
+        edit(items, MEConfigSyncHandler.SET_FROM_INGREDIENT, 4, buf -> MEStackType.ITEMS.writeNative(buf,
+                new ItemStack(Items.IRON_INGOT, 3)));
+        edit(fluids, MEConfigSyncHandler.SET_FROM_INGREDIENT, 4, buf -> MEStackType.FLUIDS.writeNative(buf,
+                new FluidStack(FluidRegistry.WATER, 250)));
+        assertEquals(3, bus.getAEItemHandler().getInventory()[4].getConfig().getStackSize());
+        assertEquals(250, hatch.getAEFluidHandler().getInventory()[4].getConfig().getStackSize());
+
+        for (MEConfigSyncHandler<?, ?> config : Arrays.asList(items, fluids)) {
+            edit(config, MEConfigSyncHandler.SET_AMOUNT, 4, buf -> buf.writeVarLong(Long.MAX_VALUE));
+            edit(config, MEConfigSyncHandler.SET_AMOUNT, 4, buf -> buf.writeVarLong(-8));
+            edit(config, MEConfigSyncHandler.SET_AMOUNT, 99, buf -> buf.writeVarLong(5));
+            edit(config, MEConfigSyncHandler.CLEAR, -1, buf -> {});
+        }
+        assertEquals(Integer.MAX_VALUE, bus.getAEItemHandler().getInventory()[4].getConfig().getStackSize());
+        assertEquals(Integer.MAX_VALUE, hatch.getAEFluidHandler().getInventory()[4].getConfig().getStackSize());
+
+        edit(items, MEConfigSyncHandler.CLEAR, 4, buf -> {});
+        edit(fluids, MEConfigSyncHandler.CLEAR, 4, buf -> {});
+        assertNull(bus.getAEItemHandler().getInventory()[4].getConfig());
+        assertNull(hatch.getAEFluidHandler().getInventory()[4].getConfig());
+    }
+
+    @Test
+    void stockingScreensTakeNoAmountsNorDuplicatesAndAutoPullLocksThem() throws Exception {
+        StockingTestBus bus = new StockingTestBus();
+        StockingTestHatch hatch = new StockingTestHatch();
+        MEConfigSyncHandler<IAEItemStack, ItemStack> items = bus.createConfigSync();
+        MEConfigSyncHandler<IAEFluidStack, FluidStack> fluids = hatch.createConfigSync();
+        edit(items, MEConfigSyncHandler.SET_FROM_INGREDIENT, 0, buf -> MEStackType.ITEMS.writeNative(buf,
+                new ItemStack(Items.IRON_INGOT)));
+        edit(fluids, MEConfigSyncHandler.SET_FROM_INGREDIENT, 0, buf -> MEStackType.FLUIDS.writeNative(buf,
+                new FluidStack(FluidRegistry.WATER, 1)));
+        edit(items, MEConfigSyncHandler.SET_AMOUNT, 0, buf -> buf.writeVarLong(40));
+        edit(fluids, MEConfigSyncHandler.SET_AMOUNT, 0, buf -> buf.writeVarLong(40));
+        assertEquals(1, bus.slots()[0].getConfig().getStackSize());
+        assertEquals(1, hatch.slots()[0].getConfig().getStackSize());
+
+        // a stocking part shows each resource once
+        edit(items, MEConfigSyncHandler.SET_FROM_INGREDIENT, 1, buf -> MEStackType.ITEMS.writeNative(buf,
+                new ItemStack(Items.IRON_INGOT)));
+        edit(fluids, MEConfigSyncHandler.SET_FROM_INGREDIENT, 1, buf -> MEStackType.FLUIDS.writeNative(buf,
+                new FluidStack(FluidRegistry.WATER, 1)));
+        assertNull(bus.slots()[1].getConfig());
+        assertNull(hatch.slots()[1].getConfig());
+
+        NBTTagCompound automatic = new NBTTagCompound();
+        automatic.setBoolean("AutoPull", true);
+        bus.readConfigFromTag(automatic);
+        hatch.readConfigFromTag(automatic);
+        bus.slots()[2].setConfig(item(1));
+        hatch.slots()[2].setConfig(fluid(1));
+        edit(items, MEConfigSyncHandler.CLEAR, 2, buf -> {});
+        edit(fluids, MEConfigSyncHandler.CLEAR, 2, buf -> {});
+        assertNotNull(bus.slots()[2].getConfig(), "auto-pull manages the configs");
+        assertNotNull(hatch.slots()[2].getConfig(), "auto-pull manages the configs");
     }
 
     @Test
@@ -427,42 +526,43 @@ class MEPartPairTest {
         return bytes;
     }
 
-    private static List<String> layout(ModularUI ui) {
-        List<String> layout = new ArrayList<>();
-        layout.add(ui.getWidth() + "x" + ui.getHeight());
-        for (int id = 0; id < ui.guiWidgets.size(); id++) {
-            Widget widget = ui.guiWidgets.get(id);
-            StringBuilder line = new StringBuilder(widget.getClass().getSimpleName()).append('@')
-                    .append(widget.getSelfPosition().x).append(',').append(widget.getSelfPosition().y);
-            // label sizes follow their text
-            if (!(widget instanceof LabelWidget) && !(widget instanceof DynamicLabelWidget)) {
-                line.append(' ').append(widget.getSize().width).append('x').append(widget.getSize().height);
-            }
-            if (widget instanceof AEConfigWidget<?> config) {
-                line.append(" [").append(config.getContainedWidgets(true).size()).append(']');
-            }
-            layout.add(line.toString());
-        }
-        return layout;
+    private static PanelSyncManager manager() {
+        return new PanelSyncManager(new ModularSyncManager(false), true);
     }
 
-    private static List<String> playerInventory(int y) {
-        List<String> slots = new ArrayList<>();
-        for (int row = 0; row < 3; row++) {
-            for (int col = 0; col < 9; col++) {
-                slots.add("SlotWidget@" + (7 + col * 18) + "," + (y + row * 18) + " 18x18");
-            }
-        }
-        for (int col = 0; col < 9; col++) {
-            slots.add("SlotWidget@" + (7 + col * 18) + "," + (y + 58) + " 18x18");
-        }
-        return slots;
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static <W extends IWidget> List<W> widgets(ModularPanel panel, Class<W> type) {
+        return (List<W>) (List<?>) TreeUtil.<IWidget, IWidget>flatListByType(panel, (Class) type);
     }
 
-    private static List<String> stockingWidgets() {
-        return Arrays.asList("ImageCycleButtonWidget@80,26 16x16", "LabelWidget@7,106", "LabelWidget@7,126",
-                "ImageWidget@96,102 73x16", "ImageWidget@40,122 36x16", "TextFieldWidget2@99,106 67x10",
-                "TextFieldWidget2@43,126 30x10", "CycleButtonWidget@82,122 87x16");
+    private static void edit(MEConfigSyncHandler<?, ?> config, int action, int index,
+                             Consumer<PacketBuffer> payload) throws Exception {
+        PacketBuffer packet = new PacketBuffer(Unpooled.buffer());
+        try {
+            packet.writeVarInt(index);
+            payload.accept(packet);
+            config.readOnServer(action, packet);
+        } finally {
+            packet.release();
+        }
+    }
+
+    private static <T extends IAEStack<T>> void sendBuffer(MEBufferSyncHandler<T> server,
+                                                           MEBufferSyncHandler<T> client) {
+        assertTrue(server.collectChanges(true));
+        sendEntries(server, client);
+    }
+
+    private static <T extends IAEStack<T>> void sendEntries(MEBufferSyncHandler<T> server,
+                                                            MEBufferSyncHandler<T> client) {
+        PacketBuffer packet = new PacketBuffer(Unpooled.buffer());
+        try {
+            server.writeEntries(packet);
+            client.readOnClient(MEBufferSyncHandler.UPDATE_ENTRIES, packet);
+            assertEquals(0, packet.readableBytes());
+        } finally {
+            packet.release();
+        }
     }
 
     private static void assertSlots(NBTTagList slots, String entryKey) {

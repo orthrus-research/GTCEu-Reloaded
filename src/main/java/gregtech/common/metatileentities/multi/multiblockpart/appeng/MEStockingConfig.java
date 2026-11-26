@@ -1,12 +1,17 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.CycleButtonWidget;
-import gregtech.api.gui.widgets.ImageWidget;
-import gregtech.api.gui.widgets.TextFieldWidget2;
+import gregtech.api.mui.GTGuiTextures;
 
 import net.minecraft.nbt.NBTTagCompound;
+
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.CycleButtonWidget;
+import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
 
 /** Settings shared by item and fluid stocking parts. Zero ticks preserves the two legacy polling clocks. */
 final class MEStockingConfig {
@@ -53,42 +58,67 @@ final class MEStockingConfig {
         return (int) Math.max(min, Math.min(max, value));
     }
 
-    private static int parseNumber(String text, int min, int max, int fallback) {
-        try {
-            return clamp(Long.parseLong(text), min, max);
-        } catch (NumberFormatException ignored) {
-            return fallback;
-        }
+    /** Sets the minimum stock; whatever a client sends is kept within 1 and the largest int. */
+    boolean setMinimumStock(long value) {
+        int minimum = clamp(value, 1, Integer.MAX_VALUE);
+        if (minimumStock == minimum) return false;
+        this.minimumStock = minimum;
+        return true;
     }
 
-    void addWidgets(ModularUI.Builder builder, boolean fluids, Runnable onChanged) {
-        builder.label(7, 106, fluids ? "gregtech.gui.me_stocking.minimum_fluids" :
-                "gregtech.gui.me_stocking.minimum_items");
-        builder.label(7, 126, "gregtech.gui.me_stocking.refresh");
-        builder.widget(new ImageWidget(96, 102, 73, 16, GuiTextures.DISPLAY)
-                .setTooltip("gregtech.gui.me_stocking.minimum.tooltip"));
-        builder.widget(new ImageWidget(40, 122, 36, 16, GuiTextures.DISPLAY)
-                .setTooltip("gregtech.gui.me_stocking.refresh.tooltip"));
-        builder.widget(new TextFieldWidget2(99, 106, 67, 10, () -> Integer.toString(minimumStock), text -> {
-            int value = parseNumber(text, 1, Integer.MAX_VALUE, minimumStock);
-            if (minimumStock != value) {
-                this.minimumStock = value;
-                onChanged.run();
-            }
-        }).setMaxLength(20).setNumbersOnly(1, Integer.MAX_VALUE));
-        builder.widget(new TextFieldWidget2(43, 126, 30, 10, () -> Integer.toString(refreshTicks), text -> {
-            int value = parseNumber(text, 0, 200, refreshTicks);
-            if (refreshTicks != value) {
-                this.refreshTicks = value;
-                onChanged.run();
-            }
-        }).setMaxLength(20).setNumbersOnly(0, 200));
-        builder.widget(new CycleButtonWidget(82, 122, 87, 16, () -> preferAbundant, value -> {
-            if (preferAbundant != value) {
-                this.preferAbundant = value;
-                onChanged.run();
-            }
-        }, "gregtech.gui.me_stocking.first", "gregtech.gui.me_stocking.abundant")
-                .setTooltipHoverString("gregtech.gui.me_stocking.selection.tooltip"));
+    /** Sets the refresh interval; whatever a client sends is kept within 0 and 200 ticks. */
+    boolean setRefreshTicks(long value) {
+        int ticks = clamp(value, 0, 200);
+        if (refreshTicks == ticks) return false;
+        this.refreshTicks = ticks;
+        return true;
+    }
+
+    boolean setPreferAbundant(boolean value) {
+        if (preferAbundant == value) return false;
+        this.preferAbundant = value;
+        return true;
+    }
+
+    void addWidgets(ModularPanel panel, PanelSyncManager syncManager, boolean fluids, Runnable onChanged) {
+        IntSyncValue minimum = new IntSyncValue(() -> minimumStock, value -> {
+            if (setMinimumStock(value)) onChanged.run();
+        });
+        IntSyncValue refresh = new IntSyncValue(() -> refreshTicks, value -> {
+            if (setRefreshTicks(value)) onChanged.run();
+        });
+        BooleanSyncValue abundant = new BooleanSyncValue(() -> preferAbundant, value -> {
+            if (setPreferAbundant(value)) onChanged.run();
+        });
+        syncManager.syncValue("me_stocking_minimum", minimum);
+        syncManager.syncValue("me_stocking_refresh", refresh);
+        syncManager.syncValue("me_stocking_abundant", abundant);
+
+        panel.child(IKey.lang(fluids ? "gregtech.gui.me_stocking.minimum_fluids" :
+                "gregtech.gui.me_stocking.minimum_items").asWidget().pos(7, 106))
+                .child(IKey.lang("gregtech.gui.me_stocking.refresh").asWidget().pos(7, 126))
+                .child(new TextFieldWidget()
+                        .pos(96, 102).size(73, 16)
+                        .background(GTGuiTextures.DISPLAY)
+                        .setTextColor(Color.WHITE.main)
+                        .setMaxLength(20)
+                        .setNumbers(1, Integer.MAX_VALUE)
+                        .value(minimum)
+                        .addTooltipLine(IKey.lang("gregtech.gui.me_stocking.minimum.tooltip")))
+                .child(new TextFieldWidget()
+                        .pos(40, 122).size(36, 16)
+                        .background(GTGuiTextures.DISPLAY)
+                        .setTextColor(Color.WHITE.main)
+                        .setMaxLength(20)
+                        .setNumbers(0, 200)
+                        .value(refresh)
+                        .addTooltipLine(IKey.lang("gregtech.gui.me_stocking.refresh.tooltip")))
+                .child(new CycleButtonWidget()
+                        .stateCount(2)
+                        .value(abundant)
+                        .stateOverlay(0, IKey.lang("gregtech.gui.me_stocking.first"))
+                        .stateOverlay(1, IKey.lang("gregtech.gui.me_stocking.abundant"))
+                        .addTooltipLine(IKey.lang("gregtech.gui.me_stocking.selection.tooltip"))
+                        .pos(82, 122).size(87, 16));
     }
 }

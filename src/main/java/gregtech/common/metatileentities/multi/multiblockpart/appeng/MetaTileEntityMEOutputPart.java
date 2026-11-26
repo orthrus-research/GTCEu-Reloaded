@@ -4,16 +4,12 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.INotifiableHandler;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
 import gregtech.api.metatileentity.multiblock.MultiblockWithDisplayBase;
+import gregtech.api.mui.GTGuis;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 
-import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.PacketBuffer;
@@ -30,6 +26,13 @@ import appeng.api.storage.data.IItemList;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +45,7 @@ public abstract class MetaTileEntityMEOutputPart<T extends IAEStack<T>,
         B extends IItemList<T> & INBTSerializable<NBTTagList>> extends MetaTileEntityAEHostablePart<T> {
 
     public final static String WORKING_TAG = "WorkingEnabled";
+    private final MEStackType<T, ?> stackType;
     private final String bufferTag;
     private boolean workingEnabled = true;
     private B internalBuffer;
@@ -51,12 +55,11 @@ public abstract class MetaTileEntityMEOutputPart<T extends IAEStack<T>,
      */
     MetaTileEntityMEOutputPart(ResourceLocation metaTileEntityId, MEStackType<T, ?> stackType, String bufferTag) {
         super(metaTileEntityId, GTValues.EV, true, stackType.getStorageChannel());
+        this.stackType = stackType;
         this.bufferTag = bufferTag;
     }
 
     protected abstract B createBuffer();
-
-    protected abstract Widget createBufferWidget(int x, int y, int rows, B buffer);
 
     /** Tells the multiblock that it may void this part's kind of output into the buffer. */
     protected abstract void enableInfiniteSink(MultiblockWithDisplayBase controller);
@@ -126,20 +129,23 @@ public abstract class MetaTileEntityMEOutputPart<T extends IAEStack<T>,
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        ModularUI.Builder builder = ModularUI
-                .builder(GuiTextures.BACKGROUND, 176, 18 + 18 * 4 + 94)
-                .label(10, 5, getMetaFullName());
-        // ME Network status
-        builder.dynamicLabel(10, 15, () -> this.isOnline ?
-                I18n.format("gregtech.gui.me_network.online") :
-                I18n.format("gregtech.gui.me_network.offline"),
-                0x404040);
-        builder.label(10, 25, "gregtech.gui.waiting_list", 0xFFFFFFFF);
-        builder.widget(createBufferWidget(10, 35, 3, this.internalBuffer));
+    public boolean usesMui2() {
+        return true;
+    }
 
-        builder.bindPlayerInventory(entityPlayer.inventory, GuiTextures.SLOT, 7, 18 + 18 * 4 + 12);
-        return builder.build(this.getHolder(), entityPlayer);
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        MEBufferSyncHandler<T> waiting = new MEBufferSyncHandler<>(stackType, this.internalBuffer);
+        BooleanSyncValue online = new BooleanSyncValue(() -> this.isOnline);
+        guiSyncManager.syncValue("me_buffer", waiting);
+        guiSyncManager.syncValue("me_online", online);
+        return GTGuis.createPanel(this, 176, 18 + 18 * 4 + 94)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(10, 5))
+                .child(IKey.dynamicKey(() -> IKey.lang(online.getBoolValue() ? "gregtech.gui.me_network.online" :
+                        "gregtech.gui.me_network.offline")).asWidget().pos(10, 15))
+                .child(IKey.lang("gregtech.gui.waiting_list").color(Color.WHITE.main).asWidget().pos(10, 25))
+                .child(new MEBufferListWidget<>(stackType, waiting::getEntries, 3).pos(10, 35))
+                .bindPlayerInventory();
     }
 
     @Override

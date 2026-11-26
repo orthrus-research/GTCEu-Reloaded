@@ -1,16 +1,6 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
 import gregtech.Bootstrap;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.INativeWidget;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.widgets.CycleButtonWidget;
-import gregtech.api.gui.widgets.WidgetUIAccess;
-import gregtech.api.metatileentity.MetaTileEntityHolder;
-import gregtech.common.gui.widget.appeng.AEConfigWidget;
-import gregtech.common.gui.widget.appeng.AEFluidConfigWidget;
-import gregtech.common.gui.widget.appeng.AEItemConfigWidget;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.stack.WrappedFluidStack;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.stack.WrappedItemStack;
 
@@ -23,8 +13,13 @@ import net.minecraftforge.fluids.FluidStack;
 
 import appeng.api.storage.data.IAEFluidStack;
 import appeng.api.storage.data.IAEItemStack;
+import appeng.api.storage.data.IAEStack;
 import appeng.fluids.util.AEFluidStack;
 import appeng.util.item.AEItemStack;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.ModularSyncManager;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -35,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -137,59 +131,56 @@ class MEAbundantStockingTest {
     }
 
     @Test
-    void abundantNativeItemStacksUseTheActualConfigWidgetPacketRoundTrip() {
+    void abundantNativeItemStacksReachTheScreenWithTheirFullAmounts() {
         StockingTestBus bus = bus();
         for (int id = 0; id < 16; id++) bus.storage.contents.add(item(id, 64 + id));
         bus.advance(1);
         assertInstanceOf(AEItemStack.class, bus.storage.contents.get(0));
-        AEItemConfigWidget server = new AEItemConfigWidget(0, 0, bus.getAEItemHandler());
-        AEItemConfigWidget client = new AEItemConfigWidget(0, 0, bus.getAEItemHandler());
-        syncWidgets(server, client);
+        MEConfigSyncHandler<IAEItemStack, ItemStack> server = bus.createConfigSync();
+        MEConfigSyncHandler<IAEItemStack, ItemStack> client = bus.createConfigSync();
+        sync(server, client, true);
+        assertTrue(client.isAutoPull());
         for (int index = 0; index < 16; index++) {
             var expected = bus.slots()[index];
-            var actual = client.getDisplay(index);
             assertInstanceOf(WrappedItemStack.class, expected.getConfig());
             assertInstanceOf(WrappedItemStack.class, expected.getStock());
-            assertEquals(expected.getConfig().createItemStack().serializeNBT(),
-                    actual.getConfig().createItemStack().serializeNBT());
-            assertEquals(expected.getStock().createItemStack().serializeNBT(),
-                    actual.getStock().createItemStack().serializeNBT());
-            assertEquals(1, actual.getConfig().getStackSize());
-            assertEquals(79 - index, actual.getStock().getStackSize());
+            assertSameItem(expected.getConfig().createItemStack(), client.getConfig(index).createItemStack());
+            assertSameItem(expected.getStock().createItemStack(), client.getStock(index).createItemStack());
+            assertEquals(1, client.getConfig(index).getStackSize());
+            assertEquals(79 - index, client.getStock(index).getStackSize());
         }
+        assertFalse(server.collectChanges(false), "an unchanged part sends nothing");
         bus.storage.contents.clear();
         bus.advance(1);
-        syncWidgets(server, client);
+        sync(server, client, false);
         for (int index = 0; index < 16; index++) {
-            assertNull(client.getDisplay(index).getConfig());
-            assertNull(client.getDisplay(index).getStock());
+            assertNull(client.getConfig(index));
+            assertNull(client.getStock(index));
         }
         assertEquals(0, bus.storage.modulations);
     }
 
     @Test
-    void abundantNativeFluidStacksUseTheLegacyWidgetCodecWithoutChangingServerTags() {
+    void abundantNativeFluidStacksReachTheScreenWithoutChangingServerTags() {
         StockingTestHatch hatch = hatch();
         for (int id = 0; id < 16; id++) hatch.storage.contents.add(fluid(id, 1000 + id));
         hatch.advance(1);
         assertInstanceOf(AEFluidStack.class, hatch.storage.contents.get(0));
-        AEFluidConfigWidget server = new AEFluidConfigWidget(0, 0, hatch.getAEFluidHandler());
-        AEFluidConfigWidget client = new AEFluidConfigWidget(0, 0, hatch.getAEFluidHandler());
-        syncWidgets(server, client);
+        MEConfigSyncHandler<IAEFluidStack, FluidStack> server = hatch.createConfigSync();
+        MEConfigSyncHandler<IAEFluidStack, FluidStack> client = hatch.createConfigSync();
+        sync(server, client, true);
         for (int index = 0; index < 16; index++) {
             var expected = hatch.slots()[index];
-            var actual = client.getDisplay(index);
             assertInstanceOf(WrappedFluidStack.class, expected.getConfig());
             assertInstanceOf(WrappedFluidStack.class, expected.getStock());
             assertEquals(tag(15 - index), expected.getConfig().getFluidStack().tag);
             assertEquals(tag(15 - index), expected.getStock().getFluidStack().tag);
-            assertSame(expected.getConfig().getFluid(), actual.getConfig().getFluid());
-            assertSame(expected.getStock().getFluid(), actual.getStock().getFluid());
-            assertEquals(1, actual.getConfig().getStackSize());
-            assertEquals(1015 - index, actual.getStock().getStackSize());
-            // The existing wrapper protocol sends only fluid name and amount. This repair does not change it.
-            assertNull(actual.getConfig().getFluidStack().tag);
-            assertNull(actual.getStock().getFluidStack().tag);
+            assertSame(expected.getConfig().getFluid(), client.getConfig(index).getFluid());
+            assertSame(expected.getStock().getFluid(), client.getStock(index).getFluid());
+            assertEquals(1, client.getConfig(index).getStackSize());
+            assertEquals(1015 - index, client.getStock(index).getStackSize());
+            // the screen shows a fluid's tag as well
+            assertEquals(tag(15 - index), client.getConfig(index).getFluidStack().tag);
         }
         for (int id = 0; id < 16; id++) {
             assertEquals(tag(id), hatch.storage.contents.get(id).getFluidStack().tag);
@@ -197,10 +188,10 @@ class MEAbundantStockingTest {
         }
         hatch.storage.contents.clear();
         hatch.advance(1);
-        syncWidgets(server, client);
+        sync(server, client, false);
         for (int index = 0; index < 16; index++) {
-            assertNull(client.getDisplay(index).getConfig());
-            assertNull(client.getDisplay(index).getStock());
+            assertNull(client.getConfig(index));
+            assertNull(client.getStock(index));
         }
         assertEquals(0, hatch.storage.modulations);
     }
@@ -318,20 +309,12 @@ class MEAbundantStockingTest {
     }
 
     @Test
-    void guiPolicyAndWronglyTypedNbtRespectBooleanSettings() {
+    void screenPolicyAndWronglyTypedNbtRespectBooleanSettings() throws Exception {
         MEStockingConfig config = new MEStockingConfig();
         AtomicInteger changes = new AtomicInteger();
-        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 228);
-        config.addWidgets(builder, false, changes::incrementAndGet);
-        CycleButtonWidget policy = builder.build(null, null).guiWidgets.values().stream()
-                .filter(CycleButtonWidget.class::isInstance).map(CycleButtonWidget.class::cast).findFirst().get();
-        PacketBuffer packet = new PacketBuffer(Unpooled.buffer());
-        try {
-            packet.writeVarInt(1);
-            policy.handleClientAction(1, packet);
-        } finally {
-            packet.release();
-        }
+        PanelSyncManager manager = new PanelSyncManager(new ModularSyncManager(false), true);
+        config.addWidgets(new ModularPanel("stocking_policy"), manager, false, changes::incrementAndGet);
+        MEStockingConfigTest.send(manager.findSyncHandler("me_stocking_abundant"), new BooleanSyncValue(() -> true));
         assertTrue(config.isPreferAbundant());
         assertEquals(1, changes.get());
         NBTTagCompound wrongType = new NBTTagCompound();
@@ -349,48 +332,23 @@ class MEAbundantStockingTest {
         return bus;
     }
 
-    private static void syncWidgets(AEConfigWidget<?> server, AEConfigWidget<?> client) {
-        server.setGui(ModularUI.builder(GuiTextures.BACKGROUND, 176, 228).build(new MetaTileEntityHolder(), null));
-        AtomicInteger packets = new AtomicInteger();
-        server.setUiAccess(new WidgetUIAccess() {
+    /** Carries one update from a server's config view to a client's, as the screen's packets would. */
+    static <T extends IAEStack<T>, N> void sync(MEConfigSyncHandler<T, N> server, MEConfigSyncHandler<T, N> client,
+                                                boolean init) {
+        assertTrue(server.collectChanges(init));
+        PacketBuffer packet = new PacketBuffer(Unpooled.buffer());
+        try {
+            server.writeChanges(packet);
+            client.readOnClient(MEConfigSyncHandler.UPDATE_SLOTS, packet);
+            assertEquals(0, packet.readableBytes(), "the reader must take the whole config and stock update");
+        } finally {
+            packet.release();
+        }
+    }
 
-            @Override
-            public void notifySizeChange() {}
-
-            @Override
-            public void notifyWidgetChange() {}
-
-            @Override
-            public boolean attemptMergeStack(ItemStack stack, boolean fromContainer, boolean simulate) {
-                return false;
-            }
-
-            @Override
-            public void sendSlotUpdate(INativeWidget slot) {}
-
-            @Override
-            public void sendHeldItemUpdate() {}
-
-            @Override
-            public void writeClientAction(Widget widget, int id, Consumer<PacketBuffer> writer) {
-                fail("Stock display synchronization must not send client actions");
-            }
-
-            @Override
-            public void writeUpdateInfo(Widget widget, int id, Consumer<PacketBuffer> writer) {
-                PacketBuffer packet = new PacketBuffer(Unpooled.buffer());
-                try {
-                    writer.accept(packet);
-                    client.readUpdateInfo(id, packet);
-                    assertEquals(0, packet.readableBytes(), "Widget reader must consume the full config/stock payload");
-                    packets.incrementAndGet();
-                } finally {
-                    packet.release();
-                }
-            }
-        });
-        server.detectAndSendChanges();
-        assertEquals(1, packets.get());
+    private static void assertSameItem(ItemStack expected, ItemStack actual) {
+        assertTrue(ItemStack.areItemsEqual(expected, actual), () -> expected + " shown as " + actual);
+        assertTrue(ItemStack.areItemStackTagsEqual(expected, actual), () -> expected + " shown as " + actual);
     }
 
     private static StockingTestHatch hatch() {

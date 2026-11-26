@@ -6,21 +6,17 @@ import gregtech.api.capability.INotifiableHandler;
 import gregtech.api.capability.impl.GhostCircuitItemStackHandler;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.widgets.GhostCircuitSlotWidget;
-import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.AbilityInstances;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.widget.GhostCircuitSlotWidget;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
-import gregtech.common.gui.widget.appeng.AEItemConfigWidget;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAEItemList;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAEItemSlot;
 
@@ -28,12 +24,16 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
 import appeng.api.storage.data.IAEItemStack;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -143,35 +143,23 @@ public class MetaTileEntityMEInputBus extends MetaTileEntityMEInputPart<IAEItemS
     }
 
     @Override
-    protected Widget createConfigWidget(int x, int y) {
-        return new AEItemConfigWidget(x, y, this.getAEItemHandler());
+    MEConfigSyncHandler<IAEItemStack, ItemStack> createConfigSync() {
+        ExportOnlyAEItemList handler = getAEItemHandler();
+        return new MEConfigSyncHandler<>(MEStackType.ITEMS, handler.getInventory(), handler.isStocking(),
+                handler::isAutoPull, stack -> handler.hasStackInConfig(stack, true), this::markDirty);
     }
 
     @Override
-    protected void addSideWidgets(ModularUI.Builder builder) {
-        // Ghost circuit slot
-        SlotWidget circuitSlot = new GhostCircuitSlotWidget(circuitInventory, 0, 7 + 18 * 4, 25 + 18 * 3)
-                .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.INT_CIRCUIT_OVERLAY);
-        builder.widget(circuitSlot.setConsumer(w -> {
-            String configString;
-            if (circuitInventory == null ||
-                    circuitInventory.getCircuitValue() == GhostCircuitItemStackHandler.NO_CONFIG) {
-                configString = new TextComponentTranslation("gregtech.gui.configurator_slot.no_value")
-                        .getFormattedText();
-            } else {
-                configString = String.valueOf(circuitInventory.getCircuitValue());
-            }
-
-            w.setTooltipText("gregtech.gui.configurator_slot.tooltip", configString);
-        }));
-
-        // Extra slot
-        builder.widget(new SlotWidget(extraSlotInventory, 0, 7 + 18 * 4, 25 + 18 * 2)
-                .setBackgroundTexture(GuiTextures.SLOT)
-                .setTooltipText("gregtech.gui.me_bus.extra_slot"));
-
-        // Arrow image
-        builder.image(7 + 18 * 4, 25 + 18, 18, 18, GuiTextures.ARROW_DOUBLE);
+    protected void addSideWidgets(ModularPanel panel, PanelSyncManager syncManager) {
+        panel.child(GTGuiTextures.ARROW_DOUBLE.asWidget().pos(7 + 18 * 4, 25 + 18).size(18))
+                .child(new ItemSlot()
+                        .pos(7 + 18 * 4, 25 + 18 * 2)
+                        .slot(new ModularSlot(extraSlotInventory, 0).singletonSlotGroup())
+                        .background(GTGuiTextures.SLOT)
+                        .addTooltipLine(IKey.lang("gregtech.gui.me_bus.extra_slot")))
+                .child(new GhostCircuitSlotWidget()
+                        .slot(circuitInventory, 0)
+                        .pos(7 + 18 * 4, 25 + 18 * 3));
     }
 
     @Override

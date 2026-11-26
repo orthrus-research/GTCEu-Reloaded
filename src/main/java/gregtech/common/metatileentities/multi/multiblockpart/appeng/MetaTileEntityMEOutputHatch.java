@@ -1,12 +1,10 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
-import gregtech.api.gui.Widget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.*;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
-import gregtech.common.gui.widget.appeng.AEFluidGridWidget;
 import gregtech.common.inventory.appeng.SerializableFluidList;
 
 import net.minecraft.client.resources.I18n;
@@ -42,11 +40,6 @@ public class MetaTileEntityMEOutputHatch extends MetaTileEntityMEOutputPart<IAEF
     @Override
     public MetaTileEntity createMetaTileEntity(IGregTechTileEntity iGregTechTileEntity) {
         return new MetaTileEntityMEOutputHatch(this.metaTileEntityId);
-    }
-
-    @Override
-    protected Widget createBufferWidget(int x, int y, int rows, SerializableFluidList buffer) {
-        return new AEFluidGridWidget(x, y, rows, buffer);
     }
 
     @Override

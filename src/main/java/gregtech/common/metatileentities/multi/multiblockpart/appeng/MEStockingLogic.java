@@ -1,8 +1,6 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ImageCycleButtonWidget;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAESlot;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,6 +12,11 @@ import appeng.api.config.Actionable;
 import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEStack;
 import appeng.api.storage.data.IItemList;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ToggleButton;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Comparator;
@@ -260,7 +263,7 @@ final class MEStockingLogic<T extends IAEStack<T>, N> {
         for (var candidate : selected.sorted()) {
             T stack = candidate.getStack();
             ExportOnlyAESlot<T> slot = part.getAESlots()[index++];
-            // The config widget decodes the legacy wrapper packet format, not AE2's native format.
+            // Configs are kept in GT's wrapper form, as configs set by hand are.
             slot.setConfig(stackType.wrap(stackType.toNative(stack.copy().setStackSize(1))));
             // Rank using the full AE quantity; only legacy visible stacks need an integer cap.
             slot.setStack(stack.copy().setStackSize(Math.min(Integer.MAX_VALUE, stack.getStackSize())));
@@ -283,10 +286,20 @@ final class MEStockingLogic<T extends IAEStack<T>, N> {
     }
 
     /** Adds the auto-pull button and the settings below the input part's screen. */
-    void addWidgets(ModularUI.Builder builder, boolean fluids) {
-        builder.widget(new ImageCycleButtonWidget(7 + 18 * 4 + 1, 26, 16, 16, GuiTextures.BUTTON_AUTO_PULL,
-                () -> autoPull, this::setAutoPull).setTooltipHoverString("gregtech.gui.me_bus.auto_pull_button"));
-        settings.addWidgets(builder, fluids, this::onSettingsChanged);
+    void addWidgets(ModularPanel panel, PanelSyncManager syncManager, boolean fluids) {
+        BooleanSyncValue autoPullValue = new BooleanSyncValue(() -> autoPull, value -> {
+            // the client's screen only shows the state; the server applies it
+            if (!part.getWorld().isRemote && value != autoPull) setAutoPull(value);
+        });
+        syncManager.syncValue("me_auto_pull", autoPullValue);
+        panel.child(new ToggleButton()
+                .pos(7 + 18 * 4 + 1, 26).size(16)
+                .value(autoPullValue)
+                .background(false, GTGuiTextures.BUTTON_AUTO_PULL[0])
+                .background(true, GTGuiTextures.BUTTON_AUTO_PULL[1])
+                .disableHoverBackground()
+                .addTooltipLine(IKey.lang("gregtech.gui.me_bus.auto_pull_button")));
+        settings.addWidgets(panel, syncManager, fluids, this::onSettingsChanged);
     }
 
     /** A screwdriver toggles auto-pull. */

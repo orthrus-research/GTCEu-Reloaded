@@ -1,7 +1,6 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
@@ -22,6 +21,8 @@ import net.minecraft.world.World;
 
 import appeng.api.storage.data.IAEItemStack;
 import codechicken.lib.raytracer.CuboidRayTraceResult;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -138,10 +139,10 @@ public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
     }
 
     @Override
-    protected ModularUI.Builder createUITemplate(EntityPlayer player) {
-        ModularUI.Builder builder = super.createUITemplate(player);
-        stocking.addWidgets(builder, false);
-        return builder;
+    void addExtraWidgets(ModularPanel panel, PanelSyncManager syncManager,
+                         MEConfigSyncHandler<IAEItemStack, ?> config) {
+        // a stocking part has no amounts to set; its settings take the place below the slots
+        stocking.addWidgets(panel, syncManager, false);
     }
 
     @Override

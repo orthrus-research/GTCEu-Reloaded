@@ -1,20 +1,21 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
 import gregtech.Bootstrap;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.TextFieldWidget2;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.ModularSyncManager;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.ValueSyncHandler;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,34 +59,36 @@ class MEStockingConfigTest {
     }
 
     @Test
-    void untrustedWidgetPacketsCannotBypassServerBoundsOrCauseOverflow() {
+    void untrustedScreenValuesCannotBypassServerBoundsOrCauseOverflow() throws Exception {
         MEStockingConfig config = new MEStockingConfig();
         AtomicInteger changes = new AtomicInteger();
-        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 228);
-        config.addWidgets(builder, false, changes::incrementAndGet);
-        List<TextFieldWidget2> fields = builder.build(null, null).guiWidgets.values().stream()
-                .filter(TextFieldWidget2.class::isInstance).map(TextFieldWidget2.class::cast)
-                .collect(Collectors.toList());
-        send(fields.get(0), "100");
-        send(fields.get(1), "200");
+        PanelSyncManager manager = new PanelSyncManager(new ModularSyncManager(false), true);
+        config.addWidgets(new ModularPanel("stocking_settings"), manager, false, changes::incrementAndGet);
+        ValueSyncHandler<?> minimum = (ValueSyncHandler<?>) manager.findSyncHandler("me_stocking_minimum");
+        ValueSyncHandler<?> refresh = (ValueSyncHandler<?>) manager.findSyncHandler("me_stocking_refresh");
+        send(minimum, new IntSyncValue(() -> 100));
+        send(refresh, new IntSyncValue(() -> 200));
         assertSettings(config, 100, 200);
         assertEquals(2, changes.get());
-        for (String invalid : new String[] { "", "NaN", "1.5", "99999999999999999999" }) {
-            send(fields.get(0), invalid);
-            send(fields.get(1), invalid);
-        }
-        assertSettings(config, 100, 200);
+        // an unchanged value is no change
+        send(minimum, new IntSyncValue(() -> 100));
+        send(refresh, new IntSyncValue(() -> 200));
         assertEquals(2, changes.get());
-        send(fields.get(0), "9223372036854775807");
-        send(fields.get(1), "9999");
+        send(minimum, new IntSyncValue(() -> Integer.MAX_VALUE));
+        send(refresh, new IntSyncValue(() -> 9999));
         assertSettings(config, Integer.MAX_VALUE, 200);
-        send(fields.get(0), "-1");
-        send(fields.get(1), "-1");
+        send(minimum, new IntSyncValue(() -> -1));
+        send(refresh, new IntSyncValue(() -> Integer.MIN_VALUE));
         assertSettings(config, 1, 0);
         NBTTagCompound saved = new NBTTagCompound();
         config.writeToNBT(saved);
         assertEquals(1, saved.getInteger("MinimumStock"));
         assertEquals(0, saved.getInteger("StockingRefreshTicks"));
+
+        int before = changes.get();
+        send(manager.findSyncHandler("me_stocking_abundant", BooleanSyncValue.class), new BooleanSyncValue(() -> true));
+        assertTrue(config.isPreferAbundant());
+        assertEquals(before + 1, changes.get());
     }
 
     static NBTTagCompound settings(int minimum, int interval) {
@@ -95,11 +98,12 @@ class MEStockingConfigTest {
         return tag;
     }
 
-    private static void send(TextFieldWidget2 widget, String value) {
+    static void send(Object receiver, ValueSyncHandler<?> sender) throws Exception {
+        sender.updateCacheFromSource(true);
         PacketBuffer packet = new PacketBuffer(Unpooled.buffer());
         try {
-            packet.writeString(value);
-            widget.handleClientAction(-1, packet);
+            sender.write(packet);
+            ((ValueSyncHandler<?>) receiver).readOnServer(0, packet);
         } finally {
             packet.release();
         }

@@ -3,13 +3,11 @@ package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IDataStickIntractable;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
 import gregtech.client.renderer.texture.cube.SimpleOverlayRenderer;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAESlot;
 
-import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -28,6 +26,15 @@ import appeng.api.storage.data.IAEStack;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.StringValue;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -43,6 +50,8 @@ public abstract class MetaTileEntityMEInputPart<T extends IAEStack<T>, S extends
 
     public final static String WORKING_TAG = "WorkingEnabled";
     protected final static int CONFIG_SIZE = 16;
+    /** How many config slots make a row; the stock they hold shows beside them in rows as long. */
+    private static final int ROW_LENGTH = 4;
     private final MEStackType<T, ?> stackType;
     private final String slotsTag;
     private final String slotTag;
@@ -72,10 +81,11 @@ public abstract class MetaTileEntityMEInputPart<T extends IAEStack<T>, S extends
     /** Removes from a slot what the network took back. */
     protected abstract void takeStock(S slot, int amount);
 
-    protected abstract Widget createConfigWidget(int x, int y);
+    /** The screen's view of the config slots, with the edits this part allows. */
+    abstract MEConfigSyncHandler<T, ?> createConfigSync();
 
     /** Adds the widgets in the column right of the config slots. */
-    protected abstract void addSideWidgets(ModularUI.Builder builder);
+    protected abstract void addSideWidgets(ModularPanel panel, PanelSyncManager syncManager);
 
     /** The front overlay, lit while the part is online. */
     protected abstract SimpleOverlayRenderer getFrontOverlay(boolean online);
@@ -141,31 +151,66 @@ public abstract class MetaTileEntityMEInputPart<T extends IAEStack<T>, S extends
     }
 
     @Override
-    protected final ModularUI createUI(EntityPlayer player) {
-        ModularUI.Builder builder = createUITemplate(player);
-        return builder.build(this.getHolder(), player);
+    public boolean usesMui2() {
+        return true;
     }
 
+    @Override
+    public final ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        MEConfigSyncHandler<T, ?> config = createConfigSync();
+        BooleanSyncValue online = new BooleanSyncValue(() -> this.isOnline);
+        guiSyncManager.syncValue("me_config", config);
+        guiSyncManager.syncValue("me_online", online);
+
+        ModularPanel panel = GTGuis.createPanel(this, 176, 18 + 18 * 4 + 94 + getUIExtraHeight())
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(10, 5))
+                .child(IKey.dynamicKey(() -> IKey.lang(online.getBoolValue() ? "gregtech.gui.me_network.online" :
+                        "gregtech.gui.me_network.offline")).asWidget().pos(10, 15));
+        addConfigSlots(panel, config);
+        addSideWidgets(panel, guiSyncManager);
+        addExtraWidgets(panel, guiSyncManager, config);
+        return panel.bindPlayerInventory();
+    }
+
+    private static <T extends IAEStack<T>, N> void addConfigSlots(ModularPanel panel,
+                                                                  MEConfigSyncHandler<T, N> config) {
+        for (int i = 0; i < config.getSize(); i++) {
+            int index = i;
+            int x = index % ROW_LENGTH * 18;
+            int y = 25 + index / ROW_LENGTH * 18;
+            panel.child(new MEConfigSlotWidget<>(config, index).pos(7 + x, y))
+                    .child(new MEStackDisplayWidget<>(config.getStackType(), () -> config.getStock(index),
+                            GTGuiTextures.SLOT_DARK).pos(7 + 18 * 5 + x, y));
+        }
+    }
+
+    /** The height the screen adds below the config slots, for the widgets {@link #addExtraWidgets} adds. */
     protected int getUIExtraHeight() {
-        return 0;
+        return 18;
     }
 
-    protected ModularUI.Builder createUITemplate(EntityPlayer player) {
-        ModularUI.Builder builder = ModularUI
-                .builder(GuiTextures.BACKGROUND, 176, 18 + 18 * 4 + 94 + getUIExtraHeight())
-                .label(10, 5, getMetaFullName());
-        // ME Network status
-        builder.dynamicLabel(10, 15, () -> this.isOnline ?
-                I18n.format("gregtech.gui.me_network.online") :
-                I18n.format("gregtech.gui.me_network.offline"),
-                0x404040);
-
-        // Config slots
-        builder.widget(createConfigWidget(7, 25));
-        addSideWidgets(builder);
-
-        builder.bindPlayerInventory(player.inventory, GuiTextures.SLOT, 7, 18 + 18 * 4 + 12 + getUIExtraHeight());
-        return builder;
+    /** Adds the widgets below the config slots: the amount of the selected slot. */
+    void addExtraWidgets(ModularPanel panel, PanelSyncManager syncManager, MEConfigSyncHandler<T, ?> config) {
+        panel.child(IKey.lang("gregtech.gui.config_slot.amount").asWidget()
+                .pos(7, 105)
+                .setEnabledIf(widget -> config.getSelected() >= 0))
+                .child(new TextFieldWidget()
+                        .pos(50, 101).size(65, 14)
+                        .background(GTGuiTextures.DISPLAY)
+                        .setTextColor(Color.WHITE.main)
+                        .setMaxLength(10)
+                        .setNumbersLong(amount -> Math.max(1, Math.min(Integer.MAX_VALUE, amount)))
+                        .value(new StringValue.Dynamic(() -> {
+                            int selected = config.getSelected();
+                            T stack = selected < 0 ? null : config.getConfig(selected);
+                            return stack == null ? "0" : Long.toString(stack.getStackSize());
+                        }, text -> {
+                            int selected = config.getSelected();
+                            try {
+                                if (selected >= 0) config.setAmount(selected, Long.parseLong(text.trim()));
+                            } catch (NumberFormatException ignored) {}
+                        }))
+                        .setEnabledIf(widget -> config.getSelected() >= 0));
     }
 
     @Override

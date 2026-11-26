@@ -1,7 +1,6 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
@@ -22,6 +21,8 @@ import net.minecraftforge.fluids.FluidStack;
 
 import appeng.api.storage.data.IAEFluidStack;
 import codechicken.lib.raytracer.CuboidRayTraceResult;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -120,10 +121,10 @@ public class MetaTileEntityMEStockingHatch extends MetaTileEntityMEInputHatch {
     }
 
     @Override
-    protected ModularUI.Builder createUITemplate(EntityPlayer player) {
-        ModularUI.Builder builder = super.createUITemplate(player);
-        stocking.addWidgets(builder, true);
-        return builder;
+    void addExtraWidgets(ModularPanel panel, PanelSyncManager syncManager,
+                         MEConfigSyncHandler<IAEFluidStack, ?> config) {
+        // a stocking part has no amounts to set; its settings take the place below the slots
+        stocking.addWidgets(panel, syncManager, true);
     }
 
     @Override
