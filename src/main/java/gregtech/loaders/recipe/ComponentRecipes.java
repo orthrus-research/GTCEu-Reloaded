@@ -22,8 +22,7 @@ import static gregtech.api.recipes.RecipeMaps.ASSEMBLY_LINE_RECIPES;
 import static gregtech.api.unification.material.Materials.*;
 import static gregtech.api.unification.ore.OrePrefix.*;
 import static gregtech.common.items.MetaItems.*;
-import static gregtech.loaders.recipe.RecipeTiers.circuitTier;
-import static gregtech.loaders.recipe.RecipeTiers.tierName;
+import static gregtech.loaders.recipe.RecipeTiers.*;
 
 /**
  * The electric components: motors, conveyors, pumps, fluid regulators, pistons, robot arms, field generators, sensors
@@ -58,26 +57,9 @@ public class ComponentRecipes {
     private static final Object[] FIELD_CORES = { null, new UnificationEntry(gem, EnderPearl),
             new UnificationEntry(gem, EnderEye), QUANTUM_EYE, new UnificationEntry(gem, NetherStar), QUANTUM_STAR };
 
-    private static final MetaItem<?>.MetaValueItem[] MOTORS = { null, ELECTRIC_MOTOR_LV, ELECTRIC_MOTOR_MV,
-            ELECTRIC_MOTOR_HV, ELECTRIC_MOTOR_EV, ELECTRIC_MOTOR_IV };
-    private static final MetaItem<?>.MetaValueItem[] CONVEYORS = { null, CONVEYOR_MODULE_LV, CONVEYOR_MODULE_MV,
-            CONVEYOR_MODULE_HV, CONVEYOR_MODULE_EV, CONVEYOR_MODULE_IV };
-    private static final MetaItem<?>.MetaValueItem[] PUMPS = { null, ELECTRIC_PUMP_LV, ELECTRIC_PUMP_MV,
-            ELECTRIC_PUMP_HV, ELECTRIC_PUMP_EV, ELECTRIC_PUMP_IV, ELECTRIC_PUMP_LuV, ELECTRIC_PUMP_ZPM,
-            ELECTRIC_PUMP_UV };
     private static final MetaItem<?>.MetaValueItem[] FLUID_REGULATORS = { null, FLUID_REGULATOR_LV,
             FLUID_REGULATOR_MV, FLUID_REGULATOR_HV, FLUID_REGULATOR_EV, FLUID_REGULATOR_IV, FLUID_REGULATOR_LUV,
             FLUID_REGULATOR_ZPM, FLUID_REGULATOR_UV };
-    private static final MetaItem<?>.MetaValueItem[] PISTONS = { null, ELECTRIC_PISTON_LV, ELECTRIC_PISTON_MV,
-            ELECTRIC_PISTON_HV, ELECTRIC_PISTON_EV, ELECTRIC_PISTON_IV };
-    private static final MetaItem<?>.MetaValueItem[] ROBOT_ARMS = { null, ROBOT_ARM_LV, ROBOT_ARM_MV, ROBOT_ARM_HV,
-            ROBOT_ARM_EV, ROBOT_ARM_IV };
-    private static final MetaItem<?>.MetaValueItem[] FIELD_GENERATORS = { null, FIELD_GENERATOR_LV,
-            FIELD_GENERATOR_MV, FIELD_GENERATOR_HV, FIELD_GENERATOR_EV, FIELD_GENERATOR_IV };
-    private static final MetaItem<?>.MetaValueItem[] SENSORS = { null, SENSOR_LV, SENSOR_MV, SENSOR_HV, SENSOR_EV,
-            SENSOR_IV };
-    private static final MetaItem<?>.MetaValueItem[] EMITTERS = { null, EMITTER_LV, EMITTER_MV, EMITTER_HV,
-            EMITTER_EV, EMITTER_IV };
 
     public static void register() {
         motors();
@@ -93,15 +75,17 @@ public class ComponentRecipes {
 
     private static void motors() {
         // the LV motor is made of steel or of iron; only the iron recipe gives the motor its recycling data
-        motor(LV, "electric_motor_lv_steel", false, cableGtSingle, Tin, wireGtSingle, Copper, Steel, SteelMagnetic);
-        motor(LV, "electric_motor_lv_iron", true, cableGtSingle, Tin, wireGtSingle, Copper, Iron, IronMagnetic);
-        motor(MV, "electric_motor_mv", true, cableGtSingle, Copper, wireGtDouble, Cupronickel, Aluminium,
+        motorRecipes(LV, "electric_motor_lv_steel", false, cableGtSingle, Tin, wireGtSingle, Copper, Steel,
                 SteelMagnetic);
-        motor(HV, "electric_motor_hv", true, cableGtDouble, Silver, wireGtDouble, Electrum, StainlessSteel,
+        motorRecipes(LV, "electric_motor_lv_iron", true, cableGtSingle, Tin, wireGtSingle, Copper, Iron,
+                IronMagnetic);
+        motorRecipes(MV, "electric_motor_mv", true, cableGtSingle, Copper, wireGtDouble, Cupronickel, Aluminium,
                 SteelMagnetic);
-        motor(EV, "electric_motor_ev", true, cableGtDouble, Aluminium, wireGtDouble, Kanthal, Titanium,
+        motorRecipes(HV, "electric_motor_hv", true, cableGtDouble, Silver, wireGtDouble, Electrum, StainlessSteel,
+                SteelMagnetic);
+        motorRecipes(EV, "electric_motor_ev", true, cableGtDouble, Aluminium, wireGtDouble, Kanthal, Titanium,
                 NeodymiumMagnetic);
-        motor(IV, "electric_motor_iv", true, cableGtDouble, Tungsten, wireGtDouble, Graphene, TungstenSteel,
+        motorRecipes(IV, "electric_motor_iv", true, cableGtDouble, Tungsten, wireGtDouble, Graphene, TungstenSteel,
                 NeodymiumMagnetic);
 
         ASSEMBLY_LINE_RECIPES.recipeBuilder()
@@ -154,9 +138,9 @@ public class ComponentRecipes {
     }
 
     /** A motor by hand and in the assembler, from a cable, a wire, two rods and a magnetic rod. */
-    private static void motor(int tier, String name, boolean recycling, OrePrefix cablePrefix, Material cable,
-                              OrePrefix wirePrefix, Material wire, Material rod, Material magnet) {
-        ModHandler.addShapedRecipe(recycling, name, MOTORS[tier].getStackForm(), "CWR", "WMW", "RWC",
+    private static void motorRecipes(int tier, String name, boolean recycling, OrePrefix cablePrefix, Material cable,
+                                     OrePrefix wirePrefix, Material wire, Material rod, Material magnet) {
+        ModHandler.addShapedRecipe(recycling, name, motor(tier).getStackForm(), "CWR", "WMW", "RWC",
                 'C', new UnificationEntry(cablePrefix, cable), 'W', new UnificationEntry(wirePrefix, wire),
                 'R', new UnificationEntry(stick, rod), 'M', new UnificationEntry(stick, magnet));
 
@@ -165,7 +149,7 @@ public class ComponentRecipes {
                 .input(stick, rod, 2)
                 .input(stick, magnet)
                 .input(wirePrefix, wire, 4)
-                .outputs(MOTORS[tier].getStackForm())
+                .outputs(motor(tier).getStackForm())
                 .duration(100).EUt(VA[LV]).buildAndRegister();
     }
 
@@ -181,11 +165,11 @@ public class ComponentRecipes {
             int maxTier = material.equals(Rubber) ? EV : IV;
             for (int tier = LV; tier <= maxTier; tier++) {
                 boolean recycling = material.equals(tier == IV ? SiliconeRubber : Rubber);
-                conveyor(tier, materialEntry.getKey(), material, recycling);
+                conveyorRecipes(tier, materialEntry.getKey(), material, recycling);
             }
             for (int tier = LV; tier <= maxTier; tier++) {
                 boolean recycling = material.equals(tier == IV ? SiliconeRubber : Rubber);
-                pump(tier, materialEntry.getKey(), material, recycling);
+                pumpRecipes(tier, materialEntry.getKey(), material, recycling);
             }
         }
 
@@ -289,27 +273,27 @@ public class ComponentRecipes {
     }
 
     /** A conveyor by hand from rubber plates, and in the assembler from liquid rubber. */
-    private static void conveyor(int tier, String rubberName, Material rubber, boolean recycling) {
+    private static void conveyorRecipes(int tier, String rubberName, Material rubber, boolean recycling) {
         ModHandler.addShapedRecipe(recycling, "conveyor_module_" + tierName(tier) + "_" + rubberName,
-                CONVEYORS[tier].getStackForm(), "RRR", "MCM", "RRR", 'R', new UnificationEntry(plate, rubber),
-                'C', new UnificationEntry(cableGtSingle, CABLES[tier]), 'M', MOTORS[tier].getStackForm());
+                conveyor(tier).getStackForm(), "RRR", "MCM", "RRR", 'R', new UnificationEntry(plate, rubber),
+                'C', new UnificationEntry(cableGtSingle, CABLES[tier]), 'M', motor(tier).getStackForm());
 
         ASSEMBLER_RECIPES.recipeBuilder()
                 .input(cableGtSingle, CABLES[tier])
-                .inputs(MOTORS[tier].getStackForm(2))
+                .inputs(motor(tier).getStackForm(2))
                 .fluidInputs(rubber.getFluid(L * 6))
                 .circuitMeta(1)
-                .outputs(CONVEYORS[tier].getStackForm())
+                .outputs(conveyor(tier).getStackForm())
                 .duration(100).EUt(VA[LV]).buildAndRegister();
     }
 
     /** A pump by hand and in the assembler, sealed with rubber rings. */
-    private static void pump(int tier, String rubberName, Material rubber, boolean recycling) {
+    private static void pumpRecipes(int tier, String rubberName, Material rubber, boolean recycling) {
         ModHandler.addShapedRecipe(recycling, "electric_pump_" + tierName(tier) + "_" + rubberName,
-                PUMPS[tier].getStackForm(), "SXR", "dPw", "RMC", 'S', new UnificationEntry(screw, PUMP_ROTORS[tier]),
+                pump(tier).getStackForm(), "SXR", "dPw", "RMC", 'S', new UnificationEntry(screw, PUMP_ROTORS[tier]),
                 'X', new UnificationEntry(rotor, PUMP_ROTORS[tier]),
                 'P', new UnificationEntry(pipeNormalFluid, PUMP_PIPES[tier]), 'R', new UnificationEntry(ring, rubber),
-                'C', new UnificationEntry(cableGtSingle, CABLES[tier]), 'M', MOTORS[tier].getStackForm());
+                'C', new UnificationEntry(cableGtSingle, CABLES[tier]), 'M', motor(tier).getStackForm());
 
         ASSEMBLER_RECIPES.recipeBuilder()
                 .input(cableGtSingle, CABLES[tier])
@@ -317,8 +301,8 @@ public class ComponentRecipes {
                 .input(screw, PUMP_ROTORS[tier])
                 .input(rotor, PUMP_ROTORS[tier])
                 .input(ring, rubber, 2)
-                .inputs(MOTORS[tier].getStackForm())
-                .outputs(PUMPS[tier].getStackForm())
+                .inputs(motor(tier).getStackForm())
+                .outputs(pump(tier).getStackForm())
                 .duration(100).EUt(VA[LV]).buildAndRegister();
     }
 
@@ -326,7 +310,7 @@ public class ComponentRecipes {
         for (int tier = LV; tier <= UV; tier++) {
             // only the LV to IV regulators carry recycling data
             var builder = ASSEMBLER_RECIPES.recipeBuilder()
-                    .inputs(PUMPS[tier].getStackForm())
+                    .inputs(pump(tier).getStackForm())
                     .input(circuit, circuitTier(tier), 2)
                     .circuitMeta(1)
                     .outputs(FLUID_REGULATORS[tier].getStackForm())
@@ -378,18 +362,18 @@ public class ComponentRecipes {
     private static void pistons() {
         for (int tier = LV; tier <= IV; tier++) {
             Material metal = METALS[tier];
-            ModHandler.addShapedRecipe(true, "electric_piston_" + tierName(tier), PISTONS[tier].getStackForm(), "PPP",
+            ModHandler.addShapedRecipe(true, "electric_piston_" + tierName(tier), piston(tier).getStackForm(), "PPP",
                     "CRR", "CMG", 'P', new UnificationEntry(plate, metal),
                     'C', new UnificationEntry(cableGtSingle, CABLES[tier]), 'R', new UnificationEntry(stick, metal),
-                    'G', new UnificationEntry(gearSmall, metal), 'M', MOTORS[tier].getStackForm());
+                    'G', new UnificationEntry(gearSmall, metal), 'M', motor(tier).getStackForm());
 
             ASSEMBLER_RECIPES.recipeBuilder()
                     .input(stick, metal, 2)
                     .input(cableGtSingle, CABLES[tier], 2)
                     .input(plate, metal, 3)
                     .input(gearSmall, metal)
-                    .inputs(MOTORS[tier].getStackForm())
-                    .outputs(PISTONS[tier].getStackForm())
+                    .inputs(motor(tier).getStackForm())
+                    .outputs(piston(tier).getStackForm())
                     .duration(100).EUt(VA[LV]).buildAndRegister();
         }
 
@@ -448,18 +432,18 @@ public class ComponentRecipes {
 
     private static void robotArms() {
         for (int tier = LV; tier <= IV; tier++) {
-            ModHandler.addShapedRecipe(true, "robot_arm_" + tierName(tier), ROBOT_ARMS[tier].getStackForm(), "CCC",
+            ModHandler.addShapedRecipe(true, "robot_arm_" + tierName(tier), robotArm(tier).getStackForm(), "CCC",
                     "MRM", "PXR", 'C', new UnificationEntry(cableGtSingle, CABLES[tier]),
-                    'R', new UnificationEntry(stick, METALS[tier]), 'M', MOTORS[tier].getStackForm(),
-                    'P', PISTONS[tier].getStackForm(), 'X', new UnificationEntry(circuit, circuitTier(tier)));
+                    'R', new UnificationEntry(stick, METALS[tier]), 'M', motor(tier).getStackForm(),
+                    'P', piston(tier).getStackForm(), 'X', new UnificationEntry(circuit, circuitTier(tier)));
 
             ASSEMBLER_RECIPES.recipeBuilder()
                     .input(cableGtSingle, CABLES[tier], 3)
                     .input(stick, METALS[tier], 2)
-                    .inputs(MOTORS[tier].getStackForm(2))
-                    .inputs(PISTONS[tier].getStackForm())
+                    .inputs(motor(tier).getStackForm(2))
+                    .inputs(piston(tier).getStackForm())
                     .input(circuit, circuitTier(tier))
-                    .outputs(ROBOT_ARMS[tier].getStackForm())
+                    .outputs(robotArm(tier).getStackForm())
                     .duration(100).EUt(VA[LV]).buildAndRegister();
         }
 
@@ -521,7 +505,7 @@ public class ComponentRecipes {
 
     private static void fieldGenerators() {
         for (int tier = LV; tier <= IV; tier++) {
-            ModHandler.addShapedRecipe(true, "field_generator_" + tierName(tier), FIELD_GENERATORS[tier].getStackForm(),
+            ModHandler.addShapedRecipe(true, "field_generator_" + tierName(tier), fieldGenerator(tier).getStackForm(),
                     "WPW", "XGX", "WPW", 'W', new UnificationEntry(wireGtQuadruple, FIELD_WIRES[tier]),
                     'P', new UnificationEntry(FIELD_PLATES[tier], METALS[tier]), 'G', FIELD_CORES[tier],
                     'X', new UnificationEntry(circuit, circuitTier(tier)));
@@ -531,7 +515,7 @@ public class ComponentRecipes {
                     .input(FIELD_PLATES[tier], METALS[tier], 2)
                     .input(circuit, circuitTier(tier), 2)
                     .input(wireGtQuadruple, FIELD_WIRES[tier], 4)
-                    .outputs(FIELD_GENERATORS[tier].getStackForm())
+                    .outputs(fieldGenerator(tier).getStackForm())
                     .duration(100).EUt(VA[LV]).buildAndRegister();
         }
 
@@ -588,7 +572,7 @@ public class ComponentRecipes {
 
     private static void sensors() {
         for (int tier = LV; tier <= IV; tier++) {
-            ModHandler.addShapedRecipe(true, "sensor_" + tierName(tier), SENSORS[tier].getStackForm(), "P G", "PR ",
+            ModHandler.addShapedRecipe(true, "sensor_" + tierName(tier), sensor(tier).getStackForm(), "P G", "PR ",
                     "XPP", 'P', new UnificationEntry(plate, METALS[tier]),
                     'R', new UnificationEntry(stick, EMITTER_RODS[tier]), 'G', EMITTER_GEMS[tier],
                     'X', new UnificationEntry(circuit, circuitTier(tier)));
@@ -598,7 +582,7 @@ public class ComponentRecipes {
                     .input(plate, METALS[tier], 4)
                     .input(circuit, circuitTier(tier))
                     .input(input(EMITTER_GEMS[tier], 1))
-                    .outputs(SENSORS[tier].getStackForm())
+                    .outputs(sensor(tier).getStackForm())
                     .duration(100).EUt(VA[LV]).buildAndRegister();
         }
 
@@ -655,7 +639,7 @@ public class ComponentRecipes {
 
     private static void emitters() {
         for (int tier = LV; tier <= IV; tier++) {
-            ModHandler.addShapedRecipe(true, "emitter_" + tierName(tier), EMITTERS[tier].getStackForm(), "CRX", "RGR",
+            ModHandler.addShapedRecipe(true, "emitter_" + tierName(tier), emitter(tier).getStackForm(), "CRX", "RGR",
                     "XRC", 'R', new UnificationEntry(stick, EMITTER_RODS[tier]),
                     'C', new UnificationEntry(cableGtSingle, CABLES[tier]), 'G', EMITTER_GEMS[tier],
                     'X', new UnificationEntry(circuit, circuitTier(tier)));
@@ -666,7 +650,7 @@ public class ComponentRecipes {
                     .input(circuit, circuitTier(tier), 2)
                     .input(input(EMITTER_GEMS[tier], 1))
                     .circuitMeta(1)
-                    .outputs(EMITTERS[tier].getStackForm())
+                    .outputs(emitter(tier).getStackForm())
                     .duration(100).EUt(VA[LV]).buildAndRegister();
         }
 
