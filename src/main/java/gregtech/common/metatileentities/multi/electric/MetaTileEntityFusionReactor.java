@@ -52,6 +52,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -288,10 +289,12 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
         }
         super.updateFormedValid();
         if (recipeMapWorkable.isWorking() && fusionRingColor == NO_COLOR) {
-            if (recipeMapWorkable.getPreviousRecipe() != null &&
-                    !recipeMapWorkable.getPreviousRecipe().getFluidOutputs().isEmpty()) {
-                setFusionRingColor(0xFF000000 |
-                        recipeMapWorkable.getPreviousRecipe().getFluidOutputs().get(0).getFluid().getColor());
+            // after a world load the running recipe is unknown until the next one starts; its saved outputs are not
+            Recipe recipe = recipeMapWorkable.getPreviousRecipe();
+            List<FluidStack> outputs = recipe != null ? recipe.getFluidOutputs() :
+                    recipeMapWorkable.getCurrentFluidOutputs();
+            if (!outputs.isEmpty()) {
+                setFusionRingColor(0xFF000000 | outputs.get(0).getFluid().getColor());
             }
         } else if (!recipeMapWorkable.isWorking() && isStructureFormed()) {
             setFusionRingColor(NO_COLOR);

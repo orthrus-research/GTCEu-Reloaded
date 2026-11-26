@@ -1601,6 +1601,21 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     /**
+     * @return the item outputs of the recipe in progress, parallels and chanced rolls included, as they will be
+     *         inserted; saved with the machine, so known after a world load, when {@link #getPreviousRecipe()} is not
+     */
+    public @NotNull List<ItemStack> getCurrentItemOutputs() {
+        return Collections.unmodifiableList(itemOutputs);
+    }
+
+    /**
+     * @return the fluid outputs of the recipe in progress, as {@link #getCurrentItemOutputs()} for items
+     */
+    public @NotNull List<FluidStack> getCurrentFluidOutputs() {
+        return Collections.unmodifiableList(fluidOutputs);
+    }
+
+    /**
      * @return the current recipe's EU/t for TOP/Waila/Tricorder
      */
     public long getInfoProviderEUt() {

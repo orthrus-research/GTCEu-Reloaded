@@ -642,15 +642,18 @@ public class MultiblockUIBuilder {
     private Recipe trimResult;
 
     public MultiblockUIBuilder addRecipeOutputLine(AbstractRecipeLogic arl, int maxLines) {
-        // todo recipe is null on first load, fix in the future
         Recipe recipe = arl.getPreviousRecipe();
+        // After a world load the running recipe is unknown until the next one starts; the outputs it saved, which
+        // already hold its parallels and chanced rolls, are shown instead
+        boolean savedOutputs = recipe == null && arl.getMaxProgress() > 0;
 
-        if (getSyncer().syncBoolean(recipe == null)) return this;
+        if (getSyncer().syncBoolean(recipe == null && !savedOutputs)) return this;
+        savedOutputs = getSyncer().syncBoolean(savedOutputs);
         RecipeMap<?> map = arl.getRecipeMap();
         if (getSyncer().syncBoolean(map == null)) return this;
 
         Recipe trimmed = null;
-        if (isServer()) {
+        if (isServer() && !savedOutputs) {
             MetaTileEntity mte = arl.getMetaTileEntity();
             int itemLimit = mte.getItemOutputLimit(), fluidLimit = mte.getFluidOutputLimit();
             // the display rebuilds every tick; trim again only when the recipe or the limits change
@@ -666,7 +669,7 @@ public class MultiblockUIBuilder {
         }
 
         int p = getSyncer().syncInt(arl.getParallelRecipesPerformed());
-        if (p == 0) p = 1;
+        if (p == 0 || savedOutputs) p = 1;
 
         long eut = getSyncer().syncLong(trimmed == null ? 0 : trimmed.getEUt());
         long maxVoltage = getSyncer().syncLong(arl.getMaximumOverclockVoltage());
@@ -679,7 +682,10 @@ public class MultiblockUIBuilder {
         List<FluidStack> fluidOutputs = new ArrayList<>();
         List<ChancedFluidOutput> chancedFluidOutputs = new ArrayList<>();
 
-        if (isServer()) {
+        if (isServer() && savedOutputs) {
+            itemOutputs.addAll(arl.getCurrentItemOutputs());
+            fluidOutputs.addAll(arl.getCurrentFluidOutputs());
+        } else if (isServer()) {
             // recipe searching has to be done server only
             itemOutputs.addAll(trimmed.getOutputs());
             chancedItemOutputs.addAll(trimmed.getChancedOutputs().getChancedEntries());
