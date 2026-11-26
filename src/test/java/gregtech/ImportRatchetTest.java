@@ -59,6 +59,19 @@ class ImportRatchetTest {
     }
 
     @Test
+    void codeChickenLibIsUsedNowhereBeyondItsBaseline() throws IOException {
+        check(new Rule("ccl_imports.list",
+                List.of("Imports of CodeChickenLib (codechicken.*) in the main sources, as <file> <imported name>.",
+                        "OrthLib's render interface is to replace CodeChickenLib; until then its uses only shrink."),
+                file -> true, List.of("codechicken"),
+                "CodeChickenLib is to be replaced, so the main sources must not use it in more places than its " +
+                        "baseline lists.",
+                "Fix each one in the code: where a vanilla or GTCEu type does the same job (Vec3d, AxisAlignedBB, " +
+                        "BlockPos, GTUtility's colour helpers), use that; CodeChickenLib types belong only where " +
+                        "an overridden rendering, collision or ray tracing method already takes them."));
+    }
+
+    @Test
     void dependenciesAreImportsAndQualifiedNamesInCode() {
         String source = """
                 package gregtech.api.example;
