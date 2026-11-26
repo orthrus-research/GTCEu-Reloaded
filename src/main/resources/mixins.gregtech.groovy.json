@@ -4,5 +4,8 @@
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_25",
   "required": true,
+  "injectors": {
+    "defaultRequire": 1
+  },
   "mixins": ["CompiledClassAccessor", "ScriptCacheMixin", "ScriptStageCacheMixin", "ReloadableRegistryManagerMixin"]
 }

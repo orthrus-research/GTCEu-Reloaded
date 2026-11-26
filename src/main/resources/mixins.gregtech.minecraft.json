@@ -6,6 +6,7 @@
   "compatibilityLevel": "JAVA_25",
   "required": true,
   "injectors": {
+    "defaultRequire": 1,
     "maxShiftBy": 10
   },
   "mixins": [
