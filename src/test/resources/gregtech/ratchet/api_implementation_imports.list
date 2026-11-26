@@ -105,7 +105,6 @@ gregtech/api/mui/GTGuiTheme.java gregtech.common.ConfigHolder
 gregtech/api/mui/GregTechGuiTransferHandler.java gregtech.common.metatileentities.storage.CraftingRecipeLogic
 gregtech/api/mui/sync/GTFluidSyncHandler.java gregtech.common.covers.filter.readers.SimpleFluidFilterReader
 gregtech/api/mui/widget/GhostCircuitSlotWidget.java gregtech.client.utils.TooltipHelper
-gregtech/api/pipenet/PipeNetWalker.java gregtech.common.pipelike.itempipe.net.ItemNetWalker
 gregtech/api/pipenet/block/BlockPipe.java gregtech.common.blocks.BlockFrame
 gregtech/api/pipenet/block/BlockPipe.java gregtech.common.blocks.MetaBlocks
 gregtech/api/pipenet/block/BlockPipe.java gregtech.common.items.MetaItems
