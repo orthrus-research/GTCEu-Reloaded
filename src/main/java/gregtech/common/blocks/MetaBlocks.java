@@ -4,6 +4,7 @@ import gregtech.api.GregTechAPI;
 import gregtech.api.block.coil.CoilRegistry;
 import gregtech.api.block.coil.CustomCoilBlock;
 import gregtech.api.block.machines.BlockMachine;
+import gregtech.api.fluids.GTFluidRegistration;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.pipenet.longdist.BlockLongDistancePipe;
@@ -99,14 +100,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static gregtech.api.unification.material.info.MaterialFlags.FORCE_GENERATE_BLOCK;
 import static gregtech.api.unification.material.info.MaterialFlags.GENERATE_FRAME;
@@ -186,7 +185,7 @@ public class MetaBlocks {
     public static final List<BlockSurfaceRock> SURFACE_ROCK_BLOCKS = new ArrayList<>();
 
     public static final List<BlockOre> ORES = new ArrayList<>();
-    public static final List<BlockFluidBase> FLUID_BLOCKS = new ArrayList<>();
+    public static final List<BlockFluidBase> FLUID_BLOCKS = GTFluidRegistration.INSTANCE.getFluidBlocks();
 
     public static void init() {
         for (MTERegistry registry : GregTechAPI.mteManager.getRegistries()) {
@@ -735,33 +734,8 @@ public class MetaBlocks {
         }
     }
 
+    /** The same as {@link BlockUtility#statePropertiesToString(Map)}, which the API uses. */
     public static String statePropertiesToString(Map<IProperty<?>, Comparable<?>> properties) {
-        StringBuilder stringbuilder = new StringBuilder();
-
-        List<Entry<IProperty<?>, Comparable<?>>> entries = properties.entrySet().stream()
-                .sorted(Comparator.comparing(c -> c.getKey().getName()))
-                .collect(Collectors.toList());
-
-        for (Map.Entry<IProperty<?>, Comparable<?>> entry : entries) {
-            if (stringbuilder.length() != 0) {
-                stringbuilder.append(",");
-            }
-
-            IProperty<?> property = entry.getKey();
-            stringbuilder.append(property.getName());
-            stringbuilder.append("=");
-            stringbuilder.append(getPropertyName(property, entry.getValue()));
-        }
-
-        if (stringbuilder.length() == 0) {
-            stringbuilder.append("normal");
-        }
-
-        return stringbuilder.toString();
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends Comparable<T>> String getPropertyName(IProperty<T> property, Comparable<?> value) {
-        return property.getName((T) value);
+        return BlockUtility.statePropertiesToString(properties);
     }
 }

@@ -8,18 +8,15 @@ gregtech/api/block/IHeatingCoilBlockStats.java gregtech.client.model.ActiveVaria
 gregtech/api/block/VariantActiveBlock.java gregtech.client.model.ActiveVariantBlockBakedModel
 gregtech/api/block/VariantActiveBlock.java gregtech.client.renderer.EmissiveLayer
 gregtech/api/block/VariantBlock.java gregtech.common.creativetab.GTCreativeTabs
-gregtech/api/block/coil/CustomCoilBlock.java gregtech.client.utils.TooltipHelper
 gregtech/api/block/coil/CustomCoilBlock.java gregtech.common.metatileentities.multi.electric.MetaTileEntityMultiSmelter
 gregtech/api/block/coil/CustomCoilStats.java gregtech.client.model.ActiveVariantBlockBakedModel
 gregtech/api/block/machines/BlockMachine.java gregtech.client.renderer.handler.MetaTileEntityRenderer
 gregtech/api/block/machines/BlockMachine.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/block/machines/BlockMachine.java gregtech.common.items.MetaItems
 gregtech/api/block/machines/BlockMachine.java gregtech.integration.ctm.IFacadeWrapper
-gregtech/api/block/machines/MachineItemBlock.java gregtech.client.utils.TooltipHelper
 gregtech/api/block/machines/MachineItemBlock.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/capability/GregtechCapabilities.java gregtech.common.metatileentities.converter.ConverterTrait
 gregtech/api/capability/IMiner.java gregtech.common.mui.widget.ScrollableTextWidget
-gregtech/api/capability/IPropertyFluidFilter.java gregtech.client.utils.TooltipHelper
 gregtech/api/capability/SimpleCapabilityManager.java gregtech.common.metatileentities.converter.ConverterTrait
 gregtech/api/capability/impl/BoilerRecipeLogic.java gregtech.common.metatileentities.multi.MetaTileEntityLargeBoiler
 gregtech/api/capability/impl/DistillationTowerLogicHandler.java gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityMultiblockPart
@@ -33,7 +30,6 @@ gregtech/api/capability/impl/miner/SteamMinerLogic.java gregtech.client.renderer
 gregtech/api/cover/CoverBase.java gregtech.client.renderer.texture.Textures
 gregtech/api/cover/CoverBase.java gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer
 gregtech/api/cover/CoverHolder.java gregtech.client.utils.RenderUtil
-gregtech/api/fluids/GTFluidRegistration.java gregtech.common.blocks.MetaBlocks
 gregtech/api/gui/ModularUI.java gregtech.common.ConfigHolder
 gregtech/api/gui/UIFactory.java gregtech.core.network.packets.PacketUIOpen
 gregtech/api/gui/UIFactory.java gregtech.core.network.packets.PacketUIWidgetUpdate
@@ -65,12 +61,10 @@ gregtech/api/items/metaitem/MetaItem.java gregtech.client.utils.ToolChargeBarRen
 gregtech/api/items/metaitem/MetaItem.java gregtech.common.covers.filter.IFilter
 gregtech/api/items/metaitem/MetaItem.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/items/toolitem/IGTTool.java gregtech.client.utils.ToolChargeBarRenderer
-gregtech/api/items/toolitem/IGTTool.java gregtech.client.utils.TooltipHelper
 gregtech/api/items/toolitem/ItemGTAxe.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/items/toolitem/ItemGTHoe.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/items/toolitem/ItemGTSword.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/items/toolitem/ItemGTTool.java gregtech.common.creativetab.GTCreativeTabs
-gregtech/api/items/toolitem/ItemGTToolbelt.java gregtech.client.utils.TooltipHelper
 gregtech/api/items/toolitem/ItemGTToolbelt.java gregtech.common.items.behaviors.ColorSprayBehaviour
 gregtech/api/items/toolitem/ItemGTToolbelt.java gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityMaintenanceHatch
 gregtech/api/items/toolitem/ItemGTToolbelt.java gregtech.core.network.packets.PacketToolbeltSelectionChange
@@ -78,7 +72,6 @@ gregtech/api/items/toolitem/ToolHelper.java gregtech.common.items.MetaItems
 gregtech/api/items/toolitem/ToolHelper.java gregtech.common.items.behaviors.ColorSprayBehaviour
 gregtech/api/metatileentity/MetaTileEntity.java gregtech.client.renderer.texture.Textures
 gregtech/api/metatileentity/MetaTileEntity.java gregtech.client.utils.RenderUtil
-gregtech/api/metatileentity/MetaTileEntity.java gregtech.client.utils.TooltipHelper
 gregtech/api/metatileentity/MetaTileEntity.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/metatileentity/MetaTileEntity.java gregtech.common.items.MetaItems
 gregtech/api/metatileentity/MetaTileEntityHolder.java gregtech.client.particle.GTNameTagParticle
@@ -118,7 +111,6 @@ gregtech/api/pipenet/block/BlockPipe.java gregtech.common.blocks.MetaBlocks
 gregtech/api/pipenet/block/BlockPipe.java gregtech.common.items.MetaItems
 gregtech/api/pipenet/block/BlockPipe.java gregtech.integration.ctm.IFacadeWrapper
 gregtech/api/pipenet/block/material/BlockMaterialPipe.java gregtech.client.renderer.pipe.PipeRenderer
-gregtech/api/pipenet/block/material/BlockMaterialPipe.java gregtech.common.blocks.MetaBlocks
 gregtech/api/pipenet/longdist/BlockLongDistancePipe.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/pipenet/longdist/LongDistancePipeType.java gregtech.common.pipelike.fluidpipe.longdistance.LDFluidPipeType
 gregtech/api/pipenet/longdist/LongDistancePipeType.java gregtech.common.pipelike.itempipe.longdistance.LDItemPipeType
@@ -146,7 +138,6 @@ gregtech/api/util/CapesRegistry.java gregtech.client.renderer.texture.Textures
 gregtech/api/util/CapesRegistry.java gregtech.core.network.packets.PacketNotifyCapeChange
 gregtech/api/util/ClipboardUtil.java gregtech.core.network.packets.PacketClipboard
 gregtech/api/util/EntityDamageUtil.java gregtech.core.advancement.AdvancementTriggers
-gregtech/api/util/FluidTooltipUtil.java gregtech.client.utils.TooltipHelper
 gregtech/api/util/GTStringUtils.java gregtech.common.blocks.BlockCompressed
 gregtech/api/util/GTStringUtils.java gregtech.common.blocks.BlockFrame
 gregtech/api/util/GTStringUtils.java gregtech.common.items.MetaItems

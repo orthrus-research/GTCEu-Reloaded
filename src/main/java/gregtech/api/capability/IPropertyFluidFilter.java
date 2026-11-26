@@ -3,7 +3,7 @@ package gregtech.api.capability;
 import gregtech.api.fluids.FluidState;
 import gregtech.api.fluids.attribute.AttributedFluid;
 import gregtech.api.fluids.attribute.FluidAttribute;
-import gregtech.client.utils.TooltipHelper;
+import gregtech.api.util.input.ModifierKeys;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraftforge.fluids.Fluid;
@@ -93,7 +93,7 @@ public interface IPropertyFluidFilter<R> extends IFilter<FluidStack> {
      * @param showTemperatureInfo if the temperature information should be displayed
      */
     default void appendTooltips(@NotNull List<String> tooltip, boolean showToolsInfo, boolean showTemperatureInfo) {
-        if (TooltipHelper.isShiftDown()) {
+        if (ModifierKeys.isShiftDown()) {
             if (showTemperatureInfo)
                 tooltip.add(I18n.format("gregtech.fluid_pipe.max_temperature", getMaxFluidTemperature()));
             if (isGasProof()) tooltip.add(I18n.format("gregtech.fluid_pipe.gas_proof"));

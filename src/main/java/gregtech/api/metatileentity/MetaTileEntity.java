@@ -35,9 +35,9 @@ import gregtech.api.util.GTLog;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.Mods;
+import gregtech.api.util.input.ModifierKeys;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.RenderUtil;
-import gregtech.client.utils.TooltipHelper;
 import gregtech.common.creativetab.GTCreativeTabs;
 import gregtech.common.items.MetaItems;
 
@@ -963,7 +963,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
 
     public final ItemStack getPickItem(CuboidRayTraceResult result, EntityPlayer player) {
         IndexedCuboid6 hitCuboid = result.cuboid6;
-        final boolean isCreativePickBlock = player.isCreative() && TooltipHelper.isCtrlDown();
+        final boolean isCreativePickBlock = player.isCreative() && ModifierKeys.isCtrlDown();
         if (hitCuboid.data instanceof CoverRayTracer.CoverSideData coverSideData) {
             Cover cover = getCoverAtSide(coverSideData.side);
             return cover == null || isCreativePickBlock ? ItemStack.EMPTY : cover.getPickItem();

@@ -10,8 +10,8 @@ import gregtech.api.pipenet.tile.TileEntityPipeBase;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.registry.MaterialRegistry;
 import gregtech.api.unification.ore.OrePrefix;
+import gregtech.api.util.BlockUtility;
 import gregtech.client.renderer.pipe.PipeRenderer;
-import gregtech.common.blocks.MetaBlocks;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -141,7 +141,7 @@ public abstract class BlockMaterialPipe<
             ModelResourceLocation resourceLocation = new ModelResourceLocation(
                     new ResourceLocation(GTValues.MODID, // force pipe models to always be GT's
                             Objects.requireNonNull(this.getRegistryName()).getPath()),
-                    MetaBlocks.statePropertiesToString(state.getProperties()));
+                    BlockUtility.statePropertiesToString(state.getProperties()));
             // noinspection ConstantConditions
             ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(this),
                     this.getMetaFromState(state), resourceLocation);

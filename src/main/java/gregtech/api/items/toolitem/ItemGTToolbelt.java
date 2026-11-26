@@ -13,7 +13,7 @@ import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.material.properties.ToolProperty;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.api.util.TextFormattingUtil;
-import gregtech.client.utils.TooltipHelper;
+import gregtech.api.util.input.ModifierKeys;
 import gregtech.common.items.behaviors.ColorSprayBehaviour;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityMaintenanceHatch;
 import gregtech.core.network.packets.PacketToolbeltSelectionChange;
@@ -336,7 +336,7 @@ public class ItemGTToolbelt extends ItemGTTool implements IDyeableItem {
             tooltip.add(I18n.format("item.gt.tool.toolbelt.size",
                     TextFormattingUtil.formatNumbers(handler.getSlots())));
             tooltip.add("");
-            if (TooltipHelper.isShiftDown()) {
+            if (ModifierKeys.isShiftDown()) {
                 tooltip.add(I18n.format("item.gt.tool.toolbelt.tooltip"));
                 tooltip.add("");
                 tooltip.add(I18n.format("item.gt.tool.toolbelt.paint"));
@@ -344,7 +344,7 @@ public class ItemGTToolbelt extends ItemGTTool implements IDyeableItem {
                 tooltip.add(I18n.format("item.gt.tool.toolbelt.maintenance"));
             } else tooltip.add(I18n.format("gregtech.tooltip.hold_shift"));
         }
-        if (TooltipHelper.isCtrlDown()) {
+        if (ModifierKeys.isCtrlDown()) {
             tooltip.add("");
             for (int i = 0; i < handler.getSlots(); i++) {
                 ItemStack tool = handler.getStackInSlot(i);

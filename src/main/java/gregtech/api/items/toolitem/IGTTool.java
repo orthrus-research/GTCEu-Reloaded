@@ -24,8 +24,8 @@ import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
+import gregtech.api.util.input.ModifierKeys;
 import gregtech.client.utils.ToolChargeBarRenderer;
-import gregtech.client.utils.TooltipHelper;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -790,7 +790,7 @@ public interface IGTTool extends ItemUIFactory {
 
         // repair info
         if (!tagCompound.getBoolean(UNBREAKABLE_KEY)) {
-            if (TooltipHelper.isShiftDown()) {
+            if (ModifierKeys.isShiftDown()) {
                 Material material = getToolMaterial(stack);
 
                 Collection<String> repairItems = new ArrayList<>();

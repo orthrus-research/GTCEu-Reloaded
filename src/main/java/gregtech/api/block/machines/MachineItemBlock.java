@@ -8,7 +8,7 @@ import gregtech.api.pipenet.block.BlockPipe;
 import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
-import gregtech.client.utils.TooltipHelper;
+import gregtech.api.util.input.ModifierKeys;
 import gregtech.common.creativetab.GTCreativeTabs;
 
 import net.minecraft.block.Block;
@@ -178,7 +178,7 @@ public class MachineItemBlock extends ItemBlock {
 
         // tool usages tooltips
         if (metaTileEntity.showToolUsages()) {
-            if (TooltipHelper.isShiftDown()) {
+            if (ModifierKeys.isShiftDown()) {
                 metaTileEntity.addToolUsages(stack, worldIn, tooltip, flagIn.isAdvanced());
             } else {
                 tooltip.add(I18n.format("gregtech.tool_action.show_tooltips"));

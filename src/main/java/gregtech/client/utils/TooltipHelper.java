@@ -1,12 +1,11 @@
 package gregtech.client.utils;
 
 import gregtech.api.util.GTLog;
+import gregtech.api.util.input.ModifierKeys;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,12 +65,14 @@ public class TooltipHelper {
         }
     }
 
+    /** The same as {@link ModifierKeys#isShiftDown()}, which the API uses. */
     public static boolean isShiftDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+        return ModifierKeys.isShiftDown();
     }
 
+    /** The same as {@link ModifierKeys#isCtrlDown()}, which the API uses. */
     public static boolean isCtrlDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+        return ModifierKeys.isCtrlDown();
     }
 
     public static class GTFormatCode {

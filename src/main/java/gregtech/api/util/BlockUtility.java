@@ -2,6 +2,7 @@ package gregtech.api.util;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -11,8 +12,13 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMaps;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class BlockUtility {
 
@@ -78,5 +84,41 @@ public class BlockUtility {
         } else {
             walkingSpeedBonusInternal.put(state, amount);
         }
+    }
+
+    /**
+     * The variant a block state's model is named by: its properties as {@code name=value}, sorted by name and
+     * separated by commas, or {@code normal} for a block without properties.
+     *
+     * @param properties the properties of a block state, as {@link IBlockState#getProperties()} gives them
+     */
+    public static String statePropertiesToString(Map<IProperty<?>, Comparable<?>> properties) {
+        StringBuilder stringbuilder = new StringBuilder();
+
+        List<Entry<IProperty<?>, Comparable<?>>> entries = properties.entrySet().stream()
+                .sorted(Comparator.comparing(c -> c.getKey().getName()))
+                .collect(Collectors.toList());
+
+        for (Map.Entry<IProperty<?>, Comparable<?>> entry : entries) {
+            if (stringbuilder.length() != 0) {
+                stringbuilder.append(",");
+            }
+
+            IProperty<?> property = entry.getKey();
+            stringbuilder.append(property.getName());
+            stringbuilder.append("=");
+            stringbuilder.append(getPropertyName(property, entry.getValue()));
+        }
+
+        if (stringbuilder.length() == 0) {
+            stringbuilder.append("normal");
+        }
+
+        return stringbuilder.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Comparable<T>> String getPropertyName(IProperty<T> property, Comparable<?> value) {
+        return property.getName((T) value);
     }
 }

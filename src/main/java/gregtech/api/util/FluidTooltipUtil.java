@@ -4,7 +4,7 @@ import gregtech.api.GTValues;
 import gregtech.api.fluids.FluidState;
 import gregtech.api.fluids.GTFluid;
 import gregtech.api.unification.material.Material;
-import gregtech.client.utils.TooltipHelper;
+import gregtech.api.util.input.ModifierKeys;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.util.text.TextFormatting;
@@ -135,7 +135,7 @@ public class FluidTooltipUtil {
 
     public static void addIngotMolFluidTooltip(@NotNull RichTooltip tooltip, @NotNull FluidStack fluidStack) {
         // Add tooltip showing how many "ingot moles" (increments of 144) this fluid is if shift is held
-        if (TooltipHelper.isShiftDown() && fluidStack.amount > GTValues.L) {
+        if (ModifierKeys.isShiftDown() && fluidStack.amount > GTValues.L) {
             int numIngots = fluidStack.amount / GTValues.L;
             int extra = fluidStack.amount % GTValues.L;
             String fluidAmount = String.format(" %,d L = %,d * %d L", fluidStack.amount, numIngots, GTValues.L);

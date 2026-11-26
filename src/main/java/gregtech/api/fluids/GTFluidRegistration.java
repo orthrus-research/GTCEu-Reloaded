@@ -5,7 +5,6 @@ import gregtech.api.GregTechAPI;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.properties.FluidProperty;
 import gregtech.api.unification.material.properties.PropertyKey;
-import gregtech.common.blocks.MetaBlocks;
 
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.util.ResourceLocation;
@@ -20,7 +19,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 public class GTFluidRegistration {
@@ -32,6 +33,8 @@ public class GTFluidRegistration {
     private static @Nullable BiMap<String, Fluid> MASTER_FLUID_REFERENCE;
 
     private static @Nullable BiMap<String, String> DEFAULT_FLUID_NAME;
+
+    private final List<BlockFluidBase> fluidBlocks = new ArrayList<>();
 
     /**
      * Fixes all registered fluids being under the gregtech modid
@@ -124,6 +127,15 @@ public class GTFluidRegistration {
      * @param block the fluid block to register
      */
     public void registerFluidBlock(@NotNull BlockFluidBase block) {
-        MetaBlocks.FLUID_BLOCKS.add(block);
+        fluidBlocks.add(block);
+    }
+
+    /**
+     * @return the fluid blocks {@link #registerFluidBlock} took, in order, which GTCEu adds to the block registry;
+     *         {@code MetaBlocks.FLUID_BLOCKS} is this list
+     */
+    @ApiStatus.Internal
+    public @NotNull List<BlockFluidBase> getFluidBlocks() {
+        return fluidBlocks;
     }
 }
