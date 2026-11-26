@@ -35,12 +35,6 @@ public class TileEntityLaserPipe extends TileEntityBeamPipe<LaserPipeType, Laser
         return GregtechDataCodes.PIPE_LASER_ACTIVE;
     }
 
-    /** A laser pipe saves its lit state and sends it with its chunk, so it stays lit while it is fed. */
-    @Override
-    protected boolean syncsActiveState() {
-        return true;
-    }
-
     /** A laser line runs straight: a pipe connects only along the axis it is already connected on. */
     @Override
     protected boolean acceptsConnection(IPipeTile<?, ?> pipe, EnumFacing side) {

@@ -103,27 +103,19 @@ public class PipeFamilyBeamTest {
         assertEquals(sides(EnumFacing.WEST, EnumFacing.NORTH), optical.getConnections());
     }
 
-    @Test
-    void aMarkKeepsALaserPipeLitButLetsAnOpticalPipeGoDark() {
+    @ParameterizedTest
+    @ValueSource(strings = { "laser", "optical" })
+    void eachMarkKeepsAPipeLitForTheFullDuration(String family) {
         ConfigurationTestWorld world = new ConfigurationTestWorld();
-        TileEntityLaserPipe laser = PipeFamilyTestSupport.laser(world, POS);
-        TileEntityOpticalPipe optical = PipeFamilyTestSupport.optical(world, POS.south(4));
-        laser.setActive(true, 100);
-        optical.setActive(true, 100);
+        TileEntityBeamPipe<?, ?, ?> pipe = line(world, family)[0];
+        pipe.setActive(true, 100);
         tick(world, 60);
-        laser.setActive(true, 100);
-        optical.setActive(true, 100);
-        tick(world, 39);
-        assertTrue(laser.isActive());
-        assertTrue(optical.isActive());
-
-        tick(world, 1);
-        assertTrue(laser.isActive(), "A laser pipe stays lit for the full duration after each mark");
-        assertFalse(optical.isActive(), "An optical pipe goes dark when the duration from lighting up ends");
-        optical.setActive(true, 100);
-        assertTrue(optical.isActive());
+        pipe.setActive(true, 100);
+        tick(world, 40);
+        // before, an optical pipe went dark here, 100 ticks after lighting up, though it was marked in between
+        assertTrue(pipe.isActive(), "A pipe stays lit for the full duration after each mark");
         tick(world, 60);
-        assertFalse(laser.isActive());
+        assertFalse(pipe.isActive());
     }
 
     @ParameterizedTest
@@ -152,44 +144,35 @@ public class PipeFamilyBeamTest {
         assertEquals(Boolean.TRUE, activeUpdate(optical.getUpdatePacket(), GregtechDataCodes.PIPE_OPTICAL_ACTIVE));
     }
 
-    @Test
-    void onlyALaserPipeSavesItsLitStateAndSendsItWithTheChunk() {
+    @ParameterizedTest
+    @ValueSource(strings = { "laser", "optical" })
+    void aPipeSavesItsLitStateAndSendsItWithTheChunk(String family) {
         ConfigurationTestWorld world = new ConfigurationTestWorld();
-        TileEntityLaserPipe laser = PipeFamilyTestSupport.laser(world, POS);
-        TileEntityOpticalPipe optical = PipeFamilyTestSupport.optical(world, POS.south(4));
-        laser.setActive(true, 100);
-        optical.setActive(true, 100);
+        TileEntityBeamPipe<?, ?, ?> pipe = line(world, family)[0];
+        pipe.setActive(true, 100);
 
-        NBTTagCompound laserTag = laser.writeToNBT(new NBTTagCompound());
-        assertTrue(laserTag.getBoolean("Active"));
-        assertFalse(optical.writeToNBT(new NBTTagCompound()).hasKey("Active"));
+        NBTTagCompound tag = pipe.writeToNBT(new NBTTagCompound());
+        assertTrue(tag.getBoolean("Active"));
         ConfigurationTestWorld loadedWorld = new ConfigurationTestWorld();
-        TileEntityLaserPipe loaded = new TileEntityLaserPipe();
+        TileEntityBeamPipe<?, ?, ?> loaded = family.equals("laser") ? new TileEntityLaserPipe() :
+                new TileEntityOpticalPipe();
         loadedWorld.put(POS, loaded, world.getBlockState(POS));
-        loaded.readFromNBT(laserTag);
+        loaded.readFromNBT(tag);
         assertTrue(loaded.isActive());
 
-        PacketBuffer laserSync = new PacketBuffer(Unpooled.buffer());
-        PacketBuffer opticalSync = new PacketBuffer(Unpooled.buffer());
+        PacketBuffer sync = new PacketBuffer(Unpooled.buffer());
         try {
-            laser.writeInitialSyncData(laserSync);
-            optical.writeInitialSyncData(opticalSync);
-            assertEquals(opticalSync.readableBytes() + 1, laserSync.readableBytes(), "The laser's lit state follows");
+            pipe.writeInitialSyncData(sync);
             ConfigurationTestWorld clientWorld = new ConfigurationTestWorld();
-            TileEntityLaserPipe laserClient = new TileEntityLaserPipe();
-            clientWorld.put(POS, laserClient, world.getBlockState(POS));
-            laserClient.receiveInitialSyncData(laserSync);
-            TileEntityOpticalPipe opticalClient = new TileEntityOpticalPipe();
-            clientWorld.put(POS.south(4), opticalClient, world.getBlockState(POS.south(4)));
-            opticalClient.receiveInitialSyncData(opticalSync);
-
-            assertTrue(laserClient.isActive());
-            assertFalse(opticalClient.isActive());
-            assertEquals(0, laserSync.readableBytes());
-            assertEquals(0, opticalSync.readableBytes());
+            TileEntityBeamPipe<?, ?, ?> client = family.equals("laser") ? new TileEntityLaserPipe() :
+                    new TileEntityOpticalPipe();
+            clientWorld.put(POS, client, world.getBlockState(POS));
+            client.receiveInitialSyncData(sync);
+            // before, an optical pipe sent no lit state, so a client that loaded its chunk saw it dark
+            assertTrue(client.isActive());
+            assertEquals(0, sync.readableBytes());
         } finally {
-            laserSync.release();
-            opticalSync.release();
+            sync.release();
         }
     }
 

@@ -316,6 +316,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Monitors | The GUI proxy plugin shows a notice on the monitor that it no longer shows machine screens. It mirrored a machine's old-GUI screen, and since every machine opens a ModularUI 2 screen it showed nothing; its mirroring is removed. The plugin item stays, loads as saved and keeps its part setting, which the advanced monitor plugin draws its connections to |
 | Items | The prospector's ore map no longer crashes the game when a scanned chunk holds ore; the map's cells could hold only one kind of map, and the server's scan sends another |
 | Multiblocks | Steam multiblocks start a recipe once they hold the steam for its whole run; before, the check compared the run's steam with the stored steam converted to EU, so at the default steam rate of 0.5 EU per millibucket they waited for twice the steam the run uses |
+| Pipes | An optical cable in use stays lit, as a laser line does, and shows its glow to a player who loads its chunk; before, it went dark every five seconds while carrying computation and lit again a moment later, and a newly loaded chunk showed it dark |
 
 ### Earlier fork changes
 

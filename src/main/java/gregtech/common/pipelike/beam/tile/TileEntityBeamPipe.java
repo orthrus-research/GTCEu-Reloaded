@@ -43,13 +43,6 @@ public abstract class TileEntityBeamPipe<PipeType extends Enum<PipeType> & IPipe
     /** The custom data discriminator that tells clients the pipe lit up or went dark. */
     protected abstract int getActiveDataCode();
 
-    /**
-     * Whether the lit state is saved with the pipe and sent with its chunk. Then each mark keeps a lit pipe lit for the
-     * full duration again. Otherwise clients only hear of changes, so a lit pipe goes dark when its duration ends even
-     * while it is marked, and lights at the next mark; a client that loaded the chunk in between sees it lit then.
-     */
-    protected abstract boolean syncsActiveState();
-
     /** Whether the pipe, with the connections it has, may also connect on {@code side}: the shape of a line. */
     protected abstract boolean acceptsConnection(IPipeTile<?, ?> pipe, EnumFacing side);
 
@@ -166,7 +159,6 @@ public abstract class TileEntityBeamPipe<PipeType extends Enum<PipeType> & IPipe
      * @param duration how long the pipe should be active for
      */
     public void setActive(boolean active, int duration) {
-        boolean lightsUp = active && !this.isActive;
         if (this.isActive != active) {
             this.isActive = active;
             notifyBlockUpdate();
@@ -175,12 +167,11 @@ public abstract class TileEntityBeamPipe<PipeType extends Enum<PipeType> & IPipe
             if (active) scheduleDisconnect();
         }
 
-        // a mark restarts the duration of a pipe that is already lit only when its state is synced
-        if (lightsUp || syncsActiveState()) {
-            this.activeDuration = duration;
-            if (duration > 0 && active) {
-                this.ticksActive = 0;
-            }
+        // each mark keeps a lit pipe lit for the full duration again; clients hear only of changes, and a chunk sent
+        // to a client carries the lit state
+        this.activeDuration = duration;
+        if (duration > 0 && active) {
+            this.ticksActive = 0;
         }
     }
 
@@ -228,33 +219,27 @@ public abstract class TileEntityBeamPipe<PipeType extends Enum<PipeType> & IPipe
     @Override
     public void writeInitialSyncData(PacketBuffer buf) {
         super.writeInitialSyncData(buf);
-        if (syncsActiveState()) {
-            buf.writeBoolean(this.isActive);
-        }
+        buf.writeBoolean(this.isActive);
     }
 
     @Override
     public void receiveInitialSyncData(PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
-        if (syncsActiveState()) {
-            this.isActive = buf.readBoolean();
-            scheduleChunkForRenderUpdate();
-        }
+        this.isActive = buf.readBoolean();
+        scheduleChunkForRenderUpdate();
     }
 
     @NotNull
     @Override
     public NBTTagCompound writeToNBT(@NotNull NBTTagCompound compound) {
-        if (syncsActiveState()) {
-            compound.setBoolean("Active", isActive);
-        }
+        compound.setBoolean("Active", isActive);
         return super.writeToNBT(compound);
     }
 
     @Override
     public void readFromNBT(@NotNull NBTTagCompound compound) {
         super.readFromNBT(compound);
-        if (syncsActiveState() && compound.hasKey("Active", Constants.NBT.TAG_BYTE)) {
+        if (compound.hasKey("Active", Constants.NBT.TAG_BYTE)) {
             isActive = compound.getBoolean("Active");
         }
     }

@@ -41,12 +41,6 @@ public class TileEntityOpticalPipe extends TileEntityBeamPipe<OpticalPipeType, O
         return GregtechDataCodes.PIPE_OPTICAL_ACTIVE;
     }
 
-    /** An optical pipe's lit state is neither saved nor sent with its chunk, so its glow restarts while it is used. */
-    @Override
-    protected boolean syncsActiveState() {
-        return false;
-    }
-
     /** An optical cable joins at most two pipes or endpoints, at any angle. */
     @Override
     protected boolean acceptsConnection(IPipeTile<?, ?> pipe, EnumFacing side) {
