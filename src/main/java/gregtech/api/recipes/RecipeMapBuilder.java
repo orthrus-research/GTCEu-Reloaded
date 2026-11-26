@@ -310,6 +310,9 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
         RecipeMap<B> recipeMap = new RecipeMap<>(unlocalizedName, defaultRecipeBuilder, this.recipeMapUIFunction,
                 itemInputs, itemOutputs, fluidInputs, fluidOutputs);
         recipeMap.setSound(sound);
+        // A built map uses the base lookup, which records every mutation and has registered alternatives only.
+        recipeMap.allowRecipeRevisionTracking();
+        recipeMap.allowRecipeCandidateFallback();
         if (allowEmptyOutputs) {
             recipeMap.allowEmptyOutput();
         }

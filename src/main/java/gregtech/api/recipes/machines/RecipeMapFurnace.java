@@ -29,9 +29,13 @@ public class RecipeMapFurnace extends RecipeMap<SimpleRecipeBuilder> {
         setSound(GTSoundEvents.FURNACE);
     }
 
+    /**
+     * This map only adds dynamic recipes to the registered lookup, so registered alternatives obey its rules.
+     * Subclasses inherit this; one that changes how registered recipes are found overrides this to return false.
+     */
     @Override
     protected boolean supportsRecipeCandidateFallback() {
-        return getClass() == RecipeMapFurnace.class;
+        return true;
     }
 
     @Override

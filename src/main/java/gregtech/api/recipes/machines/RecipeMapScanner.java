@@ -49,9 +49,13 @@ public class RecipeMapScanner extends RecipeMap<SimpleRecipeBuilder> implements 
         CUSTOM_SCANNER_LOGICS.add(logic);
     }
 
+    /**
+     * This map only adds dynamic recipes to the registered lookup, so registered alternatives obey its rules.
+     * Subclasses inherit this; one that changes how registered recipes are found overrides this to return false.
+     */
     @Override
     protected boolean supportsRecipeCandidateFallback() {
-        return getClass() == RecipeMapScanner.class;
+        return true;
     }
 
     @Override

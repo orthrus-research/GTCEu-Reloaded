@@ -92,6 +92,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private final GTRecipeCategory primaryRecipeCategory;
 
     private boolean allowEmptyOutput;
+    private boolean recipeRevisionTracking;
+    private boolean recipeCandidateFallback;
 
     private final Object grsVirtualizedRecipeMap;
     private Branch lookup = new Branch();
@@ -224,6 +226,26 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
 
     public RecipeMap<R> allowEmptyOutput() {
         this.allowEmptyOutput = true;
+        return this;
+    }
+
+    /**
+     * Admits this map to recipe revision tracking; see {@link #supportsRecipeRevisionTracking()}.
+     * {@link RecipeMapBuilder} calls this for every map it builds. Call it for another map only when its lookup has
+     * no untracked external state.
+     */
+    public RecipeMap<R> allowRecipeRevisionTracking() {
+        this.recipeRevisionTracking = true;
+        return this;
+    }
+
+    /**
+     * Admits this map to candidate fallback; see {@link #supportsRecipeCandidateFallback()}. {@link RecipeMapBuilder}
+     * calls this for every map it builds. Call it for another map only when its registered recipes obey the same rules
+     * as its lookup.
+     */
+    public RecipeMap<R> allowRecipeCandidateFallback() {
+        this.recipeCandidateFallback = true;
         return this;
     }
 
@@ -429,11 +451,16 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     }
 
     /**
-     * Subclasses may opt in when every successful lookup mutation calls {@link #onRecipesChanged()}.
-     * Dynamic lookups with untracked external state must keep continuous recipe callbacks.
+     * Whether idle machines may sleep until this map's recipe revision changes. That is safe only when every successful
+     * lookup mutation calls {@link #onRecipesChanged()}; a dynamic lookup with untracked external state must keep
+     * continuous recipe callbacks.
+     * <p>
+     * Subclasses commonly replace the lookup, so admission belongs to the map, not its class: maps built by
+     * {@link RecipeMapBuilder} are admitted, and any other map is admitted only through
+     * {@link #allowRecipeRevisionTracking()} or an override of this method.
      */
     public boolean supportsRecipeRevisionTracking() {
-        return getClass() == RecipeMap.class;
+        return recipeRevisionTracking;
     }
 
     public final long getRecipeRevision() {
@@ -549,9 +576,16 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         return new RecipeSearchResult(result.getRecipe(), first);
     }
 
-    /** Override only when registered alternatives obey the same rules as the legacy lookup. */
+    /**
+     * Whether a search whose first match is ineligible tries the other registered recipes. That is safe only when
+     * registered alternatives obey the same rules as the legacy lookup.
+     * <p>
+     * Subclasses commonly replace the lookup, so admission belongs to the map, not its class: maps built by
+     * {@link RecipeMapBuilder} are admitted, and any other map is admitted only through
+     * {@link #allowRecipeCandidateFallback()} or an override of this method.
+     */
     protected boolean supportsRecipeCandidateFallback() {
-        return getClass() == RecipeMap.class;
+        return recipeCandidateFallback;
     }
 
     /**

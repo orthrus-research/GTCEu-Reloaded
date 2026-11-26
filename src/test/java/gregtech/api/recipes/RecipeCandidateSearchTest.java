@@ -162,6 +162,25 @@ class RecipeCandidateSearchTest {
         assertEquals(Items.COOKED_PORKCHOP, generated.getOutputs().get(0).getItem());
     }
 
+    @Test
+    void builtMapsAreAdmittedAndOtherMapsOnlyWhenTheyOptIn() {
+        RecipeMap<SimpleRecipeBuilder> built = map();
+        assertTrue(built.supportsRecipeRevisionTracking());
+        assertTrue(built.supportsRecipeCandidateFallback());
+        RecipeMap<SimpleRecipeBuilder> subclass = new RecipeMap<SimpleRecipeBuilder>(name(), new SimpleRecipeBuilder(),
+                UI, 2, 1, 0, 0) {};
+        assertFalse(subclass.supportsRecipeRevisionTracking(), "A subclass may have replaced the lookup");
+        assertFalse(subclass.supportsRecipeCandidateFallback());
+        assertSame(subclass, subclass.allowRecipeRevisionTracking().allowRecipeCandidateFallback());
+        assertTrue(subclass.supportsRecipeRevisionTracking());
+        assertTrue(subclass.supportsRecipeCandidateFallback());
+        RecipeMap<SimpleRecipeBuilder> furnace = new RecipeMapFurnace(name(), new SimpleRecipeBuilder(), UI);
+        assertTrue(furnace.supportsRecipeCandidateFallback());
+        assertFalse(furnace.supportsRecipeRevisionTracking(), "The furnace's dynamic lookup has untracked state");
+        RecipeMap<SimpleRecipeBuilder> furnaceSubclass = new RecipeMapFurnace(name(), new SimpleRecipeBuilder(), UI) {};
+        assertTrue(furnaceSubclass.supportsRecipeCandidateFallback());
+    }
+
     private static RecipeMap<SimpleRecipeBuilder> map() {
         return new RecipeMapBuilder<>(name(), new SimpleRecipeBuilder()).itemInputs(2).itemOutputs(1).build();
     }
