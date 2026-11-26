@@ -14,7 +14,7 @@ public class AdvancementTriggers {
     public static IAdvancementTrigger<?> HEAT_DEATH;
     public static IAdvancementTrigger<?> COLD_DEATH;
     public static IAdvancementTrigger<?> CHEMICAL_DEATH;
-    public static IAdvancementTrigger<?> FIRST_COVER_PLACE; // does not work
+    public static IAdvancementTrigger<?> FIRST_COVER_PLACE;
 
     // TODO Not Yet Implemented
     public static IAdvancementTrigger<?> MACHINE_EXPLOSION;
