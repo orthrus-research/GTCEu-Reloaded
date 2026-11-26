@@ -1,7 +1,6 @@
 package gregtech.api.recipes;
 
 import gregtech.api.GTValues;
-import gregtech.api.GregTechAPI;
 import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.recipes.category.GTRecipeCategory;
 import gregtech.api.recipes.chance.boost.ChanceBoostFunction;
@@ -25,23 +24,17 @@ import gregtech.api.util.EnumValidationResult;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
-import gregtech.api.util.Mods;
 import gregtech.api.util.ValidationResult;
 import gregtech.common.ConfigHolder;
-import gregtech.integration.groovy.GroovyScriptModule;
-import gregtech.integration.groovy.VirtualizedRecipeMap;
-import gregtech.modules.GregTechModules;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.Optional.Method;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.oredict.OreDictionary;
 
-import com.cleanroommc.groovyscript.api.GroovyLog;
 import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
@@ -95,7 +88,6 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private boolean recipeRevisionTracking;
     private boolean recipeCandidateFallback;
 
-    private final Object grsVirtualizedRecipeMap;
     private Branch lookup = new Branch();
     private Set<Recipe> prefixRecipes = Collections.newSetFromMap(new IdentityHashMap<>());
     private boolean hasOreDictedInputs = false;
@@ -140,9 +132,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         defaultRecipeBuilder.category(primaryRecipeCategory);
         this.recipeBuilderSample = defaultRecipeBuilder;
         RECIPE_MAP_REGISTRY.put(unlocalizedName, this);
-
-        this.grsVirtualizedRecipeMap = GregTechAPI.moduleManager().isModuleEnabled(GregTechModules.MODULE_GRS) ?
-                new VirtualizedRecipeMap(this) : null;
+        RecipeScripting.frontend().mapCreated(this, defaultRecipeBuilder.getClass());
     }
 
     public static List<RecipeMap<? extends RecipeBuilder<?>>> getRecipeMaps() {
@@ -361,7 +351,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
 
         boolean accepted = compileRecipe(recipe);
         if (accepted && recipe.isGroovyRecipe()) {
-            this.getGroovyScriptRecipeMap().addScripted(recipe);
+            RecipeScripting.frontend().scriptRecipeAdded(this, recipe);
         }
         return accepted;
     }
@@ -407,9 +397,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         var states = prepareRegistrationStates(List.of(recipe), List.of(), false);
         List<List<AbstractMapIngredient>> items = fromRecipe(recipe);
         if (recurseIngredientTreeRemove(recipe, items, lookup, 0)) {
-            if (GroovyScriptModule.isCurrentlyRunning()) {
-                this.getGroovyScriptRecipeMap().addBackup(recipe);
-            }
+            RecipeScripting.Frontend scripts = RecipeScripting.frontend();
+            if (scripts.isRunning()) scripts.recipeRemoved(this, recipe);
             recipeByCategory.compute(recipe.getRecipeCategory(), (k, v) -> {
                 if (v != null) v.removeIf(entry -> entry == recipe);
                 return v == null || v.isEmpty() ? null : v;
@@ -439,9 +428,8 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     protected final void removeAllRecipes() {
         var states = prepareRegistrationStates(List.copyOf(getRecipeList()), List.of(), true);
         boolean hadRecipes = !this.recipeByCategory.isEmpty();
-        if (GroovyScriptModule.isCurrentlyRunning()) {
-            this.lookup.getRecipes(false).forEach(this.getGroovyScriptRecipeMap()::addBackup);
-        }
+        RecipeScripting.Frontend scripts = RecipeScripting.frontend();
+        if (scripts.isRunning()) this.lookup.getRecipes(false).forEach(recipe -> scripts.recipeRemoved(this, recipe));
         this.lookup.getNodes().clear();
         this.lookup.getSpecialNodes().clear();
         this.recipeByCategory.clear();
@@ -1007,11 +995,6 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         return null;
     }
 
-    @Method(modid = Mods.Names.GROOVY_SCRIPT)
-    private VirtualizedRecipeMap getGroovyScriptRecipeMap() {
-        return ((VirtualizedRecipeMap) grsVirtualizedRecipeMap);
-    }
-
     /** A cached prefix must be searched again when a more specific recipe might now be eligible. */
     public final boolean canReuseRecipe(Recipe recipe) {
         return !prefixRecipes.contains(recipe);
@@ -1116,13 +1099,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         String details = existing.left().isPresent() ? "Which conflicts with: " + existing.left().orElseThrow() :
                 "Input prefix is already used by: " + existing.right().orElseThrow().getRecipes(false)
                         .distinct().limit(3).toList();
-        if (recipe.isGroovyRecipe()) {
-            GroovyLog log = GroovyLog.get();
-            log.warn("Recipe duplicate or conflict found in RecipeMap {} and was not added. See next lines for details",
-                    this.unlocalizedName);
-            log.warn("Attempted to add Recipe: {}", recipe);
-            log.warn("{}", details);
-        }
+        if (recipe.isGroovyRecipe()) RecipeScripting.frontend().reportConflict(this, recipe, details);
         if (debug) {
             GTLog.logger.warn(
                     "Recipe duplicate or conflict found in RecipeMap {} and was not added. See next lines for details",

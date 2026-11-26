@@ -1,7 +1,5 @@
 package gregtech.api.unification.material.properties;
 
-import gregtech.integration.groovy.GroovyScriptModule;
-
 import org.jetbrains.annotations.NotNull;
 
 public class BlastProperty implements IMaterialProperty {
@@ -138,9 +136,6 @@ public class BlastProperty implements IMaterialProperty {
 
     public static GasTier validateGasTier(String gasTierName) {
         if (gasTierName == null) return null;
-        if (GroovyScriptModule.isCurrentlyRunning()) {
-            return GroovyScriptModule.parseAndValidateEnumValue(GasTier.class, gasTierName, "gas tier");
-        }
         if ("LOW".equalsIgnoreCase(gasTierName)) return GasTier.LOW;
         else if ("MID".equalsIgnoreCase(gasTierName)) return GasTier.MID;
         else if ("HIGH".equalsIgnoreCase(gasTierName)) return GasTier.HIGH;

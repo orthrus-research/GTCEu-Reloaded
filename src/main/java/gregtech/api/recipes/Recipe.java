@@ -12,7 +12,6 @@ import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.RecipePropertyStorageImpl;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.ItemStackHashStrategy;
-import gregtech.integration.groovy.GroovyScriptModule;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
@@ -102,7 +101,7 @@ public class Recipe {
                   @NotNull RecipePropertyStorage recipePropertyStorage,
                   @NotNull GTRecipeCategory recipeCategory) {
         this(inputs, outputs, chancedOutputs, fluidInputs, fluidOutputs, chancedFluidOutputs, duration, EUt, hidden,
-                authoredRecipe, recipePropertyStorage, recipeCategory, GroovyScriptModule.isCurrentlyRunning(), true);
+                authoredRecipe, recipePropertyStorage, recipeCategory, RecipeScripting.isRunning(), true);
     }
 
     private Recipe(List<GTRecipeInput> inputs, List<ItemStack> outputs,

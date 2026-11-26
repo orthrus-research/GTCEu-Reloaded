@@ -34,10 +34,8 @@ import gregtech.api.unification.stack.RecyclingData;
 import gregtech.api.util.EnumValidationResult;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
-import gregtech.api.util.Mods;
 import gregtech.api.util.ValidationResult;
 import gregtech.common.ConfigHolder;
-import gregtech.integration.groovy.GroovyScriptModule;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -45,11 +43,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fml.common.Optional;
 
-import com.cleanroommc.groovyscript.api.GroovyLog;
-import com.cleanroommc.groovyscript.api.IIngredient;
-import com.cleanroommc.groovyscript.helper.ingredient.OreDictIngredient;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -857,47 +851,6 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         return (R) this;
     }
 
-    @Optional.Method(modid = Mods.Names.GROOVY_SCRIPT)
-    public R inputs(IIngredient ingredient) {
-        return input(ofGroovyIngredient(ingredient));
-    }
-
-    @Optional.Method(modid = Mods.Names.GROOVY_SCRIPT)
-    public R inputs(IIngredient... ingredients) {
-        for (IIngredient ingredient : ingredients) {
-            inputs(ingredient);
-        }
-        return (R) this;
-    }
-
-    @Optional.Method(modid = Mods.Names.GROOVY_SCRIPT)
-    public R inputs(Collection<IIngredient> ingredients) {
-        for (IIngredient ingredient : ingredients) {
-            inputs(ingredient);
-        }
-        return (R) this;
-    }
-
-    @Optional.Method(modid = Mods.Names.GROOVY_SCRIPT)
-    public R notConsumable(IIngredient ingredient) {
-        return notConsumable(ofGroovyIngredient(ingredient));
-    }
-
-    @Optional.Method(modid = Mods.Names.GROOVY_SCRIPT)
-    private static GTRecipeInput ofGroovyIngredient(IIngredient ingredient) {
-        if (ingredient instanceof OreDictIngredient) {
-            return new GTRecipeOreInput(((OreDictIngredient) ingredient).getOreDict(), ingredient.getAmount());
-        }
-        Object oIngredient = ingredient;
-        if (oIngredient instanceof ItemStack) {
-            return new GTRecipeItemInput((ItemStack) oIngredient);
-        }
-        if (ingredient instanceof FluidStack) {
-            return new GTRecipeFluidInput((FluidStack) ingredient);
-        }
-        throw new IllegalArgumentException("Could not add groovy ingredient " + ingredient + " to recipe!");
-    }
-
     /**
      * Copies the chanced outputs of a Recipe numberOfOperations times, so every chanced output
      * gets an individual roll, instead of an all or nothing situation
@@ -1100,10 +1053,12 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     }
 
     protected EnumValidationResult validate() {
-        if (GroovyScriptModule.isCurrentlyRunning()) {
-            GroovyLog.Msg msg = GroovyLog.msg("Error adding GregTech " + recipeMap.unlocalizedName + " recipe").error();
-            validateGroovy(msg);
-            return msg.postIfNotEmpty() ? EnumValidationResult.SKIP : EnumValidationResult.VALID;
+        if (RecipeScripting.isRunning()) {
+            List<String> problems = new ArrayList<>();
+            validateScripted(problems);
+            boolean reported = RecipeScripting.frontend()
+                    .reportInvalid("Error adding GregTech " + recipeMap.unlocalizedName + " recipe", problems);
+            return reported ? EnumValidationResult.SKIP : EnumValidationResult.VALID;
         }
         if (EUt == 0) {
             GTLog.logger.error("EU/t cannot be equal to 0", new Throwable());
@@ -1132,20 +1087,29 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         return recipeStatus;
     }
 
-    @Optional.Method(modid = Mods.Names.GROOVY_SCRIPT)
-    protected void validateGroovy(GroovyLog.Msg errorMsg) {
-        errorMsg.add(EUt == 0, () -> "EU/t must not be to 0");
-        errorMsg.add(duration <= 0, () -> "Duration must not be less or equal to 0");
+    /**
+     * Validates a recipe that a running script declared ({@link RecipeScripting#isRunning()}) instead of
+     * {@link #validate()}'s checks: each problem adds one line, and any line skips the recipe with the script's error
+     * report. Subclasses add their own problems and call this method.
+     *
+     * @param problems the lines to add to
+     */
+    @MustBeInvokedByOverriders
+    protected void validateScripted(@NotNull List<String> problems) {
+        if (EUt == 0) problems.add("EU/t must not be to 0");
+        if (duration <= 0) problems.add("Duration must not be less or equal to 0");
         int maxInput = recipeMap.getMaxInputs();
         int maxOutput = recipeMap.getMaxOutputs();
         int maxFluidInput = recipeMap.getMaxFluidInputs();
         int maxFluidOutput = recipeMap.getMaxFluidOutputs();
-        errorMsg.add(inputs.size() > maxInput, () -> getRequiredString(maxInput, inputs.size(), "item input"));
-        errorMsg.add(outputs.size() > maxOutput, () -> getRequiredString(maxOutput, outputs.size(), "item output"));
-        errorMsg.add(fluidInputs.size() > maxFluidInput,
-                () -> getRequiredString(maxFluidInput, fluidInputs.size(), "fluid input"));
-        errorMsg.add(fluidOutputs.size() > maxFluidOutput,
-                () -> getRequiredString(maxFluidOutput, fluidOutputs.size(), "fluid output"));
+        if (inputs.size() > maxInput) problems.add(getRequiredString(maxInput, inputs.size(), "item input"));
+        if (outputs.size() > maxOutput) problems.add(getRequiredString(maxOutput, outputs.size(), "item output"));
+        if (fluidInputs.size() > maxFluidInput) {
+            problems.add(getRequiredString(maxFluidInput, fluidInputs.size(), "fluid input"));
+        }
+        if (fluidOutputs.size() > maxFluidOutput) {
+            problems.add(getRequiredString(maxFluidOutput, fluidOutputs.size(), "fluid output"));
+        }
     }
 
     @NotNull

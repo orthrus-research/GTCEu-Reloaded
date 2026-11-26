@@ -10,6 +10,7 @@ import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.recipes.RecipeBuilder;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.RecipeScripting;
 import gregtech.api.unification.Element;
 import gregtech.api.unification.Elements;
 import gregtech.api.unification.material.Material;
@@ -258,6 +259,11 @@ public class GroovyScriptModule extends IntegrationSubmodule implements GroovyPl
     @Override
     public void onCompatLoaded(GroovyContainer<?> container) {
         GroovyScriptModule.modSupportContainer = container;
+        // Each recipe map gets a virtualized registry in this container and the ingredient inputs on its builder
+        // class; the frontend sees maps as they are made, and maps made before now are passed to it here.
+        GroovyRecipeFrontend recipes = new GroovyRecipeFrontend();
+        RecipeScripting.install(recipes);
+        RecipeMap.getRecipeMaps().forEach(map -> recipes.mapCreated(map, map.recipeBuilder().getClass()));
         container.objectMapperBuilder("recipemap", RecipeMap.class)
                 .parser(IObjectParser.wrapStringGetter(RecipeMap::getByName))
                 .completerOfNamed(RecipeMap::getRecipeMaps, RecipeMap::getUnlocalizedName)
@@ -309,6 +315,7 @@ public class GroovyScriptModule extends IntegrationSubmodule implements GroovyPl
         ExpansionHelper.mixinClass(Material.class, MaterialPropertyExpansion.class);
         ExpansionHelper.mixinClass(Material.Builder.class, GroovyMaterialBuilderExpansion.class);
         ExpansionHelper.mixinMethod(RecipeBuilder.class, GroovyExpansions.class, "property");
+        GroovyExpansions.mixinIngredientInputs(RecipeBuilder.class);
         ExpansionHelper.mixinMethod(MaterialEvent.class, GroovyExpansions.class, "materialBuilder");
         ExpansionHelper.mixinMethod(MaterialEvent.class, GroovyExpansions.class, "toolBuilder");
         ExpansionHelper.mixinMethod(MaterialEvent.class, GroovyExpansions.class, "overrideToolBuilder");
