@@ -71,6 +71,12 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
         return new MetaTileEntityElectricBlastFurnace(metaTileEntityId);
     }
 
+    /** Offers paint groups and private input views; subclasses inherit this unless they override it. */
+    @Override
+    public boolean canUseRecipeInputViews() {
+        return true;
+    }
+
     @Override
     protected void configureDisplayText(MultiblockUIBuilder builder) {
         builder.setWorkingStatus(recipeMapWorkable.isWorkingEnabled(), recipeMapWorkable.isActive())

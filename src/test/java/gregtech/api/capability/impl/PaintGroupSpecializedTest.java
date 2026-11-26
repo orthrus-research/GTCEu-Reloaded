@@ -43,7 +43,8 @@ class PaintGroupSpecializedTest {
 
     @Test
     void actualMultiSmelterAppendCombinesRecipesOnlyWithinItsSelectedColor() {
-        assertTrue(PaintGroupSupport.supports(MetaTileEntityMultiSmelter.class));
+        assertTrue(new MetaTileEntityMultiSmelter(new ResourceLocation("gregtech", "paint_smelter"))
+                .canUseRecipeInputViews());
         Recipe wheat = RecipeMaps.FURNACE_RECIPES.recipeBuilder().inputs(new ItemStack(Items.WHEAT))
                 .outputs(new ItemStack(Items.GOLD_INGOT)).duration(128).EUt(4).build().getResult();
         Recipe iron = RecipeMaps.FURNACE_RECIPES.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT))
@@ -78,7 +79,8 @@ class PaintGroupSpecializedTest {
 
     @Test
     void actualProcessingArrayDiscoveryKeepsInstalledVoltageParallelAndColorBoundaries() throws Exception {
-        assertTrue(PaintGroupSupport.supports(MetaTileEntityProcessingArray.class));
+        assertTrue(new MetaTileEntityProcessingArray(new ResourceLocation("gregtech", "paint_array"), 0)
+                .canUseRecipeInputViews());
         RecipeMap<SimpleRecipeBuilder> map = map();
         compile(map.recipeBuilder().inputs(new ItemStack(Items.WHEAT)));
         Recipe tooHigh = map.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT))

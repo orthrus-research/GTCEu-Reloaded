@@ -29,11 +29,6 @@ final class PaintGroupTestSmelter extends MetaTileEntityMultiSmelter {
     }
 
     @Override
-    public boolean canUseRecipeInputViews() {
-        return true;
-    }
-
-    @Override
     public boolean isStructureFormed() {
         return true;
     }

@@ -54,6 +54,12 @@ public class MetaTileEntityMultiSmelter extends RecipeMapMultiblockController {
         return new MetaTileEntityMultiSmelter(metaTileEntityId);
     }
 
+    /** Offers paint groups and private input views; subclasses inherit this unless they override it. */
+    @Override
+    public boolean canUseRecipeInputViews() {
+        return true;
+    }
+
     @Override
     protected void configureDisplayText(MultiblockUIBuilder builder) {
         builder.setWorkingStatus(recipeMapWorkable.isWorkingEnabled(), recipeMapWorkable.isActive())

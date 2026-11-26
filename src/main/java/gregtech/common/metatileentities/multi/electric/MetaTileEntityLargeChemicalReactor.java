@@ -51,6 +51,12 @@ public class MetaTileEntityLargeChemicalReactor extends RecipeMapMultiblockContr
         return new MetaTileEntityLargeChemicalReactor(metaTileEntityId);
     }
 
+    /** Offers paint groups and private input views; subclasses inherit this unless they override it. */
+    @Override
+    public boolean canUseRecipeInputViews() {
+        return true;
+    }
+
     @Override
     protected @NotNull BlockPattern createStructurePattern() {
         TraceabilityPredicate casing = states(getCasingState()).setMinGlobalLimited(10);

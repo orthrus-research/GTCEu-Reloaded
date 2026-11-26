@@ -32,6 +32,12 @@ public class MetaTileEntityVacuumFreezer extends RecipeMapMultiblockController {
         return new MetaTileEntityVacuumFreezer(metaTileEntityId);
     }
 
+    /** Offers paint groups and private input views; subclasses inherit this unless they override it. */
+    @Override
+    public boolean canUseRecipeInputViews() {
+        return true;
+    }
+
     @Override
     protected BlockPattern createStructurePattern() {
         return FactoryBlockPattern.start()

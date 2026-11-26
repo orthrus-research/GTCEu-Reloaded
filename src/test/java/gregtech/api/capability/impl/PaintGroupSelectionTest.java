@@ -5,6 +5,7 @@ import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMapBuilder;
 import gregtech.api.recipes.builders.SimpleRecipeBuilder;
 import gregtech.api.recipes.logic.RecipeFailureReason;
+import gregtech.api.util.GTUtility;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityAssemblyLine;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityElectricBlastFurnace;
 
@@ -224,10 +225,19 @@ class PaintGroupSelectionTest {
     }
 
     @Test
-    void exactCoreAdmissionDoesNotEnableOrderedMachinesOrAddonSubclasses() {
-        assertTrue(PaintGroupSupport.supports(MetaTileEntityElectricBlastFurnace.class));
-        assertFalse(PaintGroupSupport.supports(MetaTileEntityAssemblyLine.class));
-        assertFalse(PaintGroupSupport.supports(PaintGroupTestController.class));
+    void coreAdmissionIsInheritedAndNotGivenToOrderedMachines() {
+        assertTrue(
+                new MetaTileEntityElectricBlastFurnace(GTUtility.gregtechId("paint_blast")).canUseRecipeInputViews());
+        assertTrue(new MetaTileEntityElectricBlastFurnace(GTUtility.gregtechId("paint_blast_addon")) {}
+                .canUseRecipeInputViews());
+        assertFalse(new MetaTileEntityElectricBlastFurnace(GTUtility.gregtechId("paint_blast_opt_out")) {
+
+            @Override
+            public boolean canUseRecipeInputViews() {
+                return false;
+            }
+        }.canUseRecipeInputViews());
+        assertFalse(new MetaTileEntityAssemblyLine(GTUtility.gregtechId("paint_assembly")).canUseRecipeInputViews());
     }
 
     static RecipeMap<SimpleRecipeBuilder> map() {

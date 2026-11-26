@@ -76,6 +76,12 @@ public class MetaTileEntityProcessingArray extends RecipeMapMultiblockController
         return new MetaTileEntityProcessingArray(metaTileEntityId, tier);
     }
 
+    /** Offers paint groups and private input views; subclasses inherit this unless they override it. */
+    @Override
+    public boolean canUseRecipeInputViews() {
+        return true;
+    }
+
     @Override
     protected void formStructure(PatternMatchContext context) {
         super.formStructure(context);

@@ -11,7 +11,6 @@ import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.MultiblockFluidInputs;
 import gregtech.api.capability.impl.MultiblockRecipeInputs;
 import gregtech.api.capability.impl.MultiblockRecipeLogic;
-import gregtech.api.capability.impl.PaintGroupSupport;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
@@ -97,9 +96,13 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
         return recipeMapWorkable;
     }
 
-    /** Addons with audited selection and output routing may explicitly opt in. */
+    /**
+     * Whether this controller offers paint groups and private input views. A controller opts in only when its recipe
+     * selection and output routing go through {@link MultiblockRecipeLogic}'s input views. Subclasses of a controller
+     * that opts in inherit it; one that replaces that selection or routing overrides this to return false.
+     */
     public boolean canUseRecipeInputViews() {
-        return PaintGroupSupport.supports(getClass());
+        return false;
     }
 
     public boolean isPaintGroupingEnabled() {
