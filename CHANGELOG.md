@@ -284,6 +284,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Saves | Covers, filters, quantum tanks and chests, fluid, steam and pump hatches, power substations, maintenance hatches and the creative chest saved in older formats are rewritten once when their chunk first loads, instead of being converted on every load. Filters saved before the filter rework keep their case-insensitive or any-entry ore dictionary matching, a simple item filter's respect for damage and NBT, and a robotic arm's transfer stack size, and a maintenance hatch from before 2.5.4 keeps its tape; before, the conversion reset these. Fluid regulators no longer save an empty `filterv2` tag |
 | Saves | The datafix passes that move machine blocks keep a quantum chest's, quantum tank's or clipboard's block see-through; before, each pass made every machine block in the chunk opaque |
 | Covers | A conveyor or pump whose saved transfer rate is missing or outside its range loads at its full rate; before, it loaded as saved, so a missing rate moved nothing |
+| Saves | Machine items held in chests, machines, entities and player inventories are carried through the machine ID migrations, as placed machines are; before, only stacks saved with a large count were, so in a world older than a migration an ordinary stack could keep an ID that no longer names its machine. A world already saved at a migration's version keeps the items it has |
 
 ### Earlier fork changes
 
