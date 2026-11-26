@@ -190,9 +190,13 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
         return GTSoundEvents.BREAKDOWN_ELECTRICAL;
     }
 
+    /**
+     * This structure meets the preview editor's contract. Subclasses inherit it; one whose structure, clones or
+     * snapshots no longer meet it overrides this to return false.
+     */
     @Override
     public boolean supportsPreviewEditing() {
-        return getClass() == MetaTileEntityElectricBlastFurnace.class;
+        return true;
     }
 
     @Override

@@ -71,9 +71,13 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
         super(metaTileEntityId, RecipeMaps.ASSEMBLY_LINE_RECIPES);
     }
 
+    /**
+     * This structure meets the preview editor's contract. Subclasses inherit it; one whose structure, clones or
+     * snapshots no longer meet it overrides this to return false.
+     */
     @Override
     public boolean supportsPreviewEditing() {
-        return getClass() == MetaTileEntityAssemblyLine.class;
+        return true;
     }
 
     @Override

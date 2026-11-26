@@ -76,19 +76,26 @@ public class MultiblockPreviewEditorTest {
     }
 
     @Test
-    void exactCoreFamiliesAdmitEditingAndUnknownSubclassesDoNot() {
+    void coreFamiliesAdmitEditingAndSubclassesInheritItUnlessTheyOptOut() {
         assertTrue(registry.blastFurnace.supportsPreviewEditing());
         assertTrue(registry.chemicalReactor.supportsPreviewEditing());
         assertTrue(registry.tower.supportsPreviewEditing());
         assertTrue(registry.assembly.supportsPreviewEditing());
-        assertFalse(new MetaTileEntityElectricBlastFurnace(PreviewTestRegistry.id("addon_blast")) {}
+        assertTrue(new MetaTileEntityElectricBlastFurnace(PreviewTestRegistry.id("addon_blast")) {}
                 .supportsPreviewEditing());
-        assertFalse(new MetaTileEntityLargeChemicalReactor(PreviewTestRegistry.id("addon_chemical")) {}
+        assertTrue(new MetaTileEntityLargeChemicalReactor(PreviewTestRegistry.id("addon_chemical")) {}
                 .supportsPreviewEditing());
-        assertFalse(
+        assertTrue(
                 new MetaTileEntityDistillationTower(PreviewTestRegistry.id("addon_tower")) {}.supportsPreviewEditing());
-        assertFalse(
+        assertTrue(
                 new MetaTileEntityAssemblyLine(PreviewTestRegistry.id("addon_assembly")) {}.supportsPreviewEditing());
+        assertFalse(new MetaTileEntityElectricBlastFurnace(PreviewTestRegistry.id("addon_blast_opt_out")) {
+
+            @Override
+            public boolean supportsPreviewEditing() {
+                return false;
+            }
+        }.supportsPreviewEditing());
     }
 
     @Test

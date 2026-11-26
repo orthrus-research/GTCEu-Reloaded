@@ -595,7 +595,7 @@ public abstract class MultiblockControllerBase extends MetaTileEntity implements
     /**
      * Opt in to the client preview editor. Implementations must support independent factory clones,
      * NBT snapshots and standalone pattern matching without formation callbacks or a real world.
-     * Subclasses with additional constraints should explicitly reconsider this contract.
+     * Subclasses inherit an implementation's answer; one that no longer meets the contract returns false.
      */
     public boolean supportsPreviewEditing() {
         return false;

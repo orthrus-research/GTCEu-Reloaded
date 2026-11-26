@@ -68,9 +68,13 @@ public class MetaTileEntityLargeChemicalReactor extends RecipeMapMultiblockContr
                 .build();
     }
 
+    /**
+     * This structure meets the preview editor's contract. Subclasses inherit it; one whose structure, clones or
+     * snapshots no longer meet it overrides this to return false.
+     */
     @Override
     public boolean supportsPreviewEditing() {
-        return getClass() == MetaTileEntityLargeChemicalReactor.class;
+        return true;
     }
 
     @Override
