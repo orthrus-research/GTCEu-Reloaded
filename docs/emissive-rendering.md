@@ -93,18 +93,13 @@ draws a buffer.
 | Fusion reactor ring | `POSITION_COLOR` quads, 800 vertices | `OPAQUE` (its colors are opaque) | `gregtech:fusion_reactor` | The reactor is valid and in its holder; drawn while the ring has a color | The reactor's |
 | Cable heat glow | `POSITION_COLOR` quads, a cuboid's faces per pipe box | `ALPHA` (alpha 0 to 0.8 by temperature) | `gregtech:heat_effect` | The particle is alive and its cable valid; drawn while alpha is above 0; not submitted for insulated cables | The cable's |
 
-## Deprecated API
+## Removed API
 
-These public types and members are kept for addons built against them and answer as GTCEu did under a renderer that
-drew terrain without its bloom pass:
-
-- `BloomEffectUtil.getBloomLayer()` and `getEffectiveBloomLayer()` answer `CUTOUT`; `getEffectiveBloomLayer(fallback)`
-  and `getEffectiveBloomLayer(boolean, fallback)` answer `fallback`. There is no `BLOOM` game layer.
-- `BloomEffectUtil.registerBloomRender(...)` (all four forms) returns `BloomRenderTicket.INVALID` and never calls the
-  render callback.
-- `BloomEffect` keeps its public parameter fields; nothing reads them.
-- `IBloomEffect`, `BloomType`, `BloomEffectUtil.BloomRenderTicket` and `GTBloomParticle` remain; a `GTBloomParticle`'s
-  bloom effect is never drawn.
+The former bloom API, `BloomEffectUtil` (with `BloomRenderTicket`), `BloomEffect`, `BloomType`, `IBloomEffect` and
+`GTBloomParticle`, is removed. An addon that asked `BloomEffectUtil` for the bloom layer uses `EmissiveLayer` instead
+(`gameLayer()` for `Block.canRenderInLayer`, `isCurrent()` while emitting geometry), one that registered a bloom render
+submits its geometry with `GTBloomKind.contribute`, and a `GTBloomParticle` becomes a `GTParticle` that draws itself in
+`renderParticle`. There is no `BLOOM` game layer.
 
 `IRenderSetup` and `EffectRenderContext` are unchanged: the particle manager uses them.
 
