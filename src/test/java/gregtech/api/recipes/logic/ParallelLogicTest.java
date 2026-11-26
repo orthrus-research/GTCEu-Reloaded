@@ -14,7 +14,6 @@ import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTHashMaps;
 import gregtech.api.util.OverlayedFluidHandler;
 import gregtech.api.util.OverlayedItemHandler;
-import gregtech.common.metatileentities.MetaTileEntities;
 import gregtech.common.metatileentities.electric.SimpleMachineMetaTileEntityResizable;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityFluidHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityItemBus;
@@ -866,14 +865,14 @@ public class ParallelLogicTest {
                 .output(Items.CARROT)
                 .build().getResult();
 
-        SimpleMachineMetaTileEntityResizable macerator = MetaTileEntities.registerMetaTileEntity(1,
-                new SimpleMachineMetaTileEntityResizable(
-                        gregtechId("macerator"),
-                        RecipeMaps.MACERATOR_RECIPES,
-                        -1,
-                        4,
-                        null,
-                        GTValues.EV));
+        // a machine instance is enough: registering it would take a real machine's id in the shared registry
+        SimpleMachineMetaTileEntityResizable macerator = new SimpleMachineMetaTileEntityResizable(
+                gregtechId("macerator"),
+                RecipeMaps.MACERATOR_RECIPES,
+                -1,
+                4,
+                null,
+                GTValues.EV);
 
         macerator.getImportItems().setStackInSlot(0, new ItemStack(Blocks.STONE, 10));
 

@@ -1,6 +1,6 @@
 package gregtech.api.util;
 
-import gregtech.Bootstrap;
+import gregtech.BootstrapExtension;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.block.machines.MachineItemBlock;
@@ -18,25 +18,18 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.objectweb.asm.Type;
-
-import java.util.Collections;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(BootstrapExtension.class)
 class TankItemFluidPreviewTest {
 
     private static CountingMachineItemBlock item;
@@ -44,17 +37,6 @@ class TankItemFluidPreviewTest {
 
     @BeforeAll
     static void bootstrap() {
-        Bootstrap.perform();
-        ASMDataTable capabilities = new ASMDataTable();
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_CAPABILITY", Collections.singletonMap("value", Type.getType(IFluidHandler.class)));
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_ITEM_CAPABILITY",
-                Collections.singletonMap("value", Type.getType(IFluidHandlerItem.class)));
-        CapabilityManager.INSTANCE.injectCapabilities(capabilities);
-        if (CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY == null) CapabilityFluidHandler.register();
-        assertNotNull(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY);
-
         MTERegistry registry = GregTechAPI.mteManager.createRegistry("q7_preview_test");
         BlockMachine block = new BlockMachine();
         block.setRegistryName("q7_preview_test", "machine");

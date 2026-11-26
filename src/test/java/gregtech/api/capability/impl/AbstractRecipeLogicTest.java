@@ -11,7 +11,6 @@ import gregtech.api.recipes.RecipeMapBuilder;
 import gregtech.api.recipes.builders.SimpleRecipeBuilder;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.world.DummyWorld;
-import gregtech.common.metatileentities.MetaTileEntities;
 
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -178,12 +177,12 @@ public class AbstractRecipeLogicTest {
                 .fluidOutputs(2)
                 .build();
 
-        MetaTileEntity at = MetaTileEntities.registerMetaTileEntity(TEST_ID,
-                new SimpleMachineMetaTileEntity(
-                        GTUtility.gregtechId("chemical_reactor.lv_" + TEST_ID),
-                        map,
-                        null,
-                        1, false));
+        // a machine instance is enough: registering it would take a real machine's id in the shared registry
+        MetaTileEntity at = new SimpleMachineMetaTileEntity(
+                GTUtility.gregtechId("chemical_reactor.lv_" + TEST_ID),
+                map,
+                null,
+                1, false);
         MetaTileEntity atte = new MetaTileEntityHolder().setMetaTileEntity(at);
         ((MetaTileEntityHolder) atte.getHolder()).setWorld(world);
         map.recipeBuilder()

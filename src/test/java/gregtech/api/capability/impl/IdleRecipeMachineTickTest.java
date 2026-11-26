@@ -1,6 +1,6 @@
 package gregtech.api.capability.impl;
 
-import gregtech.Bootstrap;
+import gregtech.BootstrapExtension;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
@@ -17,19 +17,14 @@ import net.minecraftforge.fluids.FluidStack;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static gregtech.api.capability.impl.IdleRecipeSchedulingTest.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(BootstrapExtension.class)
 class IdleRecipeMachineTickTest {
-
-    @BeforeAll
-    static void bootstrap() {
-        Bootstrap.perform();
-        EnergyContainerHandlerTest.bootstrap();
-    }
 
     @Test
     void sleepingRecipeKeepsOtherTraitsCoversBatteryTransfersAndAutoOutput() {

@@ -47,21 +47,21 @@ class SharedRecyclingOwnershipTest {
                 .itemInputs(1).itemOutputs(1).build();
         try {
             manager.registerRecyclingData(key(Items.APPLE), data(100));
-            manager.registerRecyclingData(key(Items.DIAMOND), data(7));
-            assertTrue(first.replace("same-name", List.of(recipe(map, "upstream", Items.APPLE, 2, Items.DIAMOND)))
+            manager.registerRecyclingData(key(Items.FLINT), data(7));
+            assertTrue(first.replace("same-name", List.of(recipe(map, "upstream", Items.APPLE, 2, Items.FLINT)))
                     .value().isPresent());
-            assertTrue(second.replace("same-name", List.of(recipe(map, "downstream", Items.DIAMOND, 3, Items.EMERALD)))
+            assertTrue(second.replace("same-name", List.of(recipe(map, "downstream", Items.FLINT, 3, Items.FEATHER)))
                     .value().isPresent());
-            assertEquals(data(600), manager.getRecyclingData(key(Items.EMERALD)));
-            assertTrue(first.replace("same-name", List.of(recipe(map, "upstream", Items.APPLE, 4, Items.DIAMOND)))
+            assertEquals(data(600), manager.getRecyclingData(key(Items.FEATHER)));
+            assertTrue(first.replace("same-name", List.of(recipe(map, "upstream", Items.APPLE, 4, Items.FLINT)))
                     .value().isPresent());
-            assertEquals(data(1200), manager.getRecyclingData(key(Items.EMERALD)));
+            assertEquals(data(1200), manager.getRecyclingData(key(Items.FEATHER)));
             assertTrue(first.clear().value().isPresent());
-            assertEquals(data(21), manager.getRecyclingData(key(Items.EMERALD)));
+            assertEquals(data(21), manager.getRecyclingData(key(Items.FEATHER)));
             assertEquals(List.of("same-name"), second.groups());
             assertEquals(1, map.getRecipeList().size());
             assertTrue(second.clear().value().isPresent());
-            assertEquals(before.get(key(Items.EMERALD)), manager.snapshot().get(key(Items.EMERALD)));
+            assertEquals(before.get(key(Items.FEATHER)), manager.snapshot().get(key(Items.FEATHER)));
         } finally {
             first.clear();
             second.clear();
@@ -79,16 +79,16 @@ class SharedRecyclingOwnershipTest {
                 .itemInputs(1).itemOutputs(1).build();
         try {
             manager.registerRecyclingData(key(Items.APPLE), data(100));
-            assertTrue(first.replace("upstream", List.of(recipe(map, "first", Items.APPLE, 1, Items.DIAMOND)))
+            assertTrue(first.replace("upstream", List.of(recipe(map, "first", Items.APPLE, 1, Items.FLINT)))
                     .value().isPresent());
-            assertTrue(second.replace("downstream", List.of(recipe(map, "second", Items.DIAMOND, 1, Items.EMERALD)))
+            assertTrue(second.replace("downstream", List.of(recipe(map, "second", Items.FLINT, 1, Items.FEATHER)))
                     .value().isPresent());
             var stable = manager.snapshot();
             long revision = map.getRecipeRevision();
-            var cycle = first.replace("upstream", List.of(recipe(map, "cycle", Items.EMERALD, 1, Items.DIAMOND)));
+            var cycle = first.replace("upstream", List.of(recipe(map, "cycle", Items.FEATHER, 1, Items.FLINT)));
             assertTrue(cycle.value().isEmpty());
             assertEquals("recipe.recycling.conflict", cycle.diagnostics().getFirst().code());
-            var conflict = second.replace("duplicate", List.of(recipe(map, "duplicate", Items.COAL, 1, Items.DIAMOND)));
+            var conflict = second.replace("duplicate", List.of(recipe(map, "duplicate", Items.COAL, 1, Items.FLINT)));
             assertTrue(conflict.value().isEmpty());
             assertEquals("duplicate", conflict.diagnostics().getFirst().origin().declaration());
             assertEquals(stable, manager.snapshot());
@@ -107,29 +107,29 @@ class SharedRecyclingOwnershipTest {
         var first = new RecyclingOwner();
         var second = new RecyclingOwner();
         manager.registerRecyclingData(key(Items.APPLE), data(100));
-        var firstChange = graph.prepare(first, "same", List.of(contribution("first", Items.APPLE, 2, Items.DIAMOND)),
+        var firstChange = graph.prepare(first, "same", List.of(contribution("first", Items.APPLE, 2, Items.FLINT)),
                 false);
         var staleEmpty = graph.prepare(second, "empty", List.of(), true);
-        var staleReal = graph.prepare(second, "same", List.of(contribution("second", Items.DIAMOND, 3, Items.EMERALD)),
+        var staleReal = graph.prepare(second, "same", List.of(contribution("second", Items.FLINT, 3, Items.FEATHER)),
                 false);
-        assertNull(manager.getRecyclingData(key(Items.DIAMOND)));
+        assertNull(manager.getRecyclingData(key(Items.FLINT)));
         firstChange.publish();
         assertFalse(staleEmpty.isCurrent());
         assertFalse(staleReal.isCurrent());
         assertThrows(IllegalStateException.class, staleEmpty::publish);
         assertThrows(IllegalStateException.class, staleReal::publish);
-        assertEquals(data(200), manager.getRecyclingData(key(Items.DIAMOND)));
-        graph.prepare(second, "same", List.of(contribution("second", Items.DIAMOND, 3, Items.EMERALD)), false)
+        assertEquals(data(200), manager.getRecyclingData(key(Items.FLINT)));
+        graph.prepare(second, "same", List.of(contribution("second", Items.FLINT, 3, Items.FEATHER)), false)
                 .publish();
-        assertEquals(data(600), manager.getRecyclingData(key(Items.EMERALD)));
+        assertEquals(data(600), manager.getRecyclingData(key(Items.FEATHER)));
         graph.prepare(first, "all", List.of(), true).publish();
-        assertNull(manager.getRecyclingData(key(Items.DIAMOND)));
-        assertNull(manager.getRecyclingData(key(Items.EMERALD)));
-        graph.prepare(first, "same", List.of(contribution("first", Items.APPLE, 4, Items.DIAMOND)), false).publish();
-        assertEquals(data(1200), manager.getRecyclingData(key(Items.EMERALD)));
+        assertNull(manager.getRecyclingData(key(Items.FLINT)));
+        assertNull(manager.getRecyclingData(key(Items.FEATHER)));
+        graph.prepare(first, "same", List.of(contribution("first", Items.APPLE, 4, Items.FLINT)), false).publish();
+        assertEquals(data(1200), manager.getRecyclingData(key(Items.FEATHER)));
         graph.prepare(second, "all", List.of(), true).publish();
-        assertEquals(data(400), manager.getRecyclingData(key(Items.DIAMOND)));
-        assertNull(manager.getRecyclingData(key(Items.EMERALD)));
+        assertEquals(data(400), manager.getRecyclingData(key(Items.FLINT)));
+        assertNull(manager.getRecyclingData(key(Items.FEATHER)));
     }
 
     @Test
@@ -138,15 +138,15 @@ class SharedRecyclingOwnershipTest {
         var owner = new RecyclingOwner();
         manager.registerRecyclingData(key(Items.APPLE), data(100));
         var prepared = manager.ownership().prepare(owner, "first",
-                List.of(contribution("first", Items.APPLE, 2, Items.DIAMOND)), false);
+                List.of(contribution("first", Items.APPLE, 2, Items.FLINT)), false);
         manager.registerRecyclingData(key(Items.APPLE), data(200));
         assertFalse(prepared.isCurrent());
         assertThrows(IllegalStateException.class, prepared::publish);
-        assertNull(manager.getRecyclingData(key(Items.DIAMOND)));
+        assertNull(manager.getRecyclingData(key(Items.FLINT)));
         manager.ownership()
-                .prepare(owner, "first", List.of(contribution("first", Items.APPLE, 2, Items.DIAMOND)), false)
+                .prepare(owner, "first", List.of(contribution("first", Items.APPLE, 2, Items.FLINT)), false)
                 .publish();
-        assertEquals(data(400), manager.getRecyclingData(key(Items.DIAMOND)));
+        assertEquals(data(400), manager.getRecyclingData(key(Items.FLINT)));
     }
 
     @Test
@@ -156,19 +156,19 @@ class SharedRecyclingOwnershipTest {
         var other = new RecyclingOwner();
         manager.registerRecyclingData(key(Items.APPLE), data(100));
         manager.ownership().prepare(owner, "first",
-                List.of(contribution("first", Items.APPLE, 2, Items.DIAMOND)), false).publish();
-        assertEquals(data(200), manager.getRecyclingData(key(Items.DIAMOND)));
-        manager.registerRecyclingData(key(Items.DIAMOND), data(999));
+                List.of(contribution("first", Items.APPLE, 2, Items.FLINT)), false).publish();
+        assertEquals(data(200), manager.getRecyclingData(key(Items.FLINT)));
+        manager.registerRecyclingData(key(Items.FLINT), data(999));
         // Changes by another owner still refuse to resolve over an owned entry that was edited outside.
         assertThrows(IllegalStateException.class, () -> manager.ownership().prepare(other, "other",
-                List.of(contribution("other", Items.APPLE, 1, Items.EMERALD)), false));
+                List.of(contribution("other", Items.APPLE, 1, Items.FEATHER)), false));
         manager.ownership().prepare(owner, "all", List.of(), true).publish();
-        assertEquals(data(999), manager.getRecyclingData(key(Items.DIAMOND)));
+        assertEquals(data(999), manager.getRecyclingData(key(Items.FLINT)));
         manager.ownership().prepare(owner, "all", List.of(), true).publish();
         manager.ownership().prepare(other, "other",
-                List.of(contribution("other", Items.APPLE, 1, Items.EMERALD)), false).publish();
-        assertEquals(data(100), manager.getRecyclingData(key(Items.EMERALD)));
-        assertEquals(data(999), manager.getRecyclingData(key(Items.DIAMOND)));
+                List.of(contribution("other", Items.APPLE, 1, Items.FEATHER)), false).publish();
+        assertEquals(data(100), manager.getRecyclingData(key(Items.FEATHER)));
+        assertEquals(data(999), manager.getRecyclingData(key(Items.FLINT)));
     }
 
     private static RecyclingContribution contribution(String name, Item input, int count, Item output) {

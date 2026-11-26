@@ -1,10 +1,9 @@
 package gregtech.api.capability.impl;
 
-import gregtech.Bootstrap;
+import gregtech.BootstrapExtension;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
 import gregtech.api.capability.IEnergyContainer;
-import gregtech.api.capability.SimpleCapabilityManager;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.util.GTUtility;
@@ -14,39 +13,22 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 import net.minecraftforge.items.ItemStackHandler;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.objectweb.asm.Type;
 
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(BootstrapExtension.class)
 public class EnergyContainerHandlerTest {
-
-    @BeforeAll
-    public static void bootstrap() {
-        Bootstrap.perform();
-        if (GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM == null) {
-            ASMDataTable capabilities = new ASMDataTable();
-            capabilities.addASMData(null, CapabilityInject.class.getName(), GregtechCapabilities.class.getName(),
-                    "CAPABILITY_ELECTRIC_ITEM", Collections.singletonMap("value", Type.getType(IElectricItem.class)));
-            CapabilityManager.INSTANCE.injectCapabilities(capabilities);
-            SimpleCapabilityManager.registerCapabilityWithNoDefault(IElectricItem.class);
-        }
-        assertNotNull(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM);
-    }
 
     @ParameterizedTest
     @ValueSource(longs = { 0, 64, 128 })

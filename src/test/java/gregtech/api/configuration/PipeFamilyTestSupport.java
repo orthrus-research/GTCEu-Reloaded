@@ -1,13 +1,6 @@
 package gregtech.api.configuration;
 
 import gregtech.Bootstrap;
-import gregtech.api.capability.GregtechCapabilities;
-import gregtech.api.capability.GregtechTileCapabilities;
-import gregtech.api.capability.IDataAccessHatch;
-import gregtech.api.capability.IEnergyContainer;
-import gregtech.api.capability.ILaserContainer;
-import gregtech.api.capability.IOpticalComputationProvider;
-import gregtech.api.capability.SimpleCapabilityManager;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.material.properties.FluidPipeProperties;
 import gregtech.api.unification.material.properties.WireProperties;
@@ -31,15 +24,6 @@ import gregtech.common.pipelike.optical.tile.TileEntityOpticalPipe;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
-
-import org.objectweb.asm.Type;
-
-import java.util.Collections;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 final class PipeFamilyTestSupport {
 
@@ -54,26 +38,6 @@ final class PipeFamilyTestSupport {
     static void bootstrap() {
         Bootstrap.perform();
         if (initialized) return;
-        ASMDataTable table = new ASMDataTable();
-        inject(table, GregtechCapabilities.class, "CAPABILITY_ENERGY_CONTAINER", IEnergyContainer.class);
-        inject(table, GregtechTileCapabilities.class, "CAPABILITY_DATA_ACCESS", IDataAccessHatch.class);
-        inject(table, GregtechTileCapabilities.class, "CAPABILITY_LASER", ILaserContainer.class);
-        inject(table, GregtechTileCapabilities.class, "CABABILITY_COMPUTATION_PROVIDER",
-                IOpticalComputationProvider.class);
-        CapabilityManager.INSTANCE.injectCapabilities(table);
-        if (GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER == null)
-            SimpleCapabilityManager.registerCapabilityWithNoDefault(IEnergyContainer.class);
-        if (GregtechTileCapabilities.CAPABILITY_DATA_ACCESS == null)
-            SimpleCapabilityManager.registerCapabilityWithNoDefault(IDataAccessHatch.class);
-        if (GregtechTileCapabilities.CAPABILITY_LASER == null)
-            SimpleCapabilityManager.registerCapabilityWithNoDefault(ILaserContainer.class);
-        if (GregtechTileCapabilities.CABABILITY_COMPUTATION_PROVIDER == null)
-            SimpleCapabilityManager.registerCapabilityWithNoDefault(IOpticalComputationProvider.class);
-        assertNotNull(GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER);
-        assertNotNull(GregtechTileCapabilities.CAPABILITY_DATA_ACCESS);
-        assertNotNull(GregtechTileCapabilities.CAPABILITY_LASER);
-        assertNotNull(GregtechTileCapabilities.CABABILITY_COMPUTATION_PROVIDER);
-
         cableBlock = new BlockCable(Insulation.CABLE_SINGLE, Materials.Copper.getRegistry());
         cableBlock.addPipeMaterial(Materials.Copper, new WireProperties(128, 16, 1));
         // optical and laser pipes are named and registered as in the game, so their tiles can be saved
@@ -88,11 +52,6 @@ final class PipeFamilyTestSupport {
         fluidBlock.addPipeMaterial(Materials.Copper, new FluidPipeProperties(1000, 1000, true, true, true, true));
         TileEntity.register("gregtech:pipe_family_test_fluid", PipeTestFluidPipe.class);
         initialized = true;
-    }
-
-    private static void inject(ASMDataTable table, Class<?> owner, String field, Class<?> type) {
-        table.addASMData(null, CapabilityInject.class.getName(), owner.getName(), field,
-                Collections.singletonMap("value", Type.getType(type)));
     }
 
     static TileEntityCable cable(ConfigurationTestWorld world, BlockPos pos) {

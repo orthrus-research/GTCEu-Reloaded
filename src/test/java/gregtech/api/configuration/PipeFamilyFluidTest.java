@@ -14,15 +14,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
@@ -30,7 +26,6 @@ import org.apache.logging.log4j.core.Logger;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.objectweb.asm.Type;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,16 +44,6 @@ public class PipeFamilyFluidTest {
     @BeforeAll
     static void bootstrap() {
         PipeFamilyTestSupport.bootstrap();
-        ASMDataTable capabilities = new ASMDataTable();
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_CAPABILITY", Collections.singletonMap("value", Type.getType(IFluidHandler.class)));
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_ITEM_CAPABILITY",
-                Collections.singletonMap("value", Type.getType(IFluidHandlerItem.class)));
-        CapabilityManager.INSTANCE.injectCapabilities(capabilities);
-        if (CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY == null) CapabilityFluidHandler.register();
-        assertNotNull(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
-        assertNotNull(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY);
     }
 
     @Test

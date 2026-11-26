@@ -4,14 +4,10 @@ import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.GregTechAPIInternal;
 import gregtech.api.block.IHeatingCoilBlockStats;
-import gregtech.api.block.coil.CoilManager;
-import gregtech.api.capability.SimpleCapabilityManager;
 import gregtech.api.cover.CoverDefinition;
-import gregtech.api.fluids.GTFluidRegistration;
 import gregtech.api.gui.UIFactory;
 import gregtech.api.items.gui.PlayerInventoryUIFactory;
 import gregtech.api.metatileentity.MetaTileEntityUIFactory;
-import gregtech.api.metatileentity.registry.MTEManager;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.modules.IGregTechModule;
@@ -22,12 +18,6 @@ import gregtech.api.recipes.ModHandler;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.recipes.properties.impl.TemperatureProperty;
-import gregtech.api.unification.OreDictUnifier;
-import gregtech.api.unification.material.Materials;
-import gregtech.api.unification.material.event.MaterialEvent;
-import gregtech.api.unification.material.event.MaterialRegistryEvent;
-import gregtech.api.unification.material.event.PostMaterialEvent;
-import gregtech.api.unification.material.registry.MarkerMaterialRegistry;
 import gregtech.api.util.CapesRegistry;
 import gregtech.api.util.oreglob.OreGlob;
 import gregtech.api.util.virtualregistry.VirtualEnderRegistry;
@@ -37,9 +27,6 @@ import gregtech.api.worldgen.config.WorldGenRegistry;
 import gregtech.common.CommonProxy;
 import gregtech.common.ConfigHolder;
 import gregtech.common.MetaEntities;
-import gregtech.common.blocks.BlockBatteryPart;
-import gregtech.common.blocks.BlockCleanroomCasing;
-import gregtech.common.blocks.BlockWireCoil;
 import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.command.CommandFluidReconcile;
 import gregtech.common.command.CommandHand;
@@ -49,9 +36,6 @@ import gregtech.common.command.benchmark.CommandBenchmark;
 import gregtech.common.command.worldgen.CommandWorldgen;
 import gregtech.common.covers.CoverBehaviors;
 import gregtech.common.covers.filter.oreglob.impl.OreGlobParser;
-import gregtech.common.items.MetaItems;
-import gregtech.common.items.ToolItems;
-import gregtech.common.metatileentities.MetaTileEntities;
 import gregtech.common.worldgen.LootTableHelper;
 import gregtech.core.advancement.AdvancementTriggers;
 import gregtech.core.advancement.internal.AdvancementManager;
@@ -156,79 +140,10 @@ public class CoreModule implements IGregTechModule {
         UI_FACTORY_REGISTRY.freeze();
         /* End UI Factory Registration */
 
-        SimpleCapabilityManager.init();
-
-        /* Start Material Registration */
-
-        GregTechAPI.markerMaterialRegistry = MarkerMaterialRegistry.getInstance();
-
-        // First, register other mods' Registries
-        MaterialRegistryManager managerInternal = (MaterialRegistryManager) GregTechAPI.materialManager;
-
-        logger.info("Registering material registries");
-        MinecraftForge.EVENT_BUS.post(new MaterialRegistryEvent());
-
-        // First, register CEu Materials
-        managerInternal.unfreezeRegistries();
-        MaterialEvent materialEvent = new MaterialEvent();
-        logger.info("Registering GTCEu Materials");
-        Materials.register();
-        MaterialRegistryManager.getInstance()
-                .getRegistry(GTValues.MODID)
-                .setFallbackMaterial(Materials.Aluminium);
-
-        // Then, register addon Materials
-        logger.info("Registering addon Materials");
-        MinecraftForge.EVENT_BUS.post(materialEvent);
-
-        // Fire Post-Material event, intended for when Materials need to be iterated over in-full before freezing
-        // Block entirely new Materials from being added in the Post event
-        managerInternal.closeRegistries();
-        MinecraftForge.EVENT_BUS.post(new PostMaterialEvent());
-
-        // Freeze Material Registry before processing Items, Blocks, and Fluids
-        managerInternal.freezeRegistries();
-        /* End Material Registration */
-
-        // need to do this before MetaBlocks runs, to make sure all addons get their own BlockMachine
-        /* Start MTE Registry Addition */
-        GregTechAPI.mteManager = MTEManager.getInstance();
-        GregTechAPI.coilManager = CoilManager.getInstance();
-        MinecraftForge.EVENT_BUS.post(new MTEManager.MTERegistryEvent());
-        /* End MTE Registry Addition */
-
-        OreDictUnifier.init();
-
-        MetaBlocks.init();
-        logger.info("Registering Coils");
-        MinecraftForge.EVENT_BUS.post(new CoilManager.CoilRegistryEvent());
-
-        MetaItems.init();
-        ToolItems.init();
-        GTFluidRegistration.INSTANCE.register();
-
-        /* Start CEu MetaTileEntity Registration */
-        for (MTERegistry registry : mteManager.getRegistries()) {
-            registry.unfreeze();
-        }
-        logger.info("Registering GTCEu Meta Tile Entities");
-        MetaTileEntities.init();
-        /* End CEu MetaTileEntity Registration */
-        /* Addons not done via an Event due to how much must be initialized for MTEs to register */
+        // capabilities, materials, blocks, items, fluids and machines, shared with the unit-test bootstrap
+        ContentRegistration.register();
 
         MetaEntities.init();
-
-        /* Start API Block Registration */
-        for (BlockWireCoil.CoilType type : BlockWireCoil.getCoilTypes()) {
-            HEATING_COILS.put(MetaBlocks.WIRE_COIL.getState(type), type);
-        }
-        for (BlockBatteryPart.BatteryPartType type : BlockBatteryPart.BatteryPartType.values()) {
-            PSS_BATTERIES.put(MetaBlocks.BATTERY_BLOCK.getState(type), type);
-        }
-        for (BlockCleanroomCasing.CasingType type : BlockCleanroomCasing.CasingType.values()) {
-            CLEANROOM_FILTERS.put(MetaBlocks.CLEANROOM_CASING.getState(type), type);
-        }
-        /* End API Block Registration */
 
         proxy.onPreLoad();
     }

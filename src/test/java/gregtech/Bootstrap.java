@@ -3,16 +3,17 @@ package gregtech;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.GregTechAPIInternal;
-import gregtech.api.fluids.GTFluidRegistration;
-import gregtech.api.metatileentity.registry.MTEManager;
-import gregtech.api.unification.material.Materials;
-import gregtech.api.unification.material.registry.MarkerMaterialRegistry;
-import gregtech.api.unification.ore.OrePrefix;
+import gregtech.api.capability.GregtechCapabilities;
+import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.util.GTLog;
-import gregtech.common.items.MetaItems;
+import gregtech.api.worldgen.generator.GTWorldGenCapability;
+import gregtech.common.CommonProxy;
+import gregtech.core.ContentRegistration;
+import gregtech.core.CoreModule;
 import gregtech.core.unification.material.internal.MaterialRegistryManager;
 import gregtech.modules.ModuleManager;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.Locale;
 import net.minecraft.network.INetHandler;
@@ -20,7 +21,12 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.IThreadListener;
 import net.minecraft.util.text.translation.LanguageMap;
+import net.minecraftforge.common.capabilities.CapabilityInject;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.util.CompoundDataFixer;
+import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.common.DummyModContainer;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.IFMLSidedHandler;
@@ -28,11 +34,17 @@ import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.ModMetadata;
 import net.minecraftforge.fml.common.StartupQuery;
+import net.minecraftforge.fml.common.discovery.ASMDataTable;
 import net.minecraftforge.fml.common.eventhandler.EventBus;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.CoreModManager;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.registries.GameData;
 
 import com.cleanroommc.common.CleanroomEnvironment;
+import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Type;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,14 +58,38 @@ import java.util.Set;
 
 public final class Bootstrap {
 
+    /** The classes whose {@link CapabilityInject} fields the game's loader would fill. */
+    private static final List<Class<?>> CAPABILITY_HOLDERS = List.of(GregtechCapabilities.class,
+            GregtechTileCapabilities.class, GTWorldGenCapability.class, CapabilityItemHandler.class,
+            CapabilityFluidHandler.class, CapabilityEnergy.class);
+
     private static boolean bootstrapped = false;
+    private static @Nullable Throwable failure;
 
     private Bootstrap() {}
 
+    /**
+     * Prepares this JVM once as the game's loading would: Minecraft's own bootstrap, the capabilities, GregTech's
+     * content registered by the routine the core module runs, and GregTech's block and item registry events. A failed
+     * bootstrap is reported again to every later caller rather than retried on half-set state.
+     */
     public static void perform() {
         if (bootstrapped) {
             return;
         }
+        if (failure != null) {
+            throw new IllegalStateException("The test bootstrap failed earlier in this JVM", failure);
+        }
+        try {
+            bootstrap();
+            bootstrapped = true;
+        } catch (RuntimeException | Error e) {
+            failure = e;
+            throw e;
+        }
+    }
+
+    private static void bootstrap() {
         CleanroomEnvironment.setSide(Side.SERVER);
         try {
             Field deobfuscatedEnvironment = CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");
@@ -77,26 +113,45 @@ public final class Bootstrap {
         meta.modId = GTValues.MODID;
         Loader.instance().setupTestHarness(new DummyModContainer(meta));
         GregTechAPI.moduleManager = ModuleManager.getInstance();
-        // as at the start of the core module's pre-initialization: content registration reads the high-tier switch
+        // the server-side proxy the loader injects on a dedicated server
+        CoreModule.proxy = new CommonProxy();
+        // as the core module's constructor does
+        GregTechAPI.materialManager = MaterialRegistryManager.getInstance();
+        injectCapabilities();
+
+        // the content registration of the core module's pre-initialization, after the high-tier switch it reads
         GregTechAPIInternal.preInit();
+        ContentRegistration.register();
 
-        MaterialRegistryManager managerInternal = MaterialRegistryManager.getInstance();
-        GregTechAPI.materialManager = managerInternal;
-        GregTechAPI.markerMaterialRegistry = MarkerMaterialRegistry.getInstance();
-        managerInternal.unfreezeRegistries();
-        Materials.register();
-        managerInternal.closeRegistries();
-        managerInternal.freezeRegistries();
+        // the block and item registry events, through GregTech's own handlers in the order Forge calls them: ore
+        // blocks, item blocks and meta item values exist only after these. The recipe event is left out; tests
+        // build the recipes they need.
+        RegistryEvent.Register<Block> blocks = new RegistryEvent.Register<>(GameData.BLOCKS, ForgeRegistries.BLOCKS);
+        CommonProxy.registerBlocks(blocks);
+        CommonProxy.registerBlocksLast(blocks);
+        CommonProxy.registerItems(new RegistryEvent.Register<>(GameData.ITEMS, ForgeRegistries.ITEMS));
+    }
 
-        // loadGregtechLangFile();
-
-        OrePrefix.runMaterialHandlers();
-        GTFluidRegistration.INSTANCE.register();
-        MetaItems.init();
-
-        GregTechAPI.mteManager = MTEManager.getInstance();
-
-        bootstrapped = true;
+    /**
+     * Stands in for the loader's scan of {@link CapabilityInject} fields, which a unit-test JVM does not run, so the
+     * capability registration that follows sets them as in the game; then registers the capabilities Forge registers
+     * in its own pre-initialization. GregTech's own are registered by {@link ContentRegistration}.
+     */
+    private static void injectCapabilities() {
+        ASMDataTable table = new ASMDataTable();
+        for (Class<?> holder : CAPABILITY_HOLDERS) {
+            for (Field field : holder.getDeclaredFields()) {
+                CapabilityInject inject = field.getAnnotation(CapabilityInject.class);
+                if (inject != null) {
+                    table.addASMData(null, CapabilityInject.class.getName(), holder.getName(), field.getName(),
+                            Collections.singletonMap("value", Type.getType(inject.value())));
+                }
+            }
+        }
+        CapabilityManager.INSTANCE.injectCapabilities(table);
+        CapabilityItemHandler.register();
+        CapabilityFluidHandler.register();
+        CapabilityEnergy.register();
     }
 
     private static void loadGregtechLangFile() {

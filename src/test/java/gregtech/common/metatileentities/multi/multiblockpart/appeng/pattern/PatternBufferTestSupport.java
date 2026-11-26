@@ -11,23 +11,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fluids.FluidRegistry;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
 
 import appeng.api.networking.crafting.ICraftingPatternDetails;
 import appeng.api.storage.data.IAEItemStack;
 import appeng.util.item.AEItemStack;
-import org.objectweb.asm.Type;
-
-import java.util.Collections;
 
 /** Fixtures do not install FC: only its documented wire identities exist in this test JVM. */
 public final class PatternBufferTestSupport {
@@ -36,18 +25,6 @@ public final class PatternBufferTestSupport {
 
     public static void bootstrap() {
         Bootstrap.perform();
-        // Standalone fixtures do not run Forge's capability injection/registration phase.
-        ASMDataTable capabilities = new ASMDataTable();
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityItemHandler.class.getName(),
-                "ITEM_HANDLER_CAPABILITY", Collections.singletonMap("value", Type.getType(IItemHandler.class)));
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_CAPABILITY", Collections.singletonMap("value", Type.getType(IFluidHandler.class)));
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_ITEM_CAPABILITY",
-                Collections.singletonMap("value", Type.getType(IFluidHandlerItem.class)));
-        CapabilityManager.INSTANCE.injectCapabilities(capabilities);
-        if (CapabilityItemHandler.ITEM_HANDLER_CAPABILITY == null) CapabilityItemHandler.register();
-        if (CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY == null) CapabilityFluidHandler.register();
     }
 
     public static ItemStack pattern() {

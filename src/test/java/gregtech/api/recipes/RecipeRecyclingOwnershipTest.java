@@ -47,17 +47,17 @@ class RecipeRecyclingOwnershipTest {
         try {
             manager.registerRecyclingData(stack(Items.APPLE, 1),
                     new RecyclingData(new MaterialStack(Materials.Iron, 100)));
-            manager.registerRecyclingData(stack(Items.DIAMOND, 1), original);
+            manager.registerRecyclingData(stack(Items.FLINT, 1), original);
             for (int amount : List.of(2, 4, 3)) {
                 assertTrue(registrar
                         .replace("composition",
-                                List.of(definition(map, "source", Items.APPLE, amount, Items.DIAMOND, 2)))
+                                List.of(definition(map, "source", Items.APPLE, amount, Items.FLINT, 2)))
                         .value().isPresent());
                 assertEquals(amount * 50L,
-                        manager.getRecyclingData(stack(Items.DIAMOND, 1)).getMaterials().getFirst().amount);
+                        manager.getRecyclingData(stack(Items.FLINT, 1)).getMaterials().getFirst().amount);
             }
             assertTrue(registrar.clear().value().isPresent());
-            assertSame(original, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
+            assertSame(original, manager.getRecyclingData(stack(Items.FLINT, 1)));
             assertTrue(map.getRecipeList().isEmpty());
         } finally {
             restore(before);
@@ -75,13 +75,13 @@ class RecipeRecyclingOwnershipTest {
                     new RecyclingData(new MaterialStack(Materials.Iron, 100)));
             // Deliberately reverse declaration order: the second recipe supplies the first's composition.
             var result = registrar.replace("chain", List.of(
-                    definition(map, "second", Items.DIAMOND, 3, Items.EMERALD, 1),
-                    definition(map, "first", Items.APPLE, 2, Items.DIAMOND, 1)));
+                    definition(map, "second", Items.FLINT, 3, Items.FEATHER, 1),
+                    definition(map, "first", Items.APPLE, 2, Items.FLINT, 1)));
             assertTrue(result.value().isPresent(), () -> result.diagnostics().toString());
-            assertEquals(600, manager.getRecyclingData(stack(Items.EMERALD, 1)).getMaterials().getFirst().amount);
+            assertEquals(600, manager.getRecyclingData(stack(Items.FEATHER, 1)).getMaterials().getFirst().amount);
             assertTrue(registrar.clear().value().isPresent());
-            assertEquals(before.get(new ItemAndMetadata(stack(Items.DIAMOND, 1))),
-                    manager.snapshot().get(new ItemAndMetadata(stack(Items.DIAMOND, 1))));
+            assertEquals(before.get(new ItemAndMetadata(stack(Items.FLINT, 1))),
+                    manager.snapshot().get(new ItemAndMetadata(stack(Items.FLINT, 1))));
         } finally {
             restore(before);
         }
@@ -99,33 +99,33 @@ class RecipeRecyclingOwnershipTest {
             manager.registerRecyclingData(stack(Items.COAL, 1),
                     new RecyclingData(new MaterialStack(Materials.Gold, 100)));
             var conflict = registrar.replace("conflict", List.of(
-                    definition(map, "iron", Items.APPLE, 1, Items.DIAMOND, 1),
-                    definition(map, "gold", Items.COAL, 1, Items.DIAMOND, 1)));
+                    definition(map, "iron", Items.APPLE, 1, Items.FLINT, 1),
+                    definition(map, "gold", Items.COAL, 1, Items.FLINT, 1)));
             assertEquals("recipe.recycling.conflict", conflict.diagnostics().getFirst().code());
             assertTrue(map.getRecipeList().isEmpty());
             var cycle = registrar.replace("cycle", List.of(
-                    definition(map, "one", Items.DIAMOND, 1, Items.EMERALD, 1),
-                    definition(map, "two", Items.EMERALD, 1, Items.DIAMOND, 1)));
+                    definition(map, "one", Items.FLINT, 1, Items.FEATHER, 1),
+                    definition(map, "two", Items.FEATHER, 1, Items.FLINT, 1)));
             assertTrue(cycle.value().isEmpty());
             assertTrue(map.getRecipeList().isEmpty());
-            assertTrue(registrar.replace("owned", List.of(definition(map, "owned", Items.APPLE, 1, Items.DIAMOND, 1)))
+            assertTrue(registrar.replace("owned", List.of(definition(map, "owned", Items.APPLE, 1, Items.FLINT, 1)))
                     .value().isPresent());
             long revision = map.getRecipeRevision();
-            var owned = manager.getRecyclingData(stack(Items.DIAMOND, 1));
+            var owned = manager.getRecyclingData(stack(Items.FLINT, 1));
             var external = new RecyclingData(new MaterialStack(Materials.Copper, 333));
-            manager.registerRecyclingData(stack(Items.DIAMOND, 1), external);
+            manager.registerRecyclingData(stack(Items.FLINT, 1), external);
             // Replacing over an externally edited entry is still refused and leaves every table untouched.
             assertTrue(registrar.replace("owned", List.of()).value().isEmpty());
             assertEquals(revision, map.getRecipeRevision());
             assertEquals(1, map.getRecipeList().size());
-            assertSame(external, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
+            assertSame(external, manager.getRecyclingData(stack(Items.FLINT, 1)));
             // Clear releases the edited entry instead of wedging: the outside value stays, the owned recipe goes.
             assertTrue(registrar.clear().value().isPresent());
             assertTrue(map.getRecipeList().isEmpty());
-            assertSame(external, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
-            assertNotSame(owned, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
+            assertSame(external, manager.getRecyclingData(stack(Items.FLINT, 1)));
+            assertNotSame(owned, manager.getRecyclingData(stack(Items.FLINT, 1)));
             assertTrue(registrar.clear().value().isPresent());
-            assertSame(external, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
+            assertSame(external, manager.getRecyclingData(stack(Items.FLINT, 1)));
         } finally {
             restore(before);
         }
@@ -153,26 +153,26 @@ class RecipeRecyclingOwnershipTest {
         try {
             manager.registerRecyclingData(stack(Items.APPLE, 1),
                     new RecyclingData(new MaterialStack(Materials.Iron, 100)));
-            manager.registerRecyclingData(stack(Items.DIAMOND, 1), baseline);
+            manager.registerRecyclingData(stack(Items.FLINT, 1), baseline);
             assertTrue(registrar.replace("upstream",
-                    List.of(definition(map, "first", Items.APPLE, 2, Items.DIAMOND, 1))).value().isPresent());
+                    List.of(definition(map, "first", Items.APPLE, 2, Items.FLINT, 1))).value().isPresent());
             assertTrue(registrar.replace("downstream",
-                    List.of(definition(map, "second", Items.DIAMOND, 3, Items.EMERALD, 1))).value().isPresent());
-            assertEquals(600, manager.getRecyclingData(stack(Items.EMERALD, 1)).getMaterials().getFirst().amount);
+                    List.of(definition(map, "second", Items.FLINT, 3, Items.FEATHER, 1))).value().isPresent());
+            assertEquals(600, manager.getRecyclingData(stack(Items.FEATHER, 1)).getMaterials().getFirst().amount);
             Recipe retained = map.getRecipeList().stream()
-                    .filter(recipe -> recipe.getOutputs().getFirst().getItem() == Items.EMERALD).findFirst()
+                    .filter(recipe -> recipe.getOutputs().getFirst().getItem() == Items.FEATHER).findFirst()
                     .orElseThrow();
             assertTrue(registrar.replace("upstream",
-                    List.of(definition(map, "first", Items.APPLE, 4, Items.DIAMOND, 1))).value().isPresent());
-            assertEquals(1200, manager.getRecyclingData(stack(Items.EMERALD, 1)).getMaterials().getFirst().amount);
+                    List.of(definition(map, "first", Items.APPLE, 4, Items.FLINT, 1))).value().isPresent());
+            assertEquals(1200, manager.getRecyclingData(stack(Items.FEATHER, 1)).getMaterials().getFirst().amount);
             assertTrue(map.getRecipeList().contains(retained));
             assertTrue(registrar.replace("upstream", List.of()).value().isPresent());
-            assertSame(baseline, manager.getRecyclingData(stack(Items.DIAMOND, 1)));
+            assertSame(baseline, manager.getRecyclingData(stack(Items.FLINT, 1)));
             assertEquals(new RecyclingData(new MaterialStack(Materials.Gold, 21)),
-                    manager.getRecyclingData(stack(Items.EMERALD, 1)));
+                    manager.getRecyclingData(stack(Items.FEATHER, 1)));
             assertTrue(registrar.clear().value().isPresent());
-            assertEquals(before.get(new ItemAndMetadata(stack(Items.EMERALD, 1))),
-                    manager.snapshot().get(new ItemAndMetadata(stack(Items.EMERALD, 1))));
+            assertEquals(before.get(new ItemAndMetadata(stack(Items.FEATHER, 1))),
+                    manager.snapshot().get(new ItemAndMetadata(stack(Items.FEATHER, 1))));
         } finally {
             restore(before);
         }
@@ -185,18 +185,18 @@ class RecipeRecyclingOwnershipTest {
         var registrar = new RecipeDefinitionRegistrar();
         var map = map();
         try {
-            manager.removeRecyclingData(stack(Items.DIAMOND, 1));
-            manager.removeRecyclingData(stack(Items.EMERALD, 1));
+            manager.removeRecyclingData(stack(Items.FLINT, 1));
+            manager.removeRecyclingData(stack(Items.FEATHER, 1));
             manager.registerRecyclingData(stack(Items.APPLE, 1),
                     new RecyclingData(new MaterialStack(Materials.Iron, 100)));
             assertTrue(registrar.replace("downstream",
-                    List.of(definition(map, "second", Items.DIAMOND, 3, Items.EMERALD, 1))).value().isPresent());
-            assertNull(manager.getRecyclingData(stack(Items.EMERALD, 1)));
+                    List.of(definition(map, "second", Items.FLINT, 3, Items.FEATHER, 1))).value().isPresent());
+            assertNull(manager.getRecyclingData(stack(Items.FEATHER, 1)));
             assertTrue(registrar.replace("upstream",
-                    List.of(definition(map, "first", Items.APPLE, 2, Items.DIAMOND, 1))).value().isPresent());
-            assertEquals(600, manager.getRecyclingData(stack(Items.EMERALD, 1)).getMaterials().getFirst().amount);
+                    List.of(definition(map, "first", Items.APPLE, 2, Items.FLINT, 1))).value().isPresent());
+            assertEquals(600, manager.getRecyclingData(stack(Items.FEATHER, 1)).getMaterials().getFirst().amount);
             assertTrue(registrar.replace("upstream", List.of()).value().isPresent());
-            assertNull(manager.getRecyclingData(stack(Items.EMERALD, 1)));
+            assertNull(manager.getRecyclingData(stack(Items.FEATHER, 1)));
             assertTrue(registrar.clear().value().isPresent());
         } finally {
             restore(before);
@@ -212,26 +212,26 @@ class RecipeRecyclingOwnershipTest {
         try {
             manager.registerRecyclingData(stack(Items.APPLE, 1),
                     new RecyclingData(new MaterialStack(Materials.Iron, 100)));
-            var upstream = definition(map, "first", Items.APPLE, 2, Items.DIAMOND, 1);
+            var upstream = definition(map, "first", Items.APPLE, 2, Items.FLINT, 1);
             assertTrue(registrar.replace("upstream", List.of(upstream)).value().isPresent());
             assertTrue(registrar.replace("downstream",
-                    List.of(definition(map, "second", Items.DIAMOND, 3, Items.EMERALD, 1))).value().isPresent());
+                    List.of(definition(map, "second", Items.FLINT, 3, Items.FEATHER, 1))).value().isPresent());
             var snapshot = manager.snapshot();
             var recipeRevision = map.getRecipeRevision();
             var cycle = registrar.replace("upstream",
-                    List.of(definition(map, "cycle", Items.EMERALD, 1, Items.DIAMOND, 1)));
+                    List.of(definition(map, "cycle", Items.FEATHER, 1, Items.FLINT, 1)));
             assertTrue(cycle.value().isEmpty());
             assertEquals("cycle", cycle.diagnostics().getFirst().origin().declaration());
             assertEquals(snapshot, manager.snapshot());
             assertEquals(recipeRevision, map.getRecipeRevision());
-            manager.registerRecyclingData(stack(Items.EMERALD, 1),
+            manager.registerRecyclingData(stack(Items.FEATHER, 1),
                     new RecyclingData(new MaterialStack(Materials.Copper, 5)));
             var external = manager.snapshot();
             assertTrue(registrar.replace("upstream", List.of(upstream)).value().isEmpty());
             assertEquals(external, manager.snapshot());
             assertEquals(recipeRevision, map.getRecipeRevision());
-            manager.registerRecyclingData(stack(Items.EMERALD, 1),
-                    snapshot.get(new ItemAndMetadata(stack(Items.EMERALD, 1))));
+            manager.registerRecyclingData(stack(Items.FEATHER, 1),
+                    snapshot.get(new ItemAndMetadata(stack(Items.FEATHER, 1))));
             assertTrue(registrar.clear().value().isPresent());
         } finally {
             restore(before);
@@ -248,14 +248,14 @@ class RecipeRecyclingOwnershipTest {
             manager.registerRecyclingData(stack(Items.APPLE, 1),
                     new RecyclingData(new MaterialStack(Materials.Iron, Long.MAX_VALUE)));
             assertTrue(registrar.replace("large",
-                    List.of(definition(map, "fits", Items.APPLE, 2, Items.DIAMOND, 2))).value().isPresent());
+                    List.of(definition(map, "fits", Items.APPLE, 2, Items.FLINT, 2))).value().isPresent());
             assertEquals(Long.MAX_VALUE,
-                    manager.getRecyclingData(stack(Items.DIAMOND, 1)).getMaterials().getFirst().amount);
+                    manager.getRecyclingData(stack(Items.FLINT, 1)).getMaterials().getFirst().amount);
             var snapshot = manager.snapshot();
             var revision = map.getRecipeRevision();
             var invalid = registrar.replace("large", List.of(
-                    definition(map, "valid-first", Items.COAL, 1, Items.EMERALD, 1),
-                    definition(map, "overflow-second", Items.APPLE, 2, Items.DIAMOND, 1)));
+                    definition(map, "valid-first", Items.COAL, 1, Items.FEATHER, 1),
+                    definition(map, "overflow-second", Items.APPLE, 2, Items.FLINT, 1)));
             assertTrue(invalid.value().isEmpty());
             assertEquals("overflow-second", invalid.diagnostics().getFirst().origin().declaration());
             assertEquals(snapshot, manager.snapshot());
@@ -270,7 +270,7 @@ class RecipeRecyclingOwnershipTest {
     void contributionsSnapshotQuantitiesAndDoNotRetainMutableRecipeInputs() {
         var stack = stack(Items.APPLE, 2);
         var input = ItemIngredient.exact(stack).compile();
-        var output = stack(Items.DIAMOND, 3);
+        var output = stack(Items.FLINT, 3);
         var origin = new SourceOrigin("java", "composition", 1, 1, "copied", "recipes");
         var contribution = RecyclingContribution.of(origin, output, List.of(input));
         stack.setCount(40);
@@ -298,14 +298,14 @@ class RecipeRecyclingOwnershipTest {
             manager.registerRecyclingData(stack(Items.APPLE, 1), iron);
             manager.registerRecyclingData(stack(Items.COAL, 1), iron);
             assertTrue(registrar.replace("upstream",
-                    List.of(definition(map, "first", Items.APPLE, 1, Items.DIAMOND, 1))).value().isPresent());
+                    List.of(definition(map, "first", Items.APPLE, 1, Items.FLINT, 1))).value().isPresent());
             assertTrue(registrar.replace("downstream", List.of(
-                    definition(map, "diamond-route", Items.DIAMOND, 1, Items.EMERALD, 1),
-                    definition(map, "coal-route", Items.COAL, 1, Items.EMERALD, 1))).value().isPresent());
+                    definition(map, "diamond-route", Items.FLINT, 1, Items.FEATHER, 1),
+                    definition(map, "coal-route", Items.COAL, 1, Items.FEATHER, 1))).value().isPresent());
             var snapshot = manager.snapshot();
             var revision = map.getRecipeRevision();
             var rejected = registrar.replace("upstream",
-                    List.of(definition(map, "first", Items.APPLE, 2, Items.DIAMOND, 1)));
+                    List.of(definition(map, "first", Items.APPLE, 2, Items.FLINT, 1)));
             assertTrue(rejected.value().isEmpty());
             assertEquals("coal-route", rejected.diagnostics().getFirst().origin().declaration());
             assertEquals(snapshot, manager.snapshot());
@@ -328,7 +328,7 @@ class RecipeRecyclingOwnershipTest {
                 class RecyclingAuthoring {
                     static RecyclingContribution make() {
                         new RecyclingContribution(new SourceOrigin('groovy', 'composition.groovy', 5, 1,
-                            'recipe', 'recipes'), new ItemAndMetadata(Items.DIAMOND, 0), 2,
+                            'recipe', 'recipes'), new ItemAndMetadata(Items.FLINT, 0), 2,
                             Map.of(new ItemAndMetadata(Items.APPLE, 0), 2L))
                     }
                 }
@@ -336,7 +336,7 @@ class RecipeRecyclingOwnershipTest {
                 """);
         var contribution = new RecyclingContribution(
                 new SourceOrigin("groovy", "composition.groovy", 5, 1, "recipe", "recipes"),
-                new ItemAndMetadata(Items.DIAMOND, 0), 2, Map.of(new ItemAndMetadata(Items.APPLE, 0), 2L));
+                new ItemAndMetadata(Items.FLINT, 0), 2, Map.of(new ItemAndMetadata(Items.APPLE, 0), 2L));
         assertEquals(contribution, authored);
         var manager = GregTechAPI.RECYCLING_MANAGER;
         var before = manager.snapshot();
@@ -364,22 +364,22 @@ class RecipeRecyclingOwnershipTest {
         try {
             manager.registerRecyclingData(stack(Items.APPLE, 1),
                     new RecyclingData(new MaterialStack(Materials.Iron, 100)));
-            var wildcard = new ItemStack(Items.DIAMOND, 1, gregtech.api.GTValues.W);
+            var wildcard = new ItemStack(Items.FLINT, 1, gregtech.api.GTValues.W);
             // The wildcard depends on the downstream recipe. The downstream recipe reads the exact output,
             // so it must not acquire a false edge back to the pending wildcard.
             ownership.prepare("wildcard", List.of(
-                    owned(map, "wildcard", stack(Items.EMERALD, 1), wildcard),
-                    owned(map, "dependent", stack(Items.DIAMOND, 1), stack(Items.EMERALD, 1)),
-                    owned(map, "exact", stack(Items.APPLE, 1), stack(Items.DIAMOND, 1))), false, List.of(), List.of())
+                    owned(map, "wildcard", stack(Items.FEATHER, 1), wildcard),
+                    owned(map, "dependent", stack(Items.FLINT, 1), stack(Items.FEATHER, 1)),
+                    owned(map, "exact", stack(Items.APPLE, 1), stack(Items.FLINT, 1))), false, List.of(), List.of())
                     .publish();
-            assertEquals(100, manager.getRecyclingData(stack(Items.EMERALD, 1)).getMaterials().getFirst().amount);
+            assertEquals(100, manager.getRecyclingData(stack(Items.FEATHER, 1)).getMaterials().getFirst().amount);
             assertEquals(100, manager.getRecyclingData(wildcard).getMaterials().getFirst().amount);
             ownership.prepare("all", List.of(), true, List.of(), List.of()).publish();
 
-            manager.registerRecyclingData(stack(Items.DIAMOND, 1),
+            manager.registerRecyclingData(stack(Items.FLINT, 1),
                     new RecyclingData(new MaterialStack(Materials.Gold, 77)));
             ownership.prepare("wildcard", List.of(
-                    owned(map, "from-base-exact", stack(Items.DIAMOND, 1), wildcard)), false, List.of(), List.of())
+                    owned(map, "from-base-exact", stack(Items.FLINT, 1), wildcard)), false, List.of(), List.of())
                     .publish();
             assertEquals(77, manager.getRecyclingData(wildcard).getMaterials().getFirst().amount);
             ownership.prepare("all", List.of(), true, List.of(), List.of()).publish();

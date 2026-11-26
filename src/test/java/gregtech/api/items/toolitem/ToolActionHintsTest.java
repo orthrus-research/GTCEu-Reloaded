@@ -1,10 +1,7 @@
 package gregtech.api.items.toolitem;
 
-import gregtech.Bootstrap;
+import gregtech.BootstrapExtension;
 import gregtech.api.capability.GregtechCapabilities;
-import gregtech.api.capability.GregtechTileCapabilities;
-import gregtech.api.capability.IControllable;
-import gregtech.api.capability.SimpleCapabilityManager;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
@@ -26,17 +23,14 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 
 import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.vec.Vector3;
 import com.mojang.authlib.GameProfile;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.objectweb.asm.Type;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -46,6 +40,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(BootstrapExtension.class)
 class ToolActionHintsTest {
 
     private static RecipeMap<SimpleRecipeBuilder> recipeMap;
@@ -53,23 +48,6 @@ class ToolActionHintsTest {
 
     @BeforeAll
     static void bootstrap() {
-        Bootstrap.perform();
-        // The standalone harness does not perform Forge's capability injection phase.
-        ASMDataTable capabilities = new ASMDataTable();
-        capabilities.addASMData(null, CapabilityInject.class.getName(), GregtechTileCapabilities.class.getName(),
-                "CAPABILITY_CONTROLLABLE", Collections.singletonMap("value", Type.getType(IControllable.class)));
-        capabilities.addASMData(null, CapabilityInject.class.getName(), GregtechCapabilities.class.getName(),
-                "CAPABILITY_TOOLBELT_HANDLER",
-                Collections.singletonMap("value", Type.getType(ItemGTToolbelt.ToolStackHandler.class)));
-        CapabilityManager.INSTANCE.injectCapabilities(capabilities);
-        if (GregtechTileCapabilities.CAPABILITY_CONTROLLABLE == null) {
-            SimpleCapabilityManager.registerCapabilityWithNoDefault(IControllable.class);
-        }
-        if (GregtechCapabilities.CAPABILITY_TOOLBELT_HANDLER == null) {
-            SimpleCapabilityManager.registerCapabilityWithNoDefault(ItemGTToolbelt.ToolStackHandler.class);
-        }
-        assertNotNull(GregtechTileCapabilities.CAPABILITY_CONTROLLABLE);
-        assertNotNull(GregtechCapabilities.CAPABILITY_TOOLBELT_HANDLER);
         recipeMap = new RecipeMapBuilder<>("q5_tool_hints", new SimpleRecipeBuilder())
                 .itemInputs(1).itemOutputs(1).build();
         player = new EntityPlayer(DummyWorld.INSTANCE, new GameProfile(new UUID(0, 5), "tool_hint_test")) {

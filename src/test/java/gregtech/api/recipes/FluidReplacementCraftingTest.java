@@ -1,6 +1,6 @@
 package gregtech.api.recipes;
 
-import gregtech.Bootstrap;
+import gregtech.BootstrapExtension;
 import gregtech.api.util.DummyContainer;
 import gregtech.common.crafting.FluidReplaceRecipe;
 
@@ -10,42 +10,22 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fluids.capability.templates.FluidHandlerItemStack;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.objectweb.asm.Type;
-
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(BootstrapExtension.class)
 class FluidReplacementCraftingTest {
-
-    @BeforeAll
-    static void bootstrap() {
-        Bootstrap.perform();
-        var capabilities = new ASMDataTable();
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_CAPABILITY", Map.of("value", Type.getType(IFluidHandler.class)));
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_ITEM_CAPABILITY", Map.of("value", Type.getType(IFluidHandlerItem.class)));
-        CapabilityManager.INSTANCE.injectCapabilities(capabilities);
-        if (CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY == null) CapabilityFluidHandler.register();
-        assertNotNull(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY);
-    }
 
     @ParameterizedTest
     @ValueSource(booleans = { false, true })

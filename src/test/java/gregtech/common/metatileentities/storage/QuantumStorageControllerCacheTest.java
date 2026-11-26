@@ -1,6 +1,6 @@
 package gregtech.common.metatileentities.storage;
 
-import gregtech.Bootstrap;
+import gregtech.BootstrapExtension;
 import gregtech.api.capability.IQuantumStorage;
 
 import net.minecraft.init.Items;
@@ -9,28 +9,24 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.objectweb.asm.Type;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-import java.util.Collections;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(BootstrapExtension.class)
 public class QuantumStorageControllerCacheTest {
 
     private static final BlockPos ORIGIN = new BlockPos(-32, 64, -32);
@@ -40,24 +36,6 @@ public class QuantumStorageControllerCacheTest {
     private MetaTileEntityQuantumStorageController controller;
     private MetaTileEntityQuantumChest chest;
     private MetaTileEntityQuantumTank tank;
-
-    @BeforeAll
-    static void bootstrap() {
-        Bootstrap.perform();
-        ASMDataTable table = new ASMDataTable();
-        inject(table, CapabilityItemHandler.class, "ITEM_HANDLER_CAPABILITY", IItemHandler.class);
-        inject(table, CapabilityFluidHandler.class, "FLUID_HANDLER_CAPABILITY", IFluidHandler.class);
-        CapabilityManager.INSTANCE.injectCapabilities(table);
-        if (CapabilityItemHandler.ITEM_HANDLER_CAPABILITY == null) CapabilityItemHandler.register();
-        if (CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY == null) CapabilityFluidHandler.register();
-        assertNotNull(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
-        assertNotNull(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
-    }
-
-    private static void inject(ASMDataTable table, Class<?> owner, String field, Class<?> type) {
-        table.addASMData(null, CapabilityInject.class.getName(), owner.getName(), field,
-                Collections.singletonMap("value", Type.getType(type)));
-    }
 
     @BeforeEach
     void setUp() {

@@ -12,14 +12,10 @@ import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandlerItem;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
@@ -30,11 +26,9 @@ import li.cil.oc.api.machine.Arguments;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.objectweb.asm.Type;
 
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,23 +39,6 @@ public class SimpleMachineOutputPermissionTest {
     @BeforeAll
     public static void bootstrap() {
         Bootstrap.perform();
-
-        // Standalone tests do not run Forge's capability injection phase.
-        ASMDataTable capabilities = new ASMDataTable();
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityItemHandler.class.getName(),
-                "ITEM_HANDLER_CAPABILITY", Collections.singletonMap("value", Type.getType(IItemHandler.class)));
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_CAPABILITY", Collections.singletonMap("value", Type.getType(IFluidHandler.class)));
-        // Fluid registration also creates the item capability; inject both before either test fixture registers it.
-        capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityFluidHandler.class.getName(),
-                "FLUID_HANDLER_ITEM_CAPABILITY",
-                Collections.singletonMap("value", Type.getType(IFluidHandlerItem.class)));
-        CapabilityManager.INSTANCE.injectCapabilities(capabilities);
-        if (CapabilityItemHandler.ITEM_HANDLER_CAPABILITY == null) CapabilityItemHandler.register();
-        if (CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY == null) CapabilityFluidHandler.register();
-        assertNotNull(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
-        assertNotNull(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
-
         recipeMap = new RecipeMapBuilder<>("output_permission_test", new SimpleRecipeBuilder())
                 .itemInputs(1).itemOutputs(1).fluidInputs(1).fluidOutputs(1).build();
     }

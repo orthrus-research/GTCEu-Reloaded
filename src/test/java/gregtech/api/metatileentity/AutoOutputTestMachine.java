@@ -2,7 +2,6 @@ package gregtech.api.metatileentity;
 
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.impl.EnergyContainerHandler;
-import gregtech.api.capability.impl.EnergyContainerHandlerTest;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMapBuilder;
 import gregtech.api.recipes.builders.SimpleRecipeBuilder;
@@ -43,7 +42,6 @@ class AutoOutputTestMachine extends SimpleMachineMetaTileEntity {
 
     static void bootstrap() {
         SimpleMachineOutputPermissionTest.bootstrap();
-        EnergyContainerHandlerTest.bootstrap();
     }
 
     static RecipeMap<SimpleRecipeBuilder> map() {

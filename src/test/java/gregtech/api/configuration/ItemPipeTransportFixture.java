@@ -18,16 +18,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityInject;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.fml.common.discovery.ASMDataTable;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
-
-import org.objectweb.asm.Type;
-
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -45,14 +38,6 @@ final class ItemPipeTransportFixture {
 
     static void bootstrap() {
         Bootstrap.perform();
-        if (CapabilityItemHandler.ITEM_HANDLER_CAPABILITY == null) {
-            ASMDataTable capabilities = new ASMDataTable();
-            capabilities.addASMData(null, CapabilityInject.class.getName(), CapabilityItemHandler.class.getName(),
-                    "ITEM_HANDLER_CAPABILITY", Collections.singletonMap("value", Type.getType(IItemHandler.class)));
-            CapabilityManager.INSTANCE.injectCapabilities(capabilities);
-            if (CapabilityItemHandler.ITEM_HANDLER_CAPABILITY == null) CapabilityItemHandler.register();
-        }
-        assertNotNull(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY);
     }
 
     ItemPipeTransportFixture(int batch) {
