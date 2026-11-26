@@ -1,6 +1,7 @@
 package gregtech.api.recipes;
 
 import gregtech.Bootstrap;
+import gregtech.GameStateExtension;
 import gregtech.api.definition.SourceOrigin;
 import gregtech.api.recipes.builders.AssemblyLineRecipeBuilder;
 import gregtech.api.recipes.definition.*;
@@ -20,12 +21,14 @@ import net.minecraft.util.ResourceLocation;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(GameStateExtension.class)
 class ResearchDefinitionTest {
 
     private static final AtomicInteger IDS = new AtomicInteger();

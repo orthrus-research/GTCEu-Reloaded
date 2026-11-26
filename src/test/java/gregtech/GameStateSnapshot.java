@@ -3,6 +3,7 @@ package gregtech;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.ICleanroomFilter;
 import gregtech.api.block.IHeatingCoilBlockStats;
+import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.multiblock.IBatteryData;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
@@ -36,13 +37,13 @@ import java.util.Set;
 
 /**
  * The shared game state tests change and must give back: {@link ConfigHolder} values, the recipe map and recipe
- * category registries with each map's recipes, the MTE registries with their machines, the multiblock abilities and
- * the coil, battery and cleanroom filter states.
+ * category registries with each map's recipes, the MTE registries with their machines, the meta items with their
+ * values, the multiblock abilities and the coil, battery and cleanroom filter states.
  * <p>
  * {@link #take()} records it; {@link #restore()} puts it back however the test changed it: a map a test registered
  * under a real map's name gives way to the real map again, recipes it added are removed, registries it created are
- * dropped and machines it registered are unregistered. {@link GameStateExtension} does this around every test class
- * and test.
+ * dropped, machines it registered are unregistered and meta item values it added are removed.
+ * {@link GameStateExtension} does this around every test class and test.
  */
 public final class GameStateSnapshot {
 
@@ -57,6 +58,9 @@ public final class GameStateSnapshot {
     private static final Field REGISTRY_VALUES = field(RegistrySimple.class, "values");
     private static final Field INVERSE_OBJECTS = field(RegistryNamespaced.class, "inverseObjectRegistry");
     private static final Field INTEGER_MAP = field(RegistryNamespaced.class, "underlyingIntegerMap");
+    private static final Field META_ITEMS = field(MetaItem.class, "META_ITEMS");
+    private static final Field META_ITEM_VALUES = field(MetaItem.class, "metaItems");
+    private static final Field META_ITEM_NAMES = field(MetaItem.class, "names");
 
     private final List<Runnable> config = new ArrayList<>();
     private final Map<String, RecipeMap<?>> recipeMaps;
@@ -67,6 +71,9 @@ public final class GameStateSnapshot {
     private final Map<Integer, MTERegistry> mteNetworkIds = new LinkedHashMap<>();
     private final int mteNetworkId;
     private final List<MachineRegistryContents> mteContents = new ArrayList<>();
+    private final List<MetaItem<?>> metaItems;
+    private final Map<MetaItem<?>, Map<Short, Object>> metaItemValues = new IdentityHashMap<>();
+    private final Map<MetaItem<?>, Map<String, Object>> metaItemNames = new IdentityHashMap<>();
     private final Map<MultiblockAbility<?>, List<MetaTileEntity>> abilities = new LinkedHashMap<>();
     private final Map<IBlockState, IHeatingCoilBlockStats> coils;
     private final Map<IBlockState, IBatteryData> batteries;
@@ -89,6 +96,12 @@ public final class GameStateSnapshot {
             for (MTERegistry registry : mteRegistries.values()) {
                 mteContents.add(new MachineRegistryContents(registry));
             }
+        }
+
+        this.metaItems = List.copyOf(metaItemList());
+        for (MetaItem<?> item : metaItems) {
+            metaItemValues.put(item, new LinkedHashMap<>(metaItemValues(item)));
+            metaItemNames.put(item, new LinkedHashMap<>(metaItemNames(item)));
         }
 
         MultiblockAbility.REGISTRY.forEach((ability, machines) -> abilities.put(ability, List.copyOf(machines)));
@@ -118,6 +131,10 @@ public final class GameStateSnapshot {
             mteContents.forEach(MachineRegistryContents::restore);
         }
 
+        restoreList(metaItemList(), metaItems);
+        metaItemValues.forEach((item, values) -> restoreMap(metaItemValues(item), values));
+        metaItemNames.forEach((item, names) -> restoreMap(metaItemNames(item), names));
+
         MultiblockAbility.REGISTRY.clear();
         abilities.forEach((ability, machines) -> MultiblockAbility.REGISTRY.put(ability, new ArrayList<>(machines)));
         restoreMap(GregTechAPI.HEATING_COILS, coils);
@@ -128,6 +145,11 @@ public final class GameStateSnapshot {
     private static <K, V> void restoreMap(Map<K, V> target, Map<K, V> saved) {
         target.clear();
         target.putAll(saved);
+    }
+
+    private static <T> void restoreList(List<T> target, List<T> saved) {
+        target.clear();
+        target.addAll(saved);
     }
 
     /** Removes the recipes a test added to the map and gives back the ones it removed. */
@@ -204,6 +226,21 @@ public final class GameStateSnapshot {
     @SuppressWarnings("unchecked")
     private static Int2ObjectMap<MTERegistry> networkMap(MTEManager manager) {
         return (Int2ObjectMap<MTERegistry>) read(MTE_NETWORK_MAP, manager);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<MetaItem<?>> metaItemList() {
+        return (List<MetaItem<?>>) read(META_ITEMS, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<Short, Object> metaItemValues(MetaItem<?> item) {
+        return (Map<Short, Object>) read(META_ITEM_VALUES, item);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> metaItemNames(MetaItem<?> item) {
+        return (Map<String, Object>) read(META_ITEM_NAMES, item);
     }
 
     private static Field field(Class<?> owner, String name) {

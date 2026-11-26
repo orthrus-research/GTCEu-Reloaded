@@ -1,6 +1,6 @@
 package gregtech.api.definition;
 
-import gregtech.Bootstrap;
+import gregtech.GameStateExtension;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.IHeatingCoilBlockStats;
 
@@ -13,21 +13,18 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+// its carrier meta item and coil states are given back for the tests after it
+@ExtendWith(GameStateExtension.class)
 class ContentDefinitionsTest {
 
     private static final SourceOrigin ORIGIN = new SourceOrigin("java", "PackContent.java", 3, 1, "testium", "preInit");
-
-    @BeforeAll
-    static void bootstrap() {
-        Bootstrap.perform();
-    }
 
     @Test
     void rejectsAnEntireInvalidBatchBeforeAnyContentIsQueued() {
