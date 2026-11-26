@@ -43,9 +43,6 @@ gregtech/api/gui/widgets/AbstractWidgetGroup.java gregtech.common.ConfigHolder
 gregtech/api/gui/widgets/GhostCircuitSlotWidget.java gregtech.client.utils.TooltipHelper
 gregtech/api/gui/widgets/PhantomTankWidget.java gregtech.client.utils.RenderUtil
 gregtech/api/gui/widgets/ProgressWidget.java gregtech.common.ConfigHolder
-gregtech/api/gui/widgets/RecipeProgressWidget.java gregtech.integration.IntegrationModule
-gregtech/api/gui/widgets/RecipeProgressWidget.java gregtech.integration.jei.JustEnoughItemsModule
-gregtech/api/gui/widgets/RecipeProgressWidget.java gregtech.integration.jei.recipe.RecipeMapCategory
 gregtech/api/gui/widgets/ScrollableListWidget.java gregtech.client.utils.RenderUtil
 gregtech/api/gui/widgets/TankWidget.java gregtech.client.utils.RenderUtil
 gregtech/api/gui/widgets/TankWidget.java gregtech.client.utils.TooltipHelper
@@ -104,6 +101,9 @@ gregtech/api/mui/GTGuiTheme.java gregtech.common.ConfigHolder
 gregtech/api/mui/GregTechGuiTransferHandler.java gregtech.common.metatileentities.storage.CraftingRecipeLogic
 gregtech/api/mui/sync/GTFluidSyncHandler.java gregtech.common.covers.filter.readers.SimpleFluidFilterReader
 gregtech/api/mui/widget/GhostCircuitSlotWidget.java gregtech.client.utils.TooltipHelper
+gregtech/api/mui/widget/RecipeProgressWidget.java gregtech.integration.IntegrationModule
+gregtech/api/mui/widget/RecipeProgressWidget.java gregtech.integration.jei.JustEnoughItemsModule
+gregtech/api/mui/widget/RecipeProgressWidget.java gregtech.integration.jei.recipe.RecipeMapCategory
 gregtech/api/pipenet/block/BlockPipe.java gregtech.common.blocks.BlockFrame
 gregtech/api/pipenet/block/BlockPipe.java gregtech.common.blocks.MetaBlocks
 gregtech/api/pipenet/block/BlockPipe.java gregtech.common.items.MetaItems
@@ -127,6 +127,7 @@ gregtech/api/recipes/machines/RecipeMapFormingPress.java gregtech.core.sound.GTS
 gregtech/api/recipes/machines/RecipeMapFurnace.java gregtech.core.sound.GTSoundEvents
 gregtech/api/recipes/machines/RecipeMapResearchStation.java gregtech.core.sound.GTSoundEvents
 gregtech/api/recipes/machines/RecipeMapScanner.java gregtech.core.sound.GTSoundEvents
+gregtech/api/recipes/ui/RecipeMapLayout.java gregtech.common.mui.widget.GTFluidSlot
 gregtech/api/unification/ore/StoneType.java gregtech.integration.jei.basic.OreByProduct
 gregtech/api/unification/ore/StoneTypes.java gregtech.common.blocks.MetaBlocks
 gregtech/api/unification/ore/StoneTypes.java gregtech.common.blocks.StoneVariantBlock
