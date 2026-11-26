@@ -2,20 +2,20 @@ package gregtech.common.metatileentities.electric;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.*;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.TieredMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
+import gregtech.api.mui.sync.GTFluidSyncHandler;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
+import gregtech.common.mui.widget.GTFluidSlot;
 
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -23,9 +23,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumFacing.Axis;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -42,13 +39,24 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.RichTextWidget;
+import com.cleanroommc.modularui.widgets.ToggleButton;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static gregtech.api.capability.GregtechDataCodes.PUMP_HEAD_LEVEL;
 
@@ -138,45 +146,73 @@ public class MetaTileEntityPump extends TieredMetaTileEntity {
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        WidgetGroup tankDisplay = new WidgetGroup();
-        tankDisplay.addWidget(new ImageWidget(7, 16, 81, 46, GuiTextures.DISPLAY));
-        tankDisplay.addWidget(new FluidContainerSlotWidget(importItems, 0, 90, 16, false)
-                .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.IN_SLOT_OVERLAY));
-        // tankDisplay.addWidget(new ImageWidget(91, 36, 14, 14, GuiTextures.TANK_ICON));
-        tankDisplay.addWidget(new SlotWidget(exportItems, 0, 90, 44, true, false)
-                .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.OUT_SLOT_OVERLAY));
-        tankDisplay.addWidget(new ToggleButtonWidget(7, 64, 18, 18,
-                GuiTextures.BUTTON_LOCK, this::isLocked, this::setLocked)
-                .setTooltipText("gregtech.gui.fluid_lock.tooltip")
-                .shouldUseBaseBackground());
+    public boolean usesMui2() {
+        return true;
+    }
 
-        TankWidget tankWidget = new PhantomTankWidget(exportFluids.getTankAt(0), 67, 41, 18, 18,
-                () -> this.lockedFluid,
-                fs -> {
-                    if (this.exportFluids.getTankAt(0).getFluidAmount() != 0) {
-                        return;
-                    }
-                    if (fs == null) {
-                        this.setLocked(false);
-                        this.lockedFluid = null;
-                    } else {
-                        this.setLocked(true);
-                        this.lockedFluid = fs.copy();
-                        this.lockedFluid.amount = 1;
-                    }
-                }).setDrawHoveringText(false).setAlwaysShowFull(true);
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        GTFluidSyncHandler tank = GTFluidSlot.sync(exportFluids.getTankAt(0))
+                .showAmountOnSlot(false)
+                .accessibility(true, false)
+                .handleLocking(() -> this.lockedFluid, this::lockFluid, this::setLocked, this::isLocked);
+        guiSyncManager.syncValue("pump_tank", tank);
 
-        tankDisplay.addWidget(tankWidget);
-        tankDisplay.addWidget(new LabelWidget(6, 6, getMetaFullName()));
-        tankDisplay.addWidget(new LabelWidget(11, 20, "gregtech.gui.fluid_amount", 0xFFFFFF));
-        tankDisplay.addWidget(new AdvancedTextWidget(11, 30, getFluidAmountText(tankWidget), 0xFFFFFF));
-        tankDisplay.addWidget(new AdvancedTextWidget(11, 40, getFluidNameText(tankWidget), 0xFFFFFF));
+        return GTGuis.createPanel(this, 176, 166)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(6, 6))
+                .child(new RichTextWidget()
+                        .size(81 - 6, 46 - 8)
+                        .background(GTGuiTextures.DISPLAY.asIcon().size(81, 46))
+                        .pos(7 + 3, 16 + 4)
+                        .textColor(Color.WHITE.main)
+                        .alignment(Alignment.TopLeft)
+                        .autoUpdate(true)
+                        .textBuilder(richText -> {
+                            richText.addLine(IKey.lang("gregtech.gui.fluid_amount"));
+                            // an empty tank names the fluid it is locked to
+                            IKey name = tank.getFluidNameKey();
+                            if (name == IKey.EMPTY) return;
+                            richText.addLine(name);
+                            richText.addLine(IKey.str(tank.getFormattedFluidAmount()));
+                        }))
+                .child(new GTFluidSlot()
+                        .disableBackground()
+                        .pos(67, 41)
+                        .size(18)
+                        .syncHandler(tank))
+                .child(new ItemSlot()
+                        .pos(90, 16)
+                        .background(GTGuiTextures.SLOT, GTGuiTextures.IN_SLOT_OVERLAY)
+                        .slot(new ModularSlot(importItems, 0)
+                                .singletonSlotGroup()
+                                .filter(stack -> FluidUtil.getFluidHandler(stack) != null)))
+                .child(new ItemSlot()
+                        .pos(90, 44)
+                        .background(GTGuiTextures.SLOT, GTGuiTextures.OUT_SLOT_OVERLAY)
+                        .slot(new ModularSlot(exportItems, 0)
+                                .accessibility(false, true)))
+                .child(new ToggleButton()
+                        .pos(7, 64)
+                        .overlay(GTGuiTextures.BUTTON_LOCK)
+                        .value(new BooleanSyncValue(this::isLocked, tank::lockFluid))
+                        .addTooltip(true, IKey.lang("gregtech.gui.fluid_lock.tooltip.enabled"))
+                        .addTooltip(false, IKey.lang("gregtech.gui.fluid_lock.tooltip.disabled")))
+                .bindPlayerInventory();
+    }
 
-        return ModularUI.defaultBuilder()
-                .widget(tankDisplay)
-                .bindPlayerInventory(entityPlayer.inventory)
-                .build(getHolder(), entityPlayer);
+    /** Locks to a fluid named on the screen, which the server takes only while the tank is empty. */
+    private void lockFluid(@Nullable FluidStack fluid) {
+        if (getWorld() != null && !getWorld().isRemote && this.exportFluids.getTankAt(0).getFluidAmount() != 0) {
+            return;
+        }
+        if (fluid == null) {
+            setLocked(false);
+            this.lockedFluid = null;
+        } else {
+            setLocked(true);
+            this.lockedFluid = fluid.copy();
+            this.lockedFluid.amount = 1;
+        }
     }
 
     private int getMaxPumpRange() {
@@ -322,35 +358,6 @@ public class MetaTileEntityPump extends TieredMetaTileEntity {
             return;
         }
         this.lockedFluid = null;
-    }
-
-    private Consumer<List<ITextComponent>> getFluidNameText(TankWidget tankWidget) {
-        return (list) -> {
-            // the phantom tank names the locked fluid when the tank is empty
-            TextComponentTranslation translation = tankWidget.getFluidTextComponent();
-            if (translation != null) {
-                list.add(translation);
-            }
-        };
-    }
-
-    private Consumer<List<ITextComponent>> getFluidAmountText(TankWidget tankWidget) {
-        return (list) -> {
-            String fluidAmount = "";
-
-            // Nothing in the tank
-            if (tankWidget.getFormattedFluidAmount().equals("0")) {
-                // Display Zero to show information about the locked fluid
-                if (this.lockedFluid != null) {
-                    fluidAmount = "0";
-                }
-            } else {
-                fluidAmount = tankWidget.getFormattedFluidAmount();
-            }
-            if (!fluidAmount.isEmpty()) {
-                list.add(new TextComponentString(fluidAmount));
-            }
-        };
     }
 
     @Override

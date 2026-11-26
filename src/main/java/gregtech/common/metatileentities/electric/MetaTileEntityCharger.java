@@ -4,17 +4,14 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
 import gregtech.api.capability.impl.EnergyContainerBatteryCharger;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.ModularUI.Builder;
-import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.TieredMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -22,6 +19,14 @@ import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemStackHandler;
 
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.SyncHandlers;
+import com.cleanroommc.modularui.widgets.layout.Grid;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -83,21 +88,25 @@ public class MetaTileEntityCharger extends TieredMetaTileEntity {
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        int rowSize = (int) Math.sqrt(inventorySize);
-        Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176,
-                18 + 18 * rowSize + 94)
-                .label(10, 5, getMetaFullName());
+    public boolean usesMui2() {
+        return true;
+    }
 
-        for (int y = 0; y < rowSize; y++) {
-            for (int x = 0; x < rowSize; x++) {
-                int index = y * rowSize + x;
-                builder.widget(new SlotWidget(importItems, index, 89 - rowSize * 9 + x * 18, 18 + y * 18, true, true)
-                        .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.CHARGER_OVERLAY));
-            }
-        }
-        builder.bindPlayerInventory(entityPlayer.inventory, GuiTextures.SLOT, 7, 18 + 18 * rowSize + 12);
-        return builder.build(getHolder(), entityPlayer);
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        int rowSize = (int) Math.sqrt(inventorySize);
+        guiSyncManager.registerSlotGroup("charger_inv", rowSize);
+        return GTGuis.createPanel(this, 176, 18 + 18 * rowSize + 94)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(10, 5))
+                .child(new Grid()
+                        .top(18).width(rowSize * 18).height(rowSize * 18)
+                        .minElementMargin(0, 0)
+                        .minColWidth(18).minRowHeight(18)
+                        .alignX(0.5f)
+                        .mapTo(rowSize, inventorySize, index -> new ItemSlot()
+                                .slot(SyncHandlers.itemSlot(importItems, index).slotGroup("charger_inv"))
+                                .background(GTGuiTextures.SLOT, GTGuiTextures.CHARGER_OVERLAY)))
+                .bindPlayerInventory();
     }
 
     @Override

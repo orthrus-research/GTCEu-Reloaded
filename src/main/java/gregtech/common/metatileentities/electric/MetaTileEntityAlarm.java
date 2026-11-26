@@ -3,21 +3,16 @@ package gregtech.common.metatileentities.electric;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ImageWidget;
-import gregtech.api.gui.widgets.LabelWidget;
-import gregtech.api.gui.widgets.TextFieldWidget2;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.TieredMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.ConfigHolder;
-import gregtech.common.gui.widget.terminal.gui.widgets.SelectorWidget;
 import gregtech.core.sound.GTSoundEvents;
 
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -30,12 +25,22 @@ import net.minecraft.world.World;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Color;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.StringSyncValue;
+import com.cleanroommc.modularui.widgets.menu.DropdownWidget;
+import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class MetaTileEntityAlarm extends TieredMetaTileEntity {
 
@@ -43,6 +48,7 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
     private boolean isActive;
     private int radius = 64;
     public static final int BASE_EU_CONSUMPTION = 4;
+    private static final int MAX_RADIUS = 128;
 
     public MetaTileEntityAlarm(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId, 1);
@@ -73,40 +79,68 @@ public class MetaTileEntityAlarm extends TieredMetaTileEntity {
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        return ModularUI.builder(GuiTextures.BACKGROUND, 240, 86)
-                .widget(new LabelWidget(10, 5, getMetaFullName()))
-                .widget(new SelectorWidget(10, 20, 220, 20,
-                        getSounds().stream().map(this::getNameOfSound)
-                                .collect(Collectors.toList()),
-                        0x555555, () -> getNameOfSound(this.selectedSound), true).setOnChanged((v) -> {
-                            if (this.getWorld().isRemote)
-                                GregTechAPI.soundManager.stopTileSound(getPos());
-                            SoundEvent newSound = SoundEvent.REGISTRY.getObject(new ResourceLocation(v));
-                            if (this.selectedSound != newSound) {
-                                this.selectedSound = SoundEvent.REGISTRY.getObject(new ResourceLocation(v));
-                                this.writeCustomData(GregtechDataCodes.UPDATE_SOUND,
-                                        (writer) -> writer
-                                                .writeResourceLocation(getResourceLocationOfSound(this.selectedSound)));
-                            }
-                        }))
-                .widget(new ImageWidget(10, 54, 220, 20, GuiTextures.DISPLAY))
-                .label(10, 44, "gregtech.gui.alarm.radius")
-                .widget(new TextFieldWidget2(12, 60, 216, 16, () -> String.valueOf(radius), value -> {
-                    // the text comes from the client; its range and number checks ran only there
-                    int newRadius;
-                    try {
-                        newRadius = MathHelper.clamp(Integer.parseInt(value.trim()), 0, 128);
-                    } catch (NumberFormatException e) {
-                        return;
-                    }
-                    if (newRadius != radius) {
-                        this.writeCustomData(GregtechDataCodes.UPDATE_RADIUS,
-                                (writer) -> writer.writeInt(newRadius));
-                        radius = newRadius;
-                    }
-                }).setMaxLength(10).setNumbersOnly(0, 128))
-                .build(this.getHolder(), entityPlayer);
+    public boolean usesMui2() {
+        return true;
+    }
+
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        StringSyncValue sound = new StringSyncValue(() -> getNameOfSound(this.selectedSound), this::selectSound);
+        IntSyncValue radius = new IntSyncValue(() -> this.radius, this::setRadius);
+        guiSyncManager.syncValue("alarm_sound", sound);
+        guiSyncManager.syncValue("alarm_radius", radius);
+
+        List<String> names = new ArrayList<>();
+        for (SoundEvent event : getSounds()) {
+            names.add(getNameOfSound(event));
+        }
+        return GTGuis.createPanel(this, 240, 86)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(10, 5))
+                .child(new DropdownWidget<>("alarm_sounds", String.class)
+                        .options(names)
+                        .optionToWidget((name, selected) -> IKey.str(name).color(0x555555).asWidget())
+                        .value(sound)
+                        .pos(10, 20).size(220, 20))
+                .child(IKey.lang("gregtech.gui.alarm.radius").asWidget().pos(10, 44))
+                .child(new TextFieldWidget()
+                        .pos(10, 54).size(220, 20)
+                        .background(GTGuiTextures.DISPLAY)
+                        .setTextColor(Color.WHITE.main)
+                        .setMaxLength(10)
+                        .setNumbers(0, MAX_RADIUS)
+                        .value(radius));
+    }
+
+    /** Selects one of the offered sounds by name; the server ignores any other name a client sends. */
+    private void selectSound(String name) {
+        SoundEvent newSound = null;
+        for (SoundEvent sound : getSounds()) {
+            if (getNameOfSound(sound).equals(name)) {
+                newSound = sound;
+                break;
+            }
+        }
+        if (newSound == null || newSound == this.selectedSound) return;
+        this.selectedSound = newSound;
+        if (getWorld() == null) return;
+        if (getWorld().isRemote) {
+            GregTechAPI.soundManager.stopTileSound(getPos());
+        } else {
+            writeCustomData(GregtechDataCodes.UPDATE_SOUND,
+                    writer -> writer.writeResourceLocation(getResourceLocationOfSound(this.selectedSound)));
+            markDirty();
+        }
+    }
+
+    /** Sets the radius in blocks, within 0 to {@value MAX_RADIUS} whatever a client sends. */
+    private void setRadius(int radius) {
+        int newRadius = MathHelper.clamp(radius, 0, MAX_RADIUS);
+        if (newRadius == this.radius) return;
+        this.radius = newRadius;
+        if (getWorld() != null && !getWorld().isRemote) {
+            writeCustomData(GregtechDataCodes.UPDATE_RADIUS, writer -> writer.writeInt(newRadius));
+            markDirty();
+        }
     }
 
     protected List<SoundEvent> getSounds() {
