@@ -477,9 +477,10 @@ final class MetaTileEntityRegistration {
      * 5000-9999 (incl)
      */
     private static void miscSingleblocks() {
-        // Transformer, IDs 5000-5014
-        // Hi-Amp Transformer, IDs 5015-5029
-        // Power Transformer, IDs 5030-5044
+        // Transformer, IDs 1000-1014
+        // Hi-Amp Transformer, IDs 1015-1029
+        // Power Transformer, IDs 1030-1044
+        // 5000-5044 stay unregistered: the V5 data fix moves transformer items from there
         int endPos = GregTechAPI.isHighTier() ? MetaTileEntities.TRANSFORMER.length - 1 : GTValues.UV;
         for (int i = 0; i <= endPos; i++) {
             // 1A <-> 4A
@@ -551,7 +552,7 @@ final class MetaTileEntityRegistration {
 
         // Free range: 5360-5374
 
-        // Charger, IDs 5375-5089
+        // Charger, IDs 5375-5389
         endPos = GregTechAPI.isHighTier() ? MetaTileEntities.CHARGER.length : GTValues.UHV + 1;
         for (int i = 0; i < endPos; i++) {
             String chargerId = "charger." + GTValues.VN[i].toLowerCase(Locale.ROOT);
@@ -569,9 +570,9 @@ final class MetaTileEntityRegistration {
             }
         }
 
-        // Free range: 5405-5509
+        // Free range: 5398-5509; 5390-5397 stay unregistered: the V4 data fix moves items from there
 
-        // Buffers, IDs 1510-1512
+        // Buffers, IDs 5510-5512
         MetaTileEntities.BUFFER[0] = MetaTileEntities.registerMetaTileEntity(5510,
                 new MetaTileEntityBuffer(gregtechId("buffer.lv"), GTValues.LV));
         MetaTileEntities.BUFFER[1] = MetaTileEntities.registerMetaTileEntity(5511,
@@ -591,7 +592,7 @@ final class MetaTileEntityRegistration {
         MetaTileEntities.FISHER[3] = MetaTileEntities.registerMetaTileEntity(5518,
                 new MetaTileEntityFisher(gregtechId("fisher.ev"), GTValues.EV));
 
-        // Pumps, IDs 5530-5544
+        // Pumps, IDs 1530-1533; 5530-5533 stay unregistered: the V5 data fix moves items from there
         MetaTileEntities.PUMP[0] = MetaTileEntities.registerMetaTileEntity(1530,
                 new MetaTileEntityPump(gregtechId("pump.lv"), GTValues.LV));
         MetaTileEntities.PUMP[1] = MetaTileEntities.registerMetaTileEntity(1531,
@@ -688,6 +689,7 @@ final class MetaTileEntityRegistration {
                 new MetaTileEntityMonitorScreen(gregtechId("monitor_screen")));
 
         // creative machines 5650-5659
+        // 5640 stays unregistered: the V5 data fix moves creative energy items from there
         MetaTileEntities.CREATIVE_ENERGY = MetaTileEntities.registerMetaTileEntity(5650,
                 new MetaTileEntityCreativeEnergy());
         MetaTileEntities.CREATIVE_CHEST = MetaTileEntities.registerMetaTileEntity(5651,
@@ -902,11 +904,11 @@ final class MetaTileEntityRegistration {
                     new MetaTileEntityDualHatch(gregtechId("dual_hatch.export." + tierName), tier, true));
         }
 
-        // quad and nonuple hatches, Ids 11060-11219
+        // quad and nonuple hatches, IDs 11060-11119
         // 4x Import hatch 11060-11074
         // 9x Import hatch 11075-11089
-        // 4x Export hatch 11090-11204
-        // 9x Export hatch 11205-11219
+        // 4x Export hatch 11090-11104
+        // 9x Export hatch 11105-11119
         endPos = GregTechAPI.isHighTier() ? MetaTileEntities.QUADRUPLE_IMPORT_HATCH.length : GTValues.UHV + 1;
         for (int i = GTValues.EV; i < endPos; i++) {
             String tierName = GTValues.VN[i].toLowerCase(Locale.ROOT);

@@ -118,11 +118,11 @@ public final class V2PostMTEReallocFixer {
         dataMigrator.migrateMTEMeta(MODID, 1748, 11525);
         dataMigrator.migrateMTEMeta(MODID, 1752, 11527);
         dataMigrator.migrateMTEMeta(MODID, 1753, 11528);
-        // transformers
+        // transformers: registered at 1000+, 1015+ and 1030+ since the reallocation
         for (int i = 0; i < TRANSFORMER.length; i++) {
-            dataMigrator.migrateMTEMeta(MODID, 1270 + i, 5000 + i);
-            dataMigrator.migrateMTEMeta(MODID, 1730 + i, 5015 + i);
-            dataMigrator.migrateMTEMeta(MODID, 1285 + i, 5030 + i);
+            dataMigrator.migrateMTEMeta(MODID, 1270 + i, 1000 + i);
+            dataMigrator.migrateMTEMeta(MODID, 1730 + i, 1015 + i);
+            dataMigrator.migrateMTEMeta(MODID, 1285 + i, 1030 + i);
         }
         // miners
         for (int i = 0; i < 3; i++) {
@@ -158,10 +158,7 @@ public final class V2PostMTEReallocFixer {
         for (int i = 0; i < 4; i++) {
             dataMigrator.migrateMTEMeta(MODID, 1515 + i, 5515 + i);
         }
-        // pumps
-        for (int i = 0; i < 8; i++) {
-            dataMigrator.migrateMTEMeta(MODID, 1530 + i, 5530 + i);
-        }
+        // pumps keep 1530-1533: the reallocation did not move them
         // super/quantum chests
         for (int i = 0; i < 10; i++) {
             dataMigrator.migrateMTEMeta(MODID, 1560 + i, 5560 + i);
@@ -189,7 +186,7 @@ public final class V2PostMTEReallocFixer {
         // monitor screen
         dataMigrator.migrateMTEMeta(MODID, 1667, 5648);
         // creative energy
-        dataMigrator.migrateMTEMeta(MODID, 1650, 5640);
+        dataMigrator.migrateMTEMeta(MODID, 1650, 5650);
         // creative chest
         dataMigrator.migrateMTEMeta(MODID, 1668, 5651);
         // creative tank

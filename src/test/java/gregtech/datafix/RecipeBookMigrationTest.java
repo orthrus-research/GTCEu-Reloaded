@@ -58,7 +58,7 @@ class RecipeBookMigrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { -1, 0, 1, 2, 3, 4, 5 })
+    @ValueSource(ints = { -1, 0, 1, 2, 3, 4, 5, 6 })
     void forgeVersionGateExpandsOnlyOlderPlayerDataAndResavedDataDoesNotExpandAgain(int savedVersion) {
         var table = new RecipeBookMigrationTable();
         table.register(id("gregtech:shared"), id("gregtech:shared"));
