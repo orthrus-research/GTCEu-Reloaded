@@ -304,8 +304,14 @@ public class Materials {
     public static Material NiobiumNitride;
     public static Material NiobiumTitanium;
     public static Material Obsidian;
+    /**
+     * Phosphate is an ion rather than a material, and no recipe makes or uses it any more; phosphorus and phosphorus
+     * pentoxide took its place. It stays registered so that phosphate dust in existing worlds keeps its identity: no
+     * material is the same substance to migrate it to. Do not use it in new content.
+     *
+     * @deprecated kept only for existing worlds
+     */
     @ApiStatus.Obsolete
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.10")
     @Deprecated
     public static Material Phosphate;
     public static Material SterlingSilver;

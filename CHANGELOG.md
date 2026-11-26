@@ -322,6 +322,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Multiblocks | Steam multiblocks start a recipe once they hold the steam for its whole run; before, the check compared the run's steam with the stored steam converted to EU, so at the default steam rate of 0.5 EU per millibucket they waited for twice the steam the run uses |
 | Pipes | An optical cable in use stays lit, as a laser line does, and shows its glow to a player who loads its chunk; before, it went dark every five seconds while carrying computation and lit again a moment later, and a newly loaded chunk showed it dark |
 | Integration | With HWYLA on the client only, HWYLA shows a machine's modes and a quantum controller's or storage's lines again, worked out from the client's copy as before; the server's lines are used whenever the server has HWYLA. Before, these lines needed HWYLA on the server too |
+| API | `Materials.Phosphate` is no longer scheduled for removal: it stays registered, deprecated and unused, so phosphate dust in existing worlds keeps its identity, as no material is the same substance to migrate it to |
 
 ### Earlier fork changes
 
