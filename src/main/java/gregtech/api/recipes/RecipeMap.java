@@ -3,10 +3,6 @@ package gregtech.api.recipes;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.IMultipleTankHandler;
-import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.resources.TextureArea;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.recipes.category.GTRecipeCategory;
 import gregtech.api.recipes.chance.boost.ChanceBoostFunction;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
@@ -67,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.function.DoubleSupplier;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -95,13 +90,6 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     private int maxFluidOutputs;
 
     private final GTRecipeCategory primaryRecipeCategory;
-
-    /**
-     * @deprecated {@link RecipeMapUI#isJEIVisible()}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public final boolean isHidden = false;
 
     private boolean allowEmptyOutput;
 
@@ -182,42 +170,6 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
                             "https://github.com/orthrus-research/GTCEu-Reloaded/issues",
                     currentOrePrefix, currentMaterial);
         }
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#setProgressBar(TextureArea, MoveType)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public RecipeMap<R> setProgressBar(TextureArea progressBar, MoveType moveType) {
-        this.recipeMapUI.setProgressBar(progressBar, moveType);
-        return this;
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#setItemSlotOverlay(TextureArea, boolean, boolean)}
-     *             {@link RecipeMapUI#setFluidSlotOverlay(TextureArea, boolean, boolean)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public RecipeMap<R> setSlotOverlay(boolean isOutput, boolean isFluid, TextureArea slotOverlay) {
-        return this.setSlotOverlay(isOutput, isFluid, false, slotOverlay).setSlotOverlay(isOutput, isFluid, true,
-                slotOverlay);
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#setItemSlotOverlay(TextureArea, boolean, boolean)}
-     *             {@link RecipeMapUI#setFluidSlotOverlay(TextureArea, boolean, boolean)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public RecipeMap<R> setSlotOverlay(boolean isOutput, boolean isFluid, boolean isLast, TextureArea slotOverlay) {
-        if (isFluid) {
-            this.recipeMapUI.setFluidSlotOverlay(slotOverlay, isOutput, isLast);
-        } else {
-            this.recipeMapUI.setItemSlotOverlay(slotOverlay, isOutput, isLast);
-        }
-        return this;
     }
 
     public RecipeMap<R> setSound(SoundEvent sound) {
@@ -1021,98 +973,9 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
         return null;
     }
 
-    /**
-     * @deprecated {@link RecipeMapUI#createJeiUITemplate(IItemHandlerModifiable, IItemHandlerModifiable, FluidTankList, FluidTankList, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public ModularUI.Builder createJeiUITemplate(IItemHandlerModifiable importItems, IItemHandlerModifiable exportItems,
-                                                 FluidTankList importFluids, FluidTankList exportFluids, int yOffset) {
-        return recipeMapUI.createJeiUITemplate(importItems, exportItems, importFluids, exportFluids, yOffset);
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#createUITemplate(DoubleSupplier, IItemHandlerModifiable, IItemHandlerModifiable, FluidTankList, FluidTankList, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public ModularUI.Builder createUITemplate(DoubleSupplier progressSupplier, IItemHandlerModifiable importItems,
-                                              IItemHandlerModifiable exportItems, FluidTankList importFluids,
-                                              FluidTankList exportFluids, int yOffset) {
-        return recipeMapUI.createUITemplate(progressSupplier, importItems, exportItems, importFluids, exportFluids,
-                yOffset);
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#createUITemplateNoOutputs(DoubleSupplier, IItemHandlerModifiable, IItemHandlerModifiable, FluidTankList, FluidTankList, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public ModularUI.Builder createUITemplateNoOutputs(DoubleSupplier progressSupplier,
-                                                       IItemHandlerModifiable importItems,
-                                                       IItemHandlerModifiable exportItems, FluidTankList importFluids,
-                                                       FluidTankList exportFluids, int yOffset) {
-        return recipeMapUI.createUITemplateNoOutputs(progressSupplier, importItems, exportItems, importFluids,
-                exportFluids, yOffset);
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#addInventorySlotGroup(ModularUI.Builder, IItemHandlerModifiable, FluidTankList, boolean, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected void addInventorySlotGroup(ModularUI.Builder builder, IItemHandlerModifiable itemHandler,
-                                         FluidTankList fluidHandler, boolean isOutputs, int yOffset) {}
-
-    /**
-     * @deprecated {@link RecipeMapUI#addSlot(ModularUI.Builder, int, int, int, IItemHandlerModifiable, FluidTankList, boolean, boolean)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected void addSlot(ModularUI.Builder builder, int x, int y, int slotIndex, IItemHandlerModifiable itemHandler,
-                           FluidTankList fluidHandler, boolean isFluid, boolean isOutputs) {}
-
-    /**
-     * @deprecated {@link RecipeMapUI#getOverlaysForSlot(boolean, boolean, boolean)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected TextureArea[] getOverlaysForSlot(boolean isOutput, boolean isFluid, boolean isLast) {
-        return null;
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#getPropertyHeightShift()}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public int getPropertyHeightShift() {
-        return recipeMapUI.getPropertyHeightShift();
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#shouldShiftWidgets()}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    private boolean shouldShiftWidgets() {
-        return false;
-    }
-
     @Method(modid = Mods.Names.GROOVY_SCRIPT)
     private VirtualizedRecipeMap getGroovyScriptRecipeMap() {
         return ((VirtualizedRecipeMap) grsVirtualizedRecipeMap);
-    }
-
-    /**
-     * This height is used to determine Y position to start drawing info on JEI.
-     * 
-     * @deprecated remove overrides, this method is no longer used in any way.
-     */
-    @Deprecated
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    public int getPropertyListHeight(Recipe recipe) {
-        return 0;
     }
 
     /** A cached prefix must be searched again when a more specific recipe might now be eligible. */
@@ -1414,25 +1277,6 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
             }
             if (!ls.isEmpty()) list.add(ls);
         }
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#setSpecialTexture(TextureArea, int, int, int, int)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected RecipeMap<R> setSpecialTexture(int x, int y, int width, int height, TextureArea area) {
-        recipeMapUI.setSpecialTexture(area, x, y, width, height);
-        return this;
-    }
-
-    /**
-     * @deprecated {@link RecipeMapUI#addSpecialTexture(ModularUI.Builder)}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected ModularUI.Builder addSpecialTexture(ModularUI.Builder builder) {
-        return recipeMapUI.addSpecialTexture(builder);
     }
 
     public Collection<Recipe> getRecipeList() {

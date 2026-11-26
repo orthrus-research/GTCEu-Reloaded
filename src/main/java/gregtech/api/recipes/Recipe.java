@@ -4,7 +4,6 @@ import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.recipes.category.GTRecipeCategory;
 import gregtech.api.recipes.chance.boost.ChanceBoostFunction;
 import gregtech.api.recipes.chance.output.ChancedOutputList;
-import gregtech.api.recipes.chance.output.ChancedOutputLogic;
 import gregtech.api.recipes.chance.output.impl.ChancedFluidOutput;
 import gregtech.api.recipes.chance.output.impl.ChancedItemOutput;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
@@ -25,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,17 +55,6 @@ import java.util.List;
  * Recipes are immutable.
  */
 public class Recipe {
-
-    /**
-     * This method was deprecated in 2.8 and will be removed in 2.9
-     *
-     * @deprecated use {@link ChancedOutputLogic#getMaxChancedValue()}
-     */
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    public static int getMaxChancedValue() {
-        return ChancedOutputLogic.getMaxChancedValue();
-    }
 
     private final List<GTRecipeInput> inputs;
     private final List<ItemStack> outputs;

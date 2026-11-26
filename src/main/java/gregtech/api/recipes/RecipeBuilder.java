@@ -53,7 +53,6 @@ import com.cleanroommc.groovyscript.helper.ingredient.OreDictIngredient;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -1160,16 +1159,6 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
         }
         out += ", but found " + actual;
         return out;
-    }
-
-    /**
-     * @deprecated Obsolete. Does not need calling.
-     */
-    @ApiStatus.Obsolete
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.9")
-    @Deprecated
-    protected R invalidateOnBuildAction() {
-        return (R) this;
     }
 
     /**
