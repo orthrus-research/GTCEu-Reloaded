@@ -74,6 +74,12 @@ class IdleRecipeTestMachine extends SimpleMachineMetaTileEntity {
         return scheduling;
     }
 
+    // This machine counts its own push calls, so it keeps auto-output on the push methods.
+    @Override
+    protected boolean supportsAutoOutputScheduling() {
+        return false;
+    }
+
     @Override
     public void updateCovers() {
         coverUpdates++;

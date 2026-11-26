@@ -893,7 +893,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
 
     /**
      * Opt in only when this machine's recipe logic can wake through input notifications or its explicit wake hook.
-     * Other traits and the machine itself keep their normal update schedule.
+     * Other traits and the machine itself keep their normal update schedule. Subclasses inherit a machine's answer.
      */
     public boolean supportsIdleRecipeScheduling() {
         return false;

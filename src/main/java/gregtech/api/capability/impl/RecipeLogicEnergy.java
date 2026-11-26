@@ -24,9 +24,10 @@ public class RecipeLogicEnergy extends AbstractRecipeLogic {
         setMaximumOverclockVoltage(getMaxVoltage());
     }
 
+    /** Accepts the idle scheduling contract; subclasses inherit it unless they do other work while idle. */
     @Override
     protected boolean supportsIdleRecipeScheduling() {
-        return getClass() == RecipeLogicEnergy.class;
+        return true;
     }
 
     @Override

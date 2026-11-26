@@ -38,6 +38,18 @@ public class MetaTileEntityGasCollector extends SimpleMachineMetaTileEntity {
         return new RecipeLogicEnergy(this, recipeMap, () -> energyContainer);
     }
 
+    /** Keeps its recipe logic ticking while idle, as before. */
+    @Override
+    public boolean supportsIdleRecipeScheduling() {
+        return false;
+    }
+
+    /** Keeps auto-output probing on every attempt, as before. */
+    @Override
+    protected boolean supportsAutoOutputScheduling() {
+        return false;
+    }
+
     /** Keeps this machine without a configuration card, as before; the simple-machine card would fit it. */
     @Override
     public @Nullable ConfigurationAdapter getConfigurationAdapter() {

@@ -294,9 +294,13 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
         }
     }
 
+    /**
+     * This machine's recipe logic wakes through its notifiable inputs and its wake hook. Subclasses inherit this; one
+     * whose recipes depend on anything else, such as its surroundings, overrides this to return false.
+     */
     @Override
     public boolean supportsIdleRecipeScheduling() {
-        return getClass() == SimpleMachineMetaTileEntity.class;
+        return true;
     }
 
     @Override
@@ -312,11 +316,13 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     }
 
     /**
-     * Opt-in requires notifiable export handlers and the ordinary uncovered output capability/transfer semantics.
-     * Subclasses with custom public push methods remain on those methods unless explicitly opting in here.
+     * Whether auto-output skips probes while nothing can move. It requires notifiable export handlers and the ordinary
+     * uncovered output capability and transfer semantics, and it bypasses {@link #pushItemsIntoNearbyHandlers} and
+     * {@link #pushFluidsIntoNearbyHandlers}. Subclasses inherit it; one that overrides those push methods or uses
+     * export handlers that do not notify overrides this to return false.
      */
     protected boolean supportsAutoOutputScheduling() {
-        return getClass() == SimpleMachineMetaTileEntity.class;
+        return true;
     }
 
     /** Coalesces wakes for the next ordinary five-tick output slot, without resolving capabilities or transferring. */

@@ -105,4 +105,16 @@ public class SimpleMachineMetaTileEntityResizable extends SimpleMachineMetaTileE
     public int getItemOutputLimit() {
         return outputAmount;
     }
+
+    /** Keeps its recipe logic ticking while idle, as before. */
+    @Override
+    public boolean supportsIdleRecipeScheduling() {
+        return false;
+    }
+
+    /** Keeps auto-output probing on every attempt, as before. */
+    @Override
+    protected boolean supportsAutoOutputScheduling() {
+        return false;
+    }
 }

@@ -43,6 +43,18 @@ public class MetaTileEntityRockBreaker extends SimpleMachineMetaTileEntity {
         return new RockBreakerRecipeLogic(this, RecipeMaps.ROCK_BREAKER_RECIPES, () -> energyContainer);
     }
 
+    /** Its recipes depend on the fluids beside it, not only on its inputs, so its logic keeps ticking while idle. */
+    @Override
+    public boolean supportsIdleRecipeScheduling() {
+        return false;
+    }
+
+    /** Keeps auto-output probing on every attempt, as before. */
+    @Override
+    protected boolean supportsAutoOutputScheduling() {
+        return false;
+    }
+
     /** Keeps this machine without a configuration card, as before; the simple-machine card would fit it. */
     @Override
     public @Nullable ConfigurationAdapter getConfigurationAdapter() {
@@ -122,6 +134,12 @@ public class MetaTileEntityRockBreaker extends SimpleMachineMetaTileEntity {
         @Override
         protected boolean shouldSearchForRecipes() {
             return hasValidFluids && super.shouldSearchForRecipes();
+        }
+
+        /** The adjacent fluids change without an input notification, so this logic keeps ticking while idle. */
+        @Override
+        protected boolean supportsIdleRecipeScheduling() {
+            return false;
         }
     }
 

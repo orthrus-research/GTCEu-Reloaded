@@ -253,8 +253,9 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     /**
-     * Addon logic must explicitly accept the idle scheduling contract. Running and preparation failures remain ticking;
-     * idle custom side effects must use the wake hook or the existing twenty-tick safety cadence.
+     * Whether this logic accepts the idle scheduling contract. Running and preparation failures remain ticking; idle
+     * custom side effects must use the wake hook or the existing twenty-tick safety cadence. Subclasses inherit the
+     * answer of the logic they extend; one that does other work while idle overrides this to return false.
      */
     protected boolean supportsIdleRecipeScheduling() {
         return false;

@@ -21,6 +21,12 @@ public class FuelRecipeLogic extends RecipeLogicEnergy {
         super(tileEntity, recipeMap, energyContainer);
     }
 
+    /** Generators keep ticking their recipe logic while idle, as before. */
+    @Override
+    protected boolean supportsIdleRecipeScheduling() {
+        return false;
+    }
+
     @NotNull
     @Override
     public ParallelLogicType getParallelLogicType() {

@@ -12,6 +12,8 @@ import gregtech.api.recipes.builders.SimpleRecipeBuilder;
 import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.util.GTUtility;
 import gregtech.common.items.MetaItems;
+import gregtech.common.metatileentities.electric.MetaTileEntityGasCollector;
+import gregtech.common.metatileentities.electric.SimpleMachineMetaTileEntityResizable;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -253,7 +255,7 @@ class IdleRecipeSchedulingTest {
     }
 
     @Test
-    void ordinaryCoreClassesAreAdmittedButUnknownMachinesAndLogicStayContinuous() {
+    void coreClassesAndTheirSubclassesAreAdmittedUnlessTheyOptOut() {
         RecipeMap<SimpleRecipeBuilder> map = map();
         SimpleMachineMetaTileEntity machine = new SimpleMachineMetaTileEntity(
                 GTUtility.gregtechId("idle_admission"), map, null, 1, true);
@@ -262,11 +264,16 @@ class IdleRecipeSchedulingTest {
         AbstractRecipeLogic logic = (AbstractRecipeLogic) machine.getMTETrait("RecipeMapWorkable");
         assertNotNull(logic);
         assertTrue(logic.supportsIdleRecipeScheduling());
-        SimpleMachineMetaTileEntity unknown = new SimpleMachineMetaTileEntity(
-                GTUtility.gregtechId("idle_unknown"), map, null, 1, true) {};
-        assertFalse(unknown.supportsIdleRecipeScheduling());
-        RecipeLogicEnergy unknownLogic = new RecipeLogicEnergy(machine, map, () -> IEnergyContainer.DEFAULT) {};
-        assertFalse(unknownLogic.supportsIdleRecipeScheduling());
+        SimpleMachineMetaTileEntity subclass = new SimpleMachineMetaTileEntity(
+                GTUtility.gregtechId("idle_subclass"), map, null, 1, true) {};
+        assertTrue(subclass.supportsIdleRecipeScheduling());
+        RecipeLogicEnergy subclassLogic = new RecipeLogicEnergy(machine, map, () -> IEnergyContainer.DEFAULT) {};
+        assertTrue(subclassLogic.supportsIdleRecipeScheduling());
+        assertFalse(new FuelRecipeLogic(machine, map, () -> IEnergyContainer.DEFAULT).supportsIdleRecipeScheduling());
+        assertFalse(new MetaTileEntityGasCollector(GTUtility.gregtechId("idle_gas"), map, null, 1, true,
+                tier -> 16000).supportsIdleRecipeScheduling());
+        assertFalse(new SimpleMachineMetaTileEntityResizable(GTUtility.gregtechId("idle_resizable"), map, 2, 2,
+                null, 1).supportsIdleRecipeScheduling());
         IdleRecipeTestMachine continuous = new IdleRecipeTestMachine(map);
         continuous.logic().scheduling = false;
         for (int tick = 1; tick <= 5; tick++) continuous.tick(tick);

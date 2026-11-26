@@ -4,6 +4,7 @@ import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
 import gregtech.api.capability.impl.ElectricItem;
 import gregtech.api.util.GTUtility;
+import gregtech.common.metatileentities.electric.SimpleMachineMetaTileEntityResizable;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -354,13 +355,28 @@ class AutoOutputSchedulingTest {
     }
 
     @Test
-    void defaultAdmissionRequiresTheExactMachine() {
+    void subclassesInheritAdmissionUnlessTheyOptOut() {
         SimpleMachineMetaTileEntity ordinary = new SimpleMachineMetaTileEntity(GTUtility.gregtechId("ordinary_output"),
                 AutoOutputTestMachine.map(), null, 1, true);
-        SimpleMachineMetaTileEntity unknown = new SimpleMachineMetaTileEntity(GTUtility.gregtechId("unknown_output"),
+        SimpleMachineMetaTileEntity subclass = new SimpleMachineMetaTileEntity(GTUtility.gregtechId("subclass_output"),
                 AutoOutputTestMachine.map(), null, 1, true) {};
+        SimpleMachineMetaTileEntity customPush = new SimpleMachineMetaTileEntity(
+                GTUtility.gregtechId("custom_push_output"), AutoOutputTestMachine.map(), null, 1, true) {
+
+            @Override
+            public void pushItemsIntoNearbyHandlers(EnumFacing... allowedFaces) {}
+
+            @Override
+            protected boolean supportsAutoOutputScheduling() {
+                return false;
+            }
+        };
         assertTrue(ordinary.supportsAutoOutputScheduling());
-        assertFalse(unknown.supportsAutoOutputScheduling());
+        assertTrue(subclass.supportsAutoOutputScheduling());
+        assertFalse(customPush.supportsAutoOutputScheduling());
+        SimpleMachineMetaTileEntity resizable = new SimpleMachineMetaTileEntityResizable(
+                GTUtility.gregtechId("resizable_output"), AutoOutputTestMachine.map(), 2, 2, null, 1);
+        assertFalse(resizable.supportsAutoOutputScheduling());
     }
 
     static AutoOutputTestMachine stocked() {
