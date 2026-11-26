@@ -4,9 +4,9 @@ import gregtech.api.GTValues;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.util.Mods;
+import gregtech.common.blocks.BlockLamp;
 import gregtech.common.blocks.BlockOre;
 import gregtech.integration.IntegrationSubmodule;
-import gregtech.integration.hwyla.provider.LampDataProvider;
 import gregtech.integration.probe.ProbeInfoProducer;
 import gregtech.integration.probe.producer.AEHatchProbeInfo;
 import gregtech.integration.probe.producer.ActiveTransformerProbeInfo;
@@ -16,6 +16,7 @@ import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.ConverterProbeInfo;
 import gregtech.integration.probe.producer.DiodeProbeInfo;
 import gregtech.integration.probe.producer.EnergyContainerProbeInfo;
+import gregtech.integration.probe.producer.LampProbeInfo;
 import gregtech.integration.probe.producer.LaserContainerProbeInfo;
 import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
@@ -62,7 +63,7 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         fromServer(registrar, "gregtech.primitive_pump", IGregTechTileEntity.class, new PrimitivePumpProbeInfo());
         // one day, if cover provider is ported to waila, register it right here
         fromClient(registrar, "gregtech.block_ore", BlockOre.class, new BlockOreProbeInfo());
-        LampDataProvider.INSTANCE.register(registrar);
+        fromClient(registrar, "gregtech.block_lamp", BlockLamp.class, new LampProbeInfo());
         fromServer(registrar, "gregtech.multiblock.activetransformer", TileEntity.class,
                 new ActiveTransformerProbeInfo());
         fromServer(registrar, "gregtech.battery-buffer", TileEntity.class, new BatteryBufferProbeInfo());

@@ -13,6 +13,7 @@ import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.ConverterProbeInfo;
 import gregtech.integration.probe.producer.DiodeProbeInfo;
 import gregtech.integration.probe.producer.EnergyContainerProbeInfo;
+import gregtech.integration.probe.producer.LampProbeInfo;
 import gregtech.integration.probe.producer.LaserContainerProbeInfo;
 import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
@@ -59,7 +60,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         register(oneProbe, GTValues.MODID + ":primitive_pump_provider", new PrimitivePumpProbeInfo());
         oneProbe.registerProvider(new CoverInfoProvider());
         register(oneProbe, GTValues.MODID + ":ore_block_provider", new BlockOreProbeInfo());
-        oneProbe.registerProvider(new LampInfoProvider());
+        register(oneProbe, GTValues.MODID + ":lamp_info_provider", new LampProbeInfo());
         oneProbe.registerProvider(new LDPipeProvider());
         register(oneProbe, GTValues.MODID + ":laser_container_provider", new LaserContainerProbeInfo());
         register(oneProbe, ":quantum_storage_provider", new QuantumStorageProbeInfo());
