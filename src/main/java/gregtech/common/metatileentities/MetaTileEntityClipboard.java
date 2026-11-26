@@ -1,24 +1,14 @@
 package gregtech.common.metatileentities;
 
-import gregtech.api.GregTechAPI;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.impl.FakeModularGui;
-import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.items.itemhandlers.InaccessibleItemStackHandler;
-import gregtech.api.items.metaitem.MetaItem;
-import gregtech.api.items.metaitem.stats.IItemBehaviour;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.metatileentity.IFastRenderMetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.MetaTileEntityUIFactory;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.factory.MetaTileEntityGuiFactory;
 import gregtech.api.util.GTLog;
-import gregtech.api.util.GregFakePlayer;
 import gregtech.client.renderer.texture.custom.ClipboardRenderer;
-import gregtech.common.gui.impl.FakeModularUIContainerClipboard;
 import gregtech.common.items.behaviors.ClipboardBehavior;
-import gregtech.core.network.packets.PacketClipboardNBTUpdate;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -26,7 +16,6 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
@@ -52,14 +41,16 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Vector3;
-import io.netty.buffer.Unpooled;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static codechicken.lib.raytracer.RayTracer.*;
 import static gregtech.api.capability.GregtechDataCodes.*;
@@ -87,33 +78,22 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
             15.7 / 16.0, 14.25 / 16.0, 13 / 16.0);
 
     public static final float scale = 1;
-    @SideOnly(Side.CLIENT)
-    public FakeModularGui guiCache;
-    public FakeModularUIContainerClipboard guiContainerCache;
+    /** The page shown on a placed clipboard, in its own pixels; see {@link #clickPage}. */
+    public static final int PAGE_WIDTH = 170;
+    public static final int PAGE_HEIGHT = 238;
+    public static final int PAGE_TASK_Y = 37;
+    public static final int PAGE_TASK_SPACING = 20;
+    public static final int PAGE_BUTTON_X = 6;
+    public static final int PAGE_BUTTON_SIZE = 15;
+    public static final int PAGE_ARROW_Y = 200;
+    public static final int PAGE_LEFT_X = 30;
+    public static final int PAGE_RIGHT_X = 124;
+    public static final int PAGE_ARROW_SIZE = 16;
     private static final NBTBase NO_CLIPBOARD_SIG = new NBTTagInt(0);
     private boolean didSetFacing = false;
 
-    private static final int FAKE_GUI_RETRY_TICKS = 100;
-    private boolean fakeGuiFailed;
-
     public MetaTileEntityClipboard(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId);
-    }
-
-    @Override
-    public void update() {
-        super.update();
-        // after a failed attempt, retry every few seconds rather than every tick
-        if (guiContainerCache == null && (!fakeGuiFailed || getOffsetTimer() % FAKE_GUI_RETRY_TICKS == 0)) {
-            createFakeGui();
-            scheduleRenderUpdate();
-        }
-        if (this.getWorld().isRemote) {
-            if (guiCache != null)
-                guiCache.updateScreen();
-        }
-        if (guiContainerCache != null)
-            guiContainerCache.detectAndSendChanges();
     }
 
     @Override
@@ -155,57 +135,22 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     }
 
     @Override
-    public ModularUI createUI(EntityPlayer entityPlayer) {
-        if (getClipboard().isItemEqual(CLIPBOARD.getStackForm())) {
-            List<IItemBehaviour> behaviours = ((MetaItem<?>) getClipboard().getItem()).getBehaviours(getClipboard());
-            Optional<IItemBehaviour> clipboardBehaviour = behaviours.stream()
-                    .filter((x) -> x instanceof ClipboardBehavior).findFirst();
-            if (!clipboardBehaviour.isPresent())
-                return null;
-            if (clipboardBehaviour.get() instanceof ClipboardBehavior) {
-                PlayerInventoryHolder holder = new PlayerInventoryHolder(new GregFakePlayer(entityPlayer.world),
-                        EnumHand.MAIN_HAND); // We can't have this actually set the player's hand
-                holder.setCustomValidityCheck(this::isValid).setCurrentItem(this.getClipboard());
-                if (entityPlayer instanceof GregFakePlayer) { // This is how to tell if this is being called in-world or
-                                                              // not
-                    return ClipboardBehavior.createMTEUI(holder, entityPlayer);
-                } else {
-                    return ((ClipboardBehavior) clipboardBehaviour.get()).createUI(holder, entityPlayer);
-                }
-            }
-        }
-        return null;
+    public boolean usesMui2() {
+        return true;
     }
 
-    public void createFakeGui() {
-        // Basically just the original function from the PluginBehavior, but with a lot of now useless stuff stripped
-        // out.
-        try {
-            GregFakePlayer fakePlayer = new GregFakePlayer(this.getWorld());
-            fakePlayer.setHeldItem(EnumHand.MAIN_HAND, this.getClipboard());
-            ModularUI ui = this.createUI(fakePlayer);
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager panelSyncManager, UISettings settings) {
+        settings.canInteractWith(player -> isValid() && CLIPBOARD.isItemEqual(getClipboard()));
+        return ClipboardBehavior.createPanel(this::getClipboard, this::onClipboardEdited, panelSyncManager);
+    }
 
-            ModularUI.Builder builder = new ModularUI.Builder(ui.backgroundPath, ui.getWidth(), ui.getHeight());
-            builder.shouldColor(false);
-
-            List<Widget> widgets = new ArrayList<>(ui.guiWidgets.values());
-
-            for (Widget widget : widgets) {
-                builder.widget(widget);
-            }
-            ui = builder.build(ui.holder, ui.entityPlayer);
-            FakeModularUIContainerClipboard fakeModularUIContainer = new FakeModularUIContainerClipboard(ui, this);
-            this.guiContainerCache = fakeModularUIContainer;
-            if (getWorld().isRemote)
-                this.guiCache = new FakeModularGui(ui, fakeModularUIContainer);
-            this.writeCustomData(CREATE_FAKE_UI);
-            this.fakeGuiFailed = false;
-        } catch (Exception e) {
-            if (!fakeGuiFailed) {
-                GTLog.logger.error("Could not create the clipboard's in-world GUI at {}", getPos(), e);
-            }
-            this.fakeGuiFailed = true;
-        }
+    /** Server: saves the clipboard and shows the change on the placed clipboard. */
+    private void onClipboardEdited() {
+        if (getWorld() == null || getWorld().isRemote) return;
+        markDirty();
+        NBTTagCompound tag = getClipboard().getTagCompound();
+        writeCustomData(INIT_CLIPBOARD_NBT, buf -> buf.writeCompoundTag(tag));
     }
 
     @Override
@@ -253,7 +198,7 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
                                 CuboidRayTraceResult hitResult) {
         if (!playerIn.isSneaking()) {
             if (getWorld() != null && !getWorld().isRemote) {
-                MetaTileEntityUIFactory.INSTANCE.openUI(getHolder(), (EntityPlayerMP) playerIn);
+                MetaTileEntityGuiFactory.open(playerIn, this);
             }
         } else {
             breakClipboard(playerIn);
@@ -429,12 +374,6 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
         }
     }
 
-    public void setClipboardNBT(NBTTagCompound data) {
-        ItemStack clipboard = this.getClipboard();
-        clipboard.setTagCompound(data);
-        this.setClipboard(clipboard);
-    }
-
     @Override
     public void writeInitialSyncData(PacketBuffer buf) {
         super.writeInitialSyncData(buf);
@@ -463,43 +402,17 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     @Override
     public void receiveCustomData(int dataId, PacketBuffer buf) {
         super.receiveCustomData(dataId, buf);
-        if (dataId >= UPDATE_UI) {
-            int windowID = buf.readVarInt();
-            int widgetID = buf.readVarInt();
-            if (guiCache != null)
-                guiCache.handleWidgetUpdate(windowID, widgetID, buf);
-            this.scheduleRenderUpdate();
-            this.sendNBTToServer();
-        } else if (dataId == CREATE_FAKE_UI) {
-            createFakeGui();
-            this.scheduleRenderUpdate();
-        } else if (dataId == MOUSE_POSITION) {
-            int mouseX = buf.readVarInt();
-            int mouseY = buf.readVarInt();
-            if (guiCache != null && guiContainerCache != null) {
-                guiCache.mouseClicked(mouseX, mouseY, 0); // Left mouse button
-            }
-            this.scheduleRenderUpdate();
-            this.sendNBTToServer();
-        } else if (dataId == INIT_CLIPBOARD_NBT) {
+        if (dataId == INIT_CLIPBOARD_NBT) {
             try {
                 NBTTagCompound clipboardNBT = buf.readCompoundTag();
                 ItemStack clipboard = this.getClipboard();
                 clipboard.setTagCompound(clipboardNBT);
                 this.setClipboard(clipboard);
+                this.scheduleRenderUpdate();
             } catch (Exception e) {
                 GTLog.logger.error("Could not read Clipboard Init NBT from CustomData buffer", e);
             }
         }
-    }
-
-    private void sendNBTToServer() {
-        PacketBuffer packetBuffer = new PacketBuffer(Unpooled.buffer());
-        packetBuffer.writeCompoundTag(this.getClipboard().getTagCompound());
-        GregTechAPI.networkHandler.sendToServer(new PacketClipboardNBTUpdate(
-                this.getWorld().provider.getDimension(),
-                this.getPos(),
-                1, packetBuffer));
     }
 
     @Override
@@ -509,30 +422,50 @@ public class MetaTileEntityClipboard extends MetaTileEntity implements IFastRend
     @Override
     public void renderMetaTileEntity(CCRenderState renderState, Matrix4 translation, IVertexOperation[] pipeline) {}
 
-    public void readUIAction(EntityPlayerMP player, int id, PacketBuffer buf) {
-        if (id == 1) {
-            if (this.guiContainerCache != null) {
-                guiContainerCache.handleClientAction(buf);
-            }
-        }
-    }
-
     @Override
     public void onLeftClick(EntityPlayer player, EnumFacing facing, CuboidRayTraceResult hitResult) {
         if (this.getWorld().isRemote) return;
         Pair<Double, Double> clickCoords = this.checkLookingAt(player);
         if (clickCoords == null) return; // the click missed the page
-        int width = 178; // These should always be correct.
-        int height = 230;
-        double scale = 1.0 / Math.max(width, height);
-        int mouseX = (int) ((clickCoords.getLeft() / scale));
-        int mouseY = (int) ((clickCoords.getRight() / scale));
-        if (0 <= mouseX && mouseX <= width && 0 <= mouseY && mouseY <= height) {
-            this.writeCustomData(MOUSE_POSITION, buf -> {
-                buf.writeVarInt(mouseX);
-                buf.writeVarInt(mouseY);
-            });
+        // the page is drawn in a square as wide as it is tall
+        double pageX = clickCoords.getLeft() * PAGE_HEIGHT;
+        double pageY = clickCoords.getRight() * PAGE_HEIGHT;
+        if (clickPage(getClipboard(), pageX, pageY, player.isSneaking())) {
+            onClipboardEdited();
         }
+    }
+
+    /**
+     * A left click on the placed clipboard's page: a task's check box moves to its next state, and the arrows turn
+     * one page, or ten while sneaking.
+     *
+     * @param pageX where the click hit, in the page's pixels from its left edge
+     * @param pageY where the click hit, in the page's pixels from its top edge
+     * @return whether the clipboard changed
+     */
+    public static boolean clickPage(ItemStack clipboard, double pageX, double pageY, boolean sneaking) {
+        if (inside(pageX, pageY, PAGE_LEFT_X, PAGE_ARROW_Y, PAGE_ARROW_SIZE)) {
+            return turnPage(clipboard, sneaking ? -10 : -1);
+        } else if (inside(pageX, pageY, PAGE_RIGHT_X, PAGE_ARROW_Y, PAGE_ARROW_SIZE)) {
+            return turnPage(clipboard, sneaking ? 10 : 1);
+        }
+        for (int line = 0; line < ClipboardBehavior.TASKS; line++) {
+            if (inside(pageX, pageY, PAGE_BUTTON_X, PAGE_TASK_Y + PAGE_TASK_SPACING * line, PAGE_BUTTON_SIZE)) {
+                int next = (ClipboardBehavior.getButtonState(clipboard, line) + 1) % ClipboardBehavior.BUTTON_STATES;
+                return ClipboardBehavior.setButton(clipboard, line, next);
+            }
+        }
+        return false;
+    }
+
+    private static boolean turnPage(ItemStack clipboard, int pages) {
+        int page = ClipboardBehavior.getPageNum(clipboard);
+        ClipboardBehavior.setPage(clipboard, page + pages);
+        return ClipboardBehavior.getPageNum(clipboard) != page;
+    }
+
+    private static boolean inside(double x, double y, int left, int top, int size) {
+        return left <= x && x < left + size && top <= y && y < top + size;
     }
 
     @Override

@@ -112,7 +112,19 @@ public class GTGuiTextures {
             .name(IDs.PRIMITIVE_BACKGROUND)
             .build();
 
-    // todo clipboard backgrounds, may deserve some redoing
+    // CLIPBOARD
+    public static final UITexture CLIPBOARD_BACKGROUND = fullImage("textures/gui/base/clipboard_background.png");
+    public static final UITexture CLIPBOARD_PAPER_BACKGROUND = fullImage(
+            "textures/gui/base/clipboard_paper_background.png");
+    public static final UITexture CLIPBOARD_TEXT_BOX = new UITexture.Builder()
+            .location(GTValues.MODID, "textures/gui/widget/clipboard_text_box.png")
+            .imageSize(9, 18)
+            .adaptable(1)
+            .build();
+    public static final UITexture[] CLIPBOARD_BUTTON = slice("textures/gui/widget/clipboard_button.png", 15, 60, 15,
+            15);
+    public static final UITexture BUTTON_LEFT = fullImage("textures/gui/widget/left.png");
+    public static final UITexture BUTTON_RIGHT = fullImage("textures/gui/widget/right.png");
 
     // DISPLAYS
     public static final UITexture DISPLAY = new UITexture.Builder()

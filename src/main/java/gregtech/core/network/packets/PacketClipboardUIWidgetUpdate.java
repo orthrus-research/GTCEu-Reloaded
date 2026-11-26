@@ -1,14 +1,11 @@
 package gregtech.core.network.packets;
 
-import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.network.IPacket;
 import gregtech.api.network.IServerExecutor;
-import gregtech.common.metatileentities.MetaTileEntityClipboard;
 import gregtech.core.network.NetworkUtils;
 
 import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
 public class PacketClipboardUIWidgetUpdate implements IPacket, IServerExecutor {
@@ -44,14 +41,10 @@ public class PacketClipboardUIWidgetUpdate implements IPacket, IServerExecutor {
         this.id = buf.readVarInt();
     }
 
-    // TODO This could still be cleaned up
+    /**
+     * Ignored: a placed clipboard changes only through its screen and the clicks the server checks itself. The packet
+     * stays registered so that the packets registered after it keep their ids.
+     */
     @Override
-    public void executeServer(NetHandlerPlayServer handler) {
-        TileEntity te = NetworkUtils.getTileEntityInReach(handler.player, dimension, pos);
-        if (te instanceof IGregTechTileEntity &&
-                ((IGregTechTileEntity) te).getMetaTileEntity() instanceof MetaTileEntityClipboard) {
-            ((MetaTileEntityClipboard) ((IGregTechTileEntity) te).getMetaTileEntity()).readUIAction(handler.player, id,
-                    updateData);
-        }
-    }
+    public void executeServer(NetHandlerPlayServer handler) {}
 }

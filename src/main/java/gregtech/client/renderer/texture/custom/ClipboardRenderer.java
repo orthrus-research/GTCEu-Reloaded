@@ -1,15 +1,19 @@
 package gregtech.client.renderer.texture.custom;
 
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.texture.IconRegistrar;
+import gregtech.common.items.behaviors.ClipboardBehavior;
 import gregtech.common.metatileentities.MetaTileEntityClipboard;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
@@ -22,7 +26,6 @@ import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Matrix4;
 import codechicken.lib.vec.Rotation;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -113,20 +116,58 @@ public class ClipboardRenderer implements IconRegistrar {
         GlStateManager.rotate(180, 1, 0, 0);
         GlStateManager.scale(0.875, 0.875, 0.875);
 
-        if (clipboard.guiCache != null) {
-            Pair<Double, Double> result = clipboard.checkLookingAt(Minecraft.getMinecraft().player);
-            GlStateManager.translate(0, 0, 0.01);
-            GlStateManager.scale(1, 1, -1);
-            if (result == null) {
-                clipboard.guiCache.drawScreen(0, 0, partialTicks);
-            } else {
-                clipboard.guiCache.drawScreen(result.getKey(), result.getValue(), partialTicks);
-            }
-        }
+        GlStateManager.translate(0, 0, 0.01);
+        GlStateManager.scale(1, 1, -1);
+        renderPage(clipboard.getClipboard());
 
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lastBrightnessX, lastBrightnessY);
         RenderHelper.enableStandardItemLighting();
         GlStateManager.popMatrix();
+    }
+
+    /** Draws the clipboard's current page, centred on the origin in a square one unit wide. */
+    @SideOnly(Side.CLIENT)
+    private static void renderPage(ItemStack stack) {
+        int width = MetaTileEntityClipboard.PAGE_WIDTH;
+        int height = MetaTileEntityClipboard.PAGE_HEIGHT;
+        float scale = 1f / Math.max(width, height);
+        GlStateManager.translate(-scale * width / 2f, -scale * height / 2f, 0);
+        GlStateManager.scale(scale, scale, 1);
+        GlStateManager.color(1, 1, 1, 1);
+        GlStateManager.enableBlend();
+        GTGuiTextures.CLIPBOARD_PAPER_BACKGROUND.draw(0, 0, width, height);
+        GlStateManager.translate(0, 0, 0.001);
+        GlStateManager.depthMask(false);
+
+        FontRenderer font = Minecraft.getMinecraft().fontRenderer;
+        GTGuiTextures.CLIPBOARD_TEXT_BOX.draw(18, 8, 130, 14);
+        drawText(font, ClipboardBehavior.getTitle(stack), 20, 10);
+        for (int line = 0; line < ClipboardBehavior.TASKS; line++) {
+            int y = MetaTileEntityClipboard.PAGE_TASK_Y + MetaTileEntityClipboard.PAGE_TASK_SPACING * line;
+            int buttonSize = MetaTileEntityClipboard.PAGE_BUTTON_SIZE;
+            GTGuiTextures.CLIPBOARD_BUTTON[ClipboardBehavior.getButtonState(stack, line)]
+                    .draw(MetaTileEntityClipboard.PAGE_BUTTON_X, y, buttonSize, buttonSize);
+            GTGuiTextures.CLIPBOARD_TEXT_BOX.draw(22, y + 1, 140, 12);
+            drawText(font, ClipboardBehavior.getString(stack, line), 24, y + 3);
+        }
+        int arrowSize = MetaTileEntityClipboard.PAGE_ARROW_SIZE;
+        int arrowY = MetaTileEntityClipboard.PAGE_ARROW_Y;
+        GTGuiTextures.BUTTON_LEFT.draw(MetaTileEntityClipboard.PAGE_LEFT_X, arrowY, arrowSize, arrowSize);
+        GTGuiTextures.BUTTON_RIGHT.draw(MetaTileEntityClipboard.PAGE_RIGHT_X, arrowY, arrowSize, arrowSize);
+        String page = (ClipboardBehavior.getPageNum(stack) + 1) + " / " + ClipboardBehavior.MAX_PAGES;
+        drawText(font, page, width / 2 - font.getStringWidth(page) / 2, 208 - font.FONT_HEIGHT / 2);
+
+        GlStateManager.depthMask(true);
+        GlStateManager.color(1, 1, 1, 1);
+        GlStateManager.disableLighting();
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void drawText(FontRenderer font, String text, int x, int y) {
+        GlStateManager.disableBlend();
+        font.drawString(text, x, y, ClipboardBehavior.TEXT_COLOR);
+        GlStateManager.enableBlend();
+        GlStateManager.color(1, 1, 1, 1);
     }
 
     @SideOnly(Side.CLIENT)
