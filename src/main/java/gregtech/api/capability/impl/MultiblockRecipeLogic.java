@@ -639,11 +639,6 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
     }
 
     @Override
-    protected boolean supportsRecipeCandidateEligibility() {
-        return usesLegacyRecipeCheck(MultiblockRecipeLogic.class);
-    }
-
-    @Override
     public boolean checkRecipe(@NotNull Recipe recipe) {
         RecipeMapMultiblockController controller = (RecipeMapMultiblockController) metaTileEntity;
         if (controller.checkRecipe(recipe, false)) {

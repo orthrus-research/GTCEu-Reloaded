@@ -196,11 +196,6 @@ public class RecipeLogicSteam extends AbstractRecipeLogic implements IVentable {
     }
 
     @Override
-    protected boolean supportsRecipeCandidateEligibility() {
-        return usesLegacyRecipeCheck(RecipeLogicSteam.class);
-    }
-
-    @Override
     protected void completeRecipe() {
         super.completeRecipe();
         setNeedsVenting(true);

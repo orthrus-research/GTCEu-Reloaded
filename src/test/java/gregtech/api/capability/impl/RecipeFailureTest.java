@@ -187,8 +187,13 @@ class RecipeFailureTest {
                 assertFalse(super.checkRecipe(recipe));
                 return true;
             }
+
+            @Override
+            protected boolean supportsRecipeCandidateEligibility() {
+                return false;
+            }
         };
-        assertTrue(logic.isRecipeEligible(recipe), "Unknown legacy overrides remain selected-only");
+        assertTrue(logic.isRecipeEligible(recipe), "A declared custom check stays selected-only");
         assertTrue(logic.evaluateRecipeCheck(recipe).isEmpty());
         assertReason(logic, RecipeFailureReason.NONE);
         assertFalse(logic.recordRecipeFailure(RecipeFailureReason.DIMENSION));

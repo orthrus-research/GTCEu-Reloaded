@@ -13,6 +13,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandlerModifiable;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -173,18 +174,9 @@ class RecipeCandidateSelectionTest {
     }
 
     @Test
-    void replacingAndSuperDelegatingLegacyChecksKeepTheirOriginalFinalBehavior() {
+    void checkRecipeOverridesKeepTheInheritedCandidateChecksUnlessTheyDeclareACustomCheck() {
         RecipeMap<SimpleRecipeBuilder> map = map();
         Recipe blocked = register(map, map.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT)).dimension(123456));
-        AbstractRecipeLogic replacing = new AbstractRecipeLogic(populatedMachine(), map) {
-
-            @Override
-            public boolean checkRecipe(Recipe recipe) {
-                return true;
-            }
-        };
-        assertTrue(replacing.isRecipeEligible(blocked), "Unknown legacy checks are deferred until final selection");
-        assertTrue(replacing.checkRecipe(blocked));
         AbstractRecipeLogic delegating = new AbstractRecipeLogic(populatedMachine(), map) {
 
             @Override
@@ -192,21 +184,63 @@ class RecipeCandidateSelectionTest {
                 return super.checkRecipe(recipe);
             }
         };
-        assertTrue(delegating.isRecipeEligible(blocked));
-        assertFalse(delegating.checkRecipe(blocked), "Delegating to the legacy base must still enforce dimension");
-        AbstractRecipeLogic optedIn = new AbstractRecipeLogic(populatedMachine(), map) {
+        assertTrue(delegating.supportsRecipeCandidateEligibility());
+        assertFalse(delegating.isRecipeEligible(blocked), "An override that calls super keeps the inherited checks");
+        assertFalse(delegating.checkRecipe(blocked), "Delegating to the base must still enforce dimension");
+        AbstractRecipeLogic replacing = new AbstractRecipeLogic(populatedMachine(), map) {
 
             @Override
             public boolean checkRecipe(Recipe recipe) {
-                return super.checkRecipe(recipe);
+                return true;
             }
 
             @Override
             protected boolean supportsRecipeCandidateEligibility() {
-                return true;
+                return false;
             }
         };
-        assertFalse(optedIn.isRecipeEligible(blocked));
+        assertTrue(replacing.isRecipeEligible(blocked), "A declared custom check decides for the selected recipe");
+        assertTrue(replacing.checkRecipe(blocked));
+    }
+
+    @Test
+    void anOverrideThatCallsSuperFallsBackPastACandidateTheInheritedChecksReject() {
+        RecipeMap<SimpleRecipeBuilder> map = map();
+        Recipe blocked = register(map, map.recipeBuilder().inputs(new ItemStack(Items.IRON_INGOT)).dimension(123456));
+        Recipe allowed = add(map, Items.GOLD_INGOT);
+        RecipeCandidateTestMachine machine = populatedMachine();
+        RecipeCandidateTestLogic logic = new RecipeCandidateTestLogic(machine, map);
+        logic.previousRecipe = blocked;
+        logic.trySearchNewRecipe();
+        assertSame(allowed, logic.previousRecipe);
+        assertEquals(1, logic.finalChecks, "Only the selected candidate reaches checkRecipe");
+        assertEquals(8, machine.getImportItems().getStackInSlot(0).getCount());
+        assertEquals(7, machine.getImportItems().getStackInSlot(1).getCount());
+    }
+
+    @Test
+    void multiblockLogicSubclassesKeepTheControllerCandidateCheck() {
+        RecipeMap<SimpleRecipeBuilder> map = map();
+        Recipe recipe = add(map, Items.IRON_INGOT);
+        RecipeCandidateTestController controller = new RecipeCandidateTestController(map);
+        controller.eligibility = candidate -> false;
+        MultiblockRecipeLogic addon = new MultiblockRecipeLogic(controller) {
+
+            @Override
+            public boolean checkRecipe(@NotNull Recipe recipe) {
+                return super.checkRecipe(recipe);
+            }
+        };
+        assertTrue(addon.supportsRecipeCandidateEligibility());
+        assertFalse(addon.isRecipeEligible(recipe));
+        MultiblockRecipeLogic custom = new MultiblockRecipeLogic(controller) {
+
+            @Override
+            protected boolean supportsRecipeCandidateEligibility() {
+                return false;
+            }
+        };
+        assertTrue(custom.isRecipeEligible(recipe), "Opting out skips the controller's candidate check too");
     }
 
     static RecipeMap<SimpleRecipeBuilder> map() {

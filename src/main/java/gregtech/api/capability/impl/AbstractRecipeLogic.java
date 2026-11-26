@@ -70,18 +70,6 @@ import static gregtech.api.recipes.logic.OverclockingLogic.*;
 
 public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable, IParallelableRecipeLogic {
 
-    private static final ClassValue<Class<?>> RECIPE_CHECK_IMPLEMENTATIONS = new ClassValue<Class<?>>() {
-
-        @Override
-        protected Class<?> computeValue(Class<?> type) {
-            try {
-                return type.getMethod("checkRecipe", Recipe.class).getDeclaringClass();
-            } catch (NoSuchMethodException e) {
-                throw new IllegalStateException("Recipe logic has no public checkRecipe implementation", e);
-            }
-        }
-    };
-
     private static final String ALLOW_OVERCLOCKING = "AllowOverclocking";
     private static final String OVERCLOCK_VOLTAGE = "OverclockVoltage";
 
@@ -868,15 +856,18 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     /**
-     * Custom legacy checkRecipe overrides stay selected-only unless they opt into pure candidate checks here,
-     * or implement their own isRecipeEligible hook. The final legacy check still runs unchanged.
+     * Whether the recipe search applies the pure candidate checks in {@link #isRecipeEligible(Recipe)}. A candidate
+     * that fails them is skipped and the search falls back to the next eligible candidate; {@link #checkRecipe(Recipe)}
+     * then runs once, on the candidate selected. Subclasses inherit this.
+     * <p>
+     * The inherited checks repeat what {@code super.checkRecipe} enforces, so a {@code checkRecipe} override that calls
+     * super keeps them safely. A custom {@code checkRecipe} that replaces or relaxes those requirements returns false
+     * here: its candidates are then not pre-checked, and its {@code checkRecipe} alone decides for the selected recipe.
+     * To also skip the candidates that its own check rejects, a logic overrides {@link #isRecipeEligible(Recipe)} with
+     * the side-effect-free part of that check, keeps mutations in {@code checkRecipe}, and leaves this true.
      */
     protected boolean supportsRecipeCandidateEligibility() {
-        return usesLegacyRecipeCheck(AbstractRecipeLogic.class);
-    }
-
-    protected final boolean usesLegacyRecipeCheck(Class<?> implementation) {
-        return RECIPE_CHECK_IMPLEMENTATIONS.get(getClass()) == implementation;
+        return true;
     }
 
     /**

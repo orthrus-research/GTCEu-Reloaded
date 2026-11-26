@@ -61,6 +61,16 @@ public class ComputationRecipeLogic extends MultiblockRecipeLogic {
                 recordRecipeFailure(RecipeFailureReason.COMPUTATION);
     }
 
+    /**
+     * Candidate pre-checks stay off for this logic and its subclasses, as they have been: its multiblock and
+     * computation requirements are checked for the selected recipe only. Its {@link #checkRecipe(Recipe)} calls
+     * super, so a subclass may return true to have the inherited multiblock checks applied to candidates as well.
+     */
+    @Override
+    protected boolean supportsRecipeCandidateEligibility() {
+        return false;
+    }
+
     @Override
     protected void setupRecipe(@NotNull Recipe recipe) {
         super.setupRecipe(recipe);

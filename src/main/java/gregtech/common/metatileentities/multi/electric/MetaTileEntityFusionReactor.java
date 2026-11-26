@@ -482,11 +482,6 @@ public class MetaTileEntityFusionReactor extends RecipeMapMultiblockController
         }
 
         @Override
-        protected boolean supportsRecipeCandidateEligibility() {
-            return usesLegacyRecipeCheck(FusionRecipeLogic.class);
-        }
-
-        @Override
         public boolean checkRecipe(@NotNull Recipe recipe) {
             if (!super.checkRecipe(recipe))
                 return false;

@@ -27,11 +27,6 @@ class IdleRecipeTestLogic extends RecipeLogicEnergy {
     }
 
     @Override
-    protected boolean supportsRecipeCandidateEligibility() {
-        return true;
-    }
-
-    @Override
     public RecipeMap<?> getRecipeMap() {
         return useSelectedMap ? selectedMap : super.getRecipeMap();
     }

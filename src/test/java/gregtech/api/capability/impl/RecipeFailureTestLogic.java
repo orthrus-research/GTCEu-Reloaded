@@ -19,11 +19,6 @@ class RecipeFailureTestLogic extends AbstractRecipeLogic {
     }
 
     @Override
-    protected boolean supportsRecipeCandidateEligibility() {
-        return true;
-    }
-
-    @Override
     public boolean checkRecipe(Recipe recipe) {
         finalChecks++;
         return finalAllowed && super.checkRecipe(recipe);

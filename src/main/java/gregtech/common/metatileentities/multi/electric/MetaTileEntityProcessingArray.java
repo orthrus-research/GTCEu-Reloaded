@@ -395,11 +395,6 @@ public class MetaTileEntityProcessingArray extends RecipeMapMultiblockController
         }
 
         @Override
-        protected boolean supportsRecipeCandidateEligibility() {
-            return usesLegacyRecipeCheck(ProcessingArrayWorkable.class);
-        }
-
-        @Override
         public boolean checkRecipe(@NotNull Recipe recipe) {
             if (mte == null) return false;
             if (mte instanceof IRecipeModifierProvider)
