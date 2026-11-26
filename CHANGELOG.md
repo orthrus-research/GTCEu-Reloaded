@@ -67,6 +67,7 @@ Changes for players, pack makers and addon developers. GTCEu's history up to the
 | API | Rename CT-specific provenance and property hooks; affected Java addons must migrate and rebuild |
 | API | Let native addons register exact preparation-safe builder classes and typed descriptor codecs/setters; preserve source diagnostics and owned recipe transactions |
 | Breaking | Remove classes that nothing in GTCEu used: `BlockableSlotWidget`, `DrawableWidget`, `ImageTextFieldWidget`, `IncrementButtonWidget`, `IndicatorImageWidget`, `PhantomFluidWidget`, `PhantomSlotWidget`, `ServerWidgetGroup`, `SortingButtonWidget`, `SuppliedImageWidget`, `SyncableColorRectWidget` and `tab.IGuiTextureTabInfo` in `gregtech.api.gui.widgets`, `gregtech.api.mui.InputAccessor`, and outside the API `CycleItemStackHandler`, `ModeSwitchBehavior` and `OreGlobCompileStatusWidget`. An addon that used one must keep its own copy |
+| API | Laser and optical pipes extend shared beam pipe bases in `gregtech.common.pipelike.beam` (block, item, tile, net, world net, handler, walker and route), which an addon can extend for a pipe family of its own; their methods keep their names and types, and addons built against an earlier version must be rebuilt |
 
 See [the migration guide](docs/ct-migration.md). Alpha qualification does not imply arbitrary pack compatibility.
 

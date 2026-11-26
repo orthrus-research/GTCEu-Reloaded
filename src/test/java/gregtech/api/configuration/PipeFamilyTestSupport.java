@@ -76,8 +76,13 @@ final class PipeFamilyTestSupport {
 
         cableBlock = new BlockCable(Insulation.CABLE_SINGLE, Materials.Copper.getRegistry());
         cableBlock.addPipeMaterial(Materials.Copper, new WireProperties(128, 16, 1));
+        // optical and laser pipes are named and registered as in the game, so their tiles can be saved
         opticalBlock = new BlockOpticalPipe(OpticalPipeType.NORMAL);
+        opticalBlock.setRegistryName("gregtech", "optical_pipe_normal");
         laserBlock = new BlockLaserPipe(LaserPipeType.NORMAL);
+        laserBlock.setRegistryName("gregtech", "laser_pipe_normal");
+        TileEntity.register("gregtech:optical_pipe", TileEntityOpticalPipe.class);
+        TileEntity.register("gregtech:laser_pipe", TileEntityLaserPipe.class);
         fluidBlock = new BlockFluidPipe(FluidPipeType.NORMAL, Materials.Copper.getRegistry());
         fluidBlock.setRegistryName("gregtech", "pipe_family_test_fluid");
         fluidBlock.addPipeMaterial(Materials.Copper, new FluidPipeProperties(1000, 1000, true, true, true, true));

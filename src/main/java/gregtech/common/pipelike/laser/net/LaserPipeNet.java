@@ -1,92 +1,37 @@
 package gregtech.common.pipelike.laser.net;
 
-import gregtech.api.pipenet.Node;
 import gregtech.api.pipenet.PipeNet;
 import gregtech.api.pipenet.WorldPipeNet;
-import gregtech.api.util.FacingPos;
+import gregtech.common.pipelike.beam.net.BeamPipeNet;
 import gregtech.common.pipelike.laser.LaserPipeProperties;
 
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-
-public class LaserPipeNet extends PipeNet<LaserPipeProperties> {
-
-    private final Map<FacingPos, LaserRoutePath> netData = new Object2ObjectOpenHashMap<>();
-    private long lastRouteRefresh;
-    // world time the pipes were last marked active; a mark lasts 100 ticks, so once a second is enough
-    private long lastActiveMark = Long.MIN_VALUE;
-
-    /**
-     * @return whether the pipes should be marked active now; true at most once a second
-     */
-    public boolean shouldMarkActive(long worldTime) {
-        if (worldTime - lastActiveMark < 20 && worldTime >= lastActiveMark) return false;
-        lastActiveMark = worldTime;
-        return true;
-    }
-
-    private boolean routeCacheInitialized;
+public class LaserPipeNet extends BeamPipeNet<LaserPipeProperties, LaserRoutePath> {
 
     public LaserPipeNet(WorldPipeNet<LaserPipeProperties, ? extends PipeNet<LaserPipeProperties>> world) {
-        super(world);
+        super(world, LaserPipeProperties.INSTANCE);
     }
 
+    /** A laser line runs along the axis of the face it is entered from, so an unsided query has no route. */
     @Nullable
-    public LaserRoutePath getNetData(BlockPos pipePos, EnumFacing facing) {
+    @Override
+    public LaserRoutePath getNetData(BlockPos pipePos, @Nullable EnumFacing facing) {
         if (facing == null) return null;
-        long now = getWorldData() == null ? 0 : getWorldData().getTotalWorldTime();
-        if (!routeCacheInitialized || now < lastRouteRefresh || now - lastRouteRefresh >= 200) {
-            netData.clear();
-            this.lastRouteRefresh = now;
-            this.routeCacheInitialized = true;
-        }
-        FacingPos key = new FacingPos(pipePos.toImmutable(), facing);
-        if (netData.containsKey(key)) {
-            return netData.get(key);
-        }
-        LaserRoutePath data = LaserNetWalker.createNetData(getWorldData(), pipePos, facing);
-        if (data == LaserNetWalker.FAILED_MARKER) {
-            // walker failed, don't cache, so it tries again on next insertion
-            return null;
-        }
-        netData.put(key, data);
-        return data;
+        return super.getNetData(pipePos, facing);
     }
 
     @Override
-    public void onNeighbourUpdate(BlockPos fromPos) {
-        netData.clear();
+    protected LaserRoutePath createNetData(World world, BlockPos pipePos, EnumFacing facing) {
+        return LaserNetWalker.createNetData(world, pipePos, facing);
     }
 
     @Override
-    public void onPipeConnectionsUpdate() {
-        netData.clear();
-    }
-
-    @Override
-    public void onChunkUnload() {
-        netData.clear();
-    }
-
-    @Override
-    protected void transferNodeData(Map<BlockPos, Node<LaserPipeProperties>> transferredNodes,
-                                    PipeNet<LaserPipeProperties> parentNet) {
-        super.transferNodeData(transferredNodes, parentNet);
-        netData.clear();
-        ((LaserPipeNet) parentNet).netData.clear();
-    }
-
-    @Override
-    protected void writeNodeData(LaserPipeProperties nodeData, NBTTagCompound tagCompound) {}
-
-    @Override
-    protected LaserPipeProperties readNodeData(NBTTagCompound tagCompound) {
-        return LaserPipeProperties.INSTANCE;
+    protected LaserRoutePath getFailedMarker() {
+        return LaserNetWalker.FAILED_MARKER;
     }
 }

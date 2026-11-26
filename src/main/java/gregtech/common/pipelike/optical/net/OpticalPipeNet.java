@@ -1,92 +1,27 @@
 package gregtech.common.pipelike.optical.net;
 
-import gregtech.api.pipenet.Node;
 import gregtech.api.pipenet.PipeNet;
 import gregtech.api.pipenet.WorldPipeNet;
-import gregtech.api.util.FacingPos;
+import gregtech.common.pipelike.beam.net.BeamPipeNet;
 import gregtech.common.pipelike.optical.OpticalPipeProperties;
 
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Map;
-
-public class OpticalPipeNet extends PipeNet<OpticalPipeProperties> {
-
-    private final Map<FacingPos, OpticalRoutePath> NET_DATA = new Object2ObjectOpenHashMap<>();
-    private long lastRouteRefresh;
-    // world time the pipes were last marked active; a mark lasts 100 ticks, so once a second is enough
-    private long lastActiveMark = Long.MIN_VALUE;
-
-    /**
-     * @return whether the pipes should be marked active now; true at most once a second
-     */
-    public boolean shouldMarkActive(long worldTime) {
-        if (worldTime - lastActiveMark < 20 && worldTime >= lastActiveMark) return false;
-        lastActiveMark = worldTime;
-        return true;
-    }
-
-    private boolean routeCacheInitialized;
+public class OpticalPipeNet extends BeamPipeNet<OpticalPipeProperties, OpticalRoutePath> {
 
     public OpticalPipeNet(WorldPipeNet<OpticalPipeProperties, ? extends PipeNet<OpticalPipeProperties>> world) {
-        super(world);
-    }
-
-    @Nullable
-    public OpticalRoutePath getNetData(BlockPos pipePos, EnumFacing facing) {
-        long now = getWorldData() == null ? 0 : getWorldData().getTotalWorldTime();
-        if (!routeCacheInitialized || now < lastRouteRefresh || now - lastRouteRefresh >= 200) {
-            NET_DATA.clear();
-            this.lastRouteRefresh = now;
-            this.routeCacheInitialized = true;
-        }
-        FacingPos key = new FacingPos(pipePos.toImmutable(), facing);
-        if (NET_DATA.containsKey(key)) {
-            return NET_DATA.get(key);
-        }
-        OpticalRoutePath data = OpticalNetWalker.createNetData(getWorldData(), pipePos, facing);
-        if (data == OpticalNetWalker.FAILED_MARKER) {
-            // walker failed, don't cache, so it tries again on next insertion
-            return null;
-        }
-
-        NET_DATA.put(key, data);
-        return data;
+        super(world, OpticalPipeProperties.INSTANCE);
     }
 
     @Override
-    public void onNeighbourUpdate(BlockPos fromPos) {
-        NET_DATA.clear();
+    protected OpticalRoutePath createNetData(World world, BlockPos pipePos, EnumFacing facing) {
+        return OpticalNetWalker.createNetData(world, pipePos, facing);
     }
 
     @Override
-    public void onPipeConnectionsUpdate() {
-        NET_DATA.clear();
-    }
-
-    @Override
-    public void onChunkUnload() {
-        NET_DATA.clear();
-    }
-
-    @Override
-    protected void transferNodeData(Map<BlockPos, Node<OpticalPipeProperties>> transferredNodes,
-                                    PipeNet<OpticalPipeProperties> parentNet) {
-        super.transferNodeData(transferredNodes, parentNet);
-        NET_DATA.clear();
-        ((OpticalPipeNet) parentNet).NET_DATA.clear();
-    }
-
-    @Override
-    protected void writeNodeData(OpticalPipeProperties nodeData, NBTTagCompound tagCompound) {}
-
-    @Override
-    protected OpticalPipeProperties readNodeData(NBTTagCompound tagCompound) {
-        return OpticalPipeProperties.INSTANCE;
+    protected OpticalRoutePath getFailedMarker() {
+        return OpticalNetWalker.FAILED_MARKER;
     }
 }

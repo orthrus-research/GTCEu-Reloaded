@@ -4,43 +4,21 @@ import gregtech.api.capability.IDataAccessHatch;
 import gregtech.api.capability.IOpticalComputationProvider;
 import gregtech.api.capability.IOpticalDataAccessHatch;
 import gregtech.api.recipes.Recipe;
+import gregtech.common.pipelike.beam.net.BeamNetHandler;
 import gregtech.common.pipelike.optical.tile.TileEntityOpticalPipe;
 
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-public class OpticalNetHandler implements IDataAccessHatch, IOpticalComputationProvider {
-
-    private TileEntityOpticalPipe pipe;
-    private World world;
-    private final EnumFacing facing;
-
-    private OpticalPipeNet net;
+public class OpticalNetHandler extends BeamNetHandler<OpticalPipeNet, OpticalRoutePath>
+                               implements IDataAccessHatch, IOpticalComputationProvider {
 
     public OpticalNetHandler(OpticalPipeNet net, @NotNull TileEntityOpticalPipe pipe, @Nullable EnumFacing facing) {
-        this.net = net;
-        this.pipe = pipe;
-        this.facing = facing;
-        this.world = pipe.getWorld();
-    }
-
-    public void updateNetwork(OpticalPipeNet net) {
-        this.net = net;
-    }
-
-    public void updatePipe(@NotNull TileEntityOpticalPipe pipe) {
-        this.pipe = pipe;
-        this.world = pipe.getWorld();
-    }
-
-    public OpticalPipeNet getNet() {
-        return net;
+        super(net, pipe, facing);
     }
 
     @Override
@@ -72,30 +50,8 @@ public class OpticalNetHandler implements IDataAccessHatch, IOpticalComputationP
         return traverseCanBridge(seen);
     }
 
-    private void setPipesActive() {
-        // every computation request arrives here; walking the whole line once a second keeps it lit
-        if (!net.shouldMarkActive(world.getTotalWorldTime())) return;
-        for (BlockPos pos : net.getAllNodes().keySet()) {
-            if (world.isBlockLoaded(pos) && world.getTileEntity(pos) instanceof TileEntityOpticalPipe opticalPipe) {
-                opticalPipe.setActive(true, 100);
-            }
-        }
-    }
-
-    private boolean isNetInvalidForTraversal() {
-        if (pipe == null || pipe.isInvalid() || !pipe.hasWorld() || pipe.getWorld().isRemote ||
-                !pipe.getWorld().isBlockLoaded(pipe.getPipePos()) ||
-                pipe.getWorld().getTileEntity(pipe.getPipePos()) != pipe) {
-            return true;
-        }
-        this.net = pipe.getOpticalPipeNet();
-        return net == null || !net.isValid();
-    }
-
     private boolean traverseRecipeAvailable(@NotNull Recipe recipe, @NotNull Collection<IDataAccessHatch> seen) {
-        if (isNetInvalidForTraversal()) return false;
-
-        OpticalRoutePath inv = net.getNetData(pipe.getPipePos(), facing);
+        OpticalRoutePath inv = getRoute();
         if (inv == null) return false;
 
         IOpticalDataAccessHatch hatch = inv.getDataHatch();
@@ -127,9 +83,7 @@ public class OpticalNetHandler implements IDataAccessHatch, IOpticalComputationP
 
     @Nullable
     private IOpticalComputationProvider getComputationProvider(@NotNull Collection<IOpticalComputationProvider> seen) {
-        if (isNetInvalidForTraversal()) return null;
-
-        OpticalRoutePath inv = net.getNetData(pipe.getPipePos(), facing);
+        OpticalRoutePath inv = getRoute();
         if (inv == null) return null;
 
         IOpticalComputationProvider hatch = inv.getComputationHatch();

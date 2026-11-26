@@ -4,40 +4,17 @@ import gregtech.api.capability.GregtechTileCapabilities;
 import gregtech.api.capability.IDataAccessHatch;
 import gregtech.api.capability.IOpticalComputationProvider;
 import gregtech.api.capability.IOpticalDataAccessHatch;
-import gregtech.api.pipenet.IRoutePath;
+import gregtech.common.pipelike.beam.net.BeamRoutePath;
 import gregtech.common.pipelike.optical.tile.TileEntityOpticalPipe;
 
 import net.minecraft.util.EnumFacing;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class OpticalRoutePath implements IRoutePath<TileEntityOpticalPipe> {
-
-    private final TileEntityOpticalPipe targetPipe;
-    private final EnumFacing faceToHandler;
-    private final int distance;
+public class OpticalRoutePath extends BeamRoutePath<TileEntityOpticalPipe> {
 
     public OpticalRoutePath(TileEntityOpticalPipe targetPipe, EnumFacing faceToHandler, int distance) {
-        this.targetPipe = targetPipe;
-        this.faceToHandler = faceToHandler;
-        this.distance = distance;
-    }
-
-    @NotNull
-    @Override
-    public TileEntityOpticalPipe getTargetPipe() {
-        return targetPipe;
-    }
-
-    @NotNull
-    @Override
-    public EnumFacing getTargetFacing() {
-        return faceToHandler;
-    }
-
-    public int getDistance() {
-        return distance;
+        super(targetPipe, faceToHandler, distance);
     }
 
     @Nullable

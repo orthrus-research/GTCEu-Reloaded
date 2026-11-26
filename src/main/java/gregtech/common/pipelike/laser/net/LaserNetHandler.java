@@ -1,57 +1,23 @@
 package gregtech.common.pipelike.laser.net;
 
 import gregtech.api.capability.ILaserContainer;
+import gregtech.common.pipelike.beam.net.BeamNetHandler;
 import gregtech.common.pipelike.laser.tile.TileEntityLaserPipe;
 
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class LaserNetHandler implements ILaserContainer {
-
-    private LaserPipeNet net;
-    private TileEntityLaserPipe pipe;
-    private final EnumFacing facing;
+public class LaserNetHandler extends BeamNetHandler<LaserPipeNet, LaserRoutePath> implements ILaserContainer {
 
     public LaserNetHandler(LaserPipeNet net, @NotNull TileEntityLaserPipe pipe, @Nullable EnumFacing facing) {
-        this.net = net;
-        this.pipe = pipe;
-        this.facing = facing;
-    }
-
-    public void updateNetwork(LaserPipeNet net) {
-        this.net = net;
-    }
-
-    public void updatePipe(@NotNull TileEntityLaserPipe pipe) {
-        this.pipe = pipe;
-    }
-
-    private void setPipesActive() {
-        // every energy packet arrives here; walking the whole line once a second keeps it lit
-        if (!net.shouldMarkActive(pipe.getWorld().getTotalWorldTime())) return;
-        for (BlockPos pos : net.getAllNodes().keySet()) {
-            if (pipe.getWorld().isBlockLoaded(pos) &&
-                    pipe.getWorld().getTileEntity(pos) instanceof TileEntityLaserPipe laserPipe) {
-                laserPipe.setActive(true, 100);
-            }
-        }
+        super(net, pipe, facing);
     }
 
     @Nullable
     private ILaserContainer getInnerContainer() {
-        if (pipe == null || pipe.isInvalid() || facing == null || !pipe.hasWorld() || pipe.getWorld().isRemote ||
-                !pipe.getWorld().isBlockLoaded(pipe.getPipePos()) ||
-                pipe.getWorld().getTileEntity(pipe.getPipePos()) != pipe) {
-            return null;
-        }
-
-        this.net = pipe.getLaserPipeNet();
-        if (net == null || !net.isValid()) return null;
-
-        LaserRoutePath data = net.getNetData(pipe.getPipePos(), facing);
+        LaserRoutePath data = getRoute();
         if (data == null) {
             return null;
         }
@@ -111,10 +77,6 @@ public class LaserNetHandler implements ILaserContainer {
     @Override
     public long getInputVoltage() {
         return 0;
-    }
-
-    public LaserPipeNet getNet() {
-        return net;
     }
 
     @Override
