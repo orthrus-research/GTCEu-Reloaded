@@ -21,6 +21,8 @@ public enum GTDataVersion {
     V2_POST_ID_REALLOC,
     /** Owner-qualified generated crafting names in saved player recipe books. */
     V3_MATERIAL_RECIPE_IDENTITIES,
+    /** World accelerator items that the ID reallocation moved to unregistered IDs are moved to their own. */
+    V4_WORLD_ACCELERATOR_IDS,
     ;
 
     static final @NotNull GTDataVersion @NotNull [] VALUES = values();

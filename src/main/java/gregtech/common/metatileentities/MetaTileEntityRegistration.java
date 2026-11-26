@@ -559,7 +559,7 @@ final class MetaTileEntityRegistration {
             MetaTileEntities.CHARGER[i] = MetaTileEntities.registerMetaTileEntity(5375 + i, charger);
         }
 
-        // World Accelerators, IDs 5390-5404
+        // World Accelerators, IDs 1391-1398
         if (ConfigHolder.machines.enableWorldAccelerators) {
             endPos = GTValues.UV + 1;
             for (int i = 1; i < endPos; i++) {

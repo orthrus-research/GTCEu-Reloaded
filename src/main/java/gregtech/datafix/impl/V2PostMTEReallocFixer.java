@@ -146,9 +146,9 @@ public final class V2PostMTEReallocFixer {
         for (int i = 0; i < CHARGER.length; i++) {
             dataMigrator.migrateMTEMeta(MODID, 1375 + i, 5375 + i);
         }
-        // world accelerators
+        // world accelerators: LV-UV were 1390-1397 and are registered at 1391-1398
         for (int i = 0; i < 8; i++) {
-            dataMigrator.migrateMTEMeta(MODID, 1390 + i, 5390 + i);
+            dataMigrator.migrateMTEMeta(MODID, 1390 + i, 1391 + i);
         }
         // buffers
         for (int i = 0; i < 3; i++) {

@@ -4,6 +4,7 @@ import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.datafix.impl.MigrateRecipeBook;
 import gregtech.datafix.impl.V2PostMTEReallocFixer;
+import gregtech.datafix.impl.V4WorldAcceleratorIdFixer;
 import gregtech.datafix.migration.impl.MigrateMTEBlockTE;
 import gregtech.datafix.migration.impl.MigrateMTEItems;
 import gregtech.datafix.migration.lib.MTEDataMigrator;
@@ -69,6 +70,8 @@ public final class GTDataFixers {
                 V2PostMTEReallocFixer.apply(dataMigrator);
             }
             case V3_MATERIAL_RECIPE_IDENTITIES -> fixer.registerFix(FixTypes.PLAYER, new MigrateRecipeBook());
+            case V4_WORLD_ACCELERATOR_IDS -> V4WorldAcceleratorIdFixer
+                    .apply(new MTEDataMigrator(fixer, version.ordinal()));
             default -> {}
         }
     }

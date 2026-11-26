@@ -58,7 +58,7 @@ class RecipeBookMigrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = { -1, 0, 1, 2, 3, 4 })
+    @ValueSource(ints = { -1, 0, 1, 2, 3, 4, 5 })
     void forgeVersionGateExpandsOnlyOlderPlayerDataAndResavedDataDoesNotExpandAgain(int savedVersion) {
         var table = new RecipeBookMigrationTable();
         table.register(id("gregtech:shared"), id("gregtech:shared"));
@@ -77,7 +77,8 @@ class RecipeBookMigrationTest {
         assertEquals(savedVersion < 3 ? List.of("gregtech:shared", "susy:shared") : List.of("gregtech:shared"),
                 entries(migrated.getCompoundTag("recipeBook"), "recipes"));
         fixer.writeVersionData(migrated);
-        assertEquals(3, migrated.getCompoundTag("ForgeDataVersion").getInteger("gregtech"));
+        assertEquals(GTDataVersion.currentVersion().ordinal(),
+                migrated.getCompoundTag("ForgeDataVersion").getInteger("gregtech"));
         migrated.getCompoundTag("recipeBook").setTag("recipes", names("gregtech:shared"));
         assertEquals(migrated, fixer.process(FixTypes.PLAYER, migrated.copy()));
     }
