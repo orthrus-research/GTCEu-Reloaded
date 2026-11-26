@@ -129,7 +129,16 @@ public class WireRecipeHandler {
             builder.buildAndRegister();
         }
 
-        // Silicone Rubber Recipe (all cables)
+        // Silicone Rubber and Styrene Butadiene Rubber Recipes (all cables)
+        coverCable(wirePrefix, material, cablePrefix, voltageTier, insulationAmount, SiliconeRubber,
+                GTValues.L * insulationAmount / 2);
+        coverCable(wirePrefix, material, cablePrefix, voltageTier, insulationAmount, StyreneButadieneRubber,
+                GTValues.L * insulationAmount / 4);
+    }
+
+    /** A cable covered with a synthetic rubber, which needs foils from EV and from LuV. */
+    private static void coverCable(OrePrefix wirePrefix, Material material, OrePrefix cablePrefix, int voltageTier,
+                                   int insulationAmount, Material rubber, int rubberAmount) {
         var builder = ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[ULV]).duration(100)
                 .input(wirePrefix, material)
                 .output(cablePrefix, material);
@@ -144,25 +153,7 @@ public class WireRecipeHandler {
             builder.input(foil, PolyvinylChloride, insulationAmount);
         }
 
-        builder.fluidInputs(SiliconeRubber.getFluid(GTValues.L * insulationAmount / 2))
-                .buildAndRegister();
-
-        // Styrene Butadiene Rubber Recipe (all cables)
-        builder = ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[ULV]).duration(100)
-                .input(wirePrefix, material)
-                .output(cablePrefix, material);
-
-        // Apply a Polyphenylene Sulfate Foil if LuV or above.
-        if (voltageTier >= GTValues.LuV) {
-            builder.input(foil, PolyphenyleneSulfide, insulationAmount);
-        }
-
-        // Apply a PVC Foil if EV or above.
-        if (voltageTier >= GTValues.EV) {
-            builder.input(foil, PolyvinylChloride, insulationAmount);
-        }
-
-        builder.fluidInputs(StyreneButadieneRubber.getFluid(GTValues.L * insulationAmount / 4))
+        builder.fluidInputs(rubber.getFluid(rubberAmount))
                 .buildAndRegister();
     }
 
