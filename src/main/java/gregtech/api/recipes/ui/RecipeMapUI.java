@@ -1,19 +1,9 @@
 package gregtech.api.recipes.ui;
 
-import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.resources.TextureArea;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
-import gregtech.api.gui.widgets.RecipeProgressWidget;
-import gregtech.api.gui.widgets.SlotWidget;
-import gregtech.api.gui.widgets.TankWidget;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.function.impl.TimedProgressSupplier;
-
-import net.minecraftforge.items.IItemHandlerModifiable;
 
 import com.cleanroommc.modularui.drawable.UITexture;
 import com.cleanroommc.modularui.widgets.ProgressWidget;
@@ -450,64 +440,5 @@ public class RecipeMapUI<R extends RecipeMap<?>> {
      */
     public @NotNull R recipeMap() {
         return recipeMap;
-    }
-
-    /**
-     * Build a machine's layout as a screen of the old GUI system, for the machine screens not yet on ModularUI 2.
-     *
-     * @param layout       the machine's layout
-     * @param importItems  the input item inventory
-     * @param exportItems  the output item inventory
-     * @param importFluids the input fluid inventory
-     * @param exportFluids the output fluid inventory
-     * @return the populated builder
-     */
-    @ApiStatus.Internal
-    @Deprecated
-    public static @NotNull ModularUI.Builder createLegacyUITemplate(@NotNull RecipeMapLayout layout,
-                                                                    @NotNull IItemHandlerModifiable importItems,
-                                                                    @NotNull IItemHandlerModifiable exportItems,
-                                                                    @NotNull FluidTankList importFluids,
-                                                                    @NotNull FluidTankList exportFluids) {
-        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, layout.getWidth(), layout.getHeight());
-        for (RecipeLayoutElement element : layout.getElements()) {
-            if (element instanceof RecipeLayoutSlot slot) {
-                TextureArea[] background = slot.background().stream()
-                        .map(RecipeMapUI::legacyTexture)
-                        .toArray(TextureArea[]::new);
-                if (slot.isFluid()) {
-                    FluidTankList tanks = slot.isOutput() ? exportFluids : importFluids;
-                    builder.widget(new TankWidget(tanks.getTankAt(slot.index()), slot.x(), slot.y(), 18, 18)
-                            .setAlwaysShowFull(true)
-                            .setBackgroundTexture(background)
-                            .setContainerClicking(true, !slot.isOutput()));
-                } else {
-                    builder.widget(new SlotWidget(slot.isOutput() ? exportItems : importItems, slot.index(),
-                            slot.x(), slot.y(), true, !slot.isOutput()).setBackgroundTexture(background));
-                }
-            } else if (element instanceof RecipeLayoutProgress progress) {
-                builder.widget(new RecipeProgressWidget(progress.progress(), progress.x(), progress.y(),
-                        progress.width(), progress.height(), legacyTexture(progress.texture()),
-                        legacyMoveType(progress.direction()), progress.recipeMap()));
-            } else if (element instanceof RecipeLayoutImage image) {
-                builder.image(image.x(), image.y(), image.width(), image.height(), legacyTexture(image.texture()));
-            }
-        }
-        return builder;
-    }
-
-    private static @NotNull TextureArea legacyTexture(@NotNull UITexture texture) {
-        return new TextureArea(texture.location, texture.u0, texture.v0, texture.u1 - texture.u0,
-                texture.v1 - texture.v0);
-    }
-
-    private static @NotNull MoveType legacyMoveType(@NotNull ProgressWidget.Direction direction) {
-        return switch (direction) {
-            case LEFT -> MoveType.HORIZONTAL_BACKWARDS;
-            case RIGHT -> MoveType.HORIZONTAL;
-            case UP -> MoveType.VERTICAL;
-            case DOWN -> MoveType.VERTICAL_DOWNWARDS;
-            case CIRCULAR_CW -> MoveType.CIRCULAR;
-        };
     }
 }
