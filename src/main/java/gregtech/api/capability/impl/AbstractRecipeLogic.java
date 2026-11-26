@@ -108,10 +108,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     private boolean recipeConditionPaused;
     protected boolean isOutputsFull;
     protected boolean invalidInputsForRecipes;
-    private long nextRecipeSearchTick;
-    private boolean recipeLogicWakeup = true;
-    private RecipeMap<?> observedRecipeMap;
-    private long observedRecipeRevision;
+    private final RecipeSearchScheduler scheduler;
     private final RecipeFailureTracker failures = new RecipeFailureTracker();
 
     protected boolean hasPerfectOC;
@@ -123,17 +120,13 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     private int parallelLimit = 1;
 
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap) {
-        super(tileEntity);
-        this.recipeMap = recipeMap;
-        this.observedRecipeMap = recipeMap;
-        this.observedRecipeRevision = recipeMap == null ? 0 : recipeMap.getRecipeRevision();
+        this(tileEntity, recipeMap, false);
     }
 
     public AbstractRecipeLogic(MetaTileEntity tileEntity, RecipeMap<?> recipeMap, boolean hasPerfectOC) {
         super(tileEntity);
         this.recipeMap = recipeMap;
-        this.observedRecipeMap = recipeMap;
-        this.observedRecipeRevision = recipeMap == null ? 0 : recipeMap.getRecipeRevision();
+        this.scheduler = new RecipeSearchScheduler(recipeMap);
         this.hasPerfectOC = hasPerfectOC;
     }
 
@@ -268,34 +261,32 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         World world = metaTileEntity.getWorld();
         if (world == null || world.isRemote || !isIdleRecipeSchedulingEnabled()) return true;
         // Completed outputs awaiting insertion must retain positive progress and remain on the running path.
-        if (isAwaitingOutputs() || progressTime > 0 || wasActiveAndNeedsUpdate || recipeLogicWakeup) return true;
+        if (isAwaitingOutputs() || progressTime > 0 || wasActiveAndNeedsUpdate || scheduler.isWakeupRequested())
+            return true;
         if (!workingEnabled) return false;
         long tick = metaTileEntity.getOffsetTimer();
-        if (hasRecipeMapChanged() || tick % 20 == 0 || hasNotifiedInputs()) return true;
-        return !invalidInputsForRecipes && tick >= nextRecipeSearchTick;
+        if (hasRecipeMapChanged() || RecipeSearchScheduler.isSafetyTick(tick) || hasNotifiedInputs()) return true;
+        return !invalidInputsForRecipes && scheduler.isSearchDue(tick);
     }
 
     /** Requests the next normal callback without searching, consuming notifications or changing a running recipe. */
     public void requestRecipeLogicWakeup() {
-        this.recipeLogicWakeup = true;
+        scheduler.requestWakeup();
     }
 
     private boolean hasRecipeMapChanged() {
-        RecipeMap<?> map = getRecipeMap();
-        return map != observedRecipeMap || (map != null && map.getRecipeRevision() != observedRecipeRevision);
+        return scheduler.hasMapChanged(getRecipeMap());
     }
 
     private void prepareScheduledRecipeUpdate() {
-        this.recipeLogicWakeup = false;
+        scheduler.clearWakeup();
         if (progressTime > 0 || !hasRecipeMapChanged()) return;
-        RecipeMap<?> map = getRecipeMap();
-        this.observedRecipeMap = map;
-        this.observedRecipeRevision = map == null ? 0 : map.getRecipeRevision();
+        scheduler.observe(getRecipeMap());
         // Only invalidate the idle lookup cache. Sampled outputs and running resources are never touched here.
         this.previousRecipe = null;
         this.invalidInputsForRecipes = false;
         this.isOutputsFull = false;
-        this.nextRecipeSearchTick = 0;
+        scheduler.clearDeferral();
         clearRecipeFailure();
     }
 
@@ -604,13 +595,13 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
      * @return true if recipes should be searched for
      */
     protected boolean shouldSearchForRecipes() {
-        if (hasNotifiedInputs()) this.nextRecipeSearchTick = 0;
-        return metaTileEntity.getOffsetTimer() >= nextRecipeSearchTick && canWorkWithInputs() && canFitNewOutputs();
+        if (hasNotifiedInputs()) scheduler.clearDeferral();
+        return scheduler.isSearchDue(metaTileEntity.getOffsetTimer()) && canWorkWithInputs() && canFitNewOutputs();
     }
 
     /** Environmental failures must retry even when inventories have not changed. */
     protected void deferRecipeSearch() {
-        this.nextRecipeSearchTick = metaTileEntity.getOffsetTimer() + 20;
+        scheduler.defer(metaTileEntity.getOffsetTimer());
         metaTileEntity.getNotifiedItemInputList().clear();
         metaTileEntity.getNotifiedFluidInputList().clear();
     }
@@ -791,7 +782,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         if (currentRecipe != null) {
             RecipeFailure eligibilityFailure = evaluateRecipeEligibility(currentRecipe);
             if (eligibilityFailure.isEmpty() && checkRecipeForStart(currentRecipe)) {
-                this.nextRecipeSearchTick = 0;
+                scheduler.clearDeferral();
                 Recipe selected = currentRecipe;
                 prepareRecipeForStart(() -> prepareRecipe(selected));
             } else {
@@ -1717,7 +1708,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     public void invalidate() {
         requestRecipeLogicWakeup();
         resetRecipeFailures();
-        this.nextRecipeSearchTick = 0;
+        scheduler.clearDeferral();
         previousRecipe = null;
         awaitingOutputs = false;
         this.activeRecipeConditions = RecipeConditionSet.EMPTY;
