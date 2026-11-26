@@ -98,7 +98,7 @@ public class CoverItemFilter extends CoverBase implements CoverWithUI {
         try {
             this.itemFilterContainer.setFilterStack(packetBuffer.readItemStack());
         } catch (IOException e) {
-            GTLog.logger.error("Failed to read filter for CoverItemFilter! %s", getPos().toString());
+            GTLog.logger.error("Failed to read filter for CoverItemFilter at {}", getPos(), e);
         }
     }
 
