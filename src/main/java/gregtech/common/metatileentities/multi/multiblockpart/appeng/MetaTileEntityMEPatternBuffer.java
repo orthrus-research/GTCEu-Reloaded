@@ -6,7 +6,6 @@ import gregtech.api.capability.IRecipeInputViewProvider;
 import gregtech.api.capability.RecipeInputView;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -47,6 +46,10 @@ import appeng.me.helpers.IGridProxyable;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -330,8 +333,13 @@ public class MetaTileEntityMEPatternBuffer extends MetaTileEntityAEHostablePart<
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer player) {
-        return PatternBufferUI.create(this, player);
+    public boolean usesMui2() {
+        return true;
+    }
+
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        return PatternBufferUI.create(this, guiSyncManager);
     }
 
     @Override

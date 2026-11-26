@@ -4,19 +4,17 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.IDataStickIntractable;
 import gregtech.api.capability.IRecipeInputViewProvider;
 import gregtech.api.capability.RecipeInputView;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ClickButtonWidget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.AbilityInstances;
 import gregtech.api.metatileentity.multiblock.IMultiblockAbilityPart;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.mui.GTGuis;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityMultiblockPart;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.pattern.PatternBufferLink;
-import gregtech.common.metatileentities.multi.multiblockpart.appeng.pattern.PatternBufferTextWidget;
+import gregtech.common.metatileentities.multi.multiblockpart.appeng.pattern.PatternBufferUI;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -31,6 +29,14 @@ import net.minecraftforge.items.ItemStackHandler;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.InteractionSyncHandler;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.StringSyncValue;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -151,15 +157,31 @@ public class MetaTileEntityMEPatternBufferProxy extends MetaTileEntityMultiblock
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer player) {
-        return ModularUI.builder(GuiTextures.BACKGROUND, 176, 164).label(7, 6, getMetaFullName())
-                .widget(new PatternBufferTextWidget(7, 24,
-                        () -> link == null ? "gregtech.pattern_buffer.status.no_link" : link.describe()))
-                .widget(new PatternBufferTextWidget(7, 38, () -> resolve() == null ?
-                        "gregtech.pattern_buffer.status.source_unavailable" :
-                        "gregtech.pattern_buffer.status.source_loaded"))
-                .widget(new ClickButtonWidget(7, 54, 80, 18, "gregtech.pattern_buffer.unlink", data -> unlink(player)))
-                .bindPlayerInventory(player.inventory, 82).build(getHolder(), player);
+    public boolean usesMui2() {
+        return true;
+    }
+
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        StringSyncValue linked = new StringSyncValue(() -> PatternBufferUI.bounded(
+                link == null ? "gregtech.pattern_buffer.status.no_link" : link.describe()));
+        StringSyncValue source = new StringSyncValue(() -> resolve() == null ?
+                "gregtech.pattern_buffer.status.source_unavailable" : "gregtech.pattern_buffer.status.source_loaded");
+        InteractionSyncHandler unlink = new InteractionSyncHandler().setOnMousePressed(mouse -> {
+            if (!mouse.isClient()) unlink(guiSyncManager.getPlayer());
+        });
+        guiSyncManager.syncValue("pattern_buffer_link", linked);
+        guiSyncManager.syncValue("pattern_buffer_source", source);
+        guiSyncManager.syncValue("pattern_buffer_unlink", unlink);
+        return GTGuis.createPanel(this, 176, 164)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(7, 6))
+                .child(PatternBufferUI.text(linked::getStringValue).pos(7, 24))
+                .child(PatternBufferUI.text(source::getStringValue).pos(7, 38))
+                .child(new ButtonWidget<>()
+                        .pos(7, 54).size(80, 18)
+                        .overlay(IKey.lang("gregtech.pattern_buffer.unlink"))
+                        .syncHandler(unlink))
+                .bindPlayerInventory();
     }
 
     @Override

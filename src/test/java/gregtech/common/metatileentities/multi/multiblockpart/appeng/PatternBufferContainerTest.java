@@ -1,12 +1,7 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.impl.ModularUIContainer;
-import gregtech.api.gui.widgets.SlotWidget;
-import gregtech.api.gui.widgets.TabGroup;
-import gregtech.api.gui.widgets.TankWidget;
+import gregtech.api.mui.sync.GTFluidSyncHandler;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.pattern.PatternBufferStorage;
-import gregtech.common.metatileentities.multi.multiblockpart.appeng.pattern.PatternBufferUI;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -21,6 +16,8 @@ import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 
+import com.cleanroommc.modularui.screen.ModularContainer;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import com.mojang.authlib.GameProfile;
 import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,7 +39,7 @@ class PatternBufferContainerTest {
         PatternBufferTestPart part = buffer(world);
         EntityPlayer player = player(world, part);
         part.getPatternStorage().getSharedItems().insertItem(0, new ItemStack(Items.IRON_INGOT, 32), false);
-        ModularUIContainer container = container(part, player, 1);
+        ModularContainer container = container(part, player);
         Slot slot = sharedSlot(container);
         ItemStack backing = slot.getStack();
         NBTTagCompound before = part.getPatternStorage().write();
@@ -53,8 +50,7 @@ class PatternBufferContainerTest {
             assertEquals(64, slot.getItemStackLimit(new ItemStack(Items.IRON_INGOT)));
             assertSame(backing, slot.getStack());
         }
-        tabs(container.getModularUI()).setSelectedTab(0);
-        Slot locked = tabSlot(container.getModularUI(), 0);
+        Slot locked = patternSlot(container);
         ItemStack pattern = locked.getStack();
         assertFalse(locked.isItemValid(pattern));
         assertEquals(0, locked.getItemStackLimit(pattern));
@@ -72,10 +68,10 @@ class PatternBufferContainerTest {
         part.getPatternStorage().getSharedItems().insertItem(0, new ItemStack(Items.IRON_INGOT, 64), false);
         for (int i = 0; i < 36; i++) player.inventory.setInventorySlotContents(i, new ItemStack(Items.DIAMOND, 64));
         player.inventory.setInventorySlotContents(0, new ItemStack(Items.IRON_INGOT, 63));
-        ModularUIContainer container = container(part, player, 1);
+        ModularContainer container = container(part, player);
         long revision = part.getRecipeInputRevision();
         part.controller.getNotifiedItemInputList().clear();
-        assertEquals(1, container.transferStackInSlot(player, sharedSlot(container).slotNumber).getCount());
+        container.slotClick(sharedSlot(container).slotNumber, 0, ClickType.QUICK_MOVE, player);
         assertEquals(63, part.getPatternStorage().getSharedItems().getStackInSlot(0).getCount());
         assertEquals(64, player.inventory.getStackInSlot(0).getCount());
         assertEquals(127, ironTotal(part, player));
@@ -92,12 +88,12 @@ class PatternBufferContainerTest {
         for (int i = 1; i < 9; i++)
             part.getPatternStorage().getSharedItems().insertItem(i, new ItemStack(Items.DIAMOND, 64), false);
         player.inventory.setInventorySlotContents(0, new ItemStack(Items.IRON_INGOT, 2));
-        ModularUIContainer container = container(part, player, 1);
+        ModularContainer container = container(part, player);
         long revision = part.getRecipeInputRevision();
         part.controller.getNotifiedItemInputList().clear();
-        Slot source = container.inventorySlots.stream().filter(slot -> slot.inventory == player.inventory &&
-                slot.getSlotIndex() == 0).findFirst().get();
-        assertEquals(1, container.transferStackInSlot(player, source.slotNumber).getCount());
+        ItemStack held = player.inventory.getStackInSlot(0);
+        Slot source = container.inventorySlots.stream().filter(slot -> slot.getStack() == held).findFirst().get();
+        container.slotClick(source.slotNumber, 0, ClickType.QUICK_MOVE, player);
         assertEquals(64, part.getPatternStorage().getSharedItems().getStackInSlot(0).getCount());
         assertEquals(1, player.inventory.getStackInSlot(0).getCount());
         assertEquals(65, ironTotal(part, player));
@@ -112,7 +108,7 @@ class PatternBufferContainerTest {
         EntityPlayer player = player(world, part);
         part.getPatternStorage().getSharedItems().insertItem(0, new ItemStack(Items.IRON_INGOT, 60), false);
         player.inventory.setItemStack(new ItemStack(Items.IRON_INGOT, 10));
-        ModularUIContainer container = container(part, player, 1);
+        ModularContainer container = container(part, player);
         int target = sharedSlot(container).slotNumber;
         long revision = part.getRecipeInputRevision();
         container.slotClick(target, 0, ClickType.PICKUP, player);
@@ -141,16 +137,16 @@ class PatternBufferContainerTest {
         PatternBufferTestWorld world = new PatternBufferTestWorld();
         PatternBufferTestPart part = buffer(world);
         EntityPlayer player = player(world, part);
-        ModularUIContainer container = container(part, player, 0);
-        Slot pattern = tabSlot(container.getModularUI(), 0);
+        ModularContainer container = container(part, player);
+        Slot pattern = patternSlot(container);
         NBTTagCompound before = part.getPatternStorage().write();
-        assertTrue(container.transferStackInSlot(player, pattern.slotNumber).isEmpty());
+        assertTrue(container.slotClick(pattern.slotNumber, 0, ClickType.QUICK_MOVE, player).isEmpty());
         container.slotClick(pattern.slotNumber, 0, ClickType.PICKUP, player);
         assertTrue(player.inventory.getItemStack().isEmpty());
+        for (ItemStack stack : player.inventory.mainInventory) assertTrue(stack.isEmpty(), "no pattern was copied");
         assertEquals(before, part.getPatternStorage().write());
         before.setInteger("Version", 999);
         part.getPatternStorage().read(before);
-        tabs(container.getModularUI()).setSelectedTab(1);
         player.inventory.setItemStack(new ItemStack(Items.IRON_INGOT, 2));
         container.slotClick(sharedSlot(container).slotNumber, 0, ClickType.PICKUP, player);
         assertEquals(2, player.inventory.getItemStack().getCount());
@@ -167,10 +163,9 @@ class PatternBufferContainerTest {
             player.inventory.setItemStack(new ItemStack(Items.BUCKET));
             assertNotNull(player.inventory.getItemStack()
                     .getCapability(CapabilityFluidHandler.FLUID_HANDLER_ITEM_CAPABILITY, null));
-            ModularUIContainer container = container(part, player, 1);
-            TankWidget tank = (TankWidget) tabs(container.getModularUI()).getTabWidget(1).getContainedWidgets(true)
-                    .stream()
-                    .filter(TankWidget.class::isInstance).findFirst().get();
+            PatternBufferScreen screen = PatternBufferScreen.open(part, player);
+            GTFluidSyncHandler tank = (GTFluidSyncHandler) screen.syncManager.findSyncHandler("pattern_buffer_tank",
+                    0);
             NBTTagCompound recovery = new NBTTagCompound();
             part.writeItemStackData(recovery);
             NBTTagCompound recoveryBefore = recovery.copy(), original = part.getPatternStorage().write();
@@ -183,7 +178,7 @@ class PatternBufferContainerTest {
             try {
                 packet.writeBoolean(false);
                 try {
-                    tank.handleClientAction(1, packet);
+                    tank.readOnServer(GTFluidSyncHandler.TRY_CLICK_CONTAINER, packet);
                 } finally {
                     assertEquals(1, packet.readableBytes(),
                             "Invalid old screen is rejected before parsing its tank action");
@@ -233,26 +228,23 @@ class PatternBufferContainerTest {
         };
     }
 
-    private static ModularUIContainer container(PatternBufferTestPart part, EntityPlayer player, int tab) {
-        ModularUI ui = PatternBufferUI.create(part, player);
-        ui.initWidgets();
-        tabs(ui).setSelectedTab(tab);
-        ModularUIContainer container = new ModularUIContainer(ui);
-        player.openContainer = container;
-        return container;
+    private static ModularContainer container(PatternBufferTestPart part, EntityPlayer player) {
+        return PatternBufferScreen.open(part, player).container;
     }
 
-    private static TabGroup<?> tabs(ModularUI ui) {
-        return (TabGroup<?>) ui.guiWidgets.values().stream().filter(TabGroup.class::isInstance).findFirst().get();
+    private static Slot slotOf(ModularContainer container, String group) {
+        return container.inventorySlots.stream()
+                .filter(slot -> slot instanceof ModularSlot modular && group.equals(modular.getSlotGroupName()) &&
+                        slot.getSlotIndex() == 0)
+                .findFirst().get();
     }
 
-    private static Slot tabSlot(ModularUI ui, int tab) {
-        return ((SlotWidget) tabs(ui).getTabWidget(tab).getContainedWidgets(true).stream()
-                .filter(SlotWidget.class::isInstance).findFirst().get()).getHandle();
+    private static Slot patternSlot(ModularContainer container) {
+        return slotOf(container, "pattern_buffer_patterns");
     }
 
-    private static Slot sharedSlot(ModularUIContainer container) {
-        return tabSlot(container.getModularUI(), 1);
+    private static Slot sharedSlot(ModularContainer container) {
+        return slotOf(container, "pattern_buffer_shared");
     }
 
     private static int ironTotal(PatternBufferTestPart part, EntityPlayer player) {
