@@ -2,6 +2,7 @@ package gregtech.loaders.recipe;
 
 import gregtech.api.unification.material.MarkerMaterials.Tier;
 import gregtech.api.unification.material.Material;
+import gregtech.api.unification.stack.UnificationEntry;
 
 import java.util.Locale;
 
@@ -22,6 +23,11 @@ final class RecipeTiers {
     /** @return the marker material of a tier's circuits, as {@code circuitLv} names it for LV */
     static Material circuitTier(int tier) {
         return CIRCUITS[tier];
+    }
+
+    /** @return the material of a crafting component's ore dictionary entry at a tier, such as the tier's plate */
+    static Material material(CraftingComponent.Component component, int tier) {
+        return ((UnificationEntry) component.getIngredient(tier)).material;
     }
 
     /** @return the tier's name in lower case, as recipe names hold it: {@code lv}, {@code luv} */

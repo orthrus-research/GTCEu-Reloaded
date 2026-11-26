@@ -623,37 +623,14 @@ public class MachineRecipeLoader {
                 .duration(100)
                 .buildAndRegister();
 
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, WroughtIron, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.ULV)).circuitMeta(8).duration(25)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Steel, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.LV)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Aluminium, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.MV)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, StainlessSteel, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.HV)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Titanium, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.EV)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, TungstenSteel, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.IV)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, RhodiumPlatedPalladium, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.LuV)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, NaquadahAlloy, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.ZPM)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Darmstadtium, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.UV)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Neutronium, 8)
-                .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.UHV)).circuitMeta(8).duration(50)
-                .buildAndRegister();
-
+        // the machine casing of each tier: eight of the tier's plates
+        for (int tier = ULV; tier <= UHV; tier++) {
+            RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16)
+                    .input(OrePrefix.plate, RecipeTiers.material(CraftingComponent.PLATE, tier), 8)
+                    .outputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.values()[tier]))
+                    .circuitMeta(8).duration(tier == ULV ? 25 : 50)
+                    .buildAndRegister();
+        }
         RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[LV]).input(OrePrefix.wireGtDouble, Materials.Cupronickel, 8)
                 .input(OrePrefix.foil, Materials.Bronze, 8).fluidInputs(Materials.TinAlloy.getFluid(GTValues.L))
                 .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.CUPRONICKEL)).duration(200).buildAndRegister();
@@ -832,56 +809,15 @@ public class MachineRecipeLoader {
 
         // If these recipes are changed, change the values in MaterialInfoLoader.java
 
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(25).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.ULV))
-                .input(OrePrefix.cableGtSingle, Materials.RedAlloy, 2)
-                .fluidInputs(Materials.Polyethylene.getFluid(L * 2)).outputs(MetaTileEntities.HULL[0].getStackForm())
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.LV))
-                .input(OrePrefix.cableGtSingle, Materials.Tin, 2).fluidInputs(Materials.Polyethylene.getFluid(L * 2))
-                .outputs(MetaTileEntities.HULL[1].getStackForm()).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.MV))
-                .input(OrePrefix.cableGtSingle, Materials.Copper, 2).fluidInputs(Materials.Polyethylene.getFluid(L * 2))
-                .outputs(MetaTileEntities.HULL[2].getStackForm()).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.MV))
-                .input(OrePrefix.cableGtSingle, Materials.AnnealedCopper, 2)
-                .fluidInputs(Materials.Polyethylene.getFluid(L * 2)).outputs(MetaTileEntities.HULL[2].getStackForm())
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.HV))
-                .input(OrePrefix.cableGtSingle, Materials.Gold, 2).fluidInputs(Materials.Polyethylene.getFluid(L * 2))
-                .outputs(MetaTileEntities.HULL[3].getStackForm()).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.EV))
-                .input(OrePrefix.cableGtSingle, Materials.Aluminium, 2)
-                .fluidInputs(Materials.Polyethylene.getFluid(L * 2)).outputs(MetaTileEntities.HULL[4].getStackForm())
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.IV))
-                .input(OrePrefix.cableGtSingle, Materials.Platinum, 2)
-                .fluidInputs(Polytetrafluoroethylene.getFluid(L * 2)).outputs(MetaTileEntities.HULL[5].getStackForm())
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.LuV))
-                .input(OrePrefix.cableGtSingle, Materials.NiobiumTitanium, 2)
-                .fluidInputs(Polytetrafluoroethylene.getFluid(L * 2)).outputs(MetaTileEntities.HULL[6].getStackForm())
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.ZPM))
-                .input(OrePrefix.cableGtSingle, Materials.VanadiumGallium, 2)
-                .fluidInputs(Polybenzimidazole.getFluid(L * 2)).outputs(MetaTileEntities.HULL[7].getStackForm())
-                .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.UV))
-                .input(cableGtSingle, Materials.YttriumBariumCuprate, 2).fluidInputs(Polybenzimidazole.getFluid(L * 2))
-                .outputs(MetaTileEntities.HULL[8].getStackForm()).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(50).EUt(16)
-                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.UHV))
-                .input(cableGtSingle, Materials.Europium, 2).fluidInputs(Polybenzimidazole.getFluid(L * 2))
-                .outputs(MetaTileEntities.HULL[9].getStackForm()).buildAndRegister();
+        // the hull of each tier: its casing and two of its cables, insulated with the tier's plastic; the MV hull
+        // can be wired with annealed copper as well
+        Material[] hullPlastics = { Polyethylene, Polyethylene, Polyethylene, Polyethylene, Polyethylene,
+                Polytetrafluoroethylene, Polytetrafluoroethylene, Polybenzimidazole, Polybenzimidazole,
+                Polybenzimidazole };
+        for (int tier = ULV; tier <= UHV; tier++) {
+            hull(tier, RecipeTiers.material(CraftingComponent.CABLE, tier), hullPlastics[tier]);
+            if (tier == MV) hull(MV, AnnealedCopper, hullPlastics[MV]);
+        }
 
         ASSEMBLER_RECIPES.recipeBuilder().EUt(2).input(OreDictNames.chestWood.toString()).input(plate, Iron, 5)
                 .outputs(new ItemStack(Blocks.HOPPER)).duration(800).circuitMeta(1).buildAndRegister();
@@ -1429,5 +1365,14 @@ public class MachineRecipeLoader {
                     STEAM_IMPORT_BUS.getStackForm(),
                     "d", "B", 'B', STEAM_EXPORT_BUS.getStackForm());
         }
+    }
+
+    private static void hull(int tier, Material cable, Material plastic) {
+        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().duration(tier == ULV ? 25 : 50).EUt(16)
+                .inputs(MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.values()[tier]))
+                .input(OrePrefix.cableGtSingle, cable, 2)
+                .fluidInputs(plastic.getFluid(L * 2))
+                .outputs(MetaTileEntities.HULL[tier].getStackForm())
+                .buildAndRegister();
     }
 }

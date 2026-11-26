@@ -8,14 +8,22 @@ import gregtech.api.recipes.ModHandler;
 import gregtech.api.unification.OreDictUnifier;
 import gregtech.api.unification.material.MarkerMaterials;
 import gregtech.api.unification.material.MarkerMaterials.Tier;
+import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.UnificationEntry;
 import gregtech.common.ConfigHolder;
+import gregtech.common.blocks.BlockBoilerCasing.BoilerCasingType;
+import gregtech.common.blocks.BlockFireboxCasing.FireboxCasingType;
 import gregtech.common.blocks.BlockGlassCasing;
+import gregtech.common.blocks.BlockHermeticCasing.HermeticCasingsType;
+import gregtech.common.blocks.BlockMachineCasing.MachineCasingType;
 import gregtech.common.blocks.BlockMetalCasing.MetalCasingType;
 import gregtech.common.blocks.BlockMultiblockCasing;
 import gregtech.common.blocks.BlockMultiblockCasing.MultiblockCasingType;
+import gregtech.common.blocks.BlockTurbineCasing.TurbineCasingType;
+import gregtech.common.blocks.BlockWarningSign;
+import gregtech.common.blocks.BlockWarningSign1;
 import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.blocks.wood.BlockGregPlanks;
 import gregtech.common.items.MetaItems;
@@ -29,6 +37,7 @@ import net.minecraftforge.fluids.FluidUtil;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static gregtech.common.blocks.BlockBoilerCasing.BoilerCasingType.*;
 import static gregtech.common.blocks.BlockFireboxCasing.FireboxCasingType.*;
@@ -42,30 +51,16 @@ import static gregtech.common.blocks.BlockWarningSign.SignType.*;
 import static gregtech.common.blocks.BlockWarningSign1.SignType.*;
 import static gregtech.common.blocks.BlockWireCoil.CoilType.CUPRONICKEL;
 import static gregtech.loaders.recipe.CraftingComponent.*;
+import static gregtech.loaders.recipe.RecipeTiers.tierName;
 
 public class MetaTileEntityLoader {
 
     public static void init() {
-        ModHandler.addShapedRecipe(true, "casing_ulv", MetaBlocks.MACHINE_CASING.getItemVariant(ULV), "PPP", "PwP",
-                "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.WroughtIron));
-        ModHandler.addShapedRecipe(true, "casing_lv", MetaBlocks.MACHINE_CASING.getItemVariant(LV), "PPP", "PwP", "PPP",
-                'P', new UnificationEntry(OrePrefix.plate, Materials.Steel));
-        ModHandler.addShapedRecipe(true, "casing_mv", MetaBlocks.MACHINE_CASING.getItemVariant(MV), "PPP", "PwP", "PPP",
-                'P', new UnificationEntry(OrePrefix.plate, Materials.Aluminium));
-        ModHandler.addShapedRecipe(true, "casing_hv", MetaBlocks.MACHINE_CASING.getItemVariant(HV), "PPP", "PwP", "PPP",
-                'P', new UnificationEntry(OrePrefix.plate, Materials.StainlessSteel));
-        ModHandler.addShapedRecipe(true, "casing_ev", MetaBlocks.MACHINE_CASING.getItemVariant(EV), "PPP", "PwP", "PPP",
-                'P', new UnificationEntry(OrePrefix.plate, Materials.Titanium));
-        ModHandler.addShapedRecipe(true, "casing_iv", MetaBlocks.MACHINE_CASING.getItemVariant(IV), "PPP", "PwP", "PPP",
-                'P', new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel));
-        ModHandler.addShapedRecipe(true, "casing_luv", MetaBlocks.MACHINE_CASING.getItemVariant(LuV), "PPP", "PwP",
-                "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.RhodiumPlatedPalladium));
-        ModHandler.addShapedRecipe(true, "casing_zpm", MetaBlocks.MACHINE_CASING.getItemVariant(ZPM), "PPP", "PwP",
-                "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.NaquadahAlloy));
-        ModHandler.addShapedRecipe(true, "casing_uv", MetaBlocks.MACHINE_CASING.getItemVariant(UV), "PPP", "PwP", "PPP",
-                'P', new UnificationEntry(OrePrefix.plate, Materials.Darmstadtium));
-        ModHandler.addShapedRecipe(true, "casing_uhv", MetaBlocks.MACHINE_CASING.getItemVariant(UHV), "PPP", "PwP",
-                "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Neutronium));
+        for (int tier = GTValues.ULV; tier <= GTValues.UHV; tier++) {
+            ModHandler.addShapedRecipe(true, "casing_" + tierName(tier),
+                    MetaBlocks.MACHINE_CASING.getItemVariant(MachineCasingType.values()[tier]), "PPP", "PwP", "PPP",
+                    'P', PLATE.getIngredient(tier));
+        }
 
         // If these recipes are changed, change the values in MaterialInfoLoader.java
         registerMachineRecipe(false, MetaTileEntities.HULL, "PLP", "CHC", 'P', HULL_PLATE, 'L', PLATE, 'C', CABLE, 'H',
@@ -99,131 +94,41 @@ public class MetaTileEntityLoader {
                 MetaBlocks.METAL_CASING.getItemVariant(BRONZE_BRICKS, ConfigHolder.recipes.casingsPerCraft), "PhP",
                 "PBP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Bronze), 'B',
                 new ItemStack(Blocks.BRICK_BLOCK, 1));
-        ModHandler.addShapedRecipe(true, "casing_steel_solid",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID, ConfigHolder.recipes.casingsPerCraft), "PhP", "PFP",
-                "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Steel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Steel));
-        ModHandler.addShapedRecipe(true, "casing_titanium_stable",
-                MetaBlocks.METAL_CASING.getItemVariant(TITANIUM_STABLE, ConfigHolder.recipes.casingsPerCraft), "PhP",
-                "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Titanium), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Titanium));
-        ModHandler.addShapedRecipe(true, "casing_invar_heatproof",
-                MetaBlocks.METAL_CASING.getItemVariant(INVAR_HEATPROOF, ConfigHolder.recipes.casingsPerCraft), "PhP",
-                "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Invar), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Invar));
-        ModHandler.addShapedRecipe(true, "casing_aluminium_frostproof",
-                MetaBlocks.METAL_CASING.getItemVariant(ALUMINIUM_FROSTPROOF, ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Aluminium), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Aluminium));
-        ModHandler.addShapedRecipe(true, "casing_stainless_clean",
-                MetaBlocks.METAL_CASING.getItemVariant(STAINLESS_CLEAN, ConfigHolder.recipes.casingsPerCraft), "PhP",
-                "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.StainlessSteel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.StainlessSteel));
-        ModHandler.addShapedRecipe(true, "casing_tungstensteel_robust",
-                MetaBlocks.METAL_CASING.getItemVariant(TUNGSTENSTEEL_ROBUST, ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.TungstenSteel));
-        ModHandler.addShapedRecipe(true, "casing_hssg_robust",
-                MetaBlocks.METAL_CASING.getItemVariant(HSSE_STURDY, ConfigHolder.recipes.casingsPerCraft), "PhP", "PFP",
-                "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.HSSE), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Europium));
-        ModHandler.addShapedRecipe(true, "casing_palladium_substation",
-                MetaBlocks.METAL_CASING.getItemVariant(PALLADIUM_SUBSTATION, ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Palladium), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Iridium));
+        metalCasing("casing_steel_solid", STEEL_SOLID, Materials.Steel, Materials.Steel);
+        metalCasing("casing_titanium_stable", TITANIUM_STABLE, Materials.Titanium, Materials.Titanium);
+        metalCasing("casing_invar_heatproof", INVAR_HEATPROOF, Materials.Invar, Materials.Invar);
+        metalCasing("casing_aluminium_frostproof", ALUMINIUM_FROSTPROOF, Materials.Aluminium, Materials.Aluminium);
+        metalCasing("casing_stainless_clean", STAINLESS_CLEAN, Materials.StainlessSteel, Materials.StainlessSteel);
+        metalCasing("casing_tungstensteel_robust", TUNGSTENSTEEL_ROBUST, Materials.TungstenSteel,
+                Materials.TungstenSteel);
+        metalCasing("casing_hssg_robust", HSSE_STURDY, Materials.HSSE, Materials.Europium);
+        metalCasing("casing_palladium_substation", PALLADIUM_SUBSTATION, Materials.Palladium, Materials.Iridium);
 
-        ModHandler.addShapedRecipe(true, "casing_steel_turbine_casing",
-                MetaBlocks.TURBINE_CASING.getItemVariant(STEEL_TURBINE_CASING, ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Magnalium), 'F',
+        // the steel turbine casing is built on a frame, the others on a steel turbine casing
+        turbineCasing("casing_steel_turbine_casing", STEEL_TURBINE_CASING, Materials.Magnalium,
                 new UnificationEntry(OrePrefix.frameGt, Materials.BlueSteel));
-        ModHandler.addShapedRecipe(true, "casing_stainless_turbine_casing",
-                MetaBlocks.TURBINE_CASING.getItemVariant(STAINLESS_TURBINE_CASING,
-                        ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.StainlessSteel), 'F',
+        turbineCasing("casing_stainless_turbine_casing", STAINLESS_TURBINE_CASING, Materials.StainlessSteel,
                 MetaBlocks.TURBINE_CASING.getItemVariant(STEEL_TURBINE_CASING));
-        ModHandler.addShapedRecipe(true, "casing_titanium_turbine_casing",
-                MetaBlocks.TURBINE_CASING.getItemVariant(TITANIUM_TURBINE_CASING, ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Titanium), 'F',
+        turbineCasing("casing_titanium_turbine_casing", TITANIUM_TURBINE_CASING, Materials.Titanium,
                 MetaBlocks.TURBINE_CASING.getItemVariant(STEEL_TURBINE_CASING));
-        ModHandler.addShapedRecipe(true, "casing_tungstensteel_turbine_casing",
-                MetaBlocks.TURBINE_CASING.getItemVariant(TUNGSTENSTEEL_TURBINE_CASING,
-                        ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "PFP", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel), 'F',
+        turbineCasing("casing_tungstensteel_turbine_casing", TUNGSTENSTEEL_TURBINE_CASING, Materials.TungstenSteel,
                 MetaBlocks.TURBINE_CASING.getItemVariant(STEEL_TURBINE_CASING));
 
-        ModHandler.addShapedRecipe(true, "casing_bronze_pipe",
-                MetaBlocks.BOILER_CASING.getItemVariant(BRONZE_PIPE, ConfigHolder.recipes.casingsPerCraft), "PIP",
-                "IFI", "PIP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Bronze), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Bronze), 'I',
-                new UnificationEntry(OrePrefix.pipeNormalFluid, Materials.Bronze));
-        ModHandler.addShapedRecipe(true, "casing_steel_pipe",
-                MetaBlocks.BOILER_CASING.getItemVariant(STEEL_PIPE, ConfigHolder.recipes.casingsPerCraft), "PIP", "IFI",
-                "PIP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Steel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Steel), 'I',
-                new UnificationEntry(OrePrefix.pipeNormalFluid, Materials.Steel));
-        ModHandler.addShapedRecipe(true, "casing_titanium_pipe",
-                MetaBlocks.BOILER_CASING.getItemVariant(TITANIUM_PIPE, ConfigHolder.recipes.casingsPerCraft), "PIP",
-                "IFI", "PIP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Titanium), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Titanium), 'I',
-                new UnificationEntry(OrePrefix.pipeNormalFluid, Materials.Titanium));
-        ModHandler.addShapedRecipe(true, "casing_tungstensteel_pipe",
-                MetaBlocks.BOILER_CASING.getItemVariant(TUNGSTENSTEEL_PIPE, ConfigHolder.recipes.casingsPerCraft),
-                "PIP", "IFI", "PIP", 'P', new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.TungstenSteel), 'I',
-                new UnificationEntry(OrePrefix.pipeNormalFluid, Materials.TungstenSteel));
-        ModHandler.addShapedRecipe(true, "casing_ptfe_pipe",
-                MetaBlocks.BOILER_CASING.getItemVariant(POLYTETRAFLUOROETHYLENE_PIPE,
-                        ConfigHolder.recipes.casingsPerCraft),
-                "PIP", "IFI", "PIP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Polytetrafluoroethylene), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Polytetrafluoroethylene), 'I',
-                new UnificationEntry(OrePrefix.pipeNormalFluid, Materials.Polytetrafluoroethylene));
-        ModHandler.addShapedRecipe(true, "casing_bronze_firebox",
-                MetaBlocks.BOILER_FIREBOX_CASING.getItemVariant(BRONZE_FIREBOX, ConfigHolder.recipes.casingsPerCraft),
-                "PSP", "SFS", "PSP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Bronze), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Bronze), 'S',
-                new UnificationEntry(OrePrefix.stick, Materials.Bronze));
-        ModHandler.addShapedRecipe(true, "casing_steel_firebox",
-                MetaBlocks.BOILER_FIREBOX_CASING.getItemVariant(STEEL_FIREBOX, ConfigHolder.recipes.casingsPerCraft),
-                "PSP", "SFS", "PSP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Steel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Steel), 'S',
-                new UnificationEntry(OrePrefix.stick, Materials.Steel));
-        ModHandler.addShapedRecipe(true, "casing_titanium_firebox",
-                MetaBlocks.BOILER_FIREBOX_CASING.getItemVariant(TITANIUM_FIREBOX, ConfigHolder.recipes.casingsPerCraft),
-                "PSP", "SFS", "PSP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Titanium), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Titanium), 'S',
-                new UnificationEntry(OrePrefix.stick, Materials.Titanium));
-        ModHandler.addShapedRecipe(true, "casing_tungstensteel_firebox",
-                MetaBlocks.BOILER_FIREBOX_CASING.getItemVariant(TUNGSTENSTEEL_FIREBOX,
-                        ConfigHolder.recipes.casingsPerCraft),
-                "PSP", "SFS", "PSP", 'P', new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.TungstenSteel), 'S',
-                new UnificationEntry(OrePrefix.stick, Materials.TungstenSteel));
+        pipeCasing("casing_bronze_pipe", BRONZE_PIPE, Materials.Bronze);
+        pipeCasing("casing_steel_pipe", STEEL_PIPE, Materials.Steel);
+        pipeCasing("casing_titanium_pipe", TITANIUM_PIPE, Materials.Titanium);
+        pipeCasing("casing_tungstensteel_pipe", TUNGSTENSTEEL_PIPE, Materials.TungstenSteel);
+        pipeCasing("casing_ptfe_pipe", POLYTETRAFLUOROETHYLENE_PIPE, Materials.Polytetrafluoroethylene);
+        fireboxCasing("casing_bronze_firebox", BRONZE_FIREBOX, Materials.Bronze);
+        fireboxCasing("casing_steel_firebox", STEEL_FIREBOX, Materials.Steel);
+        fireboxCasing("casing_titanium_firebox", TITANIUM_FIREBOX, Materials.Titanium);
+        fireboxCasing("casing_tungstensteel_firebox", TUNGSTENSTEEL_FIREBOX, Materials.TungstenSteel);
 
-        ModHandler.addShapedRecipe(true, "casing_bronze_gearbox",
-                MetaBlocks.TURBINE_CASING.getItemVariant(BRONZE_GEARBOX, ConfigHolder.recipes.casingsPerCraft), "PhP",
-                "GFG", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Bronze), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Bronze), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.Bronze));
-        ModHandler.addShapedRecipe(true, "casing_steel_gearbox",
-                MetaBlocks.TURBINE_CASING.getItemVariant(STEEL_GEARBOX, ConfigHolder.recipes.casingsPerCraft), "PhP",
-                "GFG", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Steel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Steel), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.Steel));
-        ModHandler.addShapedRecipe(true, "casing_stainless_steel_gearbox",
-                MetaBlocks.TURBINE_CASING.getItemVariant(STAINLESS_STEEL_GEARBOX, ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "GFG", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.StainlessSteel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.StainlessSteel), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.StainlessSteel));
-        ModHandler.addShapedRecipe(true, "casing_titanium_gearbox",
-                MetaBlocks.TURBINE_CASING.getItemVariant(TITANIUM_GEARBOX, ConfigHolder.recipes.casingsPerCraft), "PhP",
-                "GFG", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Titanium), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.Titanium), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.Titanium));
-        ModHandler.addShapedRecipe(true, "casing_tungstensteel_gearbox",
-                MetaBlocks.TURBINE_CASING.getItemVariant(TUNGSTENSTEEL_GEARBOX, ConfigHolder.recipes.casingsPerCraft),
-                "PhP", "GFG", "PwP", 'P', new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel), 'F',
-                new UnificationEntry(OrePrefix.frameGt, Materials.TungstenSteel), 'G',
-                new UnificationEntry(OrePrefix.gear, Materials.TungstenSteel));
+        gearboxCasing("casing_bronze_gearbox", BRONZE_GEARBOX, Materials.Bronze);
+        gearboxCasing("casing_steel_gearbox", STEEL_GEARBOX, Materials.Steel);
+        gearboxCasing("casing_stainless_steel_gearbox", STAINLESS_STEEL_GEARBOX, Materials.StainlessSteel);
+        gearboxCasing("casing_titanium_gearbox", TITANIUM_GEARBOX, Materials.Titanium);
+        gearboxCasing("casing_tungstensteel_gearbox", TUNGSTENSTEEL_GEARBOX, Materials.TungstenSteel);
 
         ModHandler.addShapedRecipe(true, "casing_grate_casing",
                 MetaBlocks.MULTIBLOCK_CASING.getItemVariant(GRATE_CASING, ConfigHolder.recipes.casingsPerCraft), "PVP",
@@ -242,114 +147,40 @@ public class MetaTileEntityLoader {
                 new UnificationEntry(OrePrefix.gear, Materials.Ruridit), 'A', MetaItems.ROBOT_ARM_IV.getStackForm(),
                 'F', OreDictUnifier.get(OrePrefix.frameGt, Materials.TungstenSteel));
 
-        ModHandler.addShapedRecipe(true, "warning_sign_yellow_stripes",
-                MetaBlocks.WARNING_SIGN.getItemVariant(YELLOW_STRIPES), "Y  ", " M ", "  B", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_small_yellow_stripes",
-                MetaBlocks.WARNING_SIGN.getItemVariant(SMALL_YELLOW_STRIPES), "  Y", " M ", "B  ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_radioactive_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(RADIOACTIVE_HAZARD), " YB", " M ", "   ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_bio_hazard", MetaBlocks.WARNING_SIGN.getItemVariant(BIO_HAZARD),
-                " Y ", " MB", "   ", 'M', MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B',
-                "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_explosion_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(EXPLOSION_HAZARD), " Y ", " M ", "  B", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_fire_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(FIRE_HAZARD), " Y ", " M ", " B ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_acid_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(ACID_HAZARD), " Y ", " M ", "B  ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_magic_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(MAGIC_HAZARD), " Y ", "BM ", "   ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_frost_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(FROST_HAZARD), "BY ", " M ", "   ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_noise_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(NOISE_HAZARD), "   ", " M ", "BY ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_generic_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(GENERIC_HAZARD), "   ", "BM ", " Y ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_high_voltage_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(HIGH_VOLTAGE_HAZARD), "B  ", " M ", " Y ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_magnetic_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(MAGNETIC_HAZARD), " B ", " M ", " Y ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_antimatter_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(ANTIMATTER_HAZARD), "  B", " M ", " Y ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_high_temperature_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(HIGH_TEMPERATURE_HAZARD), "   ", " MB", " Y ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_sign_void_hazard",
-                MetaBlocks.WARNING_SIGN.getItemVariant(VOID_HAZARD), "   ", " M ", " YB", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
+        // a solid steel casing M with yellow dye Y and black dye B where each sign has them
+        warningSign(YELLOW_STRIPES, "Y  ", " M ", "  B");
+        warningSign(SMALL_YELLOW_STRIPES, "  Y", " M ", "B  ");
+        warningSign(RADIOACTIVE_HAZARD, " YB", " M ", "   ");
+        warningSign(BIO_HAZARD, " Y ", " MB", "   ");
+        warningSign(EXPLOSION_HAZARD, " Y ", " M ", "  B");
+        warningSign(FIRE_HAZARD, " Y ", " M ", " B ");
+        warningSign(ACID_HAZARD, " Y ", " M ", "B  ");
+        warningSign(MAGIC_HAZARD, " Y ", "BM ", "   ");
+        warningSign(FROST_HAZARD, "BY ", " M ", "   ");
+        warningSign(NOISE_HAZARD, "   ", " M ", "BY ");
+        warningSign(GENERIC_HAZARD, "   ", "BM ", " Y ");
+        warningSign(HIGH_VOLTAGE_HAZARD, "B  ", " M ", " Y ");
+        warningSign(MAGNETIC_HAZARD, " B ", " M ", " Y ");
+        warningSign(ANTIMATTER_HAZARD, "  B", " M ", " Y ");
+        warningSign(HIGH_TEMPERATURE_HAZARD, "   ", " MB", " Y ");
+        warningSign(VOID_HAZARD, "   ", " M ", " YB");
 
-        ModHandler.addShapedRecipe(true, "warning_mob_spawner_hazard",
-                MetaBlocks.WARNING_SIGN_1.getItemVariant(MOB_SPAWNER_HAZARD), "B  ", "YM ", "   ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_spatial_storage_hazard",
-                MetaBlocks.WARNING_SIGN_1.getItemVariant(SPATIAL_STORAGE_HAZARD), " B ", "YM ", "   ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_laser_hazard", MetaBlocks.WARNING_SIGN_1.getItemVariant(LASER_HAZARD),
-                "  B", "YM ", "   ", 'M', MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B',
-                "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_mob_hazard", MetaBlocks.WARNING_SIGN_1.getItemVariant(MOB_HAZARD),
-                "   ", "YMB", "   ", 'M', MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B',
-                "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_boss_hazard", MetaBlocks.WARNING_SIGN_1.getItemVariant(BOSS_HAZARD),
-                "   ", "YM ", "  B", 'M', MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B',
-                "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_gregification_hazard",
-                MetaBlocks.WARNING_SIGN_1.getItemVariant(GREGIFICATION_HAZARD), "   ", "YM ", " B ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_causality_hazard",
-                MetaBlocks.WARNING_SIGN_1.getItemVariant(CAUSALITY_HAZARD), "   ", "YM ", "B  ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_automated_defenses_hazard",
-                MetaBlocks.WARNING_SIGN_1.getItemVariant(AUTOMATED_DEFENSES_HAZARD), "   ", " MY", "  B", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
-        ModHandler.addShapedRecipe(true, "warning_high_pressure_hazard",
-                MetaBlocks.WARNING_SIGN_1.getItemVariant(HIGH_PRESSURE_HAZARD), "   ", " MY", " B ", 'M',
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
+        warningSign(MOB_SPAWNER_HAZARD, "B  ", "YM ", "   ");
+        warningSign(SPATIAL_STORAGE_HAZARD, " B ", "YM ", "   ");
+        warningSign(LASER_HAZARD, "  B", "YM ", "   ");
+        warningSign(MOB_HAZARD, "   ", "YMB", "   ");
+        warningSign(BOSS_HAZARD, "   ", "YM ", "  B");
+        warningSign(GREGIFICATION_HAZARD, "   ", "YM ", " B ");
+        warningSign(CAUSALITY_HAZARD, "   ", "YM ", "B  ");
+        warningSign(AUTOMATED_DEFENSES_HAZARD, "   ", " MY", "  B");
+        warningSign(HIGH_PRESSURE_HAZARD, "   ", " MY", " B ");
 
-        // TODO?
-        ModHandler.addShapelessRecipe("yellow_stripes_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(YELLOW_STRIPES));
-        ModHandler.addShapelessRecipe("small_yellow_stripes_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(SMALL_YELLOW_STRIPES));
-        ModHandler.addShapelessRecipe("radioactive_hazard_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(RADIOACTIVE_HAZARD));
-        ModHandler.addShapelessRecipe("bio_hazard_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(BIO_HAZARD));
-        ModHandler.addShapelessRecipe("explosion_hazard_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(EXPLOSION_HAZARD));
-        ModHandler.addShapelessRecipe("fire_hazard_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(FIRE_HAZARD));
-        ModHandler.addShapelessRecipe("acid_hazard_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(ACID_HAZARD));
-        ModHandler.addShapelessRecipe("magic_hazard_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(MAGIC_HAZARD));
-        ModHandler.addShapelessRecipe("frost_hazard_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(FROST_HAZARD));
-        ModHandler.addShapelessRecipe("noise_hazard_to_steel_solid_casing",
-                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
-                MetaBlocks.WARNING_SIGN.getItemVariant(NOISE_HAZARD));
+        // only the first ten signs turn back into a solid steel casing
+        for (BlockWarningSign.SignType type : List.of(YELLOW_STRIPES, SMALL_YELLOW_STRIPES, RADIOACTIVE_HAZARD,
+                BIO_HAZARD, EXPLOSION_HAZARD, FIRE_HAZARD, ACID_HAZARD, MAGIC_HAZARD, FROST_HAZARD, NOISE_HAZARD)) {
+            ModHandler.addShapelessRecipe(type.getName() + "_to_steel_solid_casing",
+                    MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), MetaBlocks.WARNING_SIGN.getItemVariant(type));
+        }
 
         ModHandler.addShapedRecipe(true, "rotor_holder_hv", MetaTileEntities.ROTOR_HOLDER[GTValues.HV].getStackForm(),
                 "SGS",
@@ -978,34 +809,22 @@ public class MetaTileEntityLoader {
                 'P', new UnificationEntry(OrePrefix.plate, Materials.Gold), 'R',
                 new UnificationEntry(OrePrefix.stickLong, Materials.Gold));
 
-        // Hermetic Casings
-        ModHandler.addShapedRecipe(true, "hermetic_casing_lv", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_LV),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Steel), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Polyethylene));
-        ModHandler.addShapedRecipe(true, "hermetic_casing_mv", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_MV),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Aluminium), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeItem, Materials.PolyvinylChloride));
-        ModHandler.addShapedRecipe(true, "hermetic_casing_hv", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_HV),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.StainlessSteel), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Polytetrafluoroethylene));
-        ModHandler.addShapedRecipe(true, "hermetic_casing_ev", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_EV),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Titanium), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.StainlessSteel));
-        ModHandler.addShapedRecipe(true, "hermetic_casing_iv", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_IV),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.TungstenSteel), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Titanium));
-        ModHandler.addShapedRecipe(true, "hermetic_casing_luv", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_LUV),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.RhodiumPlatedPalladium), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.TungstenSteel));
-        ModHandler.addShapedRecipe(true, "hermetic_casing_zpm", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_ZPM),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.NaquadahAlloy), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.NiobiumTitanium));
-        ModHandler.addShapedRecipe(true, "hermetic_casing_uv", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_UV),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Darmstadtium), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Naquadah));
-        ModHandler.addShapedRecipe(true, "hermetic_casing_max", MetaBlocks.HERMETIC_CASING.getItemVariant(HERMETIC_UHV),
-                "PPP", "PFP", "PPP", 'P', new UnificationEntry(OrePrefix.plate, Materials.Neutronium), 'F',
-                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Duranium));
+        // Hermetic Casings: the tier's plates around a large pipe; the UHV casing's recipe is named for MAX
+        Object[] hermeticPipes = { null, new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Polyethylene),
+                new UnificationEntry(OrePrefix.pipeLargeItem, Materials.PolyvinylChloride),
+                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Polytetrafluoroethylene),
+                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.StainlessSteel),
+                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Titanium),
+                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.TungstenSteel),
+                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.NiobiumTitanium),
+                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Naquadah),
+                new UnificationEntry(OrePrefix.pipeLargeFluid, Materials.Duranium) };
+        for (int tier = GTValues.LV; tier <= GTValues.UHV; tier++) {
+            String name = tier == GTValues.UHV ? "hermetic_casing_max" : "hermetic_casing_" + tierName(tier);
+            ModHandler.addShapedRecipe(true, name,
+                    MetaBlocks.HERMETIC_CASING.getItemVariant(HermeticCasingsType.values()[tier - GTValues.LV]),
+                    "PPP", "PFP", "PPP", 'P', PLATE.getIngredient(tier), 'F', hermeticPipes[tier]);
+        }
 
         // Quantum Storage Controller
         ModHandler.addShapedRecipe(true, "quantum_storage_controller",
@@ -1220,5 +1039,61 @@ public class MetaTileEntityLoader {
             }
         }
         return recipe;
+    }
+
+    /** A metal casing: plates around a frame, made with a hammer and a wrench. */
+    private static void metalCasing(String name, MetalCasingType type, Material plate, Material frame) {
+        ModHandler.addShapedRecipe(true, name,
+                MetaBlocks.METAL_CASING.getItemVariant(type, ConfigHolder.recipes.casingsPerCraft), "PhP", "PFP",
+                "PwP", 'P', new UnificationEntry(OrePrefix.plate, plate), 'F',
+                new UnificationEntry(OrePrefix.frameGt, frame));
+    }
+
+    /** A turbine casing: plates around a frame or a steel turbine casing, made with a hammer and a wrench. */
+    private static void turbineCasing(String name, TurbineCasingType type, Material plate, Object frame) {
+        ModHandler.addShapedRecipe(true, name,
+                MetaBlocks.TURBINE_CASING.getItemVariant(type, ConfigHolder.recipes.casingsPerCraft), "PhP", "PFP",
+                "PwP", 'P', new UnificationEntry(OrePrefix.plate, plate), 'F', frame);
+    }
+
+    /** A boiler pipe casing: plates and fluid pipes around a frame, all of one material. */
+    private static void pipeCasing(String name, BoilerCasingType type, Material material) {
+        ModHandler.addShapedRecipe(true, name,
+                MetaBlocks.BOILER_CASING.getItemVariant(type, ConfigHolder.recipes.casingsPerCraft), "PIP", "IFI",
+                "PIP", 'P', new UnificationEntry(OrePrefix.plate, material), 'F',
+                new UnificationEntry(OrePrefix.frameGt, material), 'I',
+                new UnificationEntry(OrePrefix.pipeNormalFluid, material));
+    }
+
+    /** A firebox casing: plates and rods around a frame, all of one material. */
+    private static void fireboxCasing(String name, FireboxCasingType type, Material material) {
+        ModHandler.addShapedRecipe(true, name,
+                MetaBlocks.BOILER_FIREBOX_CASING.getItemVariant(type, ConfigHolder.recipes.casingsPerCraft), "PSP",
+                "SFS", "PSP", 'P', new UnificationEntry(OrePrefix.plate, material), 'F',
+                new UnificationEntry(OrePrefix.frameGt, material), 'S',
+                new UnificationEntry(OrePrefix.stick, material));
+    }
+
+    /** A gearbox casing: plates and gears around a frame, all of one material, made with a hammer and a wrench. */
+    private static void gearboxCasing(String name, TurbineCasingType type, Material material) {
+        ModHandler.addShapedRecipe(true, name,
+                MetaBlocks.TURBINE_CASING.getItemVariant(type, ConfigHolder.recipes.casingsPerCraft), "PhP", "GFG",
+                "PwP", 'P', new UnificationEntry(OrePrefix.plate, material), 'F',
+                new UnificationEntry(OrePrefix.frameGt, material), 'G',
+                new UnificationEntry(OrePrefix.gear, material));
+    }
+
+    private static void warningSign(BlockWarningSign.SignType type, String... pattern) {
+        warningSign("warning_sign_" + type.getName(), MetaBlocks.WARNING_SIGN.getItemVariant(type), pattern);
+    }
+
+    private static void warningSign(BlockWarningSign1.SignType type, String... pattern) {
+        warningSign("warning_" + type.getName(), MetaBlocks.WARNING_SIGN_1.getItemVariant(type), pattern);
+    }
+
+    /** A warning sign: a solid steel casing with yellow dye at Y and black dye at B in the pattern. */
+    private static void warningSign(String name, ItemStack sign, String... pattern) {
+        ModHandler.addShapedRecipe(true, name, sign, pattern[0], pattern[1], pattern[2], 'M',
+                MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), 'Y', "dyeYellow", 'B', "dyeBlack");
     }
 }
