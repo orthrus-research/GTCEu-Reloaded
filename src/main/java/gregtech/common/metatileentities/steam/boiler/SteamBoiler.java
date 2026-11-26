@@ -4,16 +4,14 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.impl.CommonFluidFilters;
 import gregtech.api.capability.impl.FilteredFluidHandler;
 import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.resources.TextureArea;
-import gregtech.api.gui.widgets.FluidContainerSlotWidget;
-import gregtech.api.gui.widgets.ProgressWidget;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
-import gregtech.api.gui.widgets.TankWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuiTheme;
+import gregtech.api.mui.GTGuis;
+import gregtech.api.mui.sync.GTFluidSyncHandler;
+import gregtech.api.mui.widget.MachineTankTooltip;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
@@ -23,11 +21,11 @@ import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import gregtech.common.ConfigHolder;
+import gregtech.common.mui.widget.GTFluidSlot;
 import gregtech.core.sound.GTSoundEvents;
 
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -39,6 +37,8 @@ import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fluids.FluidTank;
+import net.minecraftforge.fluids.FluidUtil;
+import net.minecraftforge.fluids.capability.IFluidHandlerItem;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.ItemStackHandler;
@@ -47,6 +47,18 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ProgressWidget;
+import com.cleanroommc.modularui.widgets.ProgressWidget.Direction;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -54,20 +66,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static gregtech.api.capability.GregtechDataCodes.IS_WORKING;
 
 public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoProvider {
 
-    private static final Pattern STRING_SUBSTITUTION_PATTERN = Pattern.compile("%s", Pattern.LITERAL);
-
     private static final EnumFacing[] STEAM_PUSH_DIRECTIONS = ArrayUtils.add(EnumFacing.HORIZONTALS, EnumFacing.UP);
-
-    public final TextureArea bronzeSlotBackgroundTexture;
-
-    public final TextureArea slotFurnaceBackground;
 
     protected final boolean isHighPressure;
     private final ICubeRenderer renderer;
@@ -89,8 +93,6 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
         super(metaTileEntityId);
         this.renderer = renderer;
         this.isHighPressure = isHighPressure;
-        this.bronzeSlotBackgroundTexture = getGuiTexture("slot_%s");
-        this.slotFurnaceBackground = getGuiTexture("slot_%s_furnace_background");
         this.containerInventory = new GTItemStackHandler(this, 2);
     }
 
@@ -325,34 +327,86 @@ public abstract class SteamBoiler extends MetaTileEntity implements IDataInfoPro
         return new FluidTankList(false, steamFluidTank);
     }
 
-    protected TextureArea getGuiTexture(String pathTemplate) {
-        String type = isHighPressure ? "steel" : "bronze";
-        return TextureArea.fullImage(String.format("textures/gui/steam/%s/%s.png",
-                type, STRING_SUBSTITUTION_PATTERN.matcher(pathTemplate).replaceAll(Matcher.quoteReplacement(type))));
+    @Override
+    public boolean usesMui2() {
+        return true;
     }
 
-    public ModularUI.Builder createUITemplate(EntityPlayer player) {
-        return ModularUI.builder(GuiTextures.BACKGROUND_STEAM.get(isHighPressure), 176, 166)
-                .label(6, 6, getMetaFullName()).shouldColor(false)
-                .widget(new ProgressWidget(this::getTemperaturePercent, 96, 26, 10, 54)
-                        .setProgressBar(GuiTextures.PROGRESS_BAR_BOILER_EMPTY.get(isHighPressure),
-                                GuiTextures.PROGRESS_BAR_BOILER_HEAT,
-                                MoveType.VERTICAL))
+    @Override
+    public GTGuiTheme getUITheme() {
+        return isHighPressure ? GTGuiTheme.STEEL : GTGuiTheme.BRONZE;
+    }
 
-                .widget(new TankWidget(waterFluidTank, 83, 26, 10, 54)
-                        .setBackgroundTexture(GuiTextures.PROGRESS_BAR_BOILER_EMPTY.get(isHighPressure)))
-                .widget(new TankWidget(steamFluidTank, 70, 26, 10, 54)
-                        .setBackgroundTexture(GuiTextures.PROGRESS_BAR_BOILER_EMPTY.get(isHighPressure)))
+    /**
+     * The screen, in the bronze or steel theme: the temperature bar, the steam and water tanks, the slot that empties
+     * filled containers into the water tank with the slot they come out of, the boiler's fuel and the player's
+     * inventory.
+     */
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
+        UITexture slot = GTGuiTextures.SLOT_STEAM.get(isHighPressure);
+        ModularPanel panel = GTGuis.createPanel(this, 176, 166)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(6, 6))
+                .child(new ProgressWidget()
+                        .texture(getEmptyBarTexture(), GTGuiTextures.PROGRESS_BAR_BOILER_HEAT, 54)
+                        .direction(Direction.UP)
+                        .value(new DoubleSyncValue(this::getTemperaturePercent))
+                        .pos(96, 26)
+                        .size(10, 54))
+                .child(createTank(waterFluidTank).pos(83, 26))
+                .child(createTank(steamFluidTank).pos(70, 26))
+                .child(new ItemSlot()
+                        .slot(new ModularSlot(containerInventory, 0)
+                                .filter(SteamBoiler::isFilledContainer)
+                                .singletonSlotGroup())
+                        .background(slot, GTGuiTextures.IN_SLOT_OVERLAY_STEAM.get(isHighPressure))
+                        .pos(43, 26))
+                .child(new ItemSlot()
+                        .slot(new ModularSlot(containerInventory, 1).accessibility(false, true))
+                        .background(slot, GTGuiTextures.OUT_SLOT_OVERLAY_STEAM.get(isHighPressure))
+                        .pos(43, 62))
+                .child(GTGuiTextures.CANISTER_OVERLAY_STEAM.get(isHighPressure).asWidget()
+                        .pos(43, 44)
+                        .size(18));
+        addFuelWidgets(panel, syncManager);
+        return panel.child(SlotGroupWidget.playerInventory(false).pos(7, 84));
+    }
 
-                .widget(new FluidContainerSlotWidget(containerInventory, 0, 43, 26, true)
-                        .setBackgroundTexture(GuiTextures.SLOT_STEAM.get(isHighPressure),
-                                GuiTextures.IN_SLOT_OVERLAY_STEAM.get(isHighPressure)))
-                .slot(containerInventory, 1, 43, 62, true, false,
-                        GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.OUT_SLOT_OVERLAY_STEAM.get(isHighPressure))
-                .image(43, 44, 18, 18, GuiTextures.CANISTER_OVERLAY_STEAM.get(isHighPressure))
+    /**
+     * Add what shows this boiler's fuel to its screen, such as its fuel slot or tank.
+     *
+     * @param panel       the screen
+     * @param syncManager the screen's sync manager
+     */
+    protected abstract void addFuelWidgets(@NotNull ModularPanel panel, @NotNull PanelSyncManager syncManager);
 
-                .bindPlayerInventory(player.inventory, GuiTextures.SLOT_STEAM.get(isHighPressure), 0);
+    /** @return the texture of an empty tank or bar on this boiler's screen */
+    protected @NotNull UITexture getEmptyBarTexture() {
+        return GTGuiTextures.PROGRESS_BAR_BOILER_EMPTY.get(isHighPressure);
+    }
+
+    /**
+     * A tank of this boiler's screen, 10 by 54 pixels, which shows how full it is and is not filled or drained by
+     * clicking it.
+     *
+     * @param tank the tank to show
+     * @return its widget, to place
+     */
+    protected @NotNull GTFluidSlot createTank(@NotNull FluidTank tank) {
+        GTFluidSyncHandler syncHandler = GTFluidSlot.sync(tank)
+                .accessibility(false, false)
+                .drawAlwaysFull(false)
+                .showAmountOnSlot(false);
+        return new GTFluidSlot()
+                .syncHandler(syncHandler)
+                .background(getEmptyBarTexture())
+                .tooltipBuilder(tooltip -> MachineTankTooltip.addDetails(tooltip, syncHandler))
+                .size(10, 54);
+    }
+
+    private static boolean isFilledContainer(@NotNull ItemStack stack) {
+        IFluidHandlerItem fluidHandler = FluidUtil.getFluidHandler(stack);
+        return fluidHandler != null && fluidHandler.getTankProperties()[0].getContents() != null;
     }
 
     @Override

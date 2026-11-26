@@ -2,17 +2,14 @@ package gregtech.common.metatileentities.steam;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.resources.TextureArea;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.recipes.ui.RecipeMapLayout;
 import gregtech.client.particle.IMachineParticleEffect;
 import gregtech.client.particle.VanillaParticleEffects;
 import gregtech.common.ConfigHolder;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
@@ -24,6 +21,8 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.DoubleSupplier;
+
 /**
  * A steam single-block machine, bronze or at high pressure steel, whose recipe map, overlay, casing, screen and
  * particle effects come from a {@link SteamMachineDefinition}.
@@ -32,11 +31,6 @@ import org.jetbrains.annotations.NotNull;
  * working; each of those classes only holds its definition.
  */
 public class SimpleSteamMachine extends SteamMetaTileEntity {
-
-    private static final int SLOT_SIZE = 18;
-    private static final int SLOT_Y = 25;
-    private static final int FIRST_INPUT_X = 53;
-    private static final int OUTPUT_X = 107;
 
     private final SteamMachineDefinition definition;
 
@@ -93,29 +87,8 @@ public class SimpleSteamMachine extends SteamMetaTileEntity {
     }
 
     @Override
-    public ModularUI createUI(EntityPlayer player) {
-        TextureArea slot = GuiTextures.SLOT_STEAM.get(isHighPressure);
-        ModularUI.Builder builder = createUITemplate(player);
-        for (int i = 0; i < definition.inputOverlays.length; i++) {
-            builder.slot(this.importItems, i, FIRST_INPUT_X - i * SLOT_SIZE, SLOT_Y, slot,
-                    definition.inputOverlays[i].get(isHighPressure));
-        }
-
-        builder.progressBar(workableHandler::getProgressPercent, definition.progressX, definition.progressY,
-                definition.progressWidth, definition.progressHeight, definition.progressBar.get(isHighPressure),
-                definition.progressMoveType, workableHandler.getRecipeMap());
-        if (definition.image != null) {
-            builder.image(definition.imageX, definition.imageY, definition.imageWidth, definition.imageHeight,
-                    definition.image.get(isHighPressure));
-        }
-
-        if (definition.outputOverlay == null) {
-            builder.slot(this.exportItems, 0, OUTPUT_X, SLOT_Y, true, false, slot);
-        } else {
-            builder.slot(this.exportItems, 0, OUTPUT_X, SLOT_Y, true, false, slot,
-                    definition.outputOverlay.get(isHighPressure));
-        }
-        return builder.build(getHolder(), player);
+    protected @NotNull RecipeMapLayout createScreenLayout(@NotNull DoubleSupplier progress) {
+        return definition.createLayout(isHighPressure, progress);
     }
 
     @Override

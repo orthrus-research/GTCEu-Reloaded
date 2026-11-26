@@ -776,6 +776,45 @@ public class GTGuiTextures {
 
     // RECIPE MACHINE SCREENS
     public static final UITexture INFO_ICON = fullImage("textures/gui/widget/information.png");
+    public static final SteamTexture SLOT_STEAM = new SteamTexture(SLOT_BRONZE, SLOT_STEEL);
+    public static final SteamTexture INDICATOR_NO_STEAM = new SteamTexture(INDICATOR_NO_STEAM_BRONZE,
+            INDICATOR_NO_STEAM_STEEL);
+    public static final SteamTexture CANISTER_OVERLAY_STEAM = new SteamTexture(CANISTER_OVERLAY_BRONZE,
+            CANISTER_OVERLAY_STEEL);
+    public static final SteamTexture COAL_OVERLAY_STEAM = new SteamTexture(COAL_OVERLAY_BRONZE, COAL_OVERLAY_STEEL);
+    public static final SteamTexture COMPRESSOR_OVERLAY_STEAM = new SteamTexture(COMPRESSOR_OVERLAY_BRONZE,
+            COMPRESSOR_OVERLAY_STEEL);
+    public static final SteamTexture CRUSHED_ORE_OVERLAY_STEAM = new SteamTexture(CRUSHED_ORE_OVERLAY_BRONZE,
+            CRUSHED_ORE_OVERLAY_STEEL);
+    public static final SteamTexture DUST_OVERLAY_STEAM = new SteamTexture(DUST_OVERLAY_BRONZE, DUST_OVERLAY_STEEL);
+    public static final SteamTexture EXTRACTOR_OVERLAY_STEAM = new SteamTexture(EXTRACTOR_OVERLAY_BRONZE,
+            EXTRACTOR_OVERLAY_STEEL);
+    public static final SteamTexture FURNACE_OVERLAY_STEAM = new SteamTexture(FURNACE_OVERLAY_BRONZE,
+            FURNACE_OVERLAY_STEEL);
+    public static final SteamTexture HAMMER_OVERLAY_STEAM = new SteamTexture(HAMMER_OVERLAY_BRONZE,
+            HAMMER_OVERLAY_STEEL);
+    public static final SteamTexture IN_SLOT_OVERLAY_STEAM = new SteamTexture(IN_SLOT_OVERLAY_BRONZE,
+            IN_SLOT_OVERLAY_STEEL);
+    public static final SteamTexture OUT_SLOT_OVERLAY_STEAM = new SteamTexture(OUT_SLOT_OVERLAY_BRONZE,
+            OUT_SLOT_OVERLAY_STEEL);
+    public static final SteamTexture PROGRESS_BAR_ARROW_STEAM = new SteamTexture(PROGRESS_BAR_ARROW_BRONZE,
+            PROGRESS_BAR_ARROW_STEEL);
+    public static final SteamTexture PROGRESS_BAR_BOILER_EMPTY = new SteamTexture(PROGRESS_BAR_BOILER_EMPTY_BRONZE,
+            PROGRESS_BAR_BOILER_EMPTY_STEEL);
+    public static final SteamTexture PROGRESS_BAR_BOILER_FUEL = new SteamTexture(PROGRESS_BAR_BOILER_FUEL_BRONZE,
+            PROGRESS_BAR_BOILER_FUEL_STEEL);
+    public static final SteamTexture PROGRESS_BAR_COMPRESS_STEAM = new SteamTexture(PROGRESS_BAR_COMPRESS_BRONZE,
+            PROGRESS_BAR_COMPRESS_STEEL);
+    public static final SteamTexture PROGRESS_BAR_EXTRACT_STEAM = new SteamTexture(PROGRESS_BAR_EXTRACT_BRONZE,
+            PROGRESS_BAR_EXTRACT_STEEL);
+    public static final SteamTexture PROGRESS_BAR_HAMMER_STEAM = new SteamTexture(PROGRESS_BAR_HAMMER_BRONZE,
+            PROGRESS_BAR_HAMMER_STEEL);
+    public static final SteamTexture PROGRESS_BAR_HAMMER_BASE_STEAM = new SteamTexture(
+            PROGRESS_BAR_HAMMER_BASE_BRONZE, PROGRESS_BAR_HAMMER_BASE_STEEL);
+    public static final SteamTexture PROGRESS_BAR_MACERATE_STEAM = new SteamTexture(PROGRESS_BAR_MACERATE_BRONZE,
+            PROGRESS_BAR_MACERATE_STEEL);
+    public static final SteamTexture PROGRESS_BAR_SOLAR_STEAM = new SteamTexture(PROGRESS_BAR_SOLAR_BRONZE,
+            PROGRESS_BAR_SOLAR_STEEL);
 
     // MISC
 

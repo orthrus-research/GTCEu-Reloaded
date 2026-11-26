@@ -1,22 +1,16 @@
 package gregtech.api.metatileentity;
 
 import gregtech.Bootstrap;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.resources.IGuiTexture;
-import gregtech.api.gui.resources.SteamTexture;
-import gregtech.api.gui.resources.TextureArea;
-import gregtech.api.gui.widgets.ImageWidget;
-import gregtech.api.gui.widgets.ProgressWidget;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
-import gregtech.api.gui.widgets.RecipeFailureWidget;
-import gregtech.api.gui.widgets.RecipeProgressWidget;
-import gregtech.api.gui.widgets.SlotWidget;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuiTheme;
+import gregtech.api.mui.SteamTexture;
+import gregtech.api.mui.widget.RecipeFailureWidget;
+import gregtech.api.mui.widget.RecipeProgressWidget;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMaps;
-import gregtech.api.util.Position;
-import gregtech.api.util.Size;
+import gregtech.api.recipes.ui.RecipeLayoutListing;
+import gregtech.api.recipes.ui.RecipeLayoutProgress;
+import gregtech.api.recipes.ui.RecipeMapLayout;
 import gregtech.api.util.world.DummyWorld;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
@@ -26,32 +20,38 @@ import gregtech.common.metatileentities.steam.SteamExtractor;
 import gregtech.common.metatileentities.steam.SteamFurnace;
 import gregtech.common.metatileentities.steam.SteamHammer;
 import gregtech.common.metatileentities.steam.SteamMacerator;
+import gregtech.common.metatileentities.steam.SteamRockBreaker;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.items.SlotItemHandler;
 
-import com.mojang.authlib.GameProfile;
+import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.ModularSyncManager;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.ProgressWidget.Direction;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static gregtech.api.metatileentity.SimpleMachineScreenTest.collect;
+import static gregtech.api.metatileentity.SimpleMachineScreenTest.ofType;
 import static gregtech.api.util.GTUtility.gregtechId;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Each steam single-block GTCEu registers, bronze and steel, keeps the class, recipe map, casing, overlay, inventory
- * and screen it had, both as registered and as placed.
+ * and screen it had, both as registered and as placed. The screens are the old ones on ModularUI 2: the same slots,
+ * progress bar and images at the same positions, in the textures and theme of the machine's pressure.
  */
 public class SteamMachineFamilyTest {
 
@@ -68,41 +68,41 @@ public class SteamMachineFamilyTest {
         return Stream.of(
                 new Machine("steam_extractor", SteamExtractor.class, SteamExtractor::new, steel,
                         RecipeMaps.EXTRACTOR_RECIPES, Textures.EXTRACTOR_OVERLAY, false, 1, -1, List.of(
-                                input(0, 53, GuiTextures.EXTRACTOR_OVERLAY_STEAM, steel),
-                                progress(79, 25, 20, 18, GuiTextures.PROGRESS_BAR_EXTRACT_STEAM, MoveType.HORIZONTAL,
-                                        RecipeMaps.EXTRACTOR_RECIPES, steel),
+                                input(0, 53, GTGuiTextures.EXTRACTOR_OVERLAY_STEAM, steel),
+                                progress(79, 25, 20, 18, GTGuiTextures.PROGRESS_BAR_EXTRACT_STEAM, Direction.RIGHT,
+                                        steel),
                                 output(null, steel))),
                 new Machine("steam_macerator", SteamMacerator.class, SteamMacerator::new, steel,
                         RecipeMaps.MACERATOR_RECIPES, Textures.MACERATOR_OVERLAY, false, 1, 1, List.of(
-                                input(0, 53, GuiTextures.CRUSHED_ORE_OVERLAY_STEAM, steel),
-                                progress(79, 26, 21, 18, GuiTextures.PROGRESS_BAR_MACERATE_STEAM, MoveType.HORIZONTAL,
-                                        RecipeMaps.MACERATOR_RECIPES, steel),
-                                output(GuiTextures.DUST_OVERLAY_STEAM, steel))),
+                                input(0, 53, GTGuiTextures.CRUSHED_ORE_OVERLAY_STEAM, steel),
+                                progress(79, 26, 21, 18, GTGuiTextures.PROGRESS_BAR_MACERATE_STEAM, Direction.RIGHT,
+                                        steel),
+                                output(GTGuiTextures.DUST_OVERLAY_STEAM, steel))),
                 new Machine("steam_compressor", SteamCompressor.class, SteamCompressor::new, steel,
                         RecipeMaps.COMPRESSOR_RECIPES, Textures.COMPRESSOR_OVERLAY, false, 1, -1, List.of(
-                                input(0, 53, GuiTextures.COMPRESSOR_OVERLAY_STEAM, steel),
-                                progress(78, 25, 20, 18, GuiTextures.PROGRESS_BAR_COMPRESS_STEAM, MoveType.HORIZONTAL,
-                                        RecipeMaps.COMPRESSOR_RECIPES, steel),
+                                input(0, 53, GTGuiTextures.COMPRESSOR_OVERLAY_STEAM, steel),
+                                progress(78, 25, 20, 18, GTGuiTextures.PROGRESS_BAR_COMPRESS_STEAM, Direction.RIGHT,
+                                        steel),
                                 output(null, steel))),
                 new Machine("steam_hammer", SteamHammer.class, SteamHammer::new, steel,
                         RecipeMaps.FORGE_HAMMER_RECIPES, Textures.FORGE_HAMMER_OVERLAY, false, 1, -1, List.of(
-                                input(0, 53, GuiTextures.HAMMER_OVERLAY_STEAM, steel),
-                                progress(79, 25, 20, 18, GuiTextures.PROGRESS_BAR_HAMMER_STEAM,
-                                        MoveType.VERTICAL_DOWNWARDS, RecipeMaps.FORGE_HAMMER_RECIPES, steel),
-                                image(79, 41, 20, 18, GuiTextures.PROGRESS_BAR_HAMMER_BASE_STEAM, steel),
+                                input(0, 53, GTGuiTextures.HAMMER_OVERLAY_STEAM, steel),
+                                progress(79, 25, 20, 18, GTGuiTextures.PROGRESS_BAR_HAMMER_STEAM, Direction.DOWN,
+                                        steel),
+                                image(79, 41, 20, 18, GTGuiTextures.PROGRESS_BAR_HAMMER_BASE_STEAM, steel),
                                 output(null, steel))),
                 new Machine("steam_furnace", SteamFurnace.class, SteamFurnace::new, steel,
                         RecipeMaps.FURNACE_RECIPES, Textures.FURNACE_OVERLAY, true, 1, -1, List.of(
-                                input(0, 53, GuiTextures.FURNACE_OVERLAY_STEAM, steel),
-                                progress(79, 26, 20, 16, GuiTextures.PROGRESS_BAR_ARROW_STEAM, MoveType.HORIZONTAL,
-                                        RecipeMaps.FURNACE_RECIPES, steel),
+                                input(0, 53, GTGuiTextures.FURNACE_OVERLAY_STEAM, steel),
+                                progress(79, 26, 20, 16, GTGuiTextures.PROGRESS_BAR_ARROW_STEAM, Direction.RIGHT,
+                                        steel),
                                 output(null, steel))),
                 new Machine("steam_alloy_smelter", SteamAlloySmelter.class, SteamAlloySmelter::new, steel,
                         RecipeMaps.ALLOY_SMELTER_RECIPES, Textures.ALLOY_SMELTER_OVERLAY, true, 2, -1, List.of(
-                                input(0, 53, GuiTextures.FURNACE_OVERLAY_STEAM, steel),
-                                input(1, 35, GuiTextures.FURNACE_OVERLAY_STEAM, steel),
-                                progress(79, 26, 20, 16, GuiTextures.PROGRESS_BAR_ARROW_STEAM, MoveType.HORIZONTAL,
-                                        RecipeMaps.ALLOY_SMELTER_RECIPES, steel),
+                                input(0, 53, GTGuiTextures.FURNACE_OVERLAY_STEAM, steel),
+                                input(1, 35, GTGuiTextures.FURNACE_OVERLAY_STEAM, steel),
+                                progress(79, 26, 20, 16, GTGuiTextures.PROGRESS_BAR_ARROW_STEAM, Direction.RIGHT,
+                                        steel),
                                 output(null, steel))));
     }
 
@@ -127,23 +127,71 @@ public class SteamMachineFamilyTest {
 
     @ParameterizedTest
     @MethodSource("machines")
-    public void keepsItsScreen(Machine expected) throws ReflectiveOperationException {
+    public void keepsItsScreen(Machine expected) {
         SteamMetaTileEntity machine = place(expected.create());
-        ModularUI ui = machine.createUI(player());
-        List<Widget> widgets = ui.guiWidgets.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
+        RecipeMapLayout layout = machine.createScreenLayout(() -> 0);
+        assertEquals(expected.screen(), RecipeLayoutListing.describe(layout));
+        assertSame(expected.recipeMap(), layout.getElements(RecipeLayoutProgress.class).get(0).recipeMap());
+        checkScreen(machine, expected.inputs(), 1);
+    }
 
-        List<String> screen = new ArrayList<>();
-        for (Widget widget : widgets) {
-            String description = describe(widget, machine);
-            if (description != null) screen.add(description);
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    public void rockBreakerKeepsItsScreen(boolean steel) {
+        SteamMetaTileEntity machine = place(new SteamRockBreaker(
+                gregtechId("steam_rock_breaker" + (steel ? "_steel" : "_bronze")), steel));
+        RecipeMapLayout layout = machine.createScreenLayout(() -> 0);
+        UITexture slot = GTGuiTextures.SLOT_STEAM.get(steel);
+        UITexture output = GTGuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(steel);
+        assertEquals(List.of(
+                slot("in", 0, 53, 34, slot, GTGuiTextures.DUST_OVERLAY_STEAM.get(steel)),
+                progress(79, 35, 21, 18, GTGuiTextures.PROGRESS_BAR_MACERATE_STEAM, Direction.RIGHT, steel),
+                slot("out", 0, 107, 25, slot, output),
+                slot("out", 1, 125, 25, slot, output),
+                slot("out", 2, 107, 43, slot, output),
+                slot("out", 3, 125, 43, slot, output)), RecipeLayoutListing.describe(layout));
+        assertSame(RecipeMaps.ROCK_BREAKER_RECIPES,
+                layout.getElements(RecipeLayoutProgress.class).get(0).recipeMap());
+        checkScreen(machine, 1, 4);
+    }
+
+    /**
+     * The screen every steam machine shares: the theme of its pressure, the missing steam indicator, the progress bar
+     * that shows its recipes, its slots with the old rules, and the player's inventory.
+     */
+    private static void checkScreen(SteamMetaTileEntity machine, int inputs, int outputs) {
+        assertSame(machine.isHighPressure ? GTGuiTheme.STEEL : GTGuiTheme.BRONZE, machine.getUITheme());
+        ModularPanel panel = machine.buildUI(null, new PanelSyncManager(new ModularSyncManager(false), true),
+                new UISettings());
+        List<IWidget> widgets = new ArrayList<>();
+        collect(panel, widgets);
+        assertEquals(1, ofType(widgets, RecipeFailureWidget.class).size());
+        List<RecipeProgressWidget> bars = ofType(widgets, RecipeProgressWidget.class);
+        assertEquals(1, bars.size());
+        assertSame(machine.workableHandler.getRecipeMap(), bars.get(0).getRecipeMap());
+
+        int player = 0;
+        List<ModularSlot> shownInputs = new ArrayList<>();
+        List<ModularSlot> shownOutputs = new ArrayList<>();
+        for (ItemSlot widget : ofType(widgets, ItemSlot.class)) {
+            if (!widget.isSynced()) {
+                player++;
+            } else if (widget.getSlot().getItemHandler() == machine.importItems) {
+                shownInputs.add(widget.getSlot());
+            } else {
+                assertSame(machine.exportItems, widget.getSlot().getItemHandler());
+                shownOutputs.add(widget.getSlot());
+            }
         }
-        assertEquals(expected.screen(), screen);
-        // the template every steam machine shares: title, missing steam indicator and the player's inventory
-        assertEquals(1, widgets.stream().filter(RecipeFailureWidget.class::isInstance).count());
-        assertEquals(36, widgets.stream().filter(SlotWidget.class::isInstance).count() - expected.inputs() - 1);
+        assertEquals(36, player);
+        assertEquals(inputs, shownInputs.size());
+        assertEquals(outputs, shownOutputs.size());
+        for (ModularSlot slot : shownInputs) {
+            assertTrue(slot.isCanPut() && slot.isCanTake() && slot.getSlotGroup() != null);
+        }
+        for (ModularSlot slot : shownOutputs) {
+            assertTrue(!slot.isCanPut() && slot.isCanTake() && slot.getSlotGroup() == null);
+        }
     }
 
     /** As the machine block does when it is placed: a copy of the registered machine in a holder. */
@@ -154,97 +202,29 @@ public class SteamMachineFamilyTest {
         return placed;
     }
 
-    private static EntityPlayer player() {
-        return new EntityPlayer(DummyWorld.INSTANCE,
-                new GameProfile(UUID.fromString("00000000-0000-0000-0000-000000000007"), "steam_machine_test")) {
-
-            @Override
-            public boolean isSpectator() {
-                return false;
-            }
-
-            @Override
-            public boolean isCreative() {
-                return false;
-            }
-        };
-    }
-
-    /** One line for each of the machine's own widgets; null for the shared template and the player's inventory. */
-    private static String describe(Widget widget, MetaTileEntity machine) throws ReflectiveOperationException {
-        Position position = widget.getSelfPosition();
-        Size size = widget.getSize();
-        if (widget instanceof SlotWidget slot) {
-            if (!(slot.getHandle() instanceof SlotItemHandler handle)) return null;
-            String inventory;
-            if (handle.getItemHandler() == machine.getImportItems()) inventory = "input";
-            else if (handle.getItemHandler() == machine.getExportItems()) inventory = "output";
-            else return null;
-            boolean take = read(SlotWidget.class, "canTakeItems", slot);
-            boolean put = read(SlotWidget.class, "canPutItems", slot);
-            IGuiTexture[] background = read(SlotWidget.class, "backgroundTexture", slot);
-            return slot(inventory, handle.getSlotIndex(), position.x, position.y, take, put, background);
-        }
-        if (widget instanceof RecipeProgressWidget progress) {
-            TextureArea bar = read(ProgressWidget.class, "emptyBarArea", progress);
-            MoveType moveType = read(ProgressWidget.class, "moveType", progress);
-            RecipeMap<?> recipeMap = read(RecipeProgressWidget.class, "recipeMap", progress);
-            return progress(position.x, position.y, size.width, size.height, bar, moveType, recipeMap);
-        }
-        if (widget instanceof ImageWidget image && !(widget instanceof RecipeFailureWidget)) {
-            IGuiTexture area = read(ImageWidget.class, "area", image);
-            return image(position.x, position.y, size.width, size.height, area);
-        }
-        return null;
-    }
-
     private static String input(int slot, int x, SteamTexture overlay, boolean steel) {
-        return slot("input", slot, x, 25, true, true,
-                new IGuiTexture[] { GuiTextures.SLOT_STEAM.get(steel), overlay.get(steel) });
+        return slot("in", slot, x, 25, GTGuiTextures.SLOT_STEAM.get(steel), overlay.get(steel));
     }
 
     private static String output(SteamTexture overlay, boolean steel) {
-        IGuiTexture[] background = overlay == null ? new IGuiTexture[] { GuiTextures.SLOT_STEAM.get(steel) } :
-                new IGuiTexture[] { GuiTextures.SLOT_STEAM.get(steel), overlay.get(steel) };
-        return slot("output", 0, 107, 25, true, false, background);
+        UITexture slot = GTGuiTextures.SLOT_STEAM.get(steel);
+        return overlay == null ? slot("out", 0, 107, 25, slot) : slot("out", 0, 107, 25, slot, overlay.get(steel));
     }
 
-    private static String progress(int x, int y, int width, int height, SteamTexture bar, MoveType moveType,
-                                   RecipeMap<?> recipeMap, boolean steel) {
-        return progress(x, y, width, height, bar.get(steel), moveType, recipeMap);
+    private static String slot(String side, int index, int x, int y, UITexture... background) {
+        List<String> textures = new ArrayList<>();
+        for (UITexture texture : background) textures.add(texture.location.toString());
+        return String.format("item %s %d at %d,%d 18x18 %s", side, index, x, y, textures);
+    }
+
+    private static String progress(int x, int y, int width, int height, SteamTexture bar, Direction direction,
+                                   boolean steel) {
+        return String.format("progress at %d,%d %dx%d %s %s recipes", x, y, width, height, bar.get(steel).location,
+                direction);
     }
 
     private static String image(int x, int y, int width, int height, SteamTexture texture, boolean steel) {
-        return image(x, y, width, height, texture.get(steel));
-    }
-
-    private static String slot(String inventory, int slot, int x, int y, boolean take, boolean put,
-                               IGuiTexture[] background) {
-        List<String> textures = new ArrayList<>();
-        for (IGuiTexture texture : background) textures.add(texture(texture));
-        return String.format("%s slot %d at %d,%d%s%s: %s", inventory, slot, x, y, take ? " take" : "",
-                put ? " put" : "", textures);
-    }
-
-    private static String progress(int x, int y, int width, int height, TextureArea bar, MoveType moveType,
-                                   RecipeMap<?> recipeMap) {
-        return String.format("progress bar at %d,%d %dx%d: %s %s for %s", x, y, width, height, texture(bar),
-                moveType, recipeMap.getUnlocalizedName());
-    }
-
-    private static String image(int x, int y, int width, int height, IGuiTexture texture) {
-        return String.format("image at %d,%d %dx%d: %s", x, y, width, height, texture(texture));
-    }
-
-    private static String texture(IGuiTexture texture) {
-        return texture instanceof TextureArea area ? area.imageLocation.toString() : String.valueOf(texture);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> T read(Class<?> owner, String name, Object instance) throws ReflectiveOperationException {
-        Field field = owner.getDeclaredField(name);
-        field.setAccessible(true);
-        return (T) field.get(instance);
+        return String.format("image at %d,%d %dx%d %s", x, y, width, height, texture.get(steel).location);
     }
 
     /** One registered steam machine as it was when each had its own class. */

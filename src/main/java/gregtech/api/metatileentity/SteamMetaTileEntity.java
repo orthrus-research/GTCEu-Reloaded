@@ -5,10 +5,12 @@ import gregtech.api.capability.impl.CommonFluidFilters;
 import gregtech.api.capability.impl.FilteredFluidHandler;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.RecipeLogicSteam;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.RecipeFailureWidget;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuiTheme;
+import gregtech.api.mui.GTGuis;
+import gregtech.api.mui.widget.RecipeFailureWidget;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.RecipeMapLayout;
 import gregtech.api.util.GTUtility;
 import gregtech.client.particle.VanillaParticleEffects;
 import gregtech.client.renderer.ICubeRenderer;
@@ -34,12 +36,21 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
 
 public abstract class SteamMetaTileEntity extends MetaTileEntity {
 
@@ -127,13 +138,41 @@ public abstract class SteamMetaTileEntity extends MetaTileEntity {
         return new FluidTankList(false, steamFluidTank);
     }
 
-    public ModularUI.Builder createUITemplate(EntityPlayer player) {
-        return ModularUI.builder(GuiTextures.BACKGROUND_STEAM.get(isHighPressure), 176, 166)
-                .label(6, 6, getMetaFullName()).shouldColor(false)
-                .widget(new RecipeFailureWidget(79, 42, GuiTextures.INDICATOR_NO_STEAM.get(isHighPressure),
-                        workableHandler::getRecipeFailure))
-                .bindPlayerInventory(player.inventory, GuiTextures.SLOT_STEAM.get(isHighPressure), 0);
+    @Override
+    public boolean usesMui2() {
+        return true;
     }
+
+    @Override
+    public GTGuiTheme getUITheme() {
+        return isHighPressure ? GTGuiTheme.STEEL : GTGuiTheme.BRONZE;
+    }
+
+    /**
+     * The screen, in the bronze or steel theme: the machine's slots, progress bar and images from its layout, the
+     * missing steam indicator and the player's inventory.
+     */
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
+        DoubleSyncValue progress = new DoubleSyncValue(workableHandler::getProgressPercent);
+        syncManager.syncValue("recipe_progress", progress);
+        RecipeMapLayout layout = createScreenLayout(progress::getDoubleValue);
+
+        ModularPanel panel = GTGuis.createPanel(this, layout.getWidth(), layout.getHeight())
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(6, 6));
+        layout.addWidgets(panel, importItems, exportItems, importFluids, exportFluids);
+        return panel.child(RecipeFailureWidget.create(syncManager, workableHandler::getRecipeFailure,
+                GTGuiTextures.INDICATOR_NO_STEAM.get(isHighPressure)).pos(79, 42))
+                .child(SlotGroupWidget.playerInventory(false).pos(7, 84));
+    }
+
+    /**
+     * Lay out this machine's screen: its slots, progress bar and images, in its bronze or steel textures.
+     *
+     * @param progress the machine's progress, from 0 to 1
+     * @return the layout
+     */
+    protected abstract @NotNull RecipeMapLayout createScreenLayout(@NotNull DoubleSupplier progress);
 
     @Override
     public SoundEvent getSound() {

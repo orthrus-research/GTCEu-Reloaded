@@ -1,15 +1,20 @@
 package gregtech.common.metatileentities.steam;
 
-import gregtech.api.gui.resources.SteamTexture;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.SteamTexture;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.RecipeMapLayout;
+import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.client.particle.IMachineParticleEffect;
 import gregtech.client.renderer.ICubeRenderer;
 
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.widgets.ProgressWidget.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
 
 /**
  * What sets one {@link SimpleSteamMachine} apart from another: its recipe map, front overlay, casing, screen and
@@ -21,13 +26,18 @@ import java.util.Objects;
  */
 public final class SteamMachineDefinition {
 
+    private static final int SLOT_SIZE = 18;
+    private static final int SLOT_Y = 25;
+    private static final int FIRST_INPUT_X = 53;
+    private static final int OUTPUT_X = 107;
+
     final RecipeMap<?> recipeMap;
     final ICubeRenderer overlay;
     final boolean brickedCasing;
     final SteamTexture[] inputOverlays;
     final @Nullable SteamTexture outputOverlay;
     final SteamTexture progressBar;
-    final MoveType progressMoveType;
+    final Direction progressDirection;
     final int progressX;
     final int progressY;
     final int progressWidth;
@@ -48,7 +58,7 @@ public final class SteamMachineDefinition {
         this.inputOverlays = builder.inputOverlays;
         this.outputOverlay = builder.outputOverlay;
         this.progressBar = builder.progressBar;
-        this.progressMoveType = builder.progressMoveType;
+        this.progressDirection = builder.progressDirection;
         this.progressX = builder.progressX;
         this.progressY = builder.progressY;
         this.progressWidth = builder.progressWidth;
@@ -61,6 +71,35 @@ public final class SteamMachineDefinition {
         this.itemOutputLimit = builder.itemOutputLimit;
         this.tickingEffect = builder.tickingEffect;
         this.randomEffect = builder.randomEffect;
+    }
+
+    /**
+     * Lay out the screen of a machine of this kind: its input slots, progress bar, image and output slot.
+     *
+     * @param highPressure whether the machine is a high pressure, steel one, whose textures it draws
+     * @param progress     the machine's progress, from 0 to 1
+     * @return the layout
+     */
+    public @NotNull RecipeMapLayout createLayout(boolean highPressure, @NotNull DoubleSupplier progress) {
+        UITexture slot = GTGuiTextures.SLOT_STEAM.get(highPressure);
+        RecipeMapLayout layout = new RecipeMapLayout(RecipeMapUI.WIDTH, RecipeMapUI.HEIGHT);
+        for (int i = 0; i < inputOverlays.length; i++) {
+            layout.slot(false, false, i, FIRST_INPUT_X - i * SLOT_SIZE, SLOT_Y, slot,
+                    inputOverlays[i].get(highPressure));
+        }
+
+        layout.progressBar(progressX, progressY, progressWidth, progressHeight, progressBar.get(highPressure),
+                progressDirection, progress, recipeMap);
+        if (image != null) {
+            layout.image(imageX, imageY, imageWidth, imageHeight, image.get(highPressure));
+        }
+
+        if (outputOverlay == null) {
+            layout.slot(true, false, 0, OUTPUT_X, SLOT_Y, slot);
+        } else {
+            layout.slot(true, false, 0, OUTPUT_X, SLOT_Y, slot, outputOverlay.get(highPressure));
+        }
+        return layout;
     }
 
     /**
@@ -79,7 +118,7 @@ public final class SteamMachineDefinition {
         private SteamTexture[] inputOverlays;
         private SteamTexture outputOverlay;
         private SteamTexture progressBar;
-        private MoveType progressMoveType;
+        private Direction progressDirection;
         private int progressX;
         private int progressY;
         private int progressWidth;
@@ -116,10 +155,11 @@ public final class SteamMachineDefinition {
             return this;
         }
 
-        public @NotNull Builder progressBar(@NotNull SteamTexture texture, @NotNull MoveType moveType, int x, int y,
+        /** The progress bar, whose texture holds the empty bar above the full one, filling in its direction. */
+        public @NotNull Builder progressBar(@NotNull SteamTexture texture, @NotNull Direction direction, int x, int y,
                                             int width, int height) {
             this.progressBar = texture;
-            this.progressMoveType = moveType;
+            this.progressDirection = direction;
             this.progressX = x;
             this.progressY = y;
             this.progressWidth = width;

@@ -1,10 +1,9 @@
 package gregtech.common.metatileentities.steam;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.client.particle.IMachineParticleEffect;
 import gregtech.client.particle.VanillaParticleEffects;
@@ -13,6 +12,8 @@ import gregtech.client.renderer.texture.Textures;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.ResourceLocation;
 
+import com.cleanroommc.modularui.widgets.ProgressWidget.Direction;
+
 public class SteamAlloySmelter extends SimpleSteamMachine {
 
     private static final IMachineParticleEffect BURNING = burning(0.0F);
@@ -20,8 +21,8 @@ public class SteamAlloySmelter extends SimpleSteamMachine {
     private static final SteamMachineDefinition DEFINITION = SteamMachineDefinition
             .builder(RecipeMaps.ALLOY_SMELTER_RECIPES, Textures.ALLOY_SMELTER_OVERLAY)
             .brickedCasing()
-            .inputs(GuiTextures.FURNACE_OVERLAY_STEAM, GuiTextures.FURNACE_OVERLAY_STEAM)
-            .progressBar(GuiTextures.PROGRESS_BAR_ARROW_STEAM, MoveType.HORIZONTAL, 79, 26, 20, 16)
+            .inputs(GTGuiTextures.FURNACE_OVERLAY_STEAM, GTGuiTextures.FURNACE_OVERLAY_STEAM)
+            .progressBar(GTGuiTextures.PROGRESS_BAR_ARROW_STEAM, Direction.RIGHT, 79, 26, 20, 16)
             .randomEffect(SteamAlloySmelter::smoke)
             .build();
 

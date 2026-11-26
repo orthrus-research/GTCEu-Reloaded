@@ -2,19 +2,18 @@ package gregtech.common.metatileentities.steam;
 
 import gregtech.api.capability.impl.NotifiableItemStackHandler;
 import gregtech.api.capability.impl.RecipeLogicSteam;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ProgressWidget.MoveType;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SteamMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMaps;
+import gregtech.api.recipes.ui.RecipeMapLayout;
+import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.client.particle.VanillaParticleEffects;
 import gregtech.client.renderer.texture.Textures;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
@@ -24,6 +23,12 @@ import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandlerModifiable;
+
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.widgets.ProgressWidget.Direction;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.function.DoubleSupplier;
 
 public class SteamRockBreaker extends SteamMetaTileEntity {
 
@@ -82,22 +87,17 @@ public class SteamRockBreaker extends SteamMetaTileEntity {
     }
 
     @Override
-    public ModularUI createUI(EntityPlayer player) {
-        return createUITemplate(player)
-                .slot(importItems, 0, 53, 34, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))
-                .progressBar(workableHandler::getProgressPercent, 79, 35, 21, 18,
-                        GuiTextures.PROGRESS_BAR_MACERATE_STEAM.get(isHighPressure), MoveType.HORIZONTAL,
-                        workableHandler.getRecipeMap())
-                .slot(exportItems, 0, 107, 25, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure))
-                .slot(exportItems, 1, 125, 25, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure))
-                .slot(exportItems, 2, 107, 43, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure))
-                .slot(exportItems, 3, 125, 43, true, false, GuiTextures.SLOT_STEAM.get(isHighPressure),
-                        GuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure))
-                .build(getHolder(), player);
+    protected @NotNull RecipeMapLayout createScreenLayout(@NotNull DoubleSupplier progress) {
+        UITexture slot = GTGuiTextures.SLOT_STEAM.get(isHighPressure);
+        UITexture output = GTGuiTextures.CRUSHED_ORE_OVERLAY_STEAM.get(isHighPressure);
+        return new RecipeMapLayout(RecipeMapUI.WIDTH, RecipeMapUI.HEIGHT)
+                .slot(false, false, 0, 53, 34, slot, GTGuiTextures.DUST_OVERLAY_STEAM.get(isHighPressure))
+                .progressBar(79, 35, 21, 18, GTGuiTextures.PROGRESS_BAR_MACERATE_STEAM.get(isHighPressure),
+                        Direction.RIGHT, progress, workableHandler.getRecipeMap())
+                .slot(true, false, 0, 107, 25, slot, output)
+                .slot(true, false, 1, 125, 25, slot, output)
+                .slot(true, false, 2, 107, 43, slot, output)
+                .slot(true, false, 3, 125, 43, slot, output);
     }
 
     @Override

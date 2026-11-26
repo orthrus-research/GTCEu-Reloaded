@@ -12,6 +12,8 @@ import io.netty.buffer.Unpooled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,6 +24,38 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @ExtendWith(BootstrapExtension.class)
 class RecipeFailureWidgetTest {
+
+    @Test
+    void everyReasonHasAUniqueStableCodeAndBoundedRoundTrip() {
+        Set<Integer> identifiers = new HashSet<>();
+        for (RecipeFailureReason reason : RecipeFailureReason.values()) {
+            assertTrue(identifiers.add(reason.getId()));
+            RecipeFailure original = RecipeFailure.of(reason, Long.MAX_VALUE, 42);
+            PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
+            try {
+                original.write(buffer);
+                assertEquals(reason.hasConditions() ? 19 : 17, buffer.readableBytes());
+                assertEquals(original, RecipeFailure.read(buffer));
+                assertEquals(0, buffer.readableBytes());
+            } finally {
+                buffer.release();
+            }
+        }
+    }
+
+    @Test
+    void unknownCodesUseGenericRequirementsAndConsumeTheCompletePayload() {
+        PacketBuffer buffer = new PacketBuffer(Unpooled.buffer());
+        try {
+            buffer.writeVarInt(999);
+            buffer.writeLong(100);
+            buffer.writeLong(1);
+            assertEquals(RecipeFailureReason.REQUIREMENTS, RecipeFailure.read(buffer).getReason());
+            assertEquals(0, buffer.readableBytes());
+        } finally {
+            buffer.release();
+        }
+    }
 
     @Test
     void reasonsReachTheScreenWhenOpenedAndWhenTheyChange() throws Exception {
