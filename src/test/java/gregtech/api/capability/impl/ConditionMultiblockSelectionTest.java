@@ -1,6 +1,6 @@
 package gregtech.api.capability.impl;
 
-import gregtech.Bootstrap;
+import gregtech.GameStateExtension;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.block.machines.MachineItemBlock;
@@ -17,19 +17,15 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.items.ItemStackHandler;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(GameStateExtension.class)
 class ConditionMultiblockSelectionTest {
-
-    @BeforeAll
-    static void bootstrap() {
-        Bootstrap.perform();
-    }
 
     @Test
     void distinctCachedBusConditionFallsBackWithoutConsumingTheRejectedBus() {

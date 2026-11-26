@@ -1,6 +1,6 @@
 package gregtech.api.capability.impl;
 
-import gregtech.Bootstrap;
+import gregtech.GameStateExtension;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.block.machines.MachineItemBlock;
@@ -19,20 +19,16 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(GameStateExtension.class)
 class RecipeModifierSpecialTest {
-
-    @BeforeAll
-    static void bootstrap() {
-        Bootstrap.perform();
-    }
 
     @Test
     void turbineIdleFuelGettersNeverConsultProviderAndStartupUsesAdjustedFuelParallel() throws Exception {

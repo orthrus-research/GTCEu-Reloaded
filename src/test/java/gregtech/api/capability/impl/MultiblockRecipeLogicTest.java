@@ -1,6 +1,6 @@
 package gregtech.api.capability.impl;
 
-import gregtech.Bootstrap;
+import gregtech.GameStateExtension;
 import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
@@ -10,7 +10,6 @@ import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMaps;
 import gregtech.api.util.world.DummyWorld;
-import gregtech.common.metatileentities.MetaTileEntities;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityElectricBlastFurnace;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityFluidHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityItemBus;
@@ -27,8 +26,8 @@ import net.minecraftforge.items.IItemHandlerModifiable;
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.MatcherAssert;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -37,12 +36,8 @@ import java.util.List;
 import static gregtech.api.util.GTUtility.gregtechId;
 import static org.hamcrest.CoreMatchers.*;
 
+@ExtendWith(GameStateExtension.class)
 public class MultiblockRecipeLogicTest {
-
-    @BeforeAll
-    public static void bootstrap() {
-        Bootstrap.perform();
-    }
 
     @Test
     public void trySearchNewRecipe() {
@@ -55,43 +50,42 @@ public class MultiblockRecipeLogicTest {
                 .blastFurnaceTemp(1)
                 .buildAndRegister();
 
-        RecipeMapMultiblockController mbt = MetaTileEntities.registerMetaTileEntity(509,
-                new MetaTileEntityElectricBlastFurnace(
-                        // super function calls the world, which equal null in test
-                        gregtechId("electric_blast_furnace")) {
+        RecipeMapMultiblockController mbt = new MetaTileEntityElectricBlastFurnace(
+                // super function calls the world, which equal null in test
+                gregtechId("electric_blast_furnace")) {
 
-                    @Override
-                    public boolean canBeDistinct() {
-                        return false;
-                    }
+            @Override
+            public boolean canBeDistinct() {
+                return false;
+            }
 
-                    @Override
-                    public void reinitializeStructurePattern() {}
+            @Override
+            public void reinitializeStructurePattern() {}
 
-                    // function checks for the temperature of the recipe against the coils
-                    @Override
-                    public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
-                        return true;
-                    }
+            // function checks for the temperature of the recipe against the coils
+            @Override
+            public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
+                return true;
+            }
 
-                    // a checkRecipe that accepts every temperature drops the inherited pre-check too
-                    @Override
-                    public boolean isRecipeEligible(@NotNull Recipe recipe) {
-                        return true;
-                    }
+            // a checkRecipe that accepts every temperature drops the inherited pre-check too
+            @Override
+            public boolean isRecipeEligible(@NotNull Recipe recipe) {
+                return true;
+            }
 
-                    // ignore maintenance problems
-                    @Override
-                    public boolean hasMaintenanceMechanics() {
-                        return false;
-                    }
+            // ignore maintenance problems
+            @Override
+            public boolean hasMaintenanceMechanics() {
+                return false;
+            }
 
-                    // ignore muffler outputs
-                    @Override
-                    public boolean hasMufflerMechanics() {
-                        return false;
-                    }
-                });
+            // ignore muffler outputs
+            @Override
+            public boolean hasMufflerMechanics() {
+                return false;
+            }
+        };
 
         // isValid() check in the dirtying logic requires both a metatileentity and a holder
         try {
@@ -287,42 +281,41 @@ public class MultiblockRecipeLogicTest {
                 .blastFurnaceTemp(1)
                 .buildAndRegister();
 
-        RecipeMapMultiblockController mbt = MetaTileEntities.registerMetaTileEntity(510,
-                new MetaTileEntityElectricBlastFurnace(
-                        // super function calls the world, which equal null in test
-                        gregtechId("electric_blast_furnace")) {
+        RecipeMapMultiblockController mbt = new MetaTileEntityElectricBlastFurnace(
+                // super function calls the world, which equal null in test
+                gregtechId("electric_blast_furnace")) {
 
-                    @Override
-                    public boolean hasMufflerMechanics() {
-                        return false;
-                    }
+            @Override
+            public boolean hasMufflerMechanics() {
+                return false;
+            }
 
-                    // ignore maintenance problems
-                    @Override
-                    public boolean hasMaintenanceMechanics() {
-                        return false;
-                    }
+            // ignore maintenance problems
+            @Override
+            public boolean hasMaintenanceMechanics() {
+                return false;
+            }
 
-                    @Override
-                    public void reinitializeStructurePattern() {}
+            @Override
+            public void reinitializeStructurePattern() {}
 
-                    @Override
-                    public boolean isDistinct() {
-                        return true;
-                    }
+            @Override
+            public boolean isDistinct() {
+                return true;
+            }
 
-                    // function checks for the temperature of the recipe against the coils
-                    @Override
-                    public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
-                        return true;
-                    }
+            // function checks for the temperature of the recipe against the coils
+            @Override
+            public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
+                return true;
+            }
 
-                    // a checkRecipe that accepts every temperature drops the inherited pre-check too
-                    @Override
-                    public boolean isRecipeEligible(@NotNull Recipe recipe) {
-                        return true;
-                    }
-                });
+            // a checkRecipe that accepts every temperature drops the inherited pre-check too
+            @Override
+            public boolean isRecipeEligible(@NotNull Recipe recipe) {
+                return true;
+            }
+        };
 
         // isValid() check in the dirtying logic requires both a metatileentity and a holder
         try {
@@ -548,52 +541,51 @@ public class MultiblockRecipeLogicTest {
         TestableMaintenanceHatch maintenanceHatch = new TestableMaintenanceHatch(gregtechId("maintenance.hatch"),
                 false);
 
-        RecipeMapMultiblockController mbt = MetaTileEntities.registerMetaTileEntity(508,
-                new MetaTileEntityElectricBlastFurnace(
-                        // super function calls the world, which equal null in test
-                        gregtechId("electric_blast_furnace")) {
+        RecipeMapMultiblockController mbt = new MetaTileEntityElectricBlastFurnace(
+                // super function calls the world, which equal null in test
+                gregtechId("electric_blast_furnace")) {
 
-                    @Override
-                    public boolean canBeDistinct() {
-                        return false;
-                    }
+            @Override
+            public boolean canBeDistinct() {
+                return false;
+            }
 
-                    @Override
-                    public void reinitializeStructurePattern() {}
+            @Override
+            public void reinitializeStructurePattern() {}
 
-                    // function checks for the temperature of the recipe against the coils
-                    @Override
-                    public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
-                        return true;
-                    }
+            // function checks for the temperature of the recipe against the coils
+            @Override
+            public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
+                return true;
+            }
 
-                    // a checkRecipe that accepts every temperature drops the inherited pre-check too
-                    @Override
-                    public boolean isRecipeEligible(@NotNull Recipe recipe) {
-                        return true;
-                    }
+            // a checkRecipe that accepts every temperature drops the inherited pre-check too
+            @Override
+            public boolean isRecipeEligible(@NotNull Recipe recipe) {
+                return true;
+            }
 
-                    // testing maintenance problems
-                    @Override
-                    public boolean hasMaintenanceMechanics() {
-                        return true;
-                    }
+            // testing maintenance problems
+            @Override
+            public boolean hasMaintenanceMechanics() {
+                return true;
+            }
 
-                    // ignore muffler outputs
-                    @Override
-                    public boolean hasMufflerMechanics() {
-                        return false;
-                    }
+            // ignore muffler outputs
+            @Override
+            public boolean hasMufflerMechanics() {
+                return false;
+            }
 
-                    @Override
-                    public <T> List<T> getAbilities(MultiblockAbility<T> ability) {
-                        if (ability == MultiblockAbility.MAINTENANCE_HATCH) {
-                            // noinspection unchecked
-                            return (List<T>) ImmutableList.of(maintenanceHatch);
-                        }
-                        return super.getAbilities(ability);
-                    }
-                });
+            @Override
+            public <T> List<T> getAbilities(MultiblockAbility<T> ability) {
+                if (ability == MultiblockAbility.MAINTENANCE_HATCH) {
+                    // noinspection unchecked
+                    return (List<T>) ImmutableList.of(maintenanceHatch);
+                }
+                return super.getAbilities(ability);
+            }
+        };
 
         // isValid() check in the dirtying logic requires both a metatileentity and a holder
         try {

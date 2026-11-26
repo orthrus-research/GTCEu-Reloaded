@@ -1,6 +1,6 @@
 package gregtech.api.recipes.logic;
 
-import gregtech.Bootstrap;
+import gregtech.GameStateExtension;
 import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.MultiblockRecipeLogic;
@@ -18,7 +18,6 @@ import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.ItemStackHashStrategy;
 import gregtech.api.util.world.DummyWorld;
-import gregtech.common.metatileentities.MetaTileEntities;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityElectricBlastFurnace;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityFluidHatch;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityItemBus;
@@ -33,8 +32,8 @@ import net.minecraft.world.World;
 import org.hamcrest.MatcherAssert;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -42,6 +41,7 @@ import java.lang.reflect.Method;
 
 import static org.hamcrest.CoreMatchers.*;
 
+@ExtendWith(GameStateExtension.class)
 public class IParallelableRecipeLogicTest {
 
     private static final ItemStackHashStrategy hashStrategy = ItemStackHashStrategy.comparingAll();
@@ -52,43 +52,37 @@ public class IParallelableRecipeLogicTest {
     private static MetaTileEntityFluidHatch secondImportFluidBus;
     private static MetaTileEntityFluidHatch exportFluidBus;
 
-    @BeforeAll
-    public static void bootstrap() {
-        Bootstrap.perform();
-    }
-
     private static ResourceLocation gregtechId(String name) {
         return GTUtility.gregtechId(name);
     }
 
-    private static MetaTileEntityElectricBlastFurnace initEBF(int id) {
+    private static MetaTileEntityElectricBlastFurnace initEBF() {
         World world = DummyWorld.INSTANCE;
 
-        mbt = MetaTileEntities.registerMetaTileEntity(id,
-                new MetaTileEntityElectricBlastFurnace(
-                        // super function calls the world, which equal null in test
-                        GTUtility.gregtechId("electric_blast_furnace")) {
+        mbt = new MetaTileEntityElectricBlastFurnace(
+                // super function calls the world, which equal null in test
+                GTUtility.gregtechId("electric_blast_furnace")) {
 
-                    @Override
-                    public boolean canBeDistinct() {
-                        return false;
-                    }
+            @Override
+            public boolean canBeDistinct() {
+                return false;
+            }
 
-                    @Override
-                    public void reinitializeStructurePattern() {}
+            @Override
+            public void reinitializeStructurePattern() {}
 
-                    // function checks for the temperature of the recipe against the coils
-                    @Override
-                    public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
-                        return true;
-                    }
+            // function checks for the temperature of the recipe against the coils
+            @Override
+            public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
+                return true;
+            }
 
-                    // ignore maintenance problems
-                    @Override
-                    public boolean hasMaintenanceMechanics() {
-                        return false;
-                    }
-                });
+            // ignore maintenance problems
+            @Override
+            public boolean hasMaintenanceMechanics() {
+                return false;
+            }
+        };
 
         try {
             Field field = MetaTileEntityElectricBlastFurnace.class.getSuperclass()
@@ -203,12 +197,13 @@ public class IParallelableRecipeLogicTest {
 
     @Test
     public void findMultipliedRecipe_AtMaxParallelsTest() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(511);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3)
                 .itemOutputs(2)
                 .fluidInputs(1)
@@ -256,12 +251,13 @@ public class IParallelableRecipeLogicTest {
 
     @Test
     public void findMultipliedRecipe_LessThanMaxParallelsTest() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(512);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3)
                 .itemOutputs(2)
                 .fluidInputs(1)
@@ -307,12 +303,13 @@ public class IParallelableRecipeLogicTest {
 
     @Test
     public void findMultipliedRecipe_FluidOnlyMaxParallelTest() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(519);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3)
                 .itemOutputs(2)
                 .fluidInputs(1)
@@ -359,12 +356,13 @@ public class IParallelableRecipeLogicTest {
 
     @Test
     public void findMultipliedRecipe_FluidOnlyLessThanMaxParallelTest() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(520);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3)
                 .itemOutputs(2)
                 .fluidInputs(1)
@@ -411,7 +409,7 @@ public class IParallelableRecipeLogicTest {
 
     @Test
     public void findAppendedParallelItemRecipe_AtMaxParallelsTest() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(513);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
@@ -457,7 +455,7 @@ public class IParallelableRecipeLogicTest {
 
     @Test
     public void findAppendedParallelItemRecipe_LessThanMaxParallelsTest() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(514);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
@@ -504,7 +502,7 @@ public class IParallelableRecipeLogicTest {
     // An end-to-end test for finding parallel recipes
     @Test
     public void findParallelRecipe_Test() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(515);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
@@ -538,7 +536,8 @@ public class IParallelableRecipeLogicTest {
         };
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3)
                 .itemOutputs(2)
                 .fluidInputs(1)
@@ -578,7 +577,7 @@ public class IParallelableRecipeLogicTest {
     // An end-to-end test for finding parallel recipes
     @Test
     public void findParallelRecipe_FailingFromInputTest() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(516);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
@@ -612,7 +611,8 @@ public class IParallelableRecipeLogicTest {
         };
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3)
                 .itemOutputs(2)
                 .fluidInputs(1)
@@ -642,7 +642,7 @@ public class IParallelableRecipeLogicTest {
     // An end-to-end test for finding parallel recipes
     @Test
     public void findParallelRecipe_FailingFromOutputTest() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(517);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
@@ -676,7 +676,8 @@ public class IParallelableRecipeLogicTest {
         };
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3)
                 .itemOutputs(2)
                 .fluidInputs(1)
@@ -708,12 +709,13 @@ public class IParallelableRecipeLogicTest {
 
     @Test
     public void findParallelRecipe_SmallMaxStackSize() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(521);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3).itemOutputs(2).fluidInputs(1).fluidOutputs(1).build();
 
         // Create a simple recipe to be used for testing
@@ -746,7 +748,7 @@ public class IParallelableRecipeLogicTest {
 
     @Test
     public void applyParallelBonus_Test() {
-        MetaTileEntityElectricBlastFurnace EBF = initEBF(518);
+        MetaTileEntityElectricBlastFurnace EBF = initEBF();
 
         int parallelLimit = 4;
 
@@ -780,7 +782,8 @@ public class IParallelableRecipeLogicTest {
         };
 
         // Create a recipe Map to be used for testing
-        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("electric_blast_furnace", new BlastRecipeBuilder())
+        RecipeMap<BlastRecipeBuilder> map = new RecipeMapBuilder<>("parallel_test_blast_furnace",
+                new BlastRecipeBuilder())
                 .itemInputs(3)
                 .itemOutputs(2)
                 .fluidInputs(1)

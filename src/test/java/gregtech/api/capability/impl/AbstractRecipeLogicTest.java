@@ -1,6 +1,6 @@
 package gregtech.api.capability.impl;
 
-import gregtech.Bootstrap;
+import gregtech.GameStateExtension;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntityHolder;
 import gregtech.api.metatileentity.SimpleMachineMetaTileEntity;
@@ -19,18 +19,14 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(GameStateExtension.class)
 public class AbstractRecipeLogicTest {
-
-    @BeforeAll
-    public static void bootstrap() {
-        Bootstrap.perform();
-    }
 
     @Test
     public void trySearchNewRecipe() {

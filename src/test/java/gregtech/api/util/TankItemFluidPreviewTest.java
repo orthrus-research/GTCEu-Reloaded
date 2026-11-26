@@ -1,6 +1,6 @@
 package gregtech.api.util;
 
-import gregtech.BootstrapExtension;
+import gregtech.GameStateExtension;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.block.machines.MachineItemBlock;
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(BootstrapExtension.class)
+@ExtendWith(GameStateExtension.class)
 class TankItemFluidPreviewTest {
 
     private static CountingMachineItemBlock item;
