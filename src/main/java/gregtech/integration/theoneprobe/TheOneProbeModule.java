@@ -10,6 +10,8 @@ import gregtech.integration.probe.producer.BatteryBufferProbeInfo;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.ConverterProbeInfo;
 import gregtech.integration.probe.producer.DiodeProbeInfo;
+import gregtech.integration.probe.producer.EnergyContainerProbeInfo;
+import gregtech.integration.probe.producer.LaserContainerProbeInfo;
 import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
 import gregtech.integration.probe.producer.MultiblockProbeInfo;
@@ -38,7 +40,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
     public void init(FMLInitializationEvent event) {
         getLogger().info("TheOneProbe found. Enabling integration...");
         ITheOneProbe oneProbe = TheOneProbe.theOneProbeImp;
-        oneProbe.registerProvider(new ElectricContainerInfoProvider());
+        register(oneProbe, GTValues.MODID + ":energy_container_provider", new EnergyContainerProbeInfo());
         register(oneProbe, GTValues.MODID + ":workable_provider", new WorkableProbeInfo());
         register(oneProbe, GTValues.MODID + ":controllable_provider", new ControllableProbeInfo());
         register(oneProbe, GTValues.MODID + ":transformer_info_provider", new TransformerProbeInfo());
@@ -54,7 +56,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         oneProbe.registerProvider(new BlockOreInfoProvider());
         oneProbe.registerProvider(new LampInfoProvider());
         oneProbe.registerProvider(new LDPipeProvider());
-        oneProbe.registerProvider(new LaserContainerInfoProvider());
+        register(oneProbe, GTValues.MODID + ":laser_container_provider", new LaserContainerProbeInfo());
         oneProbe.registerProvider(new QuantumStorageProvider());
         register(oneProbe, GTValues.MODID + ":active_transformer_info_provider", new ActiveTransformerProbeInfo());
         register(oneProbe, GTValues.MODID + ":battery_buffer_provider", new BatteryBufferProbeInfo());

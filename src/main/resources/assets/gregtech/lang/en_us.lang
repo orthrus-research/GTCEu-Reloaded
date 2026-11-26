@@ -135,6 +135,7 @@ option.gregtech.controllable=Controllable Machines
 option.gregtech.converter=Energy Converters
 option.gregtech.diode=Diodes
 option.gregtech.energy=Energy Containers
+option.gregtech.laser=Laser Containers
 option.gregtech.block_lamp=Lamp Blocks
 option.gregtech.maintenance=Maintenance Problems
 option.gregtech.multi_recipemap=Machine Modes
