@@ -5,7 +5,6 @@ import gregtech.api.mui.GTGuiTheme;
 import gregtech.api.mui.GregTechGuiScreen;
 import gregtech.api.mui.factory.CoverGuiFactory;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IStringSerializable;
@@ -40,26 +39,8 @@ import java.util.function.Supplier;
 
 public interface CoverWithUI extends Cover, IGuiHolder<SidedPosGuiData>, gregtech.api.gui.IUIHolder {
 
-    @ApiStatus.Experimental
-    default boolean usesMui2() {
-        // this is gonna cause problems if implementing classes expect this to be false
-        // all of our covers use mui2 though
-        return true;
-    }
-
     default void openUI(EntityPlayerMP player) {
-        if (usesMui2()) {
-            CoverGuiFactory.open(player, this);
-        } else {
-            // todo remove in 2.10
-            CoverUIFactory.INSTANCE.openUI(this, player);
-        }
-    }
-
-    @Deprecated
-    @ApiStatus.ScheduledForRemoval(inVersion = "2.10")
-    default gregtech.api.gui.ModularUI createUI(EntityPlayer player) {
-        return null;
+        CoverGuiFactory.open(player, this);
     }
 
     @ApiStatus.NonExtendable
