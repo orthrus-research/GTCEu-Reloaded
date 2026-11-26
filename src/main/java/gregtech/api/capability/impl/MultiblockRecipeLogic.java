@@ -30,7 +30,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import static gregtech.api.recipes.logic.OverclockingLogic.subTickParallelOC;
@@ -172,51 +171,9 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
 
             if (distinctController.canBeDistinct() && distinctController.isDistinct() &&
                     getInputInventory().getSlots() > 0) {
-                boolean canWork = false;
-                if (invalidatedInputList.isEmpty()) {
-                    return true;
-                }
-                if (!metaTileEntity.getNotifiedFluidInputList().isEmpty()) {
-                    canWork = true;
-                    invalidatedInputList.clear();
-                    metaTileEntity.getNotifiedFluidInputList().clear();
-                    metaTileEntity.getNotifiedItemInputList().clear();
-                } else {
-                    Iterator<IItemHandlerModifiable> notifiedIter = metaTileEntity.getNotifiedItemInputList()
-                            .iterator();
-                    while (notifiedIter.hasNext()) {
-                        IItemHandlerModifiable bus = notifiedIter.next();
-                        Iterator<IItemHandlerModifiable> invalidatedIter = invalidatedInputList.iterator();
-                        while (invalidatedIter.hasNext()) {
-                            IItemHandler invalidatedHandler = invalidatedIter.next();
-                            if (invalidatedHandler instanceof ItemHandlerList) {
-                                for (IItemHandler ih : ((ItemHandlerList) invalidatedHandler).getBackingHandlers()) {
-                                    if (ih == bus) {
-                                        canWork = true;
-                                        invalidatedIter.remove();
-                                        break;
-                                    }
-                                }
-                            } else if (invalidatedHandler == bus) {
-                                canWork = true;
-                                invalidatedIter.remove();
-                            }
-                        }
-                        notifiedIter.remove();
-                    }
-                }
-                ArrayList<IItemHandler> flattenedHandlers = new ArrayList<>();
-                for (IItemHandler ih : getInputBuses()) {
-                    if (ih instanceof ItemHandlerList) {
-                        flattenedHandlers.addAll(((ItemHandlerList) ih).getBackingHandlers());
-                    }
-                    flattenedHandlers.add(ih);
-                }
-
-                if (!invalidatedInputList.containsAll(flattenedHandlers)) {
-                    canWork = true;
-                }
-                return canWork;
+                return DistinctBusInvalidation.canSearch(invalidatedInputList,
+                        metaTileEntity.getNotifiedItemInputList(), metaTileEntity.getNotifiedFluidInputList(),
+                        this::getInputBuses);
             }
         }
         return super.canWorkWithInputs();
