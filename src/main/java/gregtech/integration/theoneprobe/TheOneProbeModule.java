@@ -4,6 +4,8 @@ import gregtech.api.GTValues;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.util.Mods;
 import gregtech.integration.IntegrationSubmodule;
+import gregtech.integration.probe.ProbeInfoProducer;
+import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.theoneprobe.provider.*;
 import gregtech.integration.theoneprobe.provider.debug.DebugPipeNetInfoProvider;
 import gregtech.integration.theoneprobe.provider.debug.DebugTickTimeProvider;
@@ -28,7 +30,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         ITheOneProbe oneProbe = TheOneProbe.theOneProbeImp;
         oneProbe.registerProvider(new ElectricContainerInfoProvider());
         oneProbe.registerProvider(new WorkableInfoProvider());
-        oneProbe.registerProvider(new ControllableInfoProvider());
+        register(oneProbe, GTValues.MODID + ":controllable_provider", new ControllableProbeInfo());
         oneProbe.registerProvider(new TransformerInfoProvider());
         oneProbe.registerProvider(new DiodeInfoProvider());
         oneProbe.registerProvider(new MultiblockInfoProvider());
@@ -51,5 +53,10 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         // Dev environment debug providers
         oneProbe.registerProvider(new DebugPipeNetInfoProvider());
         oneProbe.registerProvider(new DebugTickTimeProvider());
+    }
+
+    /** Registers a shared producer's lines under the provider ID The One Probe's configuration knows. */
+    private static void register(ITheOneProbe oneProbe, String id, ProbeInfoProducer producer) {
+        oneProbe.registerProvider(new TOPInfoAdapter(id, producer));
     }
 }

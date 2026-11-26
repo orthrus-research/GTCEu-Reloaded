@@ -8,7 +8,6 @@ import gregtech.integration.hwyla.provider.AEMultiblockHatchProvider;
 import gregtech.integration.hwyla.provider.ActiveTransformerDataProvider;
 import gregtech.integration.hwyla.provider.BatteryBufferDataProvider;
 import gregtech.integration.hwyla.provider.BlockOreDataProvider;
-import gregtech.integration.hwyla.provider.ControllableDataProvider;
 import gregtech.integration.hwyla.provider.ConverterDataProvider;
 import gregtech.integration.hwyla.provider.DiodeDataProvider;
 import gregtech.integration.hwyla.provider.ElectricContainerDataProvider;
@@ -22,9 +21,12 @@ import gregtech.integration.hwyla.provider.RecipeLogicDataProvider;
 import gregtech.integration.hwyla.provider.SteamBoilerDataProvider;
 import gregtech.integration.hwyla.provider.TransformerDataProvider;
 import gregtech.integration.hwyla.provider.WorkableDataProvider;
+import gregtech.integration.probe.ProbeInfoProducer;
+import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.modules.GregTechModules;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 
 import mcp.mobius.waila.api.IWailaPlugin;
 import mcp.mobius.waila.api.IWailaRegistrar;
@@ -44,7 +46,7 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
     public void register(IWailaRegistrar registrar) {
         ElectricContainerDataProvider.INSTANCE.register(registrar);
         WorkableDataProvider.INSTANCE.register(registrar);
-        ControllableDataProvider.INSTANCE.register(registrar);
+        fromServer(registrar, "gregtech.controllable", TileEntity.class, new ControllableProbeInfo());
         TransformerDataProvider.INSTANCE.register(registrar);
         DiodeDataProvider.INSTANCE.register(registrar);
         MultiblockDataProvider.INSTANCE.register(registrar);
@@ -61,6 +63,12 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         BatteryBufferDataProvider.INSTANCE.register(registrar);
         QuantumStorageProvider.INSTANCE.register(registrar);
         AEMultiblockHatchProvider.INSTANCE.register(registrar);
+    }
+
+    /** Registers a shared producer whose lines the server sends under a HWYLA configuration key. */
+    private static void fromServer(IWailaRegistrar registrar, String configKey, Class<?> target,
+                                   ProbeInfoProducer producer) {
+        HWYLADataAdapter.fromServer(configKey, target, producer).register(registrar);
     }
 
     /** Render an ItemStack. */
