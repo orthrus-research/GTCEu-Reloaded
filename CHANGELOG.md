@@ -264,6 +264,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Rendering | The invar and platinum lighters show their own textures again |
 | Pipes | A fluid pipe whose destination throws during a fill records the uncertain amount, logs it and pauses its automatic distribution instead of returning fluid it cannot account for; `/gt fluid-reconcile` lets a server operator inspect the record and acknowledge it ([docs/pipenet-compatibility.md](docs/pipenet-compatibility.md)) |
 | Saves | World accelerators carried over from a world older than the machine ID reallocation keep their tier; before, the reallocation moved them to IDs nothing registers and they became unknown items |
+| Multiblocks | Shift-right-clicking a coke oven with a fluid container opens its screen again |
 
 ### Earlier fork changes
 
