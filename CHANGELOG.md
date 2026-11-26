@@ -312,6 +312,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | The ME input, stocking and output buses and hatches open ModularUI 2 screens with the slots and settings they had. The amount of a config slot selected on an input bus or hatch is edited in a row below the slots instead of a box above the screen, and fluids keep their tags in the config, stock and waiting slots. The server checks every config edit, so no edit reaches a slot auto-pull manages and a stocking part takes no amounts |
 | GUI | The ME pattern buffer and its proxy open ModularUI 2 screens: the patterns, shared ingredients and private batches are tabs on the screen's left, and the same access checks guard each slot, tank and button |
 | Recipes | The ULV 16A dynamo hatch recipe makes the ULV 16A dynamo hatch; before, it made the LuV one from ULV parts |
+| Monitors | The GUI proxy plugin shows a notice on the monitor that it no longer shows machine screens. It mirrored a machine's old-GUI screen, and since every machine opens a ModularUI 2 screen it showed nothing; its mirroring is removed. The plugin item stays, loads as saved and keeps its part setting, which the advanced monitor plugin draws its connections to |
 
 ### Earlier fork changes
 
