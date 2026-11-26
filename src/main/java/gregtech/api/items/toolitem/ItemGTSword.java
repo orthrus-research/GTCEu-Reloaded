@@ -177,6 +177,7 @@ public class ItemGTSword extends ItemSword implements IGTTool {
     @Override
     public boolean canDestroyBlockInCreative(@NotNull World world, @NotNull BlockPos pos, @NotNull ItemStack stack,
                                              @NotNull EntityPlayer player) {
+        // as with vanilla swords, players in creative mode do not break blocks with one
         return false;
     }
 
@@ -272,6 +273,14 @@ public class ItemGTSword extends ItemSword implements IGTTool {
     @Override
     public ICapabilityProvider initCapabilities(@NotNull ItemStack stack, @Nullable NBTTagCompound nbt) {
         return definition$initCapabilities(stack, nbt);
+    }
+
+    @NotNull
+    @Override
+    public EnumActionResult onItemUseFirst(@NotNull EntityPlayer player, @NotNull World world, @NotNull BlockPos pos,
+                                           @NotNull EnumFacing side, float hitX, float hitY, float hitZ,
+                                           @NotNull EnumHand hand) {
+        return definition$onItemUseFirst(player, world, pos, side, hitX, hitY, hitZ, hand);
     }
 
     @NotNull
