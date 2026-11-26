@@ -360,9 +360,6 @@ public class ConfigHolder {
                 "Default: true" })
         public boolean ignoreErrorOrInvalidRecipes = true;
 
-        @Config.Comment({ "Whether to enable a login message to players when they join the world.", "Default: true" })
-        public boolean loginMessage = true;
-
         @Config.RangeInt(min = 0, max = 100)
         @Config.Comment({ "Chance with which flint and steel will create fire.", "Default: 50" })
         @Config.SlidingOption
@@ -394,10 +391,6 @@ public class ConfigHolder {
         @Config.Name("Toolbelt Config")
         public ToolbeltConfig toolbeltConfig = new ToolbeltConfig();
 
-        @Config.Comment({ "Terminal root path.", "Default: {.../config}/gregtech/terminal" })
-        @Config.RequiresMcRestart
-        public String terminalRootPath = "gregtech/terminal";
-
         @Config.Comment({ "Resolution level for fragment shaders.",
                 "Higher values increase quality (limited by the resolution of your screen) but are more GPU intensive.",
                 "Default: 2" })
@@ -408,11 +401,6 @@ public class ConfigHolder {
         @Config.Comment({ "Whether or not to enable Emissive Textures for GregTech Machines and multiblock parts.",
                 "Default: true" })
         public boolean machinesEmissiveTextures = true;
-
-        @Config.Comment({
-                "Whether or not to enable Emissive Textures for Electric Blast Furnace Coils when the multiblock is working.",
-                "Default: true" })
-        public boolean coilsActiveEmissiveTextures = true;
 
         @Config.Comment({ "Whether or not sounds should be played when using tools outside of crafting.",
                 "Default: true" })
