@@ -54,15 +54,9 @@ public class MultiblockShapeInfo {
         private Map<Character, BlockInfo> symbolMap = new HashMap<>();
 
         /**
-         * Use {@link #builder(RelativeDirection...)}
-         * 
-         * @param structureDir The directions that the provided block pattern is based upon (character, string, row).
+         * Use {@link MultiblockShapeInfo#builder(RelativeDirection...)}. The directions are those the provided block
+         * pattern is based upon: of its characters, strings and rows.
          */
-        @Deprecated
-        public Builder(@NotNull RelativeDirection... structureDir) {
-            this(structureDir[0], structureDir[1], structureDir[2]);
-        }
-
         @Deprecated
         public Builder(@NotNull RelativeDirection one, @NotNull RelativeDirection two,
                        @NotNull RelativeDirection three) {
@@ -158,7 +152,7 @@ public class MultiblockShapeInfo {
         }
 
         public Builder shallowCopy() {
-            Builder builder = new Builder(this.structureDir);
+            Builder builder = MultiblockShapeInfo.builder(this.structureDir);
             builder.shape = new ArrayList<>(this.shape);
             builder.symbolMap = new HashMap<>(this.symbolMap);
             return builder;

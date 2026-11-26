@@ -38,7 +38,6 @@ import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.api.util.SmallDigits;
 
-import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.Fluid;
@@ -1114,15 +1113,6 @@ public class Material implements Comparable<Material> {
 
         public Builder itemPipeProperties(int priority, float stacksPerSec) {
             properties.setProperty(PropertyKey.ITEM_PIPE, new ItemPipeProperties(priority, stacksPerSec));
-            return this;
-        }
-
-        // TODO Clean this up post 2.5 release
-        @Deprecated
-        public Builder addDefaultEnchant(Enchantment enchant, int level) {
-            if (!properties.hasProperty(PropertyKey.TOOL)) // cannot assign default here
-                throw new IllegalArgumentException("Material cannot have an Enchant without Tools!");
-            properties.getProperty(PropertyKey.TOOL).addEnchantmentForTools(enchant, level);
             return this;
         }
 
