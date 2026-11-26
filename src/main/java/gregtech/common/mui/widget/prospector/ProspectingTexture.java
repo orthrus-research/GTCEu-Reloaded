@@ -41,12 +41,14 @@ public class ProspectingTexture extends AbstractTexture {
         this.darkMode = darkMode;
         this.radius = radius;
         this.mode = mode;
+        // the cells hold the maps the server's packets carry, which are not fastutil maps, so the array's element
+        // type must be the interface: an array of a map class throws as soon as a chunk with ore arrives
         if (this.mode == ProspectorMode.FLUID) {
             // noinspection unchecked
-            map = new Byte2ObjectOpenHashMap[(radius * 2 - 1)][(radius * 2 - 1)];
+            map = new Map[(radius * 2 - 1)][(radius * 2 - 1)];
         } else {
             // noinspection unchecked
-            map = new Byte2ObjectOpenHashMap[(radius * 2 - 1) * 16][(radius * 2 - 1) * 16];
+            map = new Map[(radius * 2 - 1) * 16][(radius * 2 - 1) * 16];
         }
     }
 

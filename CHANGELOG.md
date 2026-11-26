@@ -314,6 +314,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | GUI | The ME pattern buffer and its proxy open ModularUI 2 screens: the patterns, shared ingredients and private batches are tabs on the screen's left, and the same access checks guard each slot, tank and button |
 | Recipes | The ULV 16A dynamo hatch recipe makes the ULV 16A dynamo hatch; before, it made the LuV one from ULV parts |
 | Monitors | The GUI proxy plugin shows a notice on the monitor that it no longer shows machine screens. It mirrored a machine's old-GUI screen, and since every machine opens a ModularUI 2 screen it showed nothing; its mirroring is removed. The plugin item stays, loads as saved and keeps its part setting, which the advanced monitor plugin draws its connections to |
+| Items | The prospector's ore map no longer crashes the game when a scanned chunk holds ore; the map's cells could hold only one kind of map, and the server's scan sends another |
 
 ### Earlier fork changes
 
