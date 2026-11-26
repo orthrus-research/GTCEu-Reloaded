@@ -631,70 +631,29 @@ public class MachineRecipeLoader {
                     .circuitMeta(8).duration(tier == ULV ? 25 : 50)
                     .buildAndRegister();
         }
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[LV]).input(OrePrefix.wireGtDouble, Materials.Cupronickel, 8)
-                .input(OrePrefix.foil, Materials.Bronze, 8).fluidInputs(Materials.TinAlloy.getFluid(GTValues.L))
-                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.CUPRONICKEL)).duration(200).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[MV]).input(OrePrefix.wireGtDouble, Materials.Kanthal, 8)
-                .input(OrePrefix.foil, Materials.Aluminium, 8).fluidInputs(Materials.Copper.getFluid(GTValues.L))
-                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.KANTHAL)).duration(300).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[HV]).input(OrePrefix.wireGtDouble, Materials.Nichrome, 8)
-                .input(OrePrefix.foil, Materials.StainlessSteel, 8)
-                .fluidInputs(Materials.Aluminium.getFluid(GTValues.L))
-                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.NICHROME)).duration(400).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[EV]).input(OrePrefix.wireGtDouble, Materials.RTMAlloy, 8)
-                .input(OrePrefix.foil, Materials.VanadiumSteel, 8).fluidInputs(Materials.Nichrome.getFluid(GTValues.L))
-                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.RTM_ALLOY)).duration(500).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[IV]).input(OrePrefix.wireGtDouble, Materials.HSSG, 8)
-                .input(OrePrefix.foil, Materials.TungstenCarbide, 8)
-                .fluidInputs(Materials.Tungsten.getFluid(GTValues.L))
-                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.HSS_G)).duration(600).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[LuV]).input(OrePrefix.wireGtDouble, Materials.Naquadah, 8)
-                .input(OrePrefix.foil, Materials.Osmium, 8).fluidInputs(Materials.TungstenSteel.getFluid(GTValues.L))
-                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.NAQUADAH)).duration(700).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[ZPM]).input(OrePrefix.wireGtDouble, Materials.Trinium, 8)
-                .input(OrePrefix.foil, Materials.NaquadahEnriched, 8)
-                .fluidInputs(Materials.Naquadah.getFluid(GTValues.L))
-                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.TRINIUM)).duration(800).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[UV]).input(OrePrefix.wireGtDouble, Materials.Tritanium, 8)
-                .input(OrePrefix.foil, Materials.Naquadria, 8).fluidInputs(Materials.Trinium.getFluid(GTValues.L))
-                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(CoilType.TRITANIUM)).duration(900).buildAndRegister();
+
+        // the heating coils, LV to UV: double wires of the coil's metal around foils, bonded with a molten metal
+        heatingCoil(CoilType.CUPRONICKEL, LV, Cupronickel, Bronze, TinAlloy);
+        heatingCoil(CoilType.KANTHAL, MV, Kanthal, Aluminium, Copper);
+        heatingCoil(CoilType.NICHROME, HV, Nichrome, StainlessSteel, Aluminium);
+        heatingCoil(CoilType.RTM_ALLOY, EV, RTMAlloy, VanadiumSteel, Nichrome);
+        heatingCoil(CoilType.HSS_G, IV, HSSG, TungstenCarbide, Tungsten);
+        heatingCoil(CoilType.NAQUADAH, LuV, Naquadah, Osmium, TungstenSteel);
+        heatingCoil(CoilType.TRINIUM, ZPM, Trinium, NaquadahEnriched, Naquadah);
+        heatingCoil(CoilType.TRITANIUM, UV, Tritanium, Naquadria, Trinium);
 
         RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Materials.Bronze, 6)
                 .inputs(new ItemStack(Blocks.BRICK_BLOCK, 1)).circuitMeta(6)
                 .outputs(METAL_CASING.getItemVariant(BRONZE_BRICKS, ConfigHolder.recipes.casingsPerCraft)).duration(50)
                 .buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Materials.Invar, 6)
-                .input(OrePrefix.frameGt, Materials.Invar, 1).circuitMeta(6).outputs(MetaBlocks.METAL_CASING
-                        .getItemVariant(MetalCasingType.INVAR_HEATPROOF, ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Materials.Steel, 6)
-                .input(OrePrefix.frameGt, Materials.Steel, 1).circuitMeta(6).outputs(MetaBlocks.METAL_CASING
-                        .getItemVariant(MetalCasingType.STEEL_SOLID, ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Materials.Aluminium, 6)
-                .input(OrePrefix.frameGt, Materials.Aluminium, 1).circuitMeta(6).outputs(MetaBlocks.METAL_CASING
-                        .getItemVariant(MetalCasingType.ALUMINIUM_FROSTPROOF, ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Materials.TungstenSteel, 6)
-                .input(OrePrefix.frameGt, Materials.TungstenSteel, 1).circuitMeta(6).outputs(MetaBlocks.METAL_CASING
-                        .getItemVariant(MetalCasingType.TUNGSTENSTEEL_ROBUST, ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Materials.StainlessSteel, 6)
-                .input(OrePrefix.frameGt, Materials.StainlessSteel, 1).circuitMeta(6).outputs(MetaBlocks.METAL_CASING
-                        .getItemVariant(MetalCasingType.STAINLESS_CLEAN, ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Materials.Titanium, 6)
-                .input(OrePrefix.frameGt, Materials.Titanium, 1).circuitMeta(6).outputs(MetaBlocks.METAL_CASING
-                        .getItemVariant(MetalCasingType.TITANIUM_STABLE, ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(plate, HSSE, 6).input(frameGt, Europium).circuitMeta(6)
-                .outputs(MetaBlocks.METAL_CASING.getItemVariant(MetalCasingType.HSSE_STURDY,
-                        ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(plate, Palladium, 6).input(frameGt, Iridium).circuitMeta(6)
-                .outputs(METAL_CASING.getItemVariant(MetalCasingType.PALLADIUM_SUBSTATION,
-                        ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
+        metalCasing(MetalCasingType.INVAR_HEATPROOF, Invar, Invar);
+        metalCasing(MetalCasingType.STEEL_SOLID, Steel, Steel);
+        metalCasing(MetalCasingType.ALUMINIUM_FROSTPROOF, Aluminium, Aluminium);
+        metalCasing(MetalCasingType.TUNGSTENSTEEL_ROBUST, TungstenSteel, TungstenSteel);
+        metalCasing(MetalCasingType.STAINLESS_CLEAN, StainlessSteel, StainlessSteel);
+        metalCasing(MetalCasingType.TITANIUM_STABLE, Titanium, Titanium);
+        metalCasing(MetalCasingType.HSSE_STURDY, HSSE, Europium);
+        metalCasing(MetalCasingType.PALLADIUM_SUBSTATION, Palladium, Iridium);
 
         RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16)
                 .inputs(MetaBlocks.METAL_CASING.getItemVariant(MetalCasingType.STEEL_SOLID))
@@ -773,28 +732,14 @@ public class MachineRecipeLoader {
                         ConfigHolder.recipes.casingsPerCraft))
                 .duration(100).cleanroom(CleanroomType.CLEANROOM).buildAndRegister();
 
+        // the steel turbine casing is built on a frame, the others on a steel turbine casing
         RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, Materials.Magnalium, 6)
                 .input(OrePrefix.frameGt, Materials.BlueSteel, 1).circuitMeta(6).outputs(MetaBlocks.TURBINE_CASING
                         .getItemVariant(TurbineCasingType.STEEL_TURBINE_CASING, ConfigHolder.recipes.casingsPerCraft))
                 .duration(50).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16)
-                .inputs(MetaBlocks.TURBINE_CASING.getItemVariant(TurbineCasingType.STEEL_TURBINE_CASING))
-                .input(OrePrefix.plate, Materials.StainlessSteel, 6).circuitMeta(6)
-                .outputs(MetaBlocks.TURBINE_CASING.getItemVariant(TurbineCasingType.STAINLESS_TURBINE_CASING,
-                        ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16)
-                .inputs(MetaBlocks.TURBINE_CASING.getItemVariant(TurbineCasingType.STEEL_TURBINE_CASING))
-                .input(OrePrefix.plate, Materials.Titanium, 6).circuitMeta(6)
-                .outputs(MetaBlocks.TURBINE_CASING.getItemVariant(TurbineCasingType.TITANIUM_TURBINE_CASING,
-                        ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
-        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16)
-                .inputs(MetaBlocks.TURBINE_CASING.getItemVariant(TurbineCasingType.STEEL_TURBINE_CASING))
-                .input(OrePrefix.plate, Materials.TungstenSteel, 6).circuitMeta(6)
-                .outputs(MetaBlocks.TURBINE_CASING.getItemVariant(TurbineCasingType.TUNGSTENSTEEL_TURBINE_CASING,
-                        ConfigHolder.recipes.casingsPerCraft))
-                .duration(50).buildAndRegister();
+        turbineCasing(TurbineCasingType.STAINLESS_TURBINE_CASING, StainlessSteel);
+        turbineCasing(TurbineCasingType.TITANIUM_TURBINE_CASING, Titanium);
+        turbineCasing(TurbineCasingType.TUNGSTENSTEEL_TURBINE_CASING, TungstenSteel);
 
         RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(48).input(OrePrefix.frameGt, Materials.Steel)
                 .input(OrePrefix.plate, Materials.Polyethylene, 6).fluidInputs(Concrete.getFluid(L))
@@ -1374,5 +1319,29 @@ public class MachineRecipeLoader {
                 .fluidInputs(plastic.getFluid(L * 2))
                 .outputs(MetaTileEntities.HULL[tier].getStackForm())
                 .buildAndRegister();
+    }
+
+    /** A heating coil, assembled longer the higher its tier. */
+    private static void heatingCoil(CoilType coil, int tier, Material wire, Material foil, Material bond) {
+        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(VA[tier]).input(OrePrefix.wireGtDouble, wire, 8)
+                .input(OrePrefix.foil, foil, 8).fluidInputs(bond.getFluid(GTValues.L))
+                .outputs(MetaBlocks.WIRE_COIL.getItemVariant(coil)).duration(100 + 100 * tier).buildAndRegister();
+    }
+
+    /** A metal casing assembled from six plates and a frame. */
+    private static void metalCasing(MetalCasingType casing, Material plate, Material frame) {
+        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16).input(OrePrefix.plate, plate, 6)
+                .input(OrePrefix.frameGt, frame, 1).circuitMeta(6)
+                .outputs(MetaBlocks.METAL_CASING.getItemVariant(casing, ConfigHolder.recipes.casingsPerCraft))
+                .duration(50).buildAndRegister();
+    }
+
+    /** A turbine casing assembled from a steel turbine casing and six plates. */
+    private static void turbineCasing(TurbineCasingType casing, Material plate) {
+        RecipeMaps.ASSEMBLER_RECIPES.recipeBuilder().EUt(16)
+                .inputs(MetaBlocks.TURBINE_CASING.getItemVariant(TurbineCasingType.STEEL_TURBINE_CASING))
+                .input(OrePrefix.plate, plate, 6).circuitMeta(6)
+                .outputs(MetaBlocks.TURBINE_CASING.getItemVariant(casing, ConfigHolder.recipes.casingsPerCraft))
+                .duration(50).buildAndRegister();
     }
 }
