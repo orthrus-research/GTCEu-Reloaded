@@ -16,12 +16,12 @@ maintainers.
 
 ## Status
 
-In development: the `ct-overhaul` branch prepares the 3.0 alpha line for Java 26 and Cleanroom 0.7.14-alpha.
+In development: the 3.0 alpha line targets Java 26 and Cleanroom 0.7.14-alpha.
 It replaces CraftTweaker integration with shared typed Java definitions and GroovyScript 1.5.0
 authoring. This is a breaking API/toolchain migration; existing packs and addons require review.
 Saved content retains its registry identities when declarations preserve their original IDs.
 See [the migration guide](docs/ct-migration.md), [typed definitions](docs/typed-definitions.md)
-and [cache behavior](docs/groovy-cache.md). No release has been published from this branch.
+and [cache behavior](docs/groovy-cache.md). No 3.0 release has been published yet.
 
 ## Changes from GTCEu
 
@@ -57,7 +57,7 @@ scripts, rebuild affected addons and test a copied world before adopting it.
 | Component | Version | Notes |
 | --- | --- | --- |
 | Minecraft | 1.12.2 | |
-| Cleanroom | 0.7.14-alpha | Required on the ct-overhaul branch |
+| Cleanroom | 0.7.14-alpha | Required from 3.0 |
 | Java | 26 | Required; qualified on Temurin 26.0.2.1 |
 | CodeChickenLib | 3.3.10 | Required; build and runtime use the same pinned release |
 | ModularUI | 3.1.6 | Required |
@@ -73,7 +73,7 @@ still has the asynchronous completion stall. The reproducible dependency repair 
 
 ## For addon and mod developers
 
-The public API is `gregtech.api`. The ct-overhaul branch uses typed Java definitions and a thin
+The public API is `gregtech.api`. The 3.0 line uses typed Java definitions and a thin
 Groovy frontend. CT-specific APIs are removed; see [the migration guide](docs/ct-migration.md)
 for replacements and intentional source changes. Existing recipe
 conditions, recipe modifier providers and the PipeNet extension points are described in their
@@ -83,7 +83,7 @@ networks guarantee to addon handlers and where those guarantees end, and
 
 ## Building from source
 
-The ct-overhaul build requires JDK 26 and uses CleanroomGradle. Product code and tests target
+The 3.0 build requires JDK 26 and uses CleanroomGradle. Product code and tests target
 Java 26; Java 8 and the standalone Forge development runtime are no longer supported.
 See [release validation](docs/pre-delivery-qualification.md) for the tested artifact and runtime.
 

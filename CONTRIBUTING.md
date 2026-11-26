@@ -15,7 +15,7 @@ what is specific to GTCEu: Reloaded. Report GTCEu: Reloaded problems here, not t
 - The `gregtech` mod ID, the `gregtech` packages, registry names, configuration keys, network
   messages and the save format stay as they are. Renaming or removing any of them needs an
   explicit migration and its own discussion.
-- The ct-overhaul branch replaces CT-specific APIs with typed Java and Groovy APIs. Document
+- The 3.0 line replaces CT-specific APIs with typed Java and Groovy APIs. Document
   intentional API changes and migration paths, and test the functionality of affected integrations.
   Do not retain a legacy adapter solely to preserve the old API.
 - A feature that changes existing behavior is opt-in or defaults off unless its document says
