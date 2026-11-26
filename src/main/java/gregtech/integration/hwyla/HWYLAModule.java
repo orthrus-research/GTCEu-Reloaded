@@ -12,7 +12,6 @@ import gregtech.integration.hwyla.provider.ConverterDataProvider;
 import gregtech.integration.hwyla.provider.DiodeDataProvider;
 import gregtech.integration.hwyla.provider.ElectricContainerDataProvider;
 import gregtech.integration.hwyla.provider.LampDataProvider;
-import gregtech.integration.hwyla.provider.MaintenanceDataProvider;
 import gregtech.integration.hwyla.provider.MultiRecipeMapDataProvider;
 import gregtech.integration.hwyla.provider.PrimitivePumpDataProvider;
 import gregtech.integration.hwyla.provider.QuantumStorageProvider;
@@ -22,6 +21,7 @@ import gregtech.integration.hwyla.provider.TransformerDataProvider;
 import gregtech.integration.hwyla.provider.WorkableDataProvider;
 import gregtech.integration.probe.ProbeInfoProducer;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
+import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiblockProbeInfo;
 import gregtech.modules.GregTechModules;
 
@@ -50,7 +50,7 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         TransformerDataProvider.INSTANCE.register(registrar);
         DiodeDataProvider.INSTANCE.register(registrar);
         fromServer(registrar, "gregtech.multiblock", TileEntity.class, new MultiblockProbeInfo());
-        MaintenanceDataProvider.INSTANCE.register(registrar);
+        fromServer(registrar, "gregtech.maintenance", TileEntity.class, new MaintenanceProbeInfo());
         MultiRecipeMapDataProvider.INSTANCE.register(registrar);
         ConverterDataProvider.INSTANCE.register(registrar);
         RecipeLogicDataProvider.INSTANCE.register(registrar);
