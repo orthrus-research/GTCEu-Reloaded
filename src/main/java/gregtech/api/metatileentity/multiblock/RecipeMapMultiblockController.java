@@ -130,7 +130,13 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
         return true;
     }
 
-    /** Read-only candidate constraints. The legacy checkRecipe hook can mutate even with consumeIfSuccess=false. */
+    /**
+     * Read-only candidate constraints. The legacy checkRecipe hook can mutate even with consumeIfSuccess=false.
+     * <p>
+     * A candidate this rejects is skipped before {@link #checkRecipe(Recipe, boolean)} runs, so it must never reject
+     * a recipe that checkRecipe accepts. Subclasses inherit a controller's constraints; a subclass whose checkRecipe
+     * accepts recipes they reject overrides this as well.
+     */
     public boolean isRecipeEligible(@NotNull Recipe recipe) {
         return true;
     }

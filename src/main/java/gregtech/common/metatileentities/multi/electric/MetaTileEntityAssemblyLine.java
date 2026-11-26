@@ -332,9 +332,13 @@ public class MetaTileEntityAssemblyLine extends RecipeMapMultiblockController {
                 .setEmit(0.2f);
     }
 
+    /**
+     * Skips candidates whose ordered inputs do not match. Subclasses inherit this; one whose checkRecipe accepts
+     * unordered inputs overrides this too.
+     */
     @Override
     public boolean isRecipeEligible(@NotNull Recipe recipe) {
-        return getClass() != MetaTileEntityAssemblyLine.class || checkOrderedInputs(recipe);
+        return checkOrderedInputs(recipe);
     }
 
     private boolean checkOrderedInputs(@NotNull Recipe recipe) {

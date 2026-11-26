@@ -114,10 +114,13 @@ public class MetaTileEntityElectricBlastFurnace extends RecipeMapMultiblockContr
         return checkRecipeTemperature(recipe);
     }
 
+    /**
+     * Skips candidates that need more heat than the furnace has. Subclasses inherit this; one whose checkRecipe
+     * accepts other temperatures overrides this too.
+     */
     @Override
     public boolean isRecipeEligible(@NotNull Recipe recipe) {
-        return getClass() != MetaTileEntityElectricBlastFurnace.class ||
-                checkRecipeTemperature(recipe);
+        return checkRecipeTemperature(recipe);
     }
 
     private boolean checkRecipeTemperature(Recipe recipe) {

@@ -65,6 +65,11 @@ class RecipeCandidateConstraintTest {
         assertTrue(furnace.isRecipeEligible(allowed));
         assertFalse(furnace.isRecipeEligible(blocked));
         assertEquals(1500, temperature.getInt(furnace));
+        MetaTileEntityElectricBlastFurnace subclass = new MetaTileEntityElectricBlastFurnace(
+                GTUtility.gregtechId("candidate_blast_subclass")) {};
+        temperature.setInt(subclass, 1500);
+        assertTrue(subclass.isRecipeEligible(allowed));
+        assertFalse(subclass.isRecipeEligible(blocked), "Subclasses inherit the temperature pre-check");
     }
 
     @Test

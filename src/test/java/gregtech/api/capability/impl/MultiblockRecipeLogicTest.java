@@ -74,6 +74,12 @@ public class MultiblockRecipeLogicTest {
                         return true;
                     }
 
+                    // a checkRecipe that accepts every temperature drops the inherited pre-check too
+                    @Override
+                    public boolean isRecipeEligible(@NotNull Recipe recipe) {
+                        return true;
+                    }
+
                     // ignore maintenance problems
                     @Override
                     public boolean hasMaintenanceMechanics() {
@@ -308,6 +314,12 @@ public class MultiblockRecipeLogicTest {
                     // function checks for the temperature of the recipe against the coils
                     @Override
                     public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
+                        return true;
+                    }
+
+                    // a checkRecipe that accepts every temperature drops the inherited pre-check too
+                    @Override
+                    public boolean isRecipeEligible(@NotNull Recipe recipe) {
                         return true;
                     }
                 });
@@ -552,6 +564,12 @@ public class MultiblockRecipeLogicTest {
                     // function checks for the temperature of the recipe against the coils
                     @Override
                     public boolean checkRecipe(@NotNull Recipe recipe, boolean consumeIfSuccess) {
+                        return true;
+                    }
+
+                    // a checkRecipe that accepts every temperature drops the inherited pre-check too
+                    @Override
+                    public boolean isRecipeEligible(@NotNull Recipe recipe) {
                         return true;
                     }
 
