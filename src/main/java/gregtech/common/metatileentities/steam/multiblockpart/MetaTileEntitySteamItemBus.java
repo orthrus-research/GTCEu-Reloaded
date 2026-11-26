@@ -52,6 +52,12 @@ public class MetaTileEntitySteamItemBus extends MetaTileEntityItemBus {
         return new MetaTileEntitySteamItemBus(metaTileEntityId, isExportHatch);
     }
 
+    /** Steam buses keep no output filter, as before: their screen does not show one. */
+    @Override
+    protected boolean supportsOutputFilter() {
+        return false;
+    }
+
     @Override
     public MultiblockAbility<IItemHandlerModifiable> getAbility() {
         return isExportHatch ? MultiblockAbility.STEAM_EXPORT_ITEMS : MultiblockAbility.STEAM_IMPORT_ITEMS;

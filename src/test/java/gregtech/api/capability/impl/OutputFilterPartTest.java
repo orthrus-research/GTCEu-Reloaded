@@ -214,17 +214,24 @@ class OutputFilterPartTest {
     }
 
     @Test
-    void missingFilterDataInputsSteamAndUnknownSubclassesKeepLegacyBehavior() {
+    void missingFilterDataInputsAndSteamBusesKeepLegacyBehaviorAndSubclassesInheritTheFilter() {
         MetaTileEntityItemBus legacy = bus();
         legacy.readFromNBT(new NBTTagCompound());
         assertFalse(legacy.getOutputFilter().hasFilter());
         assertTrue(legacy.getExportItems().insertItem(0, new ItemStack(Items.IRON_INGOT), false).isEmpty());
         assertNull(new MetaTileEntityItemBus(GTUtility.gregtechId("input"), 1, false).getOutputFilter());
         assertNull(new MetaTileEntitySteamItemBus(GTUtility.gregtechId("steam"), true).getOutputFilter());
-        assertNull(new MetaTileEntityItemBus(GTUtility.gregtechId("addon"), 1, true) {}.getOutputFilter());
+        assertNotNull(new MetaTileEntityItemBus(GTUtility.gregtechId("addon"), 1, true) {}.getOutputFilter());
+        assertNull(new MetaTileEntityItemBus(GTUtility.gregtechId("addon_opt_out"), 1, true) {
+
+            @Override
+            protected boolean supportsOutputFilter() {
+                return false;
+            }
+        }.getOutputFilter());
         assertNull(
                 new MetaTileEntityMultiFluidHatch(GTUtility.gregtechId("fluid_input"), 1, 4, false).getOutputFilter());
-        assertNull(new MetaTileEntityMultiFluidHatch(GTUtility.gregtechId("fluid_addon"), 1, 4, true) {}
+        assertNotNull(new MetaTileEntityMultiFluidHatch(GTUtility.gregtechId("fluid_addon"), 1, 4, true) {}
                 .getOutputFilter());
     }
 

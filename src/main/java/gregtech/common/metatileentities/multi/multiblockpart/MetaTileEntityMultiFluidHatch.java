@@ -95,9 +95,13 @@ public class MetaTileEntityMultiFluidHatch extends MetaTileEntityMultiblockNotif
         initializeInventory();
     }
 
-    /** Subclasses with custom handlers or screens keep their existing behavior unless explicitly integrated. */
+    /**
+     * Whether an output hatch has an output filter. Subclasses inherit it; one with its own tanks or screen that does
+     * not integrate the filter overrides this to return false. It is read in the constructor, before the subclass's
+     * own fields are set, so an override returns a constant.
+     */
     protected boolean supportsOutputFilter() {
-        return getClass() == MetaTileEntityMultiFluidHatch.class;
+        return true;
     }
 
     @Nullable

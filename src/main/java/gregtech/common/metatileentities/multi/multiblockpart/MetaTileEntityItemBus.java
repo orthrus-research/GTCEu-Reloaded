@@ -100,10 +100,12 @@ public class MetaTileEntityItemBus extends MetaTileEntityMultiblockNotifiablePar
     }
 
     /**
-     * Subclasses with their own handlers or screens must explicitly integrate the filter lifecycle before opting in.
+     * Whether an output bus has an output filter. Subclasses inherit it; one with its own export handler or screen
+     * that does not integrate the filter overrides this to return false. It is read while the inventory is built,
+     * before the subclass's own fields are set, so an override returns a constant.
      */
     protected boolean supportsOutputFilter() {
-        return getClass() == MetaTileEntityItemBus.class;
+        return true;
     }
 
     @Nullable
