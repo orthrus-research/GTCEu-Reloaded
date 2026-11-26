@@ -12,8 +12,6 @@ import gregtech.client.renderer.ICubeRenderer;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.util.Tuple;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 
 import org.junit.jupiter.api.AfterEach;
@@ -21,10 +19,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static gregtech.api.util.GTUtility.gregtechId;
 import static org.junit.jupiter.api.Assertions.*;
@@ -75,7 +71,7 @@ class MaintenanceHatchDisplayTest {
                         "fixed mask " + fixedMask + ", tool " + toolIndex);
             }
             assertEquals(fixedMask == 63 ? "gregtech.top.maintenance_fixed" : "gregtech.top.maintenance_broken",
-                    statusKey(hatch::addMaintenanceStatusText));
+                    status());
         }
     }
 
@@ -110,22 +106,22 @@ class MaintenanceHatchDisplayTest {
     void existingSuppliersObserveControllerRepairsDetachAndReform() {
         controller.setProblems(62);
         BooleanSupplier needsWrench = () -> hatch.isMaintenanceToolRequired(0);
-        Consumer<List<ITextComponent>> status = hatch::addMaintenanceStatusText;
+        Supplier<String> status = this::status;
         assertTrue(needsWrench.getAsBoolean());
-        assertEquals("gregtech.top.maintenance_broken", statusKey(status));
+        assertEquals("gregtech.top.maintenance_broken", status.get());
 
         controller.setMaintenanceFixed(0);
         assertFalse(needsWrench.getAsBoolean());
-        assertEquals("gregtech.top.maintenance_fixed", statusKey(status));
+        assertEquals("gregtech.top.maintenance_fixed", status.get());
 
         this.attachedController = null;
         assertFalse(needsWrench.getAsBoolean());
-        assertEquals("gregtech.machine.maintenance_hatch.unformed", statusKey(status));
+        assertEquals("gregtech.machine.maintenance_hatch.unformed", status.get());
 
         controller.setProblems(62);
         this.attachedController = controller;
         assertTrue(needsWrench.getAsBoolean());
-        assertEquals("gregtech.top.maintenance_broken", statusKey(status));
+        assertEquals("gregtech.top.maintenance_broken", status.get());
     }
 
     @Test
@@ -134,7 +130,7 @@ class MaintenanceHatchDisplayTest {
         hatch.storeMaintenanceData((byte) 0b101010, 123);
         for (int i = 0; i < 6; i++) {
             hatch.isMaintenanceToolRequired(i);
-            statusKey(hatch::addMaintenanceStatusText);
+            status();
         }
         assertEquals(0b010101, controller.getMaintenanceProblems());
         assertEquals(0, controller.repairCalls);
@@ -145,17 +141,14 @@ class MaintenanceHatchDisplayTest {
     }
 
     private void assertUnavailable(String expectedKey) {
-        assertEquals(expectedKey, statusKey(hatch::addMaintenanceStatusText));
+        assertEquals(expectedKey, status());
         for (int i = 0; i < 6; i++) {
             assertFalse(hatch.isMaintenanceToolRequired(i));
         }
     }
 
-    private static String statusKey(Consumer<List<ITextComponent>> supplier) {
-        List<ITextComponent> text = new ArrayList<>();
-        supplier.accept(text);
-        assertEquals(1, text.size());
-        return ((TextComponentTranslation) text.get(0)).getKey();
+    private String status() {
+        return MetaTileEntityMaintenanceHatch.statusKey(hatch.getMaintenanceProblemsForDisplay());
     }
 
     private static class TestController extends MultiblockWithDisplayBase {

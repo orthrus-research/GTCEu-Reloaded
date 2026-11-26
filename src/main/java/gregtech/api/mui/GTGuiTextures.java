@@ -589,6 +589,30 @@ public class GTGuiTextures {
     public static final UITexture BUTTON_MINER_MODES = fullImage("textures/gui/widget/button_miner_modes.png",
             ColorType.DEFAULT);
 
+    // MULTIBLOCK PART AND SMALL MACHINE SCREENS
+    public static final UITexture BUTTON_MAINTENANCE = fullImage("textures/gui/widget/button_maintenance.png");
+    public static final UITexture WIRING_BACKGROUND = fullImage("textures/gui/widget/electricity_wires_baseback.png");
+    public static final UITexture WIRING_WIRE_LEFT = UITexture.builder()
+            .location(GTValues.MODID, "textures/gui/widget/electricity_wires.png")
+            .imageSize(76, 25)
+            .xy(0, 0, 38, 25)
+            .build();
+    public static final UITexture WIRING_WIRE_RIGHT = UITexture.builder()
+            .location(GTValues.MODID, "textures/gui/widget/electricity_wires.png")
+            .imageSize(76, 25)
+            .xy(38, 0, 38, 25)
+            .build();
+    public static final UITexture WIRING_BASE_LEFT = UITexture.builder()
+            .location(GTValues.MODID, "textures/gui/widget/electricity_wires_base.png")
+            .imageSize(32, 17)
+            .xy(0, 0, 16, 17)
+            .build();
+    public static final UITexture WIRING_BASE_RIGHT = UITexture.builder()
+            .location(GTValues.MODID, "textures/gui/widget/electricity_wires_base.png")
+            .imageSize(32, 17)
+            .xy(16, 0, 16, 17)
+            .build();
+
     // PROGRESS BARS
     public static final UITexture PROGRESS_BAR_ARC_FURNACE = progressBar(
             "textures/gui/progress_bar/progress_bar_arc_furnace.png", ColorType.DEFAULT);

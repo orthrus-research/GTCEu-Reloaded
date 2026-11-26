@@ -2,14 +2,6 @@ package gregtech.common.metatileentities.multi.multiblockpart;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.IMaintenanceHatch;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.Widget;
-import gregtech.api.gui.resources.ItemStackTexture;
-import gregtech.api.gui.widgets.AdvancedTextWidget;
-import gregtech.api.gui.widgets.ClickButtonWidget;
-import gregtech.api.gui.widgets.ImageWidget;
-import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.items.toolitem.ItemGTToolbelt;
 import gregtech.api.items.toolitem.ToolClasses;
@@ -17,14 +9,16 @@ import gregtech.api.items.toolitem.ToolHelper;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.*;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
 import gregtech.api.unification.material.Materials;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.TooltipHelper;
 import gregtech.common.ConfigHolder;
-import gregtech.common.gui.widget.among_us.FixWiringTaskWidget;
 import gregtech.common.inventory.handlers.TapeItemStackHandler;
 import gregtech.common.items.MetaItems;
 import gregtech.common.items.ToolItems;
+import gregtech.common.mui.widget.FixWiringTaskWidget;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
@@ -33,11 +27,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.*;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.event.HoverEvent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.items.IItemHandler;
@@ -47,6 +37,20 @@ import codechicken.lib.raytracer.CuboidRayTraceResult;
 import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.IVertexOperation;
 import codechicken.lib.vec.Matrix4;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.drawable.ItemDrawable;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.DoubleSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.InteractionSyncHandler;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.SyncHandlers;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
+import com.cleanroommc.modularui.widgets.TextWidget;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,9 +60,8 @@ import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static gregtech.api.capability.GregtechDataCodes.*;
 
@@ -376,13 +379,13 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
                 .doubleValue();
     }
 
-    private void incInternalMultiplier(Widget.ClickData data) {
+    void incInternalMultiplier() {
         if (durationMultiplier.compareTo(MAX_DURATION_MULTIPLIER) == 0) return;
         durationMultiplier = durationMultiplier.add(DURATION_ACTION_AMOUNT);
         writeCustomData(MAINTENANCE_MULTIPLIER, b -> b.writeDouble(durationMultiplier.doubleValue()));
     }
 
-    private void decInternalMultiplier(Widget.ClickData data) {
+    void decInternalMultiplier() {
         if (durationMultiplier.compareTo(MIN_DURATION_MULTIPLIER) == 0) return;
         durationMultiplier = durationMultiplier.subtract(DURATION_ACTION_AMOUNT);
         writeCustomData(MAINTENANCE_MULTIPLIER, b -> b.writeDouble(durationMultiplier.doubleValue()));
@@ -412,39 +415,104 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 188)
-                .label(5, 5, getMetaFullName())
-                .bindPlayerInventory(entityPlayer.inventory, GuiTextures.SLOT, 7, 106);
-
-        if (!isConfigurable && GTValues.FOOLS.get()) {
-            builder.widget(new FixWiringTaskWidget(48, 15, 80, 50)
-                    .setOnFinished(this::fixAllMaintenanceProblems)
-                    .setCanInteractPredicate(this::isAttachedToMultiBlock));
-        } else {
-            builder.widget(new SlotWidget(itemStackHandler, 0, 89 - 10, 18 - 1)
-                    .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.DUCT_TAPE_OVERLAY)
-                    .setTooltipText("gregtech.machine.maintenance_hatch_tape_slot.tooltip"))
-                    .widget(new ClickButtonWidget(89 - 10 - 1, 18 * 2 + 3, 20, 20, "",
-                            data -> fixMaintenanceProblems(entityPlayer))
-                            .setButtonTexture(GuiTextures.MAINTENANCE_ICON)
-                            .setTooltipText("gregtech.machine.maintenance_hatch_tool_slot.tooltip"));
-        }
-        if (isConfigurable) {
-            builder.widget(
-                    new AdvancedTextWidget(5, 25, getTextWidgetText("duration", this::getDurationMultiplier), 0x404040))
-                    .widget(new AdvancedTextWidget(5, 39, getTextWidgetText("time", this::getTimeMultiplier), 0x404040))
-                    .widget(new ClickButtonWidget(9, 18 * 3 + 16 - 18, 12, 12, "-", this::decInternalMultiplier))
-                    .widget(new ClickButtonWidget(9 + 18 * 2, 18 * 3 + 16 - 18, 12, 12, "+",
-                            this::incInternalMultiplier));
-        }
-        addMaintenanceStatusWidgets(builder);
-        return builder.build(getHolder(), entityPlayer);
+    public boolean usesMui2() {
+        return true;
     }
 
-    private void addMaintenanceStatusWidgets(ModularUI.Builder builder) {
-        builder.widget(new AdvancedTextWidget(5, 68, this::addMaintenanceStatusText, 0x404040)
-                .setMaxWidthLimit(166));
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
+        IntSyncValue problems = new IntSyncValue(this::getMaintenanceProblemsForDisplay);
+        guiSyncManager.syncValue("maintenance_problems", problems);
+
+        ModularPanel panel = GTGuis.createPanel(this, 176, 188)
+                .child(IKey.lang(getMetaFullName()).asWidget().pos(5, 5));
+        if (!isConfigurable && GTValues.FOOLS.get()) {
+            addWiringTask(panel, guiSyncManager);
+        } else {
+            // the button fixes what the tools and tape in the clicking player's inventory can fix
+            InteractionSyncHandler fix = new InteractionSyncHandler().setOnMousePressed(mouse -> {
+                if (!mouse.isClient()) fixMaintenanceProblems(guiSyncManager.getPlayer());
+            });
+            guiSyncManager.syncValue("maintenance_fix", fix);
+            panel.child(new ItemSlot()
+                    .pos(79, 17)
+                    .slot(SyncHandlers.itemSlot(itemStackHandler, 0).singletonSlotGroup())
+                    .background(GTGuiTextures.SLOT, GTGuiTextures.DUCT_TAPE_OVERLAY)
+                    .addTooltipLine(IKey.lang("gregtech.machine.maintenance_hatch_tape_slot.tooltip")))
+                    .child(new ButtonWidget<>()
+                            .pos(78, 39).size(20)
+                            .background(GTGuiTextures.BUTTON_MAINTENANCE)
+                            .disableHoverBackground()
+                            .syncHandler(fix)
+                            .addTooltipLine(IKey.lang("gregtech.machine.maintenance_hatch_tool_slot.tooltip")));
+        }
+        if (isConfigurable) {
+            addMultiplierWidgets(panel, guiSyncManager);
+        }
+        addMaintenanceStatusWidgets(panel, problems);
+        return panel.bindPlayerInventory();
+    }
+
+    private void addWiringTask(ModularPanel panel, PanelSyncManager guiSyncManager) {
+        // the connections are kept for this screen only, as the old widget kept them
+        int[] connected = { 0 };
+        IntSyncValue wiring = new IntSyncValue(() -> connected[0], mask -> {
+            boolean wasDone = connected[0] == FixWiringTaskWidget.ALL_CONNECTED;
+            connected[0] |= mask & FixWiringTaskWidget.ALL_CONNECTED;
+            if (!wasDone && connected[0] == FixWiringTaskWidget.ALL_CONNECTED && getWorld() != null &&
+                    !getWorld().isRemote) {
+                fixAllMaintenanceProblems();
+            }
+        });
+        BooleanSyncValue attached = new BooleanSyncValue(this::isAttachedToMultiBlock);
+        guiSyncManager.syncValue("maintenance_wiring", wiring);
+        guiSyncManager.syncValue("maintenance_attached", attached);
+        panel.child(new FixWiringTaskWidget(wiring)
+                .canInteract(attached::getBoolValue)
+                .pos(48, 15).size(80, 50));
+    }
+
+    private void addMultiplierWidgets(ModularPanel panel, PanelSyncManager guiSyncManager) {
+        DoubleSyncValue duration = new DoubleSyncValue(this::getDurationMultiplier);
+        DoubleSyncValue time = new DoubleSyncValue(this::getTimeMultiplier);
+        InteractionSyncHandler decrease = new InteractionSyncHandler().setOnMousePressed(mouse -> {
+            if (!mouse.isClient()) decInternalMultiplier();
+        });
+        InteractionSyncHandler increase = new InteractionSyncHandler().setOnMousePressed(mouse -> {
+            if (!mouse.isClient()) incInternalMultiplier();
+        });
+        guiSyncManager.syncValue("maintenance_duration", duration);
+        guiSyncManager.syncValue("maintenance_time", time);
+        guiSyncManager.syncValue("maintenance_decrease", decrease);
+        guiSyncManager.syncValue("maintenance_increase", increase);
+        panel.child(multiplierText("duration", duration::getDoubleValue).pos(5, 25))
+                .child(multiplierText("time", time::getDoubleValue).pos(5, 39))
+                .child(new ButtonWidget<>()
+                        .pos(9, 18 * 3 + 16 - 18).size(12)
+                        .overlay(IKey.str("-"))
+                        .syncHandler(decrease))
+                .child(new ButtonWidget<>()
+                        .pos(9 + 18 * 2, 18 * 3 + 16 - 18).size(12)
+                        .overlay(IKey.str("+"))
+                        .syncHandler(increase));
+    }
+
+    private static TextWidget<?> multiplierText(String type, DoubleSupplier multiplier) {
+        String key = "gregtech.maintenance.configurable_" + type;
+        return IKey.lang(key, () -> new Object[] { multiplier.getAsDouble() })
+                .asWidget()
+                .tooltipAutoUpdate(true)
+                .tooltipBuilder(tooltip -> {
+                    double value = multiplier.getAsDouble();
+                    tooltip.addLine(value == 1.0 ? IKey.lang(key + ".unchanged_description") :
+                            IKey.lang(key + ".changed_description", value));
+                });
+    }
+
+    private void addMaintenanceStatusWidgets(ModularPanel panel, IntSyncValue problems) {
+        panel.child(IKey.dynamicKey(() -> statusText(problems.getIntValue()))
+                .asWidget()
+                .pos(5, 68).width(166));
 
         ItemStack[] tools = {
                 ToolItems.WRENCH.get(Materials.Neutronium),
@@ -457,9 +525,10 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
         String[] toolNames = { "wrench", "screwdriver", "soft_mallet", "hard_hammer", "wire_cutter", "crowbar" };
         for (int i = 0; i < tools.length; i++) {
             int index = i;
-            builder.widget(new ImageWidget(34 + i * 18, 82, 16, 16, new ItemStackTexture(tools[i]))
-                    .setPredicate(() -> isMaintenanceToolRequired(index))
-                    .setTooltip("gregtech.machine.maintenance_hatch.required." + toolNames[i]));
+            panel.child(new ItemDrawable(tools[i]).asWidget()
+                    .pos(34 + i * 18, 82).size(16)
+                    .setEnabledIf(widget -> isToolRequired(problems.getIntValue(), index))
+                    .addTooltipLine(IKey.lang("gregtech.machine.maintenance_hatch.required." + toolNames[i])));
         }
     }
 
@@ -477,36 +546,28 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
     }
 
     boolean isMaintenanceToolRequired(int index) {
-        int problems = getMaintenanceProblemsForDisplay();
+        return isToolRequired(getMaintenanceProblemsForDisplay(), index);
+    }
+
+    /** @param problems a mask from {@link #getMaintenanceProblemsForDisplay()}, where a fault is a zero bit */
+    static boolean isToolRequired(int problems, int index) {
         return problems >= 0 && ((problems >> index) & 1) == 0;
     }
 
-    void addMaintenanceStatusText(List<ITextComponent> text) {
-        int problems = getMaintenanceProblemsForDisplay();
-        String key = switch (problems) {
+    /** @param problems a mask from {@link #getMaintenanceProblemsForDisplay()} */
+    static String statusKey(int problems) {
+        return switch (problems) {
             case MAINTENANCE_UNFORMED -> "gregtech.machine.maintenance_hatch.unformed";
             case MAINTENANCE_DISABLED -> "gregtech.machine.maintenance_hatch.disabled";
             case ALL_MAINTENANCE_FIXED -> "gregtech.top.maintenance_fixed";
             default -> "gregtech.top.maintenance_broken";
         };
-        TextFormatting color = problems < 0 ? TextFormatting.DARK_GRAY :
-                problems == ALL_MAINTENANCE_FIXED ? TextFormatting.DARK_GREEN : TextFormatting.RED;
-        text.add(new TextComponentTranslation(key).setStyle(new Style().setColor(color)));
     }
 
-    private static Consumer<List<ITextComponent>> getTextWidgetText(String type, Supplier<Double> multiplier) {
-        return (list) -> {
-            ITextComponent tooltip;
-            if (multiplier.get() == 1.0) {
-                tooltip = new TextComponentTranslation(
-                        "gregtech.maintenance.configurable_" + type + ".unchanged_description");
-            } else {
-                tooltip = new TextComponentTranslation(
-                        "gregtech.maintenance.configurable_" + type + ".changed_description", multiplier.get());
-            }
-            list.add(new TextComponentTranslation("gregtech.maintenance.configurable_" + type, multiplier.get())
-                    .setStyle(new Style().setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip))));
-        };
+    private static IKey statusText(int problems) {
+        TextFormatting color = problems < 0 ? TextFormatting.DARK_GRAY :
+                problems == ALL_MAINTENANCE_FIXED ? TextFormatting.DARK_GREEN : TextFormatting.RED;
+        return IKey.lang(statusKey(problems)).style(color);
     }
 
     @Override
