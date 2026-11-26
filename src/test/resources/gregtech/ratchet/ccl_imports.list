@@ -440,7 +440,6 @@ gregtech/common/metatileentities/multi/MetaTileEntityMultiblockTank.java codechi
 gregtech/common/metatileentities/multi/MetaTileEntityMultiblockTank.java codechicken.lib.vec.Matrix4
 gregtech/common/metatileentities/multi/MetaTileEntityPrimitiveBlastFurnace.java codechicken.lib.render.CCRenderState
 gregtech/common/metatileentities/multi/MetaTileEntityPrimitiveBlastFurnace.java codechicken.lib.render.pipeline.IVertexOperation
-gregtech/common/metatileentities/multi/MetaTileEntityPrimitiveBlastFurnace.java codechicken.lib.texture.TextureUtils
 gregtech/common/metatileentities/multi/MetaTileEntityPrimitiveBlastFurnace.java codechicken.lib.vec.Cuboid6
 gregtech/common/metatileentities/multi/MetaTileEntityPrimitiveBlastFurnace.java codechicken.lib.vec.Matrix4
 gregtech/common/metatileentities/multi/MetaTileEntityPrimitiveWaterPump.java codechicken.lib.render.CCRenderState
