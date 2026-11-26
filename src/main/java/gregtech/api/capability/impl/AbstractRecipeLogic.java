@@ -112,11 +112,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     private boolean recipeLogicWakeup = true;
     private RecipeMap<?> observedRecipeMap;
     private long observedRecipeRevision;
-    private RecipeFailure recipeFailure = RecipeFailure.NONE;
-    private RecipeFailure progressConditionFailure = RecipeFailure.NONE;
-    private RecipeFailure capturedFailure = RecipeFailure.NONE;
-    private boolean capturingFailure;
-    private boolean mufflerBlocked;
+    private final RecipeFailureTracker failures = new RecipeFailureTracker();
 
     protected boolean hasPerfectOC;
 
@@ -317,9 +313,10 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
                     if (progressTime <= 0 || canProcessActiveRecipeConditions()) {
                         // Some legacy predicates cancel work or query consumable resources. A hold must precede them.
                         if (getMetaTileEntity().getOffsetTimer() % 20 == 0 || resumingConditions) {
-                            this.progressConditionFailure = captureRecipeFailure(this::canProgressRecipe,
+                            RecipeFailure progressFailure = captureRecipeFailure(this::canProgressRecipe,
                                     RecipeFailureReason.PROGRESS_REQUIREMENTS);
-                            this.canRecipeProgress = progressConditionFailure.isEmpty();
+                            failures.setProgressFailure(progressFailure);
+                            this.canRecipeProgress = progressFailure.isEmpty();
                         }
 
                         if (progressTime > 0) {
@@ -371,8 +368,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             return RecipeFailure.of(RecipeFailureReason.UNFORMED);
         }
         if (!workingEnabled) return RecipeFailure.of(RecipeFailureReason.DISABLED);
-        if (mufflerBlocked) return RecipeFailure.of(RecipeFailureReason.MUFFLER_OBSTRUCTED);
-        return recipeFailure;
+        return failures.get();
     }
 
     protected void setRecipeFailure(RecipeFailureReason reason) {
@@ -380,25 +376,22 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     protected void setRecipeFailure(RecipeFailure failure) {
-        this.recipeFailure = failure;
+        failures.set(failure);
     }
 
     protected void clearRecipeFailure() {
-        this.recipeFailure = RecipeFailure.NONE;
+        failures.clear();
     }
 
     private void resetRecipeFailures() {
         clearRecipeFailure();
-        this.progressConditionFailure = RecipeFailure.NONE;
-        this.capturedFailure = RecipeFailure.NONE;
-        this.capturingFailure = false;
-        this.mufflerBlocked = false;
+        failures.resetDiagnostics();
     }
 
     /** Called only with the result of the controller's existing muffler gate. */
     public void setRecipeBlockedByMuffler(boolean blocked) {
-        if (this.mufflerBlocked != blocked) clearRecipeFailure();
-        this.mufflerBlocked = blocked;
+        if (failures.isMufflerBlocked() != blocked) clearRecipeFailure();
+        failures.setMufflerBlocked(blocked);
     }
 
     /**
@@ -414,23 +407,12 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     public boolean recordRecipeFailure(RecipeFailure failure) {
-        if (capturingFailure && capturedFailure.isEmpty()) this.capturedFailure = failure;
-        return false;
+        return failures.record(failure);
     }
 
     /** Executes the supplied existing check exactly once, discarding a recorded failure if an override succeeds. */
     protected RecipeFailure captureRecipeFailure(BooleanSupplier check, RecipeFailureReason unknownFailure) {
-        boolean previousCapturing = this.capturingFailure;
-        RecipeFailure previousFailure = this.capturedFailure;
-        this.capturingFailure = true;
-        this.capturedFailure = RecipeFailure.NONE;
-        try {
-            if (check.getAsBoolean()) return RecipeFailure.NONE;
-            return capturedFailure.isEmpty() ? RecipeFailure.of(unknownFailure) : capturedFailure;
-        } finally {
-            this.capturingFailure = previousCapturing;
-            this.capturedFailure = previousFailure;
-        }
+        return failures.capture(check, unknownFailure);
     }
 
     /** Evaluates the pure hook once. This is a selection operation, never a UI getter. */
@@ -611,8 +593,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     }
 
     protected RecipeFailure getProgressConditionFailure() {
-        return progressConditionFailure.isEmpty() ? RecipeFailure.of(RecipeFailureReason.PROGRESS_REQUIREMENTS) :
-                progressConditionFailure;
+        return failures.getProgressFailure();
     }
 
     protected RecipeFailureReason getPowerFailureReason(long eut) {
@@ -1480,7 +1461,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         clearRecipeFailure();
         this.activeRecipeConditions = recipe.getProperty(ConditionProperty.getInstance(), RecipeConditionSet.EMPTY);
         this.recipeConditionPaused = false;
-        this.progressConditionFailure = RecipeFailure.NONE;
+        failures.clearProgressFailure();
         this.progressTime = 1;
         setMaxProgress(ocResult.duration());
         this.recipeEUt = ocResult.eut();
@@ -1655,7 +1636,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         if (this.workingEnabled != workingEnabled) {
             requestRecipeLogicWakeup();
             clearRecipeFailure();
-            this.progressConditionFailure = RecipeFailure.NONE;
+            failures.clearProgressFailure();
         }
         this.workingEnabled = workingEnabled;
         metaTileEntity.markDirty();
