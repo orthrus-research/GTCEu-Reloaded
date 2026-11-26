@@ -505,7 +505,7 @@ public class MetaTileEntityMachineRecipeLoader {
                     .input(hatches4A[tier], tier == UHV && !dynamo ? 2 : 1)
                     .input(wireGtOctal, CONDUCTORS[tier], 2)
                     .input(plate, material(CraftingComponent.PLATE, tier), 4)
-                    .output(dynamo && tier == ULV ? hatches16A[LuV] : hatches16A[tier])
+                    .output(hatches16A[tier])
                     .duration(200).EUt(tier > ULV ? VA[tier - 1] : VH[ULV]).buildAndRegister();
         }
 
