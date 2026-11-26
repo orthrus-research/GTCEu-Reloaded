@@ -42,3 +42,15 @@ description = "Build and test on Java 26, with the definition boundary, mixin ma
 locks = ["gradle"]
 memory = 6
 steps = [["{gradle}", "build", "--console=plain"]]
+
+# A game for checking GTCEuR's own behaviour in a session, resolved by `wb play gtceur:check` or lab.resolve: GTCEuR
+# and the mods it requires at runtime, every member by SHA-256 from the worktree's set revision and GTCEuR from the
+# Store by the tree CI built, on Cubature's standalone world (a local creative server on 127.0.0.1 and one offline
+# client whose player is an operator). An open session takes server console lines from its commands.txt and client
+# requests through the drive agent. Fugue is a coremod that must sort before the other mod files.
+[launch.check]
+members = ["gtceur:mod@both", "orthlib:mod@both", "modularui@both", "codechickenlib@both", "fugue@both",
+           "scalar@both"]
+runtime = "cleanroom"
+base = "cubature:standalone"
+place = { "fugue@both" = "+Fugue-0.25.5.jar" }
