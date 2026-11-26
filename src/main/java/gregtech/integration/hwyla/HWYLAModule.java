@@ -14,7 +14,6 @@ import gregtech.integration.hwyla.provider.ElectricContainerDataProvider;
 import gregtech.integration.hwyla.provider.LampDataProvider;
 import gregtech.integration.hwyla.provider.MaintenanceDataProvider;
 import gregtech.integration.hwyla.provider.MultiRecipeMapDataProvider;
-import gregtech.integration.hwyla.provider.MultiblockDataProvider;
 import gregtech.integration.hwyla.provider.PrimitivePumpDataProvider;
 import gregtech.integration.hwyla.provider.QuantumStorageProvider;
 import gregtech.integration.hwyla.provider.RecipeLogicDataProvider;
@@ -23,6 +22,7 @@ import gregtech.integration.hwyla.provider.TransformerDataProvider;
 import gregtech.integration.hwyla.provider.WorkableDataProvider;
 import gregtech.integration.probe.ProbeInfoProducer;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
+import gregtech.integration.probe.producer.MultiblockProbeInfo;
 import gregtech.modules.GregTechModules;
 
 import net.minecraft.item.ItemStack;
@@ -49,7 +49,7 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         fromServer(registrar, "gregtech.controllable", TileEntity.class, new ControllableProbeInfo());
         TransformerDataProvider.INSTANCE.register(registrar);
         DiodeDataProvider.INSTANCE.register(registrar);
-        MultiblockDataProvider.INSTANCE.register(registrar);
+        fromServer(registrar, "gregtech.multiblock", TileEntity.class, new MultiblockProbeInfo());
         MaintenanceDataProvider.INSTANCE.register(registrar);
         MultiRecipeMapDataProvider.INSTANCE.register(registrar);
         ConverterDataProvider.INSTANCE.register(registrar);
