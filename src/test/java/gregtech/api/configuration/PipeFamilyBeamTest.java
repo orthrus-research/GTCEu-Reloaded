@@ -2,6 +2,8 @@ package gregtech.api.configuration;
 
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.GregtechTileCapabilities;
+import gregtech.api.capability.ILaserContainer;
+import gregtech.api.capability.IOpticalComputationProvider;
 import gregtech.api.network.PacketDataList;
 import gregtech.api.util.TaskScheduler;
 import gregtech.common.pipelike.beam.net.BeamPipeNet;
@@ -24,6 +26,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -54,6 +58,25 @@ public class PipeFamilyBeamTest {
         assertSame(line[2], route.getTargetPipe());
         assertEquals(EnumFacing.EAST, route.getTargetFacing());
         assertEquals(3, route.getDistance());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "laser", "optical" })
+    void aRequestThatReachesTheEndpointLightsTheLineAtMostOnceASecond(String family) {
+        ConfigurationTestWorld world = new ConfigurationTestWorld();
+        TileEntityBeamPipe<?, ?, ?>[] line = line(world, family);
+        assertTrue(request(line[0], family));
+        for (TileEntityBeamPipe<?, ?, ?> pipe : line) {
+            assertTrue(pipe.isActive());
+        }
+
+        line[1].setActive(false, -1);
+        world.setTotalWorldTime(19);
+        assertTrue(request(line[0], family));
+        assertFalse(line[1].isActive(), "The line is walked at most once a second");
+        world.setTotalWorldTime(20);
+        assertTrue(request(line[0], family));
+        assertTrue(line[1].isActive());
     }
 
     @Test
@@ -191,6 +214,17 @@ public class PipeFamilyBeamTest {
             pipe.setConnection(EnumFacing.EAST, true, false);
         }
         return line;
+    }
+
+    /** Sends a request into the line through the open face of its first pipe; true if the endpoint took it. */
+    private static boolean request(TileEntityBeamPipe<?, ?, ?> pipe, String family) {
+        if (family.equals("laser")) {
+            ILaserContainer handler = pipe.getCapability(GregtechTileCapabilities.CAPABILITY_LASER, EnumFacing.WEST);
+            return handler != null && handler.acceptEnergyFromNetwork(EnumFacing.WEST, 32, 1) > 0;
+        }
+        IOpticalComputationProvider handler = pipe.getCapability(
+                GregtechTileCapabilities.CABABILITY_COMPUTATION_PROVIDER, EnumFacing.WEST);
+        return handler != null && handler.requestCWUt(1, false, new ArrayList<>()) > 0;
     }
 
     private static int sides(EnumFacing... sides) {

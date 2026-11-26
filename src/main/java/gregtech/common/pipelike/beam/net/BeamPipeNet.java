@@ -25,7 +25,8 @@ public abstract class BeamPipeNet<NodeDataType, RouteType extends BeamRoutePath<
     private final NodeDataType nodeData;
     private long lastRouteRefresh;
     // world time the pipes were last marked active; a mark lasts 100 ticks, so once a second is enough
-    private long lastActiveMark = Long.MIN_VALUE;
+    private long lastActiveMark;
+    private boolean activeMarked;
     private boolean routeCacheInitialized;
 
     protected BeamPipeNet(WorldPipeNet<NodeDataType, ? extends PipeNet<NodeDataType>> world, NodeDataType nodeData) {
@@ -43,8 +44,9 @@ public abstract class BeamPipeNet<NodeDataType, RouteType extends BeamRoutePath<
      * @return whether the pipes should be marked active now; true at most once a second
      */
     public boolean shouldMarkActive(long worldTime) {
-        if (worldTime - lastActiveMark < 20 && worldTime >= lastActiveMark) return false;
-        lastActiveMark = worldTime;
+        if (activeMarked && worldTime >= lastActiveMark && worldTime - lastActiveMark < 20) return false;
+        this.activeMarked = true;
+        this.lastActiveMark = worldTime;
         return true;
     }
 
