@@ -1,6 +1,7 @@
 package gregtech.integration.hwyla;
 
 import gregtech.api.GTValues;
+import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.util.Mods;
 import gregtech.integration.IntegrationSubmodule;
@@ -9,7 +10,6 @@ import gregtech.integration.hwyla.provider.BlockOreDataProvider;
 import gregtech.integration.hwyla.provider.LampDataProvider;
 import gregtech.integration.hwyla.provider.PrimitivePumpDataProvider;
 import gregtech.integration.hwyla.provider.QuantumStorageProvider;
-import gregtech.integration.hwyla.provider.SteamBoilerDataProvider;
 import gregtech.integration.probe.ProbeInfoProducer;
 import gregtech.integration.probe.producer.ActiveTransformerProbeInfo;
 import gregtech.integration.probe.producer.BatteryBufferProbeInfo;
@@ -22,6 +22,7 @@ import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
 import gregtech.integration.probe.producer.MultiblockProbeInfo;
 import gregtech.integration.probe.producer.RecipeLogicProbeInfo;
+import gregtech.integration.probe.producer.SteamBoilerProbeInfo;
 import gregtech.integration.probe.producer.TransformerProbeInfo;
 import gregtech.integration.probe.producer.WorkableProbeInfo;
 import gregtech.modules.GregTechModules;
@@ -56,7 +57,7 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         fromServer(registrar, "gregtech.multi_recipemap", TileEntity.class, new MultiRecipeMapProbeInfo());
         fromServer(registrar, "gregtech.converter", TileEntity.class, new ConverterProbeInfo());
         fromServer(registrar, "gregtech.recipe_logic", TileEntity.class, new RecipeLogicProbeInfo());
-        SteamBoilerDataProvider.INSTANCE.register(registrar);
+        fromServer(registrar, "gregtech.steam_boiler", IGregTechTileEntity.class, new SteamBoilerProbeInfo());
         PrimitivePumpDataProvider.INSTANCE.register(registrar);
         // one day, if cover provider is ported to waila, register it right here
         BlockOreDataProvider.INSTANCE.register(registrar);
