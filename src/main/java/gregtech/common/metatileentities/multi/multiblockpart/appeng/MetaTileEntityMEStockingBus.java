@@ -1,9 +1,7 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng;
 
 import gregtech.api.GTValues;
-import gregtech.api.gui.GuiTextures;
 import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ImageCycleButtonWidget;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
@@ -11,7 +9,6 @@ import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
 import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAEItemList;
 import gregtech.common.metatileentities.multi.multiblockpart.appeng.slot.ExportOnlyAEItemSlot;
-import gregtech.common.metatileentities.multi.multiblockpart.appeng.stack.WrappedItemStack;
 
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
@@ -21,34 +18,24 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 
-import appeng.api.config.Actionable;
-import appeng.api.storage.IMEMonitor;
 import appeng.api.storage.data.IAEItemStack;
-import appeng.api.storage.data.IItemList;
 import codechicken.lib.raytracer.CuboidRayTraceResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.function.Predicate;
 
-import static gregtech.api.capability.GregtechDataCodes.UPDATE_AUTO_PULL;
-
+/** An input bus that shows what the network holds instead of buffering it; see {@link MEStockingLogic}. */
 public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
 
-    private static final int CONFIG_SIZE = 16;
-    private final MEStockingConfig stockingConfig = new MEStockingConfig();
-    private boolean autoPull;
-    private Predicate<ItemStack> autoPullTest;
+    private final MEStockingLogic<IAEItemStack, ItemStack> stocking = new MEStockingLogic<>(this,
+            MEStackType.ITEMS, this::testConfiguredInOtherBus);
 
     public MetaTileEntityMEStockingBus(ResourceLocation metaTileEntityId) {
         super(metaTileEntityId, GTValues.IV);
-        this.autoPullTest = $ -> false;
     }
 
     @Override
@@ -66,80 +53,23 @@ public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
 
     @Override
     protected boolean shouldUpdateME() {
-        // Check connectivity even while disabled, without tying it to an expensive storage scan.
-        if (!updateMEStatus() || !isWorkingEnabled()) {
-            clearUnavailableStock();
-            return false;
-        }
-        int interval = stockingConfig.getRefreshTicks();
-        if (interval == 0) return shouldSyncME();
-        if (getOffsetTimer() % interval != 0) return false;
-        if (autoPull) refreshList();
-        return true;
+        return stocking.shouldUpdate();
     }
 
     @Override
     public void update() {
         super.update();
-        if (!getWorld().isRemote && isOnline && isWorkingEnabled() && autoPull &&
-                stockingConfig.getRefreshTicks() == 0 && getOffsetTimer() % 100 == 0) {
-            refreshList();
-            syncME();
-        }
-    }
-
-    private void clearUnavailableStock() {
-        if (autoPull) {
-            clearInventory(0);
-        } else {
-            for (var slot : getAEItemHandler().getInventory()) {
-                slot.setStack(null);
-            }
-        }
-    }
-
-    private void onStockingConfigChanged() {
-        if (getWorld() != null && !getWorld().isRemote) {
-            markDirty();
-            onConfigPasted();
-        }
+        stocking.update();
     }
 
     @Override
     protected void onConfigPasted() {
-        if (!updateMEStatus() || !isWorkingEnabled()) {
-            clearUnavailableStock();
-            return;
-        }
-        if (autoPull) refreshList();
-        syncME();
+        stocking.onConfigPasted();
     }
 
     @Override
     protected void syncME() {
-        IMEMonitor<IAEItemStack> monitor = getMonitor();
-        if (monitor == null) {
-            clearUnavailableStock();
-            return;
-        }
-
-        for (ExportOnlyAEStockingItemSlot slot : this.getAEItemHandler().getInventory()) {
-            if (slot.getConfig() == null) {
-                slot.setStack(null);
-            } else {
-                // Try to fill the slot
-                IAEItemStack request;
-                if (slot.getConfig() instanceof WrappedItemStack wis) {
-                    request = wis.getAEStack();
-                } else {
-                    request = slot.getConfig().copy();
-                }
-                request.setStackSize(Integer.MAX_VALUE);
-                IAEItemStack result = monitor.extractItems(request, Actionable.SIMULATE, getActionSource());
-                slot.setStack(result != null && result.getStackSize() >= stockingConfig.getMinimumStock() ?
-                        result : null);
-            }
-        }
+        stocking.sync();
     }
 
     @Override
@@ -151,21 +81,12 @@ public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
     @Override
     public void addToMultiBlock(MultiblockControllerBase controllerBase) {
         super.addToMultiBlock(controllerBase);
-        // ensure that no other stocking bus on this multiblock is configured to hold the same item.
-        // that we have in our own bus.
-        this.autoPullTest = stack -> !this.testConfiguredInOtherBus(stack);
-        // also ensure that our current config is valid given other inputs
-        validateConfig();
+        stocking.attach();
     }
 
     @Override
     public void removeFromMultiBlock(MultiblockControllerBase controllerBase) {
-        // block auto-pull from working when not in a formed multiblock
-        this.autoPullTest = $ -> false;
-        if (this.autoPull) {
-            // may as well clear if we are auto-pull, no reason to preserve the config
-            this.getAEItemHandler().clearConfig();
-        }
+        stocking.detach();
         super.removeFromMultiBlock(controllerBase);
     }
 
@@ -175,23 +96,7 @@ public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
         if (!getWorld().isRemote && !newValue) {
             // Ensure that our configured items won't match any other buses in the multiblock.
             // Needed since we allow duplicates in distinct mode on, but not off
-            validateConfig();
-        }
-    }
-
-    /**
-     * Test for if any of our configured items are in another stocking bus on the multi
-     * we are attached to. Prevents dupes in certain situations.
-     */
-    private void validateConfig() {
-        for (var slot : this.getAEItemHandler().getInventory()) {
-            if (slot.getConfig() != null) {
-                ItemStack configuredStack = slot.getConfig().createItemStack();
-                if (testConfiguredInOtherBus(configuredStack)) {
-                    slot.setConfig(null);
-                    slot.setStock(null);
-                }
-            }
+            stocking.validateConfig();
         }
     }
 
@@ -221,109 +126,10 @@ public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
         return false;
     }
 
-    private void setAutoPull(boolean autoPull) {
-        setAutoPull(autoPull, true);
-    }
-
-    private void setAutoPull(boolean autoPull, boolean refresh) {
-        this.autoPull = autoPull;
-        markDirty();
-        if (!getWorld().isRemote) {
-            if (!this.autoPull) {
-                this.getAEItemHandler().clearConfig();
-            } else if (refresh) {
-                onConfigPasted();
-            }
-            writeCustomData(UPDATE_AUTO_PULL, buf -> buf.writeBoolean(this.autoPull));
-        }
-    }
-
-    /**
-     * Refresh the configuration list in auto-pull mode.
-     * Sets the config to the first 16 valid items found in the network.
-     */
-    private void refreshList() {
-        IMEMonitor<IAEItemStack> monitor = getMonitor();
-        if (monitor == null) {
-            clearInventory(0);
-            return;
-        }
-
-        IItemList<IAEItemStack> storageList = monitor.getStorageList();
-        if (storageList == null) {
-            clearInventory(0);
-            return;
-        }
-
-        if (stockingConfig.isPreferAbundant()) {
-            refreshAbundant(monitor, storageList);
-            return;
-        }
-
-        int index = 0;
-        for (IAEItemStack stack : storageList) {
-            if (index >= CONFIG_SIZE) break;
-            if (stack.getStackSize() < stockingConfig.getMinimumStock()) continue;
-            stack = monitor.extractItems(stack.copy(), Actionable.SIMULATE, getActionSource());
-            if (stack == null || stack.getStackSize() < stockingConfig.getMinimumStock()) continue;
-
-            ItemStack itemStack = stack.createItemStack();
-            if (itemStack == null || itemStack.isEmpty()) continue;
-            // Ensure that it is valid to configure with this stack
-            if (autoPullTest != null && !autoPullTest.test(itemStack)) continue;
-            IAEItemStack selectedStack = WrappedItemStack.fromItemStack(itemStack);
-            if (selectedStack == null) continue;
-            IAEItemStack configStack = selectedStack.copy().setStackSize(1);
-            var slot = this.getAEItemHandler().getInventory()[index];
-            slot.setConfig(configStack);
-            slot.setStack(selectedStack);
-            index++;
-        }
-
-        clearInventory(index);
-    }
-
-    private void refreshAbundant(IMEMonitor<IAEItemStack> monitor, IItemList<IAEItemStack> storageList) {
-        MEStockingSelection<MEStockingSelection.Candidate<IAEItemStack>> selected = new MEStockingSelection<>(
-                CONFIG_SIZE,
-                Comparator.<MEStockingSelection.Candidate<IAEItemStack>>naturalOrder());
-        for (IAEItemStack stored : storageList) {
-            if (stored.getStackSize() < stockingConfig.getMinimumStock()) continue;
-            IAEItemStack extracted = monitor.extractItems(stored.copy(), Actionable.SIMULATE, getActionSource());
-            if (extracted == null || extracted.getStackSize() < stockingConfig.getMinimumStock()) continue;
-            ItemStack identity = extracted.copy().setStackSize(1).createItemStack();
-            if (identity == null || identity.isEmpty()) continue;
-            if (autoPullTest != null && !autoPullTest.test(identity)) continue;
-            selected.offer(new MEStockingSelection.Candidate<>(extracted.copy(), extracted.getStackSize(),
-                    MEStockingIdentity::item));
-        }
-
-        int index = 0;
-        for (var candidate : selected.sorted()) {
-            IAEItemStack stack = candidate.getStack();
-            var slot = getAEItemHandler().getInventory()[index++];
-            // The config widget decodes the legacy wrapper packet format, not AE2's native format.
-            slot.setConfig(WrappedItemStack.fromItemStack(stack.copy().setStackSize(1).createItemStack()));
-            // Rank using the full AE quantity; only legacy visible stacks need an integer cap.
-            slot.setStack(stack.copy().setStackSize(Math.min(Integer.MAX_VALUE, stack.getStackSize())));
-        }
-        clearInventory(index);
-    }
-
-    private void clearInventory(int startIndex) {
-        for (int i = startIndex; i < CONFIG_SIZE; i++) {
-            var slot = this.getAEItemHandler().getInventory()[i];
-            slot.setConfig(null);
-            slot.setStack(null);
-        }
-    }
-
     @Override
     public void receiveCustomData(int dataId, PacketBuffer buf) {
         super.receiveCustomData(dataId, buf);
-        if (dataId == UPDATE_AUTO_PULL) {
-            this.autoPull = buf.readBoolean();
-        }
+        stocking.receiveCustomData(dataId, buf);
     }
 
     @Override
@@ -334,53 +140,70 @@ public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
     @Override
     protected ModularUI.Builder createUITemplate(EntityPlayer player) {
         ModularUI.Builder builder = super.createUITemplate(player);
-        builder.widget(new ImageCycleButtonWidget(7 + 18 * 4 + 1, 26, 16, 16, GuiTextures.BUTTON_AUTO_PULL,
-                () -> autoPull, this::setAutoPull).setTooltipHoverString("gregtech.gui.me_bus.auto_pull_button"));
-        stockingConfig.addWidgets(builder, false, this::onStockingConfigChanged);
+        stocking.addWidgets(builder, false);
         return builder;
     }
 
     @Override
     public boolean onScrewdriverClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing,
                                       CuboidRayTraceResult hitResult) {
-        if (!getWorld().isRemote) {
-            setAutoPull(!autoPull);
-            if (autoPull) {
-                playerIn.sendStatusMessage(
-                        new TextComponentTranslation("gregtech.machine.me.stocking_auto_pull_enabled"), false);
-            } else {
-                playerIn.sendStatusMessage(
-                        new TextComponentTranslation("gregtech.machine.me.stocking_auto_pull_disabled"), false);
-            }
-        }
-        return true;
+        return stocking.onScrewdriverClick(playerIn);
     }
 
     @Override
     public NBTTagCompound writeToNBT(NBTTagCompound data) {
         super.writeToNBT(data);
-        data.setBoolean("AutoPull", autoPull);
-        stockingConfig.writeToNBT(data);
+        stocking.writeToNBT(data);
         return data;
     }
 
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
-        this.autoPull = data.getBoolean("AutoPull");
-        stockingConfig.readFromNBT(data, false);
+        stocking.readFromNBT(data);
     }
 
     @Override
     public void writeInitialSyncData(PacketBuffer buf) {
         super.writeInitialSyncData(buf);
-        buf.writeBoolean(autoPull);
+        stocking.writeInitialSyncData(buf);
     }
 
     @Override
     public void receiveInitialSyncData(PacketBuffer buf) {
         super.receiveInitialSyncData(buf);
-        this.autoPull = buf.readBoolean();
+        stocking.receiveInitialSyncData(buf);
+    }
+
+    @Override
+    public void addInformation(ItemStack stack, @Nullable World player, @NotNull List<String> tooltip,
+                               boolean advanced) {
+        tooltip.add(I18n.format("gregtech.machine.item_bus.import.tooltip"));
+        tooltip.add(I18n.format("gregtech.machine.me.stocking_item.tooltip"));
+        tooltip.add(I18n.format("gregtech.machine.me_import_item_hatch.configs.tooltip"));
+        tooltip.add(I18n.format("gregtech.machine.me.copy_paste.tooltip"));
+        tooltip.add(I18n.format("gregtech.machine.me.stocking_item.tooltip.2"));
+        tooltip.add(I18n.format("gregtech.machine.me.extra_connections.tooltip"));
+        tooltip.add(I18n.format("gregtech.universal.enabled"));
+    }
+
+    @Override
+    protected NBTTagCompound writeConfigToTag() {
+        NBTTagCompound tag = stocking.writeConfigToTag(super::writeConfigToTag);
+        if (stocking.isAutoPull()) {
+            // the configured slots are not copied in auto-pull, but the ghost circuit still is
+            tag.setByte("GhostCircuit", (byte) this.circuitInventory.getCircuitValue());
+        }
+        return tag;
+    }
+
+    @Override
+    protected void readConfigFromTag(NBTTagCompound tag) {
+        if (!stocking.readConfigFromTag(tag)) {
+            super.readConfigFromTag(tag);
+        } else if (tag.hasKey("GhostCircuit")) {
+            this.setGhostCircuitConfig(tag.getByte("GhostCircuit"));
+        }
     }
 
     private static class ExportOnlyAEStockingItemSlot extends ExportOnlyAEItemSlot {
@@ -408,83 +231,22 @@ public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
 
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
-            if (slot == 0 && this.stock != null) {
-                if (this.config != null) {
-                    // Extract the items from the real net to either validate (simulate)
-                    // or extract (modulate) when this is called
-                    IMEMonitor<IAEItemStack> monitor = holder.getMonitor();
-                    if (monitor == null) return ItemStack.EMPTY;
+            if (slot != 0 || this.stock == null || this.config == null) return ItemStack.EMPTY;
+            // Extract the items from the real net to either validate (simulate)
+            // or extract (modulate) when this is called
+            IAEItemStack result = holder.stocking.extract(this.config, amount, simulate);
+            if (result == null) return ItemStack.EMPTY;
 
-                    Actionable action = simulate ? Actionable.SIMULATE : Actionable.MODULATE;
-                    IAEItemStack request;
-                    if (this.config instanceof WrappedItemStack wis) {
-                        request = wis.getAEStack();
-                    } else {
-                        request = this.config.copy();
-                    }
-                    request.setStackSize(amount);
-
-                    IAEItemStack result = monitor.extractItems(request, action, holder.getActionSource());
-                    if (result != null) {
-                        int extracted = (int) Math.min(result.getStackSize(), amount);
-                        this.stock.decStackSize(extracted); // may as well update the display here
-                        if (this.trigger != null) {
-                            this.trigger.accept(0);
-                        }
-                        if (extracted != 0) {
-                            ItemStack resultStack = this.config.createItemStack();
-                            resultStack.setCount(extracted);
-                            return resultStack;
-                        }
-                    }
-                }
+            int extracted = (int) Math.min(result.getStackSize(), amount);
+            this.stock.decStackSize(extracted); // may as well update the display here
+            if (this.trigger != null) {
+                this.trigger.accept(0);
             }
-            return ItemStack.EMPTY;
+            if (extracted == 0) return ItemStack.EMPTY;
+            ItemStack resultStack = this.config.createItemStack();
+            resultStack.setCount(extracted);
+            return resultStack;
         }
-    }
-
-    @Override
-    public void addInformation(ItemStack stack, @Nullable World player, @NotNull List<String> tooltip,
-                               boolean advanced) {
-        tooltip.add(I18n.format("gregtech.machine.item_bus.import.tooltip"));
-        tooltip.add(I18n.format("gregtech.machine.me.stocking_item.tooltip"));
-        tooltip.add(I18n.format("gregtech.machine.me_import_item_hatch.configs.tooltip"));
-        tooltip.add(I18n.format("gregtech.machine.me.copy_paste.tooltip"));
-        tooltip.add(I18n.format("gregtech.machine.me.stocking_item.tooltip.2"));
-        tooltip.add(I18n.format("gregtech.machine.me.extra_connections.tooltip"));
-        tooltip.add(I18n.format("gregtech.universal.enabled"));
-    }
-
-    @Override
-    protected NBTTagCompound writeConfigToTag() {
-        if (!autoPull) {
-            NBTTagCompound tag = super.writeConfigToTag();
-            tag.setBoolean("AutoPull", false);
-            stockingConfig.writeToNBT(tag);
-            return tag;
-        }
-        // if in auto-pull, no need to write actual configured slots, but still need to write the ghost circuit
-        NBTTagCompound tag = new NBTTagCompound();
-        tag.setBoolean("AutoPull", true);
-        stockingConfig.writeToNBT(tag);
-        tag.setByte("GhostCircuit", (byte) this.circuitInventory.getCircuitValue());
-        return tag;
-    }
-
-    @Override
-    protected void readConfigFromTag(NBTTagCompound tag) {
-        stockingConfig.readFromNBT(tag, true);
-        if (tag.getBoolean("AutoPull")) {
-            // if being set to auto-pull, no need to read the configured slots
-            this.setAutoPull(true, false);
-            if (tag.hasKey("GhostCircuit")) {
-                this.setGhostCircuitConfig(tag.getByte("GhostCircuit"));
-            }
-            return;
-        }
-        // set auto pull first to avoid issues with clearing the config after reading from the data stick
-        this.setAutoPull(false, false);
-        super.readConfigFromTag(tag);
     }
 
     private static class ExportOnlyAEStockingItemList extends ExportOnlyAEItemList {
@@ -523,7 +285,7 @@ public class MetaTileEntityMEStockingBus extends MetaTileEntityMEInputBus {
 
         @Override
         public boolean isAutoPull() {
-            return holder.autoPull;
+            return holder.stocking.isAutoPull();
         }
 
         @Override
