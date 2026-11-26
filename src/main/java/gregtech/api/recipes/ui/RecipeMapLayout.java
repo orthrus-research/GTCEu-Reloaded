@@ -1,9 +1,24 @@
 package gregtech.api.recipes.ui;
 
+import gregtech.api.capability.IMultipleTankHandler;
+import gregtech.api.mui.sync.GTFluidSyncHandler;
+import gregtech.api.mui.widget.MachineTankTooltip;
+import gregtech.api.mui.widget.RecipeProgressWidget;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.common.mui.widget.GTFluidSlot;
 
+import net.minecraftforge.fluids.IFluidTank;
+import net.minecraftforge.items.IItemHandlerModifiable;
+
+import com.cleanroommc.modularui.api.drawable.IDrawable;
+import com.cleanroommc.modularui.api.widget.IWidget;
 import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.value.DoubleValue;
+import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widgets.ProgressWidget;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
+import com.cleanroommc.modularui.widgets.slot.ModularSlot;
+import com.cleanroommc.modularui.widgets.slot.SlotGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.UnmodifiableView;
@@ -100,5 +115,68 @@ public final class RecipeMapLayout {
     public @NotNull RecipeMapLayout image(int x, int y, int width, int height, @NotNull UITexture texture) {
         elements.add(new RecipeLayoutImage(x, y, width, height, texture));
         return this;
+    }
+
+    /**
+     * Place this layout on a ModularUI 2 panel as a machine's screen, showing the machine's inventories.
+     * <p>
+     * Input slots take and give items, and items shift-clicked from the player's inventory go to them; output slots
+     * only give items. Input tanks are filled and drained with a held fluid container, output tanks only drained into
+     * one. A progress bar with a recipe map shows the map's recipes in the recipe viewer when clicked.
+     *
+     * @param parent       the panel or widget to place it on
+     * @param importItems  the machine's item inputs
+     * @param exportItems  the machine's item outputs
+     * @param importFluids the machine's input tanks
+     * @param exportFluids the machine's output tanks
+     */
+    public void addWidgets(@NotNull ParentWidget<?> parent, @NotNull IItemHandlerModifiable importItems,
+                           @NotNull IItemHandlerModifiable exportItems, @NotNull IMultipleTankHandler importFluids,
+                           @NotNull IMultipleTankHandler exportFluids) {
+        SlotGroup inputs = new SlotGroup("recipe_inputs", 1, true).setAllowSorting(false);
+        for (RecipeLayoutElement element : elements) {
+            IWidget widget;
+            if (element instanceof RecipeLayoutSlot slot && slot.isFluid()) {
+                IMultipleTankHandler tanks = slot.isOutput() ? exportFluids : importFluids;
+                widget = createTank(slot, tanks.getTankAt(slot.index()).getDelegate());
+            } else if (element instanceof RecipeLayoutSlot slot) {
+                ModularSlot modularSlot = new ModularSlot(slot.isOutput() ? exportItems : importItems, slot.index())
+                        .accessibility(!slot.isOutput(), true);
+                if (!slot.isOutput()) modularSlot.slotGroup(inputs);
+                widget = new ItemSlot()
+                        .slot(modularSlot)
+                        .background(slot.background().toArray(new IDrawable[0]))
+                        .pos(slot.x(), slot.y());
+            } else if (element instanceof RecipeLayoutProgress bar) {
+                widget = createProgressBar(bar);
+            } else {
+                RecipeLayoutImage image = (RecipeLayoutImage) element;
+                widget = image.texture().asWidget().pos(image.x(), image.y()).size(image.width(), image.height());
+            }
+            parent.child(widget);
+        }
+    }
+
+    private static @NotNull GTFluidSlot createTank(@NotNull RecipeLayoutSlot slot, @NotNull IFluidTank tank) {
+        GTFluidSyncHandler syncHandler = GTFluidSlot.sync(tank)
+                .accessibility(true, !slot.isOutput());
+        return new GTFluidSlot()
+                .syncHandler(syncHandler)
+                .background(slot.background().toArray(new IDrawable[0]))
+                .tooltipBuilder(tooltip -> MachineTankTooltip.addDetails(tooltip, syncHandler))
+                .pos(slot.x(), slot.y())
+                .size(RecipeLayoutSlot.SIZE);
+    }
+
+    private static @NotNull ProgressWidget createProgressBar(@NotNull RecipeLayoutProgress bar) {
+        ProgressWidget widget = bar.recipeMap() == null ? new ProgressWidget() :
+                new RecipeProgressWidget(bar.recipeMap());
+        boolean vertical = bar.direction() == ProgressWidget.Direction.UP ||
+                bar.direction() == ProgressWidget.Direction.DOWN;
+        return widget.texture(bar.texture(), vertical ? bar.height() : bar.width())
+                .direction(bar.direction())
+                .value(new DoubleValue.Dynamic(bar.progress(), null))
+                .pos(bar.x(), bar.y())
+                .size(bar.width(), bar.height());
     }
 }

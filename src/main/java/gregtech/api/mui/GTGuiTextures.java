@@ -774,6 +774,9 @@ public class GTGuiTextures {
     public static final UITexture PROGRESS_BAR_FLUID_RIG_DEPLETION = progressBar(
             "textures/gui/progress_bar/progress_bar_fluid_rig_depletion.png", 190, 14);
 
+    // RECIPE MACHINE SCREENS
+    public static final UITexture INFO_ICON = fullImage("textures/gui/widget/information.png");
+
     // MISC
 
     public static void init() {/**/}
