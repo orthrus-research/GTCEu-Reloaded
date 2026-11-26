@@ -172,10 +172,11 @@ public class SimpleItemFilterReader extends BaseFilterReader implements IItemHan
     public void deserializeNBT(NBTTagCompound nbt) {
         super.deserializeNBT(nbt);
 
+        // the keys say that the filter respects damage and NBT, as serializeNBT writes them
         if (nbt.hasKey(RESPECT_DAMAGE))
-            this.setIgnoreDamage(nbt.getBoolean(RESPECT_DAMAGE));
+            this.setIgnoreDamage(!nbt.getBoolean(RESPECT_DAMAGE));
 
         if (nbt.hasKey(RESPECT_NBT))
-            this.setIgnoreNBT(nbt.getBoolean(RESPECT_NBT));
+            this.setIgnoreNBT(!nbt.getBoolean(RESPECT_NBT));
     }
 }
