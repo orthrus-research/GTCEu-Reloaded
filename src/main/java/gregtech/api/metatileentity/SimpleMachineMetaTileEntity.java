@@ -28,6 +28,7 @@ import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.items.toolitem.ToolActionHints;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.client.particle.IMachineParticleEffect;
@@ -93,8 +94,6 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     protected IFluidHandler outputFluidInventory;
 
     private IItemHandlerModifiable actualImportItems;
-
-    private static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
 
     @Nullable // particle run every tick when the machine is active
     protected final IMachineParticleEffect tickingParticle;
@@ -687,16 +686,9 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
     }
 
     protected ModularUI.Builder createGuiTemplate(EntityPlayer player) {
-        RecipeMap<?> workableRecipeMap = workable.getRecipeMap();
-        int yOffset = 0;
-        if (workableRecipeMap.getMaxInputs() >= 6 || workableRecipeMap.getMaxFluidInputs() >= 6 ||
-                workableRecipeMap.getMaxOutputs() >= 6 || workableRecipeMap.getMaxFluidOutputs() >= 6) {
-            yOffset = FONT_HEIGHT;
-        }
-
-        ModularUI.Builder builder = workableRecipeMap.getRecipeMapUI()
-                .createUITemplate(workable::getProgressPercent, importItems, exportItems, importFluids, exportFluids,
-                        yOffset)
+        int yOffset = getRecipeLayoutOffset();
+        ModularUI.Builder builder = RecipeMapUI.createLegacyUITemplate(
+                createRecipeLayout(workable::getProgressPercent), importItems, exportItems, importFluids, exportFluids)
                 .widget(new LabelWidget(5, 5, getMetaFullName()))
                 .widget(new SlotWidget(chargerInventory, 0, 79, 62 + yOffset, true, true, false)
                         .setBackgroundTexture(GuiTextures.SLOT, GuiTextures.CHARGER_OVERLAY)

@@ -11,6 +11,7 @@ import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.multiblock.ICleanroomProvider;
 import gregtech.api.metatileentity.multiblock.ICleanroomReceiver;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.RecipeMapLayout;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.renderer.ICubeRenderer;
 
@@ -34,10 +35,13 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 
 public abstract class WorkableTieredMetaTileEntity extends TieredMetaTileEntity
                                                    implements IDataInfoProvider, ICleanroomReceiver {
+
+    private static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
 
     protected final AbstractRecipeLogic workable;
     protected final RecipeMap<?> recipeMap;
@@ -147,6 +151,27 @@ public abstract class WorkableTieredMetaTileEntity extends TieredMetaTileEntity
         if (workable.getRecipeMap().getMaxFluidInputs() != 0)
             tooltip.add(I18n.format("gregtech.universal.tooltip.fluid_storage_capacity",
                     this.tankScalingFunction.apply(getTier())));
+    }
+
+    /**
+     * Lay out this machine's screen as its recipe map does: its slots and tanks, the map's progress bar and its image.
+     *
+     * @param progress the progress the bar shows, from 0 to 1
+     * @return the layout
+     */
+    protected @NotNull RecipeMapLayout createRecipeLayout(@NotNull DoubleSupplier progress) {
+        return workable.getRecipeMap().getRecipeMapUI().createLayout(progress, importItems.getSlots(),
+                exportItems.getSlots(), importFluids.getTanks(), exportFluids.getTanks(), getRecipeLayoutOffset());
+    }
+
+    /**
+     * @return how far this machine's screen is moved down: a line of text when its recipe map takes or gives six or
+     *         more of a kind, which a recipe viewer lists properties in
+     */
+    protected int getRecipeLayoutOffset() {
+        RecipeMap<?> map = workable.getRecipeMap();
+        return map.getMaxInputs() >= 6 || map.getMaxFluidInputs() >= 6 || map.getMaxOutputs() >= 6 ||
+                map.getMaxFluidOutputs() >= 6 ? FONT_HEIGHT : 0;
     }
 
     public Function<Integer, Integer> getTankScalingFunction() {

@@ -1,73 +1,67 @@
 package gregtech.api.recipes.ui.impl;
 
-import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.resources.TextureArea;
-import gregtech.api.gui.widgets.ProgressWidget;
-import gregtech.api.gui.widgets.SlotWidget;
-import gregtech.api.gui.widgets.TankWidget;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.RecipeMapLayout;
 import gregtech.api.recipes.ui.RecipeMapUI;
+import gregtech.api.util.function.impl.TimedProgressSupplier;
 
-import net.minecraftforge.items.IItemHandlerModifiable;
-
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.widgets.ProgressWidget.Direction;
 import org.jetbrains.annotations.NotNull;
 
 public class DistillationTowerUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
+
+    /** The output tanks the beaker overlays are drawn under, which cycle through three beakers. */
+    private static final int BEAKER_TANKS = 12;
 
     public DistillationTowerUI(@NotNull R recipeMap) {
         super(recipeMap, true, true, true, false, false);
     }
 
     @Override
-    protected void addSlot(ModularUI.Builder builder, int x, int y, int slotIndex, IItemHandlerModifiable itemHandler,
-                           FluidTankList fluidHandler, boolean isFluid, boolean isOutputs) {
+    protected void addSlot(@NotNull RecipeMapLayout layout, int x, int y, int slotIndex, int itemCount,
+                           int fluidCount, boolean isFluid, boolean isOutputs) {
         if (isFluid) {
-            TankWidget tankWidget = new TankWidget(fluidHandler.getTankAt(slotIndex), x, y, 18, 18);
-            TextureArea base = GuiTextures.FLUID_SLOT;
-
+            UITexture overlay;
             if (!isOutputs)
-                tankWidget.setBackgroundTexture(base, GuiTextures.BEAKER_OVERLAY_1);
-            else if (slotIndex == 0 || slotIndex == 3 || slotIndex == 6 || slotIndex == 9)
-                tankWidget.setBackgroundTexture(base, GuiTextures.BEAKER_OVERLAY_2);
-            else if (slotIndex == 1 || slotIndex == 4 || slotIndex == 7 || slotIndex == 10)
-                tankWidget.setBackgroundTexture(base, GuiTextures.BEAKER_OVERLAY_3);
-            else if (slotIndex == 2 || slotIndex == 5 || slotIndex == 8 || slotIndex == 11)
-                tankWidget.setBackgroundTexture(base, GuiTextures.BEAKER_OVERLAY_4);
+                overlay = GTGuiTextures.BEAKER_OVERLAY_1;
+            else if (slotIndex >= BEAKER_TANKS)
+                overlay = null;
+            else if (slotIndex % 3 == 0)
+                overlay = GTGuiTextures.BEAKER_OVERLAY_2;
+            else if (slotIndex % 3 == 1)
+                overlay = GTGuiTextures.BEAKER_OVERLAY_3;
+            else
+                overlay = GTGuiTextures.BEAKER_OVERLAY_4;
 
-            tankWidget.setAlwaysShowFull(true);
-            builder.widget(tankWidget);
+            if (overlay == null) {
+                layout.slot(isOutputs, true, slotIndex, x, y);
+            } else {
+                layout.slot(isOutputs, true, slotIndex, x, y, GTGuiTextures.FLUID_SLOT, overlay);
+            }
         } else {
-            SlotWidget slotWidget = new SlotWidget(itemHandler, slotIndex, x, y, true, !isOutputs);
-            TextureArea base = GuiTextures.SLOT;
-
-            slotWidget.setBackgroundTexture(base, GuiTextures.DUST_OVERLAY);
-
-            builder.widget(slotWidget);
+            layout.slot(isOutputs, false, slotIndex, x, y, GTGuiTextures.SLOT, GTGuiTextures.DUST_OVERLAY);
         }
     }
 
     @Override
-    public ModularUI.Builder createJeiUITemplate(IItemHandlerModifiable importItems, IItemHandlerModifiable exportItems,
-                                                 FluidTankList importFluids, FluidTankList exportFluids, int yOffset) {
-        ModularUI.Builder builder = ModularUI.defaultBuilder(yOffset);
-        builder.widget(new ProgressWidget(200, 47, 8, 66, 58, GuiTextures.PROGRESS_BAR_DISTILLATION_TOWER,
-                ProgressWidget.MoveType.HORIZONTAL));
-        addInventorySlotGroup(builder, importItems, importFluids, false, 9);
-        addInventorySlotGroup(builder, exportItems, exportFluids, true, 9);
-        if (specialTexture() != null && specialTexturePosition() != null) {
-            addSpecialTexture(builder);
-        }
-        return builder;
+    public @NotNull RecipeMapLayout createJeiLayout(int importItems, int exportItems, int importFluids,
+                                                    int exportFluids) {
+        RecipeMapLayout layout = new RecipeMapLayout(WIDTH, HEIGHT)
+                .progressBar(47, 8, 66, 58, GTGuiTextures.PROGRESS_BAR_DISTILLATION_TOWER, Direction.RIGHT,
+                        new TimedProgressSupplier(VIEWER_PROGRESS_TICKS, 66, false), null);
+        addInventorySlotGroup(layout, importItems, importFluids, false, 9);
+        addInventorySlotGroup(layout, exportItems, exportFluids, true, 9);
+        addSpecialTexture(layout);
+        return layout;
     }
 
     @Override
-    protected void addInventorySlotGroup(@NotNull ModularUI.Builder builder,
-                                         @NotNull IItemHandlerModifiable itemHandler,
-                                         @NotNull FluidTankList fluidHandler, boolean isOutputs, int yOffset) {
-        int itemInputsCount = itemHandler.getSlots();
-        int fluidInputsCount = fluidHandler.getTanks();
+    protected void addInventorySlotGroup(@NotNull RecipeMapLayout layout, int itemCount, int fluidCount,
+                                         boolean isOutputs, int yOffset) {
+        int itemInputsCount = itemCount;
+        int fluidInputsCount = fluidCount;
         boolean invertFluids = false;
         if (itemInputsCount == 0) {
             int tmp = itemInputsCount;
@@ -80,14 +74,14 @@ public class DistillationTowerUI<R extends RecipeMap<?>> extends RecipeMapUI<R> 
         int itemSlotsToDown = inputSlotGrid[1];
         int startInputsX = isOutputs ? 104 : 68 - itemSlotsToLeft * 18;
         int startInputsY = 55 - (int) (itemSlotsToDown / 2.0 * 18) + yOffset;
-        boolean wasGroupOutput = itemHandler.getSlots() + fluidHandler.getTanks() == 12;
+        boolean wasGroupOutput = itemCount + fluidCount == 12;
         if (wasGroupOutput && isOutputs) startInputsY -= 9;
-        if (itemHandler.getSlots() == 6 && fluidHandler.getTanks() == 2 && !isOutputs) startInputsY -= 9;
+        if (itemCount == 6 && fluidCount == 2 && !isOutputs) startInputsY -= 9;
         if (!isOutputs) {
-            addSlot(builder, 40, startInputsY + (itemSlotsToDown - 1) * 18 - 18, 0, itemHandler, fluidHandler,
+            addSlot(layout, 40, startInputsY + (itemSlotsToDown - 1) * 18 - 18, 0, itemCount, fluidCount,
                     invertFluids, false);
         } else {
-            addSlot(builder, 94, startInputsY + (itemSlotsToDown - 1) * 18, 0, itemHandler, fluidHandler, invertFluids,
+            addSlot(layout, 94, startInputsY + (itemSlotsToDown - 1) * 18, 0, itemCount, fluidCount, invertFluids,
                     true);
         }
 
@@ -105,7 +99,7 @@ public class DistillationTowerUI<R extends RecipeMap<?>> extends RecipeMapUI<R> 
             for (int i = 0; i < fluidInputsCount; i++) {
                 int x = startInputsX + 18 * (i % 3);
                 int y = startSpecY - (i / 3) * 18;
-                addSlot(builder, x, y, i, itemHandler, fluidHandler, true, true);
+                addSlot(layout, x, y, i, itemCount, fluidCount, true, true);
             }
         }
     }

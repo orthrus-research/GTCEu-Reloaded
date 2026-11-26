@@ -1,14 +1,12 @@
 package gregtech.api.recipes.ui.impl;
 
-import gregtech.api.capability.impl.FluidTankList;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.ProgressWidget;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.RecipeMapLayout;
 import gregtech.api.recipes.ui.RecipeMapUI;
+import gregtech.api.util.function.impl.TimedProgressSupplier;
 
-import net.minecraftforge.items.IItemHandlerModifiable;
-
+import com.cleanroommc.modularui.widgets.ProgressWidget.Direction;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,14 +21,14 @@ public class CokeOvenUI<R extends RecipeMap<?>> extends RecipeMapUI<R> {
     }
 
     @Override
-    public ModularUI.Builder createJeiUITemplate(IItemHandlerModifiable importItems, IItemHandlerModifiable exportItems,
-                                                 FluidTankList importFluids, FluidTankList exportFluids, int yOffset) {
-        ModularUI.Builder builder = ModularUI.builder(GuiTextures.BACKGROUND, 176, 100)
-                .widget(new ProgressWidget(200, 70, 19, 36, 18, GuiTextures.PROGRESS_BAR_COKE_OVEN,
-                        ProgressWidget.MoveType.HORIZONTAL));
-        addSlot(builder, 52, 10, 0, importItems, null, false, false);
-        addSlot(builder, 106, 10, 0, exportItems, null, false, true);
-        addSlot(builder, 106, 28, 0, null, exportFluids, true, true);
-        return builder;
+    public @NotNull RecipeMapLayout createJeiLayout(int importItems, int exportItems, int importFluids,
+                                                    int exportFluids) {
+        RecipeMapLayout layout = new RecipeMapLayout(WIDTH, 100)
+                .progressBar(70, 19, 36, 18, GTGuiTextures.PROGRESS_BAR_COKE_OVEN, Direction.RIGHT,
+                        new TimedProgressSupplier(VIEWER_PROGRESS_TICKS, 36, false), null);
+        addSlot(layout, 52, 10, 0, importItems, importFluids, false, false);
+        addSlot(layout, 106, 10, 0, exportItems, exportFluids, false, true);
+        addSlot(layout, 106, 28, 0, exportItems, exportFluids, true, true);
+        return layout;
     }
 }

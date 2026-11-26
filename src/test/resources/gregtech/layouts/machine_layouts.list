@@ -1,0 +1,308 @@
+# The recipe map layout of each kind of simple machine and generator screen: its map, the item slots and tanks it
+# shows on each side and how far its slots are moved down, then each slot, tank, progress bar and image. Recorded
+# from the screens of the old GUI system before they moved to ModularUI 2; RecipeMachineLayoutTest compares the
+# layouts of every registered machine with it exactly, and writes the layouts it found under build/layouts.
+machine alloy_smelter items 2/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/furnace_overlay_1.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/furnace_overlay_1.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine arc_furnace items 1/4 fluids 1/1 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_arc_furnace.png RIGHT recipes
+  item in 0 at 52,33 18x18 [gregtech:textures/gui/base/slot.png]
+  fluid in 0 at 34,33 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 2 at 106,42 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 3 at 124,42 18x18 [gregtech:textures/gui/base/slot.png]
+  fluid out 0 at 142,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine arc_furnace items 1/9 fluids 1/1 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_arc_furnace.png RIGHT recipes
+  item in 0 at 52,33 18x18 [gregtech:textures/gui/base/slot.png]
+  fluid in 0 at 34,33 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 1 at 124,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 2 at 142,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 3 at 106,33 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 4 at 124,33 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 5 at 142,33 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 6 at 106,51 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 7 at 124,51 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 8 at 142,51 18x18 [gregtech:textures/gui/base/slot.png]
+  fluid out 0 at 106,69 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine assembler items 9/1 fluids 1/0 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_circuit.png RIGHT recipes
+  item in 0 at 16,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 1 at 34,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 2 at 52,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 3 at 16,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 4 at 34,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 5 at 52,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 6 at 16,51 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 7 at 34,51 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 8 at 52,51 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  fluid in 0 at 52,69 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,33 18x18 [gregtech:textures/gui/base/slot.png]
+machine autoclave items 2/2 fluids 1/1 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_crystallization.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  fluid in 0 at 16,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crystal_overlay.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crystal_overlay.png]
+  fluid out 0 at 142,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine bender items 2/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_bending.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/bender_overlay.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/int_circuit_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine brewery items 1/0 fluids 1/1 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow_multiple.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/brewer_overlay.png]
+  fluid in 0 at 34,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 0 at 106,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine canner items 2/2 fluids 1/1 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_canner.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/canner_overlay.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/canister_overlay.png]
+  fluid in 0 at 16,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/dark_canister_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/canister_overlay.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/canister_overlay.png]
+  fluid out 0 at 142,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/dark_canister_overlay.png]
+machine centrifuge items 2/6 fluids 1/6 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_extract.png RIGHT recipes
+  item in 0 at 34,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/extractor_overlay.png]
+  item in 1 at 52,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/canister_overlay.png]
+  fluid in 0 at 16,33 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/centrifuge_overlay.png]
+  item out 0 at 106,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 1 at 124,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 2 at 142,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 3 at 106,33 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 4 at 124,33 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 5 at 142,33 18x18 [gregtech:textures/gui/base/slot.png]
+  fluid out 0 at 106,53 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 1 at 124,53 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 2 at 142,53 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 3 at 106,71 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 4 at 124,71 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 5 at 142,71 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine chemical_bath items 1/6 fluids 1/1 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_mixer.png CIRCULAR_CW recipes
+  item in 0 at 52,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/brewer_overlay.png]
+  fluid in 0 at 34,33 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 2 at 142,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 3 at 106,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 4 at 124,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 5 at 142,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  fluid out 0 at 106,60 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine chemical_reactor items 2/2 fluids 3/2 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow_multiple.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/molecular_overlay_1.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/molecular_overlay_2.png]
+  fluid in 0 at 52,42 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/molecular_overlay_3.png]
+  fluid in 1 at 34,42 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/molecular_overlay_3.png]
+  fluid in 2 at 16,42 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/molecular_overlay_4.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/vial_overlay_1.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/vial_overlay_1.png]
+  fluid out 0 at 106,42 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/vial_overlay_2.png]
+  fluid out 1 at 124,42 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/vial_overlay_2.png]
+machine circuit_assembler items 6/1 fluids 1/0 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_circuit_assembler.png RIGHT recipes
+  item in 0 at 16,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 1 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 2 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 3 at 16,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 4 at 34,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  item in 5 at 52,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/circuit_overlay.png]
+  fluid in 0 at 52,60 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,33 18x18 [gregtech:textures/gui/base/slot.png]
+machine combustion_generator items 0/0 fluids 1/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow_multiple.png RIGHT recipes
+  fluid in 0 at 52,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/furnace_overlay_2.png]
+machine compressor items 1/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_compress.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/compressor_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine cutter items 1/2 fluids 1/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_slice.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/sawblade_overlay.png]
+  fluid in 0 at 34,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/cutter_overlay.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+machine distillery items 1/1 fluids 1/1 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow_multiple.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/int_circuit_overlay.png]
+  fluid in 0 at 34,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/beaker_overlay_1.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  fluid out 0 at 124,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/beaker_overlay_4.png]
+machine electric_furnace items 1/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/furnace_overlay_1.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine electrolyzer items 2/6 fluids 1/6 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_extract.png RIGHT recipes
+  item in 0 at 34,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/lightning_overlay_1.png]
+  item in 1 at 52,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/canister_overlay.png]
+  fluid in 0 at 16,33 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/lightning_overlay_2.png]
+  item out 0 at 106,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 1 at 124,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 2 at 142,15 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 3 at 106,33 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 4 at 124,33 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 5 at 142,33 18x18 [gregtech:textures/gui/base/slot.png]
+  fluid out 0 at 106,53 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 1 at 124,53 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 2 at 142,53 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 3 at 106,71 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 4 at 124,71 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid out 5 at 142,71 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine electromagnetic_separator items 1/4 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_magnet.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item out 0 at 106,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 1 at 124,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 2 at 106,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 3 at 124,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+machine extractor items 1/1 fluids 0/1 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_extract.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/extractor_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+  fluid out 0 at 124,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine extruder items 2/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_extruder.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/mold_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine fermenter items 1/1 fluids 1/1 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  fluid in 0 at 34,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  fluid out 0 at 124,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine fluid_heater items 1/0 fluids 1/1 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/int_circuit_overlay.png]
+  fluid in 0 at 34,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/heating_overlay_1.png]
+  fluid out 0 at 106,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/heating_overlay_2.png]
+machine fluid_solidifier items 1/1 fluids 1/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/solidifier_overlay.png]
+  fluid in 0 at 34,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine forge_hammer items 1/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_hammer.png DOWN recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/hammer_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+  image at 78,42 20x6 gregtech:textures/gui/progress_bar/progress_bar_hammer_base.png
+machine forming_press items 6/1 fluids 0/0 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_compress.png RIGHT recipes
+  item in 0 at 16,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/press_overlay_2.png]
+  item in 1 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/press_overlay_4.png]
+  item in 2 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/press_overlay_1.png]
+  item in 3 at 16,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/press_overlay_2.png]
+  item in 4 at 34,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/press_overlay_4.png]
+  item in 5 at 52,42 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/press_overlay_1.png]
+  item out 0 at 106,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/press_overlay_3.png]
+machine gas_collector items 1/0 fluids 0/1 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_gas_collector.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/int_circuit_overlay.png]
+  fluid out 0 at 106,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/centrifuge_overlay.png]
+machine gas_turbine items 0/0 fluids 1/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_gas_collector.png RIGHT recipes
+  fluid in 0 at 52,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/dark_canister_overlay.png]
+machine laser_engraver items 2/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/lens_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine lathe items 1/2 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_lathe.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/pipe_overlay_1.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/pipe_overlay_2.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  image at 98,24 5x18 gregtech:textures/gui/progress_bar/progress_bar_lathe_base.png
+machine macerator items 1/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_macerate.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+machine macerator items 1/3 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_macerate.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 2 at 142,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+machine macerator items 1/4 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_macerate.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item out 0 at 106,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 1 at 124,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 2 at 106,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 3 at 124,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+machine mixer items 6/1 fluids 2/1 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_mixer.png CIRCULAR_CW recipes
+  item in 0 at 16,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item in 1 at 34,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item in 2 at 52,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item in 3 at 16,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item in 4 at 34,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item in 5 at 52,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  fluid in 0 at 52,51 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  fluid in 1 at 34,51 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  fluid out 0 at 124,33 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+machine ore_washer items 2/3 fluids 1/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_bath.png CIRCULAR_CW recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  fluid in 0 at 16,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 2 at 142,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+machine packer items 2/2 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_unpacker.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/box_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/boxed_overlay.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/boxed_overlay.png]
+machine polarizer items 1/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_magnet.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine rock_breaker items 1/4 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_macerate.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 0 at 106,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item out 1 at 124,15 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item out 2 at 106,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item out 3 at 124,33 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+machine scanner items 2/1 fluids 1/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_arrow.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/data_orb_overlay.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/scanner_overlay.png]
+  fluid in 0 at 16,24 18x18 [gregtech:textures/gui/base/fluid_slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+machine sifter items 1/6 fluids 0/0 offset 9
+  progress at 78,32 20x20 gregtech:textures/gui/progress_bar/progress_bar_sift.png DOWN recipes
+  item in 0 at 52,33 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 2 at 142,24 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 3 at 106,42 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 4 at 124,42 18x18 [gregtech:textures/gui/base/slot.png]
+  item out 5 at 142,42 18x18 [gregtech:textures/gui/base/slot.png]
+machine steam_turbine items 0/0 fluids 1/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_gas_collector.png RIGHT recipes
+  fluid in 0 at 52,24 18x18 [gregtech:textures/gui/base/fluid_slot.png, gregtech:textures/gui/overlay/centrifuge_overlay.png]
+machine thermal_centrifuge items 1/3 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_macerate.png RIGHT recipes
+  item in 0 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/crushed_ore_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 1 at 124,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+  item out 2 at 142,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/dust_overlay.png]
+machine wiremill items 2/1 fluids 0/0 offset 0
+  progress at 78,23 20x20 gregtech:textures/gui/progress_bar/progress_bar_wiremill.png RIGHT recipes
+  item in 0 at 34,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/wiremill_overlay.png]
+  item in 1 at 52,24 18x18 [gregtech:textures/gui/base/slot.png, gregtech:textures/gui/overlay/int_circuit_overlay.png]
+  item out 0 at 106,24 18x18 [gregtech:textures/gui/base/slot.png]

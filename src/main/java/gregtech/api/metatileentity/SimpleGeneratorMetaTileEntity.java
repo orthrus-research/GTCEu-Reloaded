@@ -11,6 +11,8 @@ import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.widgets.LabelWidget;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.recipes.RecipeMap;
+import gregtech.api.recipes.ui.RecipeMapLayout;
+import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.PipelineUtil;
@@ -32,11 +34,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 
 public class SimpleGeneratorMetaTileEntity extends WorkableTieredMetaTileEntity implements IActiveOutputSide {
-
-    private static final int FONT_HEIGHT = 9; // Minecraft's FontRenderer FONT_HEIGHT value
 
     public SimpleGeneratorMetaTileEntity(ResourceLocation metaTileEntityId, RecipeMap<?> recipeMap,
                                          ICubeRenderer renderer, int tier,
@@ -95,24 +96,18 @@ public class SimpleGeneratorMetaTileEntity extends WorkableTieredMetaTileEntity 
         return super.getCapability(capability, side);
     }
 
+    @Override
+    protected @NotNull RecipeMapLayout createRecipeLayout(@NotNull DoubleSupplier progress) {
+        if (handlesRecipeOutputs) return super.createRecipeLayout(progress);
+        return workable.getRecipeMap().getRecipeMapUI().createLayout(progress, importItems.getSlots(), 0,
+                importFluids.getTanks(), 0, getRecipeLayoutOffset());
+    }
+
     protected ModularUI.Builder createGuiTemplate(EntityPlayer player) {
-        RecipeMap<?> workableRecipeMap = workable.getRecipeMap();
-        int yOffset = 0;
-        if (workableRecipeMap.getMaxInputs() >= 6 || workableRecipeMap.getMaxFluidInputs() >= 6 ||
-                workableRecipeMap.getMaxOutputs() >= 6 || workableRecipeMap.getMaxFluidOutputs() >= 6)
-            yOffset = FONT_HEIGHT;
-
-        ModularUI.Builder builder;
-        if (handlesRecipeOutputs)
-            builder = workableRecipeMap.getRecipeMapUI().createUITemplate(workable::getProgressPercent,
-                    importItems, exportItems, importFluids, exportFluids, yOffset);
-        else builder = workableRecipeMap.getRecipeMapUI().createUITemplateNoOutputs(workable::getProgressPercent,
-                importItems,
-                exportItems, importFluids, exportFluids, yOffset);
-        builder.widget(new LabelWidget(6, 6, getMetaFullName()))
-                .bindPlayerInventory(player.inventory, GuiTextures.SLOT, yOffset);
-
-        return builder;
+        return RecipeMapUI.createLegacyUITemplate(createRecipeLayout(workable::getProgressPercent), importItems,
+                exportItems, importFluids, exportFluids)
+                .widget(new LabelWidget(6, 6, getMetaFullName()))
+                .bindPlayerInventory(player.inventory, GuiTextures.SLOT, getRecipeLayoutOffset());
     }
 
     @Override

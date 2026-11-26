@@ -1,13 +1,13 @@
 package gregtech.api.recipes;
 
-import gregtech.api.gui.resources.TextureArea;
-import gregtech.api.gui.widgets.ProgressWidget;
 import gregtech.api.recipes.ui.RecipeMapUI;
 import gregtech.api.recipes.ui.RecipeMapUIFunction;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
 
+import com.cleanroommc.modularui.drawable.UITexture;
+import com.cleanroommc.modularui.widgets.ProgressWidget;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectArrayMap;
 import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -23,7 +23,7 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     private final String unlocalizedName;
     private final B defaultRecipeBuilder;
 
-    private final Byte2ObjectMap<TextureArea> slotOverlays = new Byte2ObjectArrayMap<>();
+    private final Byte2ObjectMap<UITexture> slotOverlays = new Byte2ObjectArrayMap<>();
 
     private int itemInputs;
     private boolean modifyItemInputs = true;
@@ -36,10 +36,10 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
 
     private boolean isGenerator;
 
-    private @Nullable TextureArea progressBar;
-    private @Nullable ProgressWidget.MoveType moveType;
+    private @Nullable UITexture progressBar;
+    private @Nullable ProgressWidget.Direction progressDirection;
 
-    private @Nullable TextureArea specialTexture;
+    private @Nullable UITexture specialTexture;
     private int @Nullable [] specialTextureLocation;
 
     private RecipeMapUIFunction recipeMapUIFunction = this::buildUI;
@@ -143,23 +143,23 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
     }
 
     /**
-     * @param progressBar the progress bar texture to use
+     * @param progressBar the progress bar texture to use: the empty bar above the full one
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable TextureArea progressBar) {
+    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable UITexture progressBar) {
         this.progressBar = progressBar;
         return this;
     }
 
     /**
-     * @param progressBar the progress bar texture to use
-     * @param moveType    the progress bar move type to use
+     * @param progressBar the progress bar texture to use: the empty bar above the full one
+     * @param direction   the direction the progress bar fills in
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable TextureArea progressBar,
-                                                    @Nullable ProgressWidget.MoveType moveType) {
+    public @NotNull RecipeMapBuilder<B> progressBar(@Nullable UITexture progressBar,
+                                                    @Nullable ProgressWidget.Direction direction) {
         this.progressBar = progressBar;
-        this.moveType = moveType;
+        this.progressDirection = direction;
         return this;
     }
 
@@ -168,7 +168,7 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
      * @param isOutput if the slot is an output slot
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull TextureArea texture, boolean isOutput) {
+    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull UITexture texture, boolean isOutput) {
         this.slotOverlays.put(computeOverlayKey(isOutput, false, false), texture);
         this.slotOverlays.put(computeOverlayKey(isOutput, false, true), texture);
         return this;
@@ -180,7 +180,7 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
      * @param isLastSlot if the slot is the last slot
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull TextureArea texture, boolean isOutput,
+    public @NotNull RecipeMapBuilder<B> itemSlotOverlay(@NotNull UITexture texture, boolean isOutput,
                                                         boolean isLastSlot) {
         this.slotOverlays.put(computeOverlayKey(isOutput, false, isLastSlot), texture);
         return this;
@@ -191,7 +191,7 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
      * @param isOutput if the slot is an output slot
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull TextureArea texture, boolean isOutput) {
+    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull UITexture texture, boolean isOutput) {
         this.slotOverlays.put(computeOverlayKey(isOutput, true, false), texture);
         this.slotOverlays.put(computeOverlayKey(isOutput, true, true), texture);
         return this;
@@ -203,13 +203,13 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
      * @param isLastSlot if the slot is the last slot
      * @return this
      */
-    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull TextureArea texture, boolean isOutput,
+    public @NotNull RecipeMapBuilder<B> fluidSlotOverlay(@NotNull UITexture texture, boolean isOutput,
                                                          boolean isLastSlot) {
         this.slotOverlays.put(computeOverlayKey(isOutput, true, isLastSlot), texture);
         return this;
     }
 
-    public @NotNull RecipeMapBuilder<B> specialTexture(@NotNull TextureArea texture, int x, int y, int width,
+    public @NotNull RecipeMapBuilder<B> specialTexture(@NotNull UITexture texture, int x, int y, int width,
                                                        int height) {
         this.specialTexture = texture;
         this.specialTextureLocation = new int[] { x, y, width, height };
@@ -235,8 +235,8 @@ public class RecipeMapBuilder<B extends RecipeBuilder<B>> {
         if (progressBar != null) {
             ui.setProgressBarTexture(progressBar);
         }
-        if (moveType != null) {
-            ui.setProgressBarMoveType(moveType);
+        if (progressDirection != null) {
+            ui.setProgressBarDirection(progressDirection);
         }
         if (specialTexture != null && specialTextureLocation != null) {
             ui.setSpecialTexture(specialTexture, specialTextureLocation);
