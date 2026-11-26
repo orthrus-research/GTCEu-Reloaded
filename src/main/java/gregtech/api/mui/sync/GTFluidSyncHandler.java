@@ -324,6 +324,10 @@ public class GTFluidSyncHandler extends SyncHandler {
             int step = Integer.signum(data.mouseButton);
             if ((step > 0 && !canFillSlot()) || (step < 0 && !canDrainSlot())) return;
             tryScrollPhantom(new MouseData(data.side, step, data.shift, data.ctrl, data.alt));
+        } else if (id == LOCK_FLUID) {
+            // a fluid dropped from a recipe viewer; it locks only a tank that is not locked yet
+            FluidStack fluid = NetworkUtils.readFluidStack(buf);
+            if (!isPhantom() && !GTUtility.isEmpty(fluid)) lockFluid(fluid);
         }
     }
 

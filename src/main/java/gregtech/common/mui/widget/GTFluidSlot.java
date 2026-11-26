@@ -147,6 +147,8 @@ public final class GTFluidSlot extends Widget<GTFluidSlot> implements Interactab
                     buffer -> NetworkUtils.writeFluidStack(buffer, ingredient));
         } else {
             this.syncHandler.lockFluid(ingredient);
+            this.syncHandler.syncToServer(GTFluidSyncHandler.LOCK_FLUID,
+                    buffer -> NetworkUtils.writeFluidStack(buffer, ingredient));
         }
     }
 
