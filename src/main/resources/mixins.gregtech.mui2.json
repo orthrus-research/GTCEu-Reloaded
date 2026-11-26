@@ -5,6 +5,7 @@
   "minVersion": "0.8",
   "compatibilityLevel": "JAVA_25",
   "injectors": {
+    "defaultRequire": 1,
     "maxShiftBy": 10
   },
   "mixins": [],
