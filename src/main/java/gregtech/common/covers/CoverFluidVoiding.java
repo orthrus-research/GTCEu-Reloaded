@@ -1,8 +1,10 @@
 package gregtech.common.covers;
 
 import gregtech.api.capability.GregtechTileCapabilities;
+import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverableView;
+import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.covers.filter.FluidFilterContainer;
@@ -34,6 +36,9 @@ import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 
 public class CoverFluidVoiding extends CoverPump {
 
@@ -45,6 +50,24 @@ public class CoverFluidVoiding extends CoverPump {
         this.isWorkingAllowed = false;
         this.fluidFilterContainer = new FluidFilterContainer(this);
         this.fluidFilterContainer.setMaxTransferSize(Integer.MAX_VALUE);
+    }
+
+    /**
+     * Keeps this cover without a configuration card, as before: the pump's card was written for the pump's
+     * settings, not this cover's.
+     */
+    @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return null;
+    }
+
+    /**
+     * Keeps this cover without the pump's screwdriver hint, as before. Its screwdriver click is the pump's, so
+     * the hint could be inherited instead.
+     */
+    @Override
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking) {
+        return null;
     }
 
     @Override

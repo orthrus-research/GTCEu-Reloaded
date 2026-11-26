@@ -1,6 +1,8 @@
 package gregtech.common.metatileentities.electric;
 
 import gregtech.api.capability.impl.RecipeLogicEnergy;
+import gregtech.api.configuration.ConfigurationAdapter;
+import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.SimpleMachineMetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -9,8 +11,12 @@ import gregtech.api.recipes.RecipeMaps;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
 
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Set;
 import java.util.function.Function;
 
 public class MetaTileEntityGasCollector extends SimpleMachineMetaTileEntity {
@@ -30,5 +36,17 @@ public class MetaTileEntityGasCollector extends SimpleMachineMetaTileEntity {
     @Override
     protected RecipeLogicEnergy createWorkable(RecipeMap<?> recipeMap) {
         return new RecipeLogicEnergy(this, recipeMap, () -> energyContainer);
+    }
+
+    /** Keeps this machine without a configuration card, as before; the simple-machine card would fit it. */
+    @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return null;
+    }
+
+    /** Keeps this machine without tool hints, as before; its tool clicks are the simple machine's. */
+    @Override
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
+        return null;
     }
 }

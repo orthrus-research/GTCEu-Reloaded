@@ -116,9 +116,12 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
         markDirty();
     }
 
+    /**
+     * Copies this pump's settings with the configuration card. Subclasses inherit it; one with settings of its own, or
+     * that gives these settings another meaning, overrides this to return its own adapter or null.
+     */
     @Override
     public @Nullable ConfigurationAdapter getConfigurationAdapter() {
-        if (getClass() != CoverPump.class) return null;
         return new ScalarConfigurationAdapter("gregtech:pump/1") {
 
             @Override
@@ -364,10 +367,10 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
         return 1;
     }
 
+    /** Subclasses inherit this hint; one that changes what the screwdriver does overrides this. */
     @Override
     public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking) {
-        return getClass() == CoverPump.class && toolClasses.contains(ToolClasses.SCREWDRIVER) ?
-                ToolAction.COVER_SETTINGS : null;
+        return toolClasses.contains(ToolClasses.SCREWDRIVER) ? ToolAction.COVER_SETTINGS : null;
     }
 
     @Override

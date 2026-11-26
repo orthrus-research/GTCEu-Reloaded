@@ -1,8 +1,10 @@
 package gregtech.common.covers;
 
 import gregtech.api.capability.GregtechDataCodes;
+import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverableView;
+import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.covers.filter.SmartItemFilter;
@@ -30,9 +32,11 @@ import com.cleanroommc.modularui.value.sync.StringSyncValue;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class CoverRoboticArm extends CoverConveyor {
 
@@ -44,6 +48,24 @@ public class CoverRoboticArm extends CoverConveyor {
         super(definition, coverableView, attachedSide, tier, itemsPerSecond);
         this.transferMode = TransferMode.TRANSFER_ANY;
         this.itemFilterContainer.setMaxTransferSize(1);
+    }
+
+    /**
+     * Keeps this cover without a configuration card, as before: the conveyor's card was written for the conveyor's
+     * settings, not this cover's.
+     */
+    @Override
+    public @Nullable ConfigurationAdapter getConfigurationAdapter() {
+        return null;
+    }
+
+    /**
+     * Keeps this cover without the conveyor's screwdriver hint, as before. Its screwdriver click is the conveyor's, so
+     * the hint could be inherited instead.
+     */
+    @Override
+    public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking) {
+        return null;
     }
 
     @Override

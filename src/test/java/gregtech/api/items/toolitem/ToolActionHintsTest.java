@@ -201,7 +201,11 @@ class ToolActionHintsTest {
     }
 
     @Test
-    void unknownSubclassChangingARealHandlerDoesNotInheritHints() {
+    void subclassesInheritHintsAndASubclassChangingAHandlerOptsOut() {
+        SimpleMachineMetaTileEntity inherited = attach(new SimpleMachineMetaTileEntity(
+                GTUtility.gregtechId("q5_inherited"), recipeMap, null, 1, true) {});
+        assertEquals(ToolAction.ROTATE_OUTPUT,
+                inherited.getToolActionHint(tools(ToolClasses.WRENCH), false, EnumFacing.EAST));
         SimpleMachineMetaTileEntity custom = attach(new SimpleMachineMetaTileEntity(
                 GTUtility.gregtechId("q5_custom"), recipeMap, null, 1, true) {
 
@@ -209,6 +213,11 @@ class ToolActionHintsTest {
             public boolean onWrenchClick(EntityPlayer player, EnumHand hand, EnumFacing side,
                                          CuboidRayTraceResult hit) {
                 return false;
+            }
+
+            @Override
+            public ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
+                return null;
             }
         });
         for (String tool : tools(ToolClasses.WRENCH, ToolClasses.SCREWDRIVER, ToolClasses.SOFT_MALLET,
@@ -245,9 +254,19 @@ class ToolActionHintsTest {
             public EnumActionResult onScrewdriverClick(EntityPlayer player, EnumHand hand, CuboidRayTraceResult hit) {
                 throw new AssertionError("A hint must not probe a click handler");
             }
+
+            @Override
+            public ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking) {
+                return null;
+            }
         });
         assertNull(machine.getToolActionHint(tools(ToolClasses.SCREWDRIVER), false, EnumFacing.UP));
         assertNull(machine.getToolActionHint(tools(ToolClasses.SOFT_MALLET), false, EnumFacing.UP));
+
+        machine.addCover(EnumFacing.DOWN, new CoverConveyor(conveyorDefinition, machine, EnumFacing.DOWN, 1, 8) {});
+        assertEquals(ToolAction.COVER_SETTINGS,
+                machine.getToolActionHint(tools(ToolClasses.SCREWDRIVER), false, EnumFacing.DOWN),
+                "A cover subclass inherits the screwdriver hint");
     }
 
     @Test

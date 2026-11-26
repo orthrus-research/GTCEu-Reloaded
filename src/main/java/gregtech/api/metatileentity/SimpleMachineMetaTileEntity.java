@@ -158,12 +158,16 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
         return hasFrontFacing;
     }
 
+    /**
+     * Copies this machine's settings with the configuration card. Subclasses inherit it; one with settings of its own,
+     * or that gives these settings another meaning, overrides this to return its own adapter or null.
+     */
     @Override
     public @Nullable ConfigurationAdapter getConfigurationAdapter() {
-        return getClass() == SimpleMachineMetaTileEntity.class ? createSimpleConfigurationAdapter() : null;
+        return createSimpleConfigurationAdapter();
     }
 
-    /** Called only by an implementation explicitly admitting its unchanged simple-machine settings semantics. */
+    /** Creates the simple-machine settings adapter, which an override of getConfigurationAdapter() may return. */
     protected final ConfigurationAdapter createSimpleConfigurationAdapter() {
         return new ScalarConfigurationAdapter("gregtech:simple_machine/1") {
 
@@ -230,11 +234,13 @@ public class SimpleMachineMetaTileEntity extends WorkableTieredMetaTileEntity
         markDirty();
     }
 
+    /**
+     * Describes what this class's tool click handlers do. Subclasses inherit the hints; one that changes how a tool
+     * click is handled overrides this.
+     */
     @Override
     public @Nullable ToolAction getToolActionHint(Set<String> toolClasses, boolean sneaking, EnumFacing side) {
-        // Addon subclasses can change click handling, so they must opt in explicitly.
-        return getClass() == SimpleMachineMetaTileEntity.class ?
-                ToolActionHints.forSimpleMachine(this, toolClasses, sneaking, side) : null;
+        return ToolActionHints.forSimpleMachine(this, toolClasses, sneaking, side);
     }
 
     @Override

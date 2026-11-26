@@ -47,10 +47,13 @@ public class TileEntityItemPipe extends TileEntityMaterialPipeBase<ItemPipeType,
         return hasWorld() ? getWorld().getTotalWorldTime() : 0L;
     }
 
+    /**
+     * Copies this pipe's connections with the configuration card. Subclasses inherit it, including the ticking form;
+     * one that changes how connections open or close overrides this to return null.
+     */
     @Override
     public @Nullable ConfigurationAdapter getConfigurationAdapter() {
-        return getClass() == TileEntityItemPipe.class || getClass() == TileEntityItemPipeTickable.class ?
-                new PipeConfigurationAdapter(this, "gregtech:item_pipe/1") : null;
+        return new PipeConfigurationAdapter(this, "gregtech:item_pipe/1");
     }
 
     @Override

@@ -24,10 +24,13 @@ public class TileEntityFluidPipe extends TileEntityMaterialPipeBase<FluidPipeTyp
     public static final int FREQUENCY = 5;
     private WeakReference<FluidPipeNet> currentPipeNet = new WeakReference<>(null);
 
+    /**
+     * Copies this pipe's connections with the configuration card. Subclasses inherit it, including the ticking form;
+     * one that changes how connections open or close overrides this to return null.
+     */
     @Override
     public ConfigurationAdapter getConfigurationAdapter() {
-        return getClass() == TileEntityFluidPipe.class || getClass() == TileEntityFluidPipeTickable.class ?
-                new PipeConfigurationAdapter(this, "gregtech:fluid_pipe/1") : null;
+        return new PipeConfigurationAdapter(this, "gregtech:fluid_pipe/1");
     }
 
     @Override

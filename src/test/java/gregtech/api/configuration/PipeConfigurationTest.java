@@ -116,8 +116,14 @@ public class PipeConfigurationTest {
         assertThrows(IllegalArgumentException.class, () -> prepare(otherWorld, item, desired));
         ConfigurationTestWorld addonWorld = new ConfigurationTestWorld();
         TileEntityItemPipe admitted = item(addonWorld, CENTER, new TileEntityItemPipe());
-        TileEntityItemPipe unknown = item(addonWorld, CENTER.east(), new TileEntityItemPipe() {});
-        assertNull(unknown.getConfigurationAdapter());
+        assertNotNull(new TileEntityItemPipe() {}.getConfigurationAdapter(), "Pipe subclasses inherit the card");
+        TileEntityItemPipe unknown = item(addonWorld, CENTER.east(), new TileEntityItemPipe() {
+
+            @Override
+            public ConfigurationAdapter getConfigurationAdapter() {
+                return null;
+            }
+        });
         assertThrows(IllegalArgumentException.class, () -> prepare(addonWorld, admitted, desired));
         assertEquals(0, admitted.getConnections());
     }
@@ -207,7 +213,8 @@ public class PipeConfigurationTest {
         assertTrue(prepare(world, local, masks(0, 0)).execute());
         assertEquals(731, local.getFluidTanks()[0].getFluidAmount());
         assertFalse(neighbor.isConnected(EnumFacing.WEST));
-        assertNull(new TileEntityFluidPipe() {}.getConfigurationAdapter());
+        assertNotNull(new TileEntityFluidPipe() {}.getConfigurationAdapter());
+        assertNotNull(new TileEntityFluidPipeTickable().getConfigurationAdapter());
     }
 
     @Test

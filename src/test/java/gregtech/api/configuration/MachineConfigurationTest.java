@@ -12,9 +12,11 @@ import gregtech.api.recipes.builders.SimpleRecipeBuilder;
 import gregtech.api.util.GTUtility;
 import gregtech.common.covers.CoverConveyor;
 import gregtech.common.covers.CoverPump;
+import gregtech.common.covers.CoverRoboticArm;
 import gregtech.common.covers.filter.SimpleFluidFilter;
 import gregtech.common.covers.filter.SimpleItemFilter;
 import gregtech.common.items.MetaItems;
+import gregtech.common.metatileentities.electric.MetaTileEntityGasCollector;
 import gregtech.common.metatileentities.electric.SimpleMachineMetaTileEntityResizable;
 
 import net.minecraft.init.Blocks;
@@ -229,18 +231,29 @@ public class MachineConfigurationTest {
     }
 
     @Test
-    public void unknownMachineAndCoverSubclassesMustExplicitlyOptIn() {
-        SimpleMachineMetaTileEntity unknown = new SimpleMachineMetaTileEntity(
-                GTUtility.gregtechId("configuration_unknown"), recipeMap, null, 1, true) {};
-        assertNull(unknown.getConfigurationAdapter());
+    public void machineAndCoverSubclassesInheritTheCardUnlessTheyOptOut() {
+        SimpleMachineMetaTileEntity inherited = new SimpleMachineMetaTileEntity(
+                GTUtility.gregtechId("configuration_inherited"), recipeMap, null, 1, true) {};
+        assertNotNull(inherited.getConfigurationAdapter());
         SimpleMachineMetaTileEntityResizable resizable = new SimpleMachineMetaTileEntityResizable(
                 GTUtility.gregtechId("configuration_resizable"), recipeMap, 2, 2, null, 2);
         assertNotNull(resizable.getConfigurationAdapter());
+        assertNull(new MetaTileEntityGasCollector(GTUtility.gregtechId("configuration_gas"), recipeMap, null, 1, true,
+                tier -> 16000).getConfigurationAdapter());
         ConfigurationTestWorld world = new ConfigurationTestWorld();
         SimpleMachineMetaTileEntity machine = machine(world, new BlockPos(0, 64, 0));
-        CoverConveyor unknownCover = new CoverConveyor(conveyorDefinition, machine, EnumFacing.EAST, 1, 64) {};
-        assertNull(unknownCover.getConfigurationAdapter());
-        machine.addCover(EnumFacing.EAST, unknownCover);
+        CoverConveyor inheritedCover = new CoverConveyor(conveyorDefinition, machine, EnumFacing.EAST, 1, 64) {};
+        assertNotNull(inheritedCover.getConfigurationAdapter());
+        assertNull(new CoverRoboticArm(conveyorDefinition, machine, EnumFacing.WEST, 1, 64).getConfigurationAdapter(),
+                "The robotic arm keeps its explicit opt-out");
+        CoverConveyor optedOut = new CoverConveyor(conveyorDefinition, machine, EnumFacing.EAST, 1, 64) {
+
+            @Override
+            public ConfigurationAdapter getConfigurationAdapter() {
+                return null;
+            }
+        };
+        machine.addCover(EnumFacing.EAST, optedOut);
         assertThrows(IllegalArgumentException.class, () -> clipboard(machine));
     }
 
