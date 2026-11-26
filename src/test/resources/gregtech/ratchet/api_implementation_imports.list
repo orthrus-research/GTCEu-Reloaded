@@ -52,7 +52,6 @@ gregtech/api/gui/widgets/TankWidget.java gregtech.client.utils.TooltipHelper
 gregtech/api/items/armor/ArmorMetaItem.java gregtech.common.creativetab.GTCreativeTabs
 gregtech/api/items/armor/ArmorUtils.java gregtech.core.sound.GTSoundEvents
 gregtech/api/items/behavior/CoverItemBehavior.java gregtech.core.advancement.AdvancementTriggers
-gregtech/api/items/behavior/MonitorPluginBaseBehavior.java gregtech.common.gui.widget.monitor.WidgetPluginConfig
 gregtech/api/items/behavior/MonitorPluginBaseBehavior.java gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityMonitorScreen
 gregtech/api/items/behavior/MonitorPluginBaseBehavior.java gregtech.core.network.packets.PacketPluginSynced
 gregtech/api/items/materialitem/MetaPrefixItem.java gregtech.common.creativetab.GTCreativeTabs
