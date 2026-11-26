@@ -47,10 +47,12 @@ steps = [["{gradle}", "build", "--console=plain"]]
 # and the mods it requires at runtime, every member by SHA-256 from the worktree's set revision and GTCEuR from the
 # Store by the tree CI built, on Cubature's standalone world (a local creative server on 127.0.0.1 and one offline
 # client whose player is an operator). An open session takes server console lines from its commands.txt and client
-# requests through the drive agent. Fugue is a coremod that must sort before the other mod files.
+# requests through Workbench's drive agent (wbdrive), which stays idle unless the session turns it on with
+# client:-Dwb.driver=true and points client:-Dwb.driver.inbox and client:-Dwb.driver.outbox under the out root, where
+# drive.send writes. Fugue is a coremod that must sort before the other mod files.
 [launch.check]
 members = ["gtceur:mod@both", "orthlib:mod@both", "modularui@both", "codechickenlib@both", "fugue@both",
-           "scalar@both"]
+           "scalar@both", "wbdrive@client"]
 runtime = "cleanroom"
 base = "cubature:standalone"
 place = { "fugue@both" = "+Fugue-0.25.5.jar" }
