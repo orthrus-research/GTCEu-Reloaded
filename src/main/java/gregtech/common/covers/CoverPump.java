@@ -16,6 +16,7 @@ import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
+import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.renderer.texture.cube.SimpleSidedCubeRenderer;
 import gregtech.common.covers.filter.FluidFilterContainer;
@@ -471,11 +472,14 @@ public class CoverPump extends CoverBase implements CoverWithUI, ITickable, ICon
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
         this.transferRate = tagCompound.getInteger("TransferRate");
-        this.pumpMode = PumpMode.VALUES[tagCompound.getInteger("PumpMode")];
-        this.distributionMode = DistributionMode.VALUES[tagCompound.getInteger("DistributionMode")];
+        this.pumpMode = GTUtility.enumByOrdinal(PumpMode.VALUES, tagCompound.getInteger("PumpMode"), PumpMode.EXPORT);
+        this.distributionMode = GTUtility.enumByOrdinal(DistributionMode.VALUES,
+                tagCompound.getInteger("DistributionMode"), DistributionMode.INSERT_FIRST);
         this.isWorkingAllowed = tagCompound.getBoolean("WorkingAllowed");
-        this.manualImportExportMode = ManualImportExportMode.VALUES[tagCompound.getInteger("ManualImportExportMode")];
-        this.bucketMode = BucketMode.VALUES[tagCompound.getInteger("BucketMode")];
+        this.manualImportExportMode = GTUtility.enumByOrdinal(ManualImportExportMode.VALUES,
+                tagCompound.getInteger("ManualImportExportMode"), ManualImportExportMode.DISABLED);
+        this.bucketMode = GTUtility.enumByOrdinal(BucketMode.VALUES, tagCompound.getInteger("BucketMode"),
+                BucketMode.MILLI_BUCKET);
         var filterTag = tagCompound.getCompoundTag("Filter");
         if (filterTag.hasKey("IsBlacklist"))
             this.fluidFilterContainer.handleLegacyNBT(filterTag);

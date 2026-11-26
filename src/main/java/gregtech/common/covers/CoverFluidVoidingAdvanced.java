@@ -4,6 +4,7 @@ import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverableView;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.util.GTTransferUtils;
+import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.covers.filter.CompositeFilter;
 import gregtech.common.covers.filter.CompositeFilterOverflow;
@@ -190,7 +191,8 @@ public class CoverFluidVoidingAdvanced extends CoverFluidVoiding {
 
     @Override
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
-        this.voidingMode = VoidingMode.VALUES[tagCompound.getInteger("VoidingMode")];
+        this.voidingMode = GTUtility.enumByOrdinal(VoidingMode.VALUES, tagCompound.getInteger("VoidingMode"),
+                VoidingMode.VOID_ANY);
         this.fluidFilterContainer.setMaxTransferSize(this.voidingMode.maxStackSize);
         this.transferAmount = tagCompound.getInteger("TransferAmount");
         super.readFromNBT(tagCompound);

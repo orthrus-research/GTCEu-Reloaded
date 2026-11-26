@@ -203,7 +203,8 @@ public class CoverItemFilter extends CoverBase implements CoverWithUI {
     @Override
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
-        this.filterMode = ItemFilterMode.VALUES[tagCompound.getInteger("FilterMode")];
+        this.filterMode = GTUtility.enumByOrdinal(ItemFilterMode.VALUES, tagCompound.getInteger("FilterMode"),
+                ItemFilterMode.FILTER_INSERT);
         if (tagCompound.hasKey("IsBlacklist")) {
             this.itemFilterContainer.setFilterStack(getDefinition().getDropItemStack());
             this.itemFilterContainer.handleLegacyNBT(tagCompound);

@@ -266,6 +266,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | Saves | World accelerators carried over from a world older than the machine ID reallocation keep their tier; before, the reallocation moved them to IDs nothing registers and they became unknown items |
 | Multiblocks | Shift-right-clicking a coke oven with a fluid container opens its screen again |
 | Multiblocks | After a world load, a multiblock that resumes a recipe lists what it is producing, the research station shows what it is researching and the fusion reactor ring takes its product colour; before, all three stayed blank until the next recipe started |
+| Covers | Conveyor, pump, filter, voiding, machine controller and digital interface covers, and the prospector, fall back to their default mode when saved data names a mode that does not exist; before, loading threw and the cover or item lost its data |
 
 ### Earlier fork changes
 

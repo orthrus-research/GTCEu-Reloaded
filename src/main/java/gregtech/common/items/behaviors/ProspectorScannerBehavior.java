@@ -86,7 +86,7 @@ public class ProspectorScannerBehavior implements IItemBehaviour, ItemUIFactory,
             return ProspectorMode.ORE;
         }
         if (tag.hasKey("Mode", Constants.NBT.TAG_INT)) {
-            return ProspectorMode.VALUES[tag.getInteger("Mode")];
+            return GTUtility.enumByOrdinal(ProspectorMode.VALUES, tag.getInteger("Mode"), ProspectorMode.ORE);
         }
         return ProspectorMode.ORE;
     }

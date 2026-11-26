@@ -5,6 +5,7 @@ import gregtech.api.capability.IControllable;
 import gregtech.api.cover.*;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
+import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -299,7 +300,8 @@ public class CoverMachineController extends CoverBase implements CoverWithUI {
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
         this.isInverted = tagCompound.getBoolean("Inverted");
-        this.controllerMode = ControllerMode.VALUES[tagCompound.getInteger("ControllerMode")];
+        this.controllerMode = GTUtility.enumByOrdinal(ControllerMode.VALUES, tagCompound.getInteger("ControllerMode"),
+                ControllerMode.MACHINE);
     }
 
     @Override

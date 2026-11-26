@@ -16,6 +16,7 @@ import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTTransferUtils;
+import gregtech.api.util.GTUtility;
 import gregtech.api.util.ItemStackHashStrategy;
 import gregtech.api.util.ItemTransferException;
 import gregtech.client.renderer.texture.Textures;
@@ -767,10 +768,13 @@ public class CoverConveyor extends CoverBase implements CoverWithUI, ITickable, 
     public void readFromNBT(@NotNull NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
         this.transferRate = tagCompound.getInteger("TransferRate");
-        this.conveyorMode = ConveyorMode.VALUES[tagCompound.getInteger("ConveyorMode")];
-        this.distributionMode = DistributionMode.VALUES[tagCompound.getInteger("DistributionMode")];
+        this.conveyorMode = GTUtility.enumByOrdinal(ConveyorMode.VALUES, tagCompound.getInteger("ConveyorMode"),
+                ConveyorMode.EXPORT);
+        this.distributionMode = GTUtility.enumByOrdinal(DistributionMode.VALUES,
+                tagCompound.getInteger("DistributionMode"), DistributionMode.INSERT_FIRST);
         this.isWorkingAllowed = tagCompound.getBoolean("WorkingAllowed");
-        this.manualImportExportMode = ManualImportExportMode.VALUES[tagCompound.getInteger("ManualImportExportMode")];
+        this.manualImportExportMode = GTUtility.enumByOrdinal(ManualImportExportMode.VALUES,
+                tagCompound.getInteger("ManualImportExportMode"), ManualImportExportMode.DISABLED);
         var filterTag = tagCompound.getCompoundTag("Filter");
         if (filterTag.hasKey("IsBlacklist")) {
             this.itemFilterContainer.handleLegacyNBT(filterTag);

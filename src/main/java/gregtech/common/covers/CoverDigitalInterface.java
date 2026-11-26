@@ -15,6 +15,7 @@ import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuis;
 import gregtech.api.util.GTLog;
+import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.RenderUtil;
@@ -253,7 +254,8 @@ public class CoverDigitalInterface extends CoverBase implements IFastRenderMetaT
     @Override
     public void readFromNBT(NBTTagCompound tagCompound) {
         super.readFromNBT(tagCompound);
-        this.mode = tagCompound.hasKey("cdiMode") ? MODE.VALUES[tagCompound.getByte("cdiMode")] : MODE.PROXY;
+        this.mode = tagCompound.hasKey("cdiMode") ?
+                GTUtility.enumByOrdinal(MODE.VALUES, tagCompound.getByte("cdiMode"), MODE.PROXY) : MODE.PROXY;
         this.spin = tagCompound.hasKey("cdiSpin") ? EnumFacing.byIndex(tagCompound.getByte("cdiSpin")) :
                 EnumFacing.NORTH;
         this.slot = tagCompound.hasKey("cdiSlot") ? tagCompound.getInteger("cdiSlot") : 0;

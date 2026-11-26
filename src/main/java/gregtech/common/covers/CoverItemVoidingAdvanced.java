@@ -3,6 +3,7 @@ package gregtech.common.covers;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.cover.CoverableView;
 import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.common.covers.filter.CompositeFilter;
 import gregtech.common.covers.filter.CompositeFilterOverflow;
@@ -168,7 +169,8 @@ public class CoverItemVoidingAdvanced extends CoverItemVoiding {
 
     @Override
     public void readFromNBT(NBTTagCompound tagCompound) {
-        this.voidingMode = VoidingMode.VALUES[tagCompound.getInteger("VoidMode")];
+        this.voidingMode = GTUtility.enumByOrdinal(VoidingMode.VALUES, tagCompound.getInteger("VoidMode"),
+                VoidingMode.VOID_ANY);
         this.itemFilterContainer.setMaxTransferSize(this.voidingMode.maxStackSize);
         super.readFromNBT(tagCompound);
     }
