@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.Instant;
@@ -140,20 +141,20 @@ public class DownloadThread extends Thread {
     public static byte[] load(String url) throws IOException, FoundVideoException {
         TextureCache.CacheEntry entry = TEXTURE_CACHE.getEntry(url);
         long requestTime = System.currentTimeMillis();
-        // the address comes from another player's monitor: web images only, bounded in time and size
+        // the address comes from another player's monitor: web images outside the player's own network only,
+        // bounded in time and size, and each redirect checked again
         URL address = new URL(url);
-        String protocol = address.getProtocol();
-        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
-            throw new IOException("Only http and https images can be loaded: " + url);
-        }
-        URLConnection connection = address.openConnection();
-        connection.setConnectTimeout(TIMEOUT_MILLIS);
-        connection.setReadTimeout(TIMEOUT_MILLIS);
-        connection.addRequestProperty("User-Agent",
-                "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
+        URLConnection connection;
         int responseCode = -1;
-        if (connection instanceof HttpURLConnection) {
-            HttpURLConnection httpConnection = (HttpURLConnection) connection;
+        for (int redirects = 0;; redirects++) {
+            checkAddress(address);
+            connection = address.openConnection();
+            connection.setConnectTimeout(TIMEOUT_MILLIS);
+            connection.setReadTimeout(TIMEOUT_MILLIS);
+            connection.addRequestProperty("User-Agent",
+                    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
+            if (!(connection instanceof HttpURLConnection httpConnection)) break;
+            httpConnection.setInstanceFollowRedirects(false);
             if (entry != null) {
                 if (entry.getEtag() != null) {
                     httpConnection.setRequestProperty("If-None-Match", entry.getEtag());
@@ -163,6 +164,15 @@ public class DownloadThread extends Thread {
                 }
             }
             responseCode = httpConnection.getResponseCode();
+            if (responseCode < 300 || responseCode >= 400 || responseCode == HttpURLConnection.HTTP_NOT_MODIFIED) {
+                break;
+            }
+            String location = httpConnection.getHeaderField("Location");
+            httpConnection.disconnect();
+            if (location == null || redirects >= MAX_REDIRECTS) {
+                throw new IOException("Too many or empty redirects for " + url);
+            }
+            address = new URL(address, location);
         }
         InputStream in = null;
         try {
@@ -228,11 +238,27 @@ public class DownloadThread extends Thread {
         }
     }
 
+    /** Refuses an address that is not http or https, or whose host is inside the player's own network. */
+    private static void checkAddress(URL address) throws IOException {
+        String protocol = address.getProtocol();
+        if (!"http".equalsIgnoreCase(protocol) && !"https".equalsIgnoreCase(protocol)) {
+            throw new IOException("Only http and https images can be loaded: " + address);
+        }
+        String host = address.getHost();
+        if (host == null || host.isEmpty()) throw new IOException("No host in " + address);
+        for (InetAddress inetAddress : InetAddress.getAllByName(host)) {
+            if (!ImageUtils.isPublicAddress(inetAddress)) {
+                throw new IOException("Images are not loaded from local or private addresses: " + address);
+            }
+        }
+    }
+
     private static long parseHttpDate(String date) {
         return ZonedDateTime.parse(date.trim(), HTTP_DATE).toInstant().toEpochMilli();
     }
 
     private static final int TIMEOUT_MILLIS = 10_000;
+    private static final int MAX_REDIRECTS = 5;
     private static final int MAX_DOWNLOAD_BYTES = 16 * 1024 * 1024;
 
     /** Read the whole stream, failing once it passes {@link #MAX_DOWNLOAD_BYTES}. */

@@ -381,6 +381,11 @@ public class ConfigHolder {
         @Config.Comment({ "Show a small stored-fluid badge on quantum tank inventory icons.", "Default: false" })
         public boolean quantumTankFluidBadges = false;
 
+        @Config.Comment({ "Whether Online Picture plugins on central monitors download the pictures players link.",
+                "Your game then fetches an address another player chose, and its owner learns your IP address.",
+                "Only http and https addresses outside your own network are fetched.", "Default: false" })
+        public boolean monitorOnlinePictures = false;
+
         @Config.Name("Gui Config")
         public GuiConfig guiConfig = new GuiConfig();
 

@@ -2573,6 +2573,7 @@ metaitem.plugin.text.name=Text Plugin
 metaitem.plugin.online_pic.name=Online Picture Plugin
 metaitem.plugin.fake_gui.name=GUI Proxy Plugin
 metaitem.plugin.advanced_monitor.name=Advanced Monitor Proxy Plugin
+metaitem.plugin.online_pic.disabled=Online pictures are turned off in the client options
 metaitem.cover.digital.name=Digital Interface
 metaitem.cover.digital.tooltip=Connects machines over §fPower Cables§7 to the §fCentral Monitor§7 as §fCover§7.
 metaitem.cover.digital.wireless.name=Wireless Digital Interface

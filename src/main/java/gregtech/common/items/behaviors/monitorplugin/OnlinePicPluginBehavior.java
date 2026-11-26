@@ -4,7 +4,10 @@ import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.gui.resources.picturetexture.PictureTexture;
 import gregtech.api.gui.resources.utils.DownloadThread;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
+import gregtech.client.utils.RenderUtil;
+import gregtech.common.ConfigHolder;
 
+import net.minecraft.client.resources.I18n;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.RayTraceResult;
@@ -21,6 +24,11 @@ import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.ToggleButton;
 import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
+import org.jetbrains.annotations.Nullable;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Locale;
 
 public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
 
@@ -44,11 +52,11 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
     public String error;
 
     /**
-     * Sets the picture and how it is drawn. A client sends every value, so the call is ignored when the address is
-     * longer than {@link #MAX_URL_LENGTH}; the angle is kept between -180 and 180 and the scales between 0 and 1.
+     * Sets the picture and how it is drawn. A client sends every value, so the call is ignored unless a new address is
+     * {@linkplain #isAllowedUrl allowed}; the angle is kept between -180 and 180 and the scales between 0 and 1.
      */
     public void setConfig(String url, float rotation, float scaleX, float scaleY, boolean flippedX, boolean flippedY) {
-        if (url == null || url.length() > MAX_URL_LENGTH) return;
+        if (url == null || (!url.equals(this.url) && !isAllowedUrl(url))) return;
         rotation = snap(rotation, -180, 180, 1);
         scaleX = snap(scaleX, 0, 1, 0.05);
         scaleY = snap(scaleY, 0, 1, 0.05);
@@ -73,6 +81,30 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
             packetBuffer.writeBoolean(flippedY);
         });
         markAsDirty();
+    }
+
+    /**
+     * Whether a monitor may show {@code url}: none at all, or an absolute http or https address with a host, at most
+     * {@link #MAX_URL_LENGTH} characters long. Whether a player's game then downloads it is that player's choice
+     * ({@code monitorOnlinePictures} in the client options), and the download refuses addresses inside the player's
+     * own network.
+     */
+    public static boolean isAllowedUrl(@Nullable String url) {
+        if (url == null || url.length() > MAX_URL_LENGTH) return false;
+        if (url.isEmpty()) return true;
+        for (int i = 0; i < url.length(); i++) {
+            char c = url.charAt(i);
+            if (c <= ' ' || c == 0x7F) return false;
+        }
+        try {
+            URI uri = new URI(url);
+            String scheme = uri.getScheme();
+            return scheme != null && uri.getHost() != null && !uri.getHost().isEmpty() &&
+                    ("http".equals(scheme.toLowerCase(Locale.ROOT)) ||
+                            "https".equals(scheme.toLowerCase(Locale.ROOT)));
+        } catch (URISyntaxException e) {
+            return false;
+        }
     }
 
     @Override
@@ -192,12 +224,15 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
 
     @Override
     public void renderPlugin(float partialTicks, RayTraceResult rayTraceResult) {
-        if (!this.url.isEmpty()) {
-            if (texture != null && texture.hasTexture()) {
-                texture.render(-0.5f, -0.5f, 1, 1, this.rotation, this.scaleX, this.scaleY, this.flippedX,
-                        this.flippedY);
-            } else
-                this.loadTexture();
+        if (this.url.isEmpty()) return;
+        if (!ConfigHolder.client.monitorOnlinePictures) {
+            RenderUtil.renderText(0, 0, 0.002f, 1 / 128f, 0xFFFFFFFF,
+                    I18n.format("metaitem.plugin.online_pic.disabled"), true);
+        } else if (texture != null && texture.hasTexture()) {
+            texture.render(-0.5f, -0.5f, 1, 1, this.rotation, this.scaleX, this.scaleY, this.flippedX,
+                    this.flippedY);
+        } else {
+            this.loadTexture();
         }
     }
 

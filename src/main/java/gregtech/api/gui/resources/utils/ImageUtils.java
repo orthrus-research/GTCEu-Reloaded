@@ -10,6 +10,9 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.util.Iterator;
 
 import javax.imageio.ImageIO;
@@ -20,6 +23,39 @@ import javax.imageio.stream.ImageInputStream;
 public class ImageUtils {
 
     public static final Logger LOGGER = LogManager.getLogger(GregTechMod.class);
+
+    /**
+     * Whether an address is on the public internet: not this machine, nor a private, link-local, carrier-grade NAT,
+     * unique local or multicast address.
+     */
+    public static boolean isPublicAddress(InetAddress address) {
+        if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress() ||
+                address.isSiteLocalAddress() || address.isMulticastAddress()) {
+            return false;
+        }
+        byte[] bytes = address.getAddress();
+        if (address instanceof Inet4Address) {
+            int first = bytes[0] & 0xFF;
+            int second = bytes[1] & 0xFF;
+            // 0.0.0.0/8 and the shared 100.64.0.0/10
+            return first != 0 && !(first == 100 && (second & 0xC0) == 64);
+        }
+        if (address instanceof Inet6Address) {
+            // unique local fc00::/7, and IPv4 addresses mapped into IPv6
+            if ((bytes[0] & 0xFE) == 0xFC) return false;
+            boolean mapped = bytes[10] == (byte) 0xFF && bytes[11] == (byte) 0xFF;
+            for (int i = 0; i < 10 && mapped; i++) mapped = bytes[i] == 0;
+            if (mapped) {
+                try {
+                    return isPublicAddress(InetAddress.getByAddress(new byte[] { bytes[12], bytes[13], bytes[14],
+                            bytes[15] }));
+                } catch (IOException e) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
     public static String readType(byte[] input) throws IOException {
         InputStream in = null;
