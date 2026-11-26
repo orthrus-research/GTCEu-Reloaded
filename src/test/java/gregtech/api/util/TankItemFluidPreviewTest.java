@@ -65,6 +65,13 @@ class TankItemFluidPreviewTest {
         register(registry, 2, new MetaTileEntityCreativeTank(id("creative")));
         register(registry, 3, new MetaTileEntityDrum(id("addon_drum"), Materials.Steel, 32000) {});
         register(registry, 4, new MetaTileEntityQuantumTank(id("addon_tank"), 5, 64000) {});
+        register(registry, 5, new MetaTileEntityDrum(id("opted_out_drum"), Materials.Steel, 32000) {
+
+            @Override
+            public boolean showsItemFluidBadge() {
+                return false;
+            }
+        });
         item = new CountingMachineItemBlock(block);
         item.setRegistryName("q7_preview_test", "machine");
     }
@@ -88,8 +95,14 @@ class TankItemFluidPreviewTest {
     }
 
     @Test
-    void onlyTheTwoExactFamiliesAreAdmitted() {
-        for (int metadata : new int[] { 2, 3, 4 }) {
+    void subclassesInheritTheBadgeUnlessTheyOptOut() {
+        for (int metadata : new int[] { 3, 4 }) {
+            FluidStack preview = TankItemFluidPreview.getFluid(filled(metadata, new FluidStack(FluidRegistry.WATER,
+                    1000)), true, true);
+            assertNotNull(preview);
+            assertEquals(1000, preview.amount);
+        }
+        for (int metadata : new int[] { 2, 5 }) {
             ItemStack excluded = filled(metadata, new FluidStack(FluidRegistry.WATER, 1000));
             item.queries = 0;
             assertNull(TankItemFluidPreview.getFluid(excluded, true, true));

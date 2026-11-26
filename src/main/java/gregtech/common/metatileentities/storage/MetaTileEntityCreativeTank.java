@@ -88,6 +88,12 @@ public class MetaTileEntityCreativeTank extends MetaTileEntityQuantumTank {
         return new MetaTileEntityCreativeTank(this.metaTileEntityId);
     }
 
+    /** The creative tank's item shows no fluid badge, as before. */
+    @Override
+    public boolean showsItemFluidBadge() {
+        return false;
+    }
+
     @Override
     public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager guiSyncManager, UISettings settings) {
         return appendCreativeUI(GTGuis.createPanel(this, 176, 166), true,

@@ -103,6 +103,15 @@ public class MetaTileEntityDrum extends MetaTileEntity {
         return new MetaTileEntityDrum(metaTileEntityId, fluidFilter, isWood, color, tankSize);
     }
 
+    /**
+     * Whether this drum's item shows a badge of its stored fluid when drum fluid badges are enabled. The badge
+     * reads the item's fluid capability. Subclasses inherit it; one whose item should not show its contents
+     * overrides this.
+     */
+    public boolean showsItemFluidBadge() {
+        return true;
+    }
+
     @Override
     public String getHarvestTool() {
         return isWood ? ToolClasses.AXE : ToolClasses.WRENCH;

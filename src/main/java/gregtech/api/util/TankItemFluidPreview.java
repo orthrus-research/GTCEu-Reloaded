@@ -24,8 +24,8 @@ public final class TankItemFluidPreview {
         if ((!drums && !quantumTanks) || stack.isEmpty()) return null;
         MetaTileEntity machine = GTUtility.getMetaTileEntity(stack);
         if (machine == null) return null;
-        boolean enabled = (drums && machine.getClass() == MetaTileEntityDrum.class) ||
-                (quantumTanks && machine.getClass() == MetaTileEntityQuantumTank.class);
+        boolean enabled = (drums && machine instanceof MetaTileEntityDrum drum && drum.showsItemFluidBadge()) ||
+                (quantumTanks && machine instanceof MetaTileEntityQuantumTank tank && tank.showsItemFluidBadge());
         if (!enabled) return null;
 
         // Read the item capability, never a registry prototype's mutable tank or its locked-fluid metadata.

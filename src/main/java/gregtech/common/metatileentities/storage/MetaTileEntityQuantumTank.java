@@ -230,6 +230,15 @@ public class MetaTileEntityQuantumTank extends MetaTileEntityQuantumStorage<IFlu
         return new MetaTileEntityQuantumTank(metaTileEntityId, tier, maxFluidCapacity);
     }
 
+    /**
+     * Whether this tank's item shows a badge of its stored fluid when quantum tank fluid badges are enabled. The badge
+     * reads the item's fluid capability. Subclasses inherit it; one whose item should not show its contents
+     * overrides this.
+     */
+    public boolean showsItemFluidBadge() {
+        return true;
+    }
+
     @Override
     protected FluidTankList createImportFluidHandler() {
         return new FluidTankList(false, fluidTank);
