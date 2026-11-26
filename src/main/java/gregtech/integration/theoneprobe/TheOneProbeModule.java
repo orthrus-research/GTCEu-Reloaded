@@ -8,6 +8,7 @@ import gregtech.integration.probe.ProbeInfoProducer;
 import gregtech.integration.probe.producer.AEHatchProbeInfo;
 import gregtech.integration.probe.producer.ActiveTransformerProbeInfo;
 import gregtech.integration.probe.producer.BatteryBufferProbeInfo;
+import gregtech.integration.probe.producer.BlockOreProbeInfo;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.ConverterProbeInfo;
 import gregtech.integration.probe.producer.DiodeProbeInfo;
@@ -57,7 +58,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         register(oneProbe, GTValues.MODID + ":steam_boiler_provider", new SteamBoilerProbeInfo());
         register(oneProbe, GTValues.MODID + ":primitive_pump_provider", new PrimitivePumpProbeInfo());
         oneProbe.registerProvider(new CoverInfoProvider());
-        oneProbe.registerProvider(new BlockOreInfoProvider());
+        register(oneProbe, GTValues.MODID + ":ore_block_provider", new BlockOreProbeInfo());
         oneProbe.registerProvider(new LampInfoProvider());
         oneProbe.registerProvider(new LDPipeProvider());
         register(oneProbe, GTValues.MODID + ":laser_container_provider", new LaserContainerProbeInfo());

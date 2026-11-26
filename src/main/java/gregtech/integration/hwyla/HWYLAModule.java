@@ -4,13 +4,14 @@ import gregtech.api.GTValues;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.util.Mods;
+import gregtech.common.blocks.BlockOre;
 import gregtech.integration.IntegrationSubmodule;
-import gregtech.integration.hwyla.provider.BlockOreDataProvider;
 import gregtech.integration.hwyla.provider.LampDataProvider;
 import gregtech.integration.probe.ProbeInfoProducer;
 import gregtech.integration.probe.producer.AEHatchProbeInfo;
 import gregtech.integration.probe.producer.ActiveTransformerProbeInfo;
 import gregtech.integration.probe.producer.BatteryBufferProbeInfo;
+import gregtech.integration.probe.producer.BlockOreProbeInfo;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.ConverterProbeInfo;
 import gregtech.integration.probe.producer.DiodeProbeInfo;
@@ -60,7 +61,7 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
         fromServer(registrar, "gregtech.steam_boiler", IGregTechTileEntity.class, new SteamBoilerProbeInfo());
         fromServer(registrar, "gregtech.primitive_pump", IGregTechTileEntity.class, new PrimitivePumpProbeInfo());
         // one day, if cover provider is ported to waila, register it right here
-        BlockOreDataProvider.INSTANCE.register(registrar);
+        fromClient(registrar, "gregtech.block_ore", BlockOre.class, new BlockOreProbeInfo());
         LampDataProvider.INSTANCE.register(registrar);
         fromServer(registrar, "gregtech.multiblock.activetransformer", TileEntity.class,
                 new ActiveTransformerProbeInfo());
@@ -74,6 +75,12 @@ public class HWYLAModule extends IntegrationSubmodule implements IWailaPlugin {
     private static void fromServer(IWailaRegistrar registrar, String configKey, Class<?> target,
                                    ProbeInfoProducer producer) {
         HWYLADataAdapter.fromServer(configKey, target, producer).register(registrar);
+    }
+
+    /** Registers a shared producer whose lines the client produces from the block state alone. */
+    private static void fromClient(IWailaRegistrar registrar, String configKey, Class<?> target,
+                                   ProbeInfoProducer producer) {
+        HWYLADataAdapter.fromClient(configKey, target, producer).register(registrar);
     }
 
     /** Render an ItemStack. */
