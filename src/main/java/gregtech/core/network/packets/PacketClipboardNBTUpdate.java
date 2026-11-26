@@ -3,6 +3,7 @@ package gregtech.core.network.packets;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.network.IPacket;
 import gregtech.api.network.IServerExecutor;
+import gregtech.api.util.GTLog;
 import gregtech.common.metatileentities.MetaTileEntityClipboard;
 import gregtech.core.network.NetworkUtils;
 
@@ -53,7 +54,10 @@ public class PacketClipboardNBTUpdate implements IPacket, IServerExecutor {
             try {
                 ((MetaTileEntityClipboard) ((IGregTechTileEntity) te).getMetaTileEntity())
                         .setClipboardNBT(updateData.readCompoundTag());
-            } catch (Exception ignored) {}
+            } catch (Exception exception) {
+                GTLog.logger.warn("Ignoring an unreadable clipboard update from {} for {}",
+                        handler.player.getName(), pos, exception);
+            }
         }
     }
 }

@@ -16,6 +16,7 @@ import gregtech.common.metatileentities.MetaTileEntities;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import org.hamcrest.MatcherAssert;
@@ -141,6 +142,28 @@ public class AbstractRecipeLogicTest {
         assertEquals(remaining,
                 logic.getInputInventory().getStackInSlot(0).getCount());
         assertFalse(logic.isActive());
+    }
+
+    @Test
+    void aResumedRecipeKeepsItsOutputsThroughAWorldLoad() {
+        AbstractRecipeLogic running = createTestLogic(1, 10);
+        queryTestRecipe(running);
+        MatcherAssert.assertThat(running.isActive, is(true));
+        NBTTagCompound saved = running.serializeNBT();
+
+        // a world load builds the machine afresh and reads its saved recipe logic
+        AbstractRecipeLogic loaded = createTestLogic(1, 10);
+        loaded.deserializeNBT(saved);
+
+        // the recipe itself is not saved, so the displays read the outputs saved with it
+        MatcherAssert.assertThat(loaded.getPreviousRecipe(), nullValue());
+        MatcherAssert.assertThat(loaded.getMaxProgress(), is(10));
+        MatcherAssert.assertThat(loaded.getCurrentItemOutputs().size(), is(1));
+        MatcherAssert.assertThat(AbstractRecipeLogic.areItemStacksEqual(loaded.getCurrentItemOutputs().get(0),
+                new ItemStack(Blocks.STONE, 1)), is(true));
+        MatcherAssert.assertThat(loaded.getCurrentFluidOutputs().isEmpty(), is(true));
+        assertThrows(UnsupportedOperationException.class,
+                () -> loaded.getCurrentItemOutputs().add(ItemStack.EMPTY));
     }
 
     private static AbstractRecipeLogic createTestLogic(int testRecipeEUt, int testRecipeDuration) {
