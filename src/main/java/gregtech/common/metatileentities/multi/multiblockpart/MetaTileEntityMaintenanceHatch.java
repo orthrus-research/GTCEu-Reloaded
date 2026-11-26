@@ -589,8 +589,18 @@ public class MetaTileEntityMaintenanceHatch extends MetaTileEntityMultiblockPart
             this.itemStackHandler.deserializeNBT(data.getCompoundTag("tapeInventory"));
         }
         if (isConfigurable) {
-            durationMultiplier = BigDecimal.valueOf(data.getDouble("DurationMultiplier"));
+            durationMultiplier = data.hasKey("DurationMultiplier", Constants.NBT.TAG_ANY_NUMERIC) ?
+                    loadedDurationMultiplier(data.getDouble("DurationMultiplier")) : BigDecimal.ONE;
         }
+    }
+
+    /**
+     * A saved multiplier on the buttons' 0.01 steps within their bounds; the buttons stop only at the bounds
+     * themselves, and a multiplier of 0 would make the multiblock's recipes take no time.
+     */
+    private static BigDecimal loadedDurationMultiplier(double saved) {
+        BigDecimal multiplier = BigDecimal.valueOf(saved).setScale(2, RoundingMode.HALF_UP);
+        return multiplier.max(MIN_DURATION_MULTIPLIER).min(MAX_DURATION_MULTIPLIER);
     }
 
     @Override

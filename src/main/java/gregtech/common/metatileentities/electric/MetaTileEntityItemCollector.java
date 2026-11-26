@@ -24,6 +24,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.IItemHandlerModifiable;
@@ -223,7 +224,9 @@ public class MetaTileEntityItemCollector extends TieredMetaTileEntity {
     @Override
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
-        this.itemSuckingRange = data.getInteger("CollectRange");
+        // a range saved outside this tier's bounds, or none, is brought within them as the screen keeps it
+        this.itemSuckingRange = data.hasKey("CollectRange", Constants.NBT.TAG_ANY_NUMERIC) ?
+                clampSuckingRange(data.getInteger("CollectRange")) : maxItemSuckingRange;
         this.itemFilter.deserializeNBT(data.getCompoundTag("Filter"));
     }
 

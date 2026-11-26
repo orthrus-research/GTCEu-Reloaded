@@ -72,6 +72,16 @@ class SmallMachineScreenTest {
         send(range, Integer.MIN_VALUE);
         assertEquals(1, range(collector));
 
+        // loading keeps the same bounds: no saved range is the tier's whole range, a saved one is clamped
+        MetaTileEntityItemCollector loaded = new MetaTileEntityItemCollector(gregtechId("screen_collector"),
+                GTValues.LV, 8);
+        loaded.readFromNBT(new NBTTagCompound());
+        assertEquals(8, range(loaded));
+        NBTTagCompound tooFar = new NBTTagCompound();
+        tooFar.setInteger("CollectRange", 1000);
+        loaded.readFromNBT(tooFar);
+        assertEquals(8, range(loaded));
+
         List<ModularSlot> slots = slotsOf(panel, collector.getExportItems());
         assertEquals(collector.getExportItems().getSlots(), slots.size());
         for (ModularSlot slot : slots) {

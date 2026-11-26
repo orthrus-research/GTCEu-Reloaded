@@ -6,6 +6,7 @@ import gregtech.common.items.MetaItems;
 
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.relauncher.Side;
 
@@ -47,6 +48,20 @@ class MaintenanceHatchScreenTest {
         assertEquals(0.9, hatch.getDurationMultiplier(), 1e-9);
         assertEquals(hatch.getTimeMultiplier(), syncedDouble(manager, "maintenance_time"), 1e-9);
         assertEquals(0.9, syncedDouble(manager, "maintenance_duration"), 1e-9);
+    }
+
+    @Test
+    void aLoadedMultiplierIsOnTheButtonsStepsWithinTheirBounds() {
+        MetaTileEntityMaintenanceHatch hatch = new MetaTileEntityMaintenanceHatch(
+                gregtechId("screen_configurable_maintenance"), true);
+        hatch.readFromNBT(new NBTTagCompound());
+        assertEquals(1.0, hatch.getDurationMultiplier(), 1e-9);
+        for (double[] saved : new double[][] { { 0, 0.9 }, { 5, 1.1 }, { 1.034, 1.03 } }) {
+            NBTTagCompound data = new NBTTagCompound();
+            data.setDouble("DurationMultiplier", saved[0]);
+            hatch.readFromNBT(data);
+            assertEquals(saved[1], hatch.getDurationMultiplier(), 1e-9);
+        }
     }
 
     @Test
