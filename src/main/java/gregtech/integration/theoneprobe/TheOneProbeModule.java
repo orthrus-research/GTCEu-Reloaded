@@ -5,6 +5,7 @@ import gregtech.api.modules.GregTechModule;
 import gregtech.api.util.Mods;
 import gregtech.integration.IntegrationSubmodule;
 import gregtech.integration.probe.ProbeInfoProducer;
+import gregtech.integration.probe.producer.ActiveTransformerProbeInfo;
 import gregtech.integration.probe.producer.BatteryBufferProbeInfo;
 import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.ConverterProbeInfo;
@@ -55,7 +56,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         oneProbe.registerProvider(new LDPipeProvider());
         oneProbe.registerProvider(new LaserContainerInfoProvider());
         oneProbe.registerProvider(new QuantumStorageProvider());
-        oneProbe.registerProvider(new ActiveTransformerInfoProvider());
+        register(oneProbe, GTValues.MODID + ":active_transformer_info_provider", new ActiveTransformerProbeInfo());
         register(oneProbe, GTValues.MODID + ":battery_buffer_provider", new BatteryBufferProbeInfo());
         oneProbe.registerProvider(new AEMultiblockHatchProvider());
 
