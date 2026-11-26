@@ -9,6 +9,7 @@ import gregtech.integration.probe.producer.ControllableProbeInfo;
 import gregtech.integration.probe.producer.MaintenanceProbeInfo;
 import gregtech.integration.probe.producer.MultiRecipeMapProbeInfo;
 import gregtech.integration.probe.producer.MultiblockProbeInfo;
+import gregtech.integration.probe.producer.RecipeLogicProbeInfo;
 import gregtech.integration.probe.producer.WorkableProbeInfo;
 import gregtech.integration.theoneprobe.provider.*;
 import gregtech.integration.theoneprobe.provider.debug.DebugPipeNetInfoProvider;
@@ -41,7 +42,7 @@ public class TheOneProbeModule extends IntegrationSubmodule {
         register(oneProbe, GTValues.MODID + ":multiblock_maintenance_provider", new MaintenanceProbeInfo());
         register(oneProbe, GTValues.MODID + ":multi_recipemap_provider", new MultiRecipeMapProbeInfo());
         oneProbe.registerProvider(new ConverterInfoProvider());
-        oneProbe.registerProvider(new RecipeLogicInfoProvider());
+        register(oneProbe, GTValues.MODID + ":recipe_logic_provider", new RecipeLogicProbeInfo());
         oneProbe.registerProvider(new SteamBoilerInfoProvider());
         oneProbe.registerProvider(new PrimitivePumpInfoProvider());
         oneProbe.registerProvider(new CoverInfoProvider());
