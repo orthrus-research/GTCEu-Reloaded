@@ -1,5 +1,7 @@
 package gregtech.api.recipes.conditions;
 
+import gregtech.api.recipes.RecipeCallbackLog;
+
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -135,6 +137,7 @@ public final class RecipeConditionSet {
             }
             return new RecipeConditionSet(primary, sources);
         } catch (RuntimeException exception) {
+            RecipeCallbackLog.warnOnce("Reading saved recipe conditions", exception);
             return unavailable(input);
         }
     }

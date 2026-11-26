@@ -1,6 +1,7 @@
 package gregtech.api.recipes.modifiers;
 
 import gregtech.api.recipes.Recipe;
+import gregtech.api.recipes.RecipeCallbackLog;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
@@ -45,6 +46,7 @@ public final class RecipeModifierAttempt {
                         -1,
                         "gregtech.recipe.modifier.unsupported_source");
             } catch (RuntimeException invalid) {
+                RecipeCallbackLog.warnOnce("Copying a recipe for its modifiers", invalid);
                 result = RecipeModifierResult.failure(RecipeModifierResult.Status.INVALID, "gregtech:recipe_copy", -1,
                         "gregtech.recipe.modifier.invalid_source");
             }

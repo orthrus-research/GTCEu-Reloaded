@@ -1,6 +1,7 @@
 package gregtech.api.recipes.conditions;
 
 import gregtech.api.recipes.IdentifierPatterns;
+import gregtech.api.recipes.RecipeCallbackLog;
 
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -48,6 +49,7 @@ public final class RecipeCondition<T> {
             if (!context.isAvailable()) return ConditionState.UNAVAILABLE;
             return type.test(value, context).inverted(inverted);
         } catch (RuntimeException exception) {
+            RecipeCallbackLog.warnOnce("Recipe condition " + type.id(), exception);
             return ConditionState.UNAVAILABLE;
         }
     }
@@ -85,6 +87,9 @@ public final class RecipeCondition<T> {
             return type == null ? new RecipeCondition<>(tag) :
                     type.read(tag.getCompoundTag("Data"), tag.getBoolean("Inverted"));
         } catch (RuntimeException exception) {
+            String id = tag.getString("Type");
+            RecipeCallbackLog.warnOnce("Reading a saved recipe condition of type " +
+                    (id.length() <= 128 && IdentifierPatterns.isResourceId(id) ? id : "<invalid>"), exception);
             return new RecipeCondition<>(tag);
         }
     }

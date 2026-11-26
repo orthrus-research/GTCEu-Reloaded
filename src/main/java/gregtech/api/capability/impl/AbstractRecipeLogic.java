@@ -16,6 +16,7 @@ import gregtech.api.metatileentity.multiblock.ICleanroomReceiver;
 import gregtech.api.metatileentity.multiblock.ParallelLogicType;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeBuilder;
+import gregtech.api.recipes.RecipeCallbackLog;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.conditions.ConditionEvaluation;
 import gregtech.api.recipes.conditions.RecipeConditionContext;
@@ -490,6 +491,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             if (modifiers == null) throw new IllegalArgumentException("Modifier provider returned null");
             context = modifiers.isEmpty() ? null : createRecipeModifierContext();
         } catch (RuntimeException invalidProvider) {
+            RecipeCallbackLog.warnOnce("Recipe modifier provider " + provider.getClass().getName(), invalidProvider);
             setRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
             deferRecipeSearch();
             return recordRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
@@ -547,6 +549,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
         try {
             return RecipeModifierCopies.retainMetadata(contents, source);
         } catch (RuntimeException invalid) {
+            RecipeCallbackLog.warnOnce("Keeping recipe modifier metadata", invalid);
             recordRecipeFailure(RecipeFailureReason.MODIFIER_INVALID);
             return null;
         }

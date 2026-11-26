@@ -1,6 +1,7 @@
 package gregtech.common.metatileentities.multi.multiblockpart.appeng.pattern;
 
 import gregtech.api.capability.impl.FluidTankList;
+import gregtech.api.util.GTLog;
 
 import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
@@ -252,7 +253,13 @@ public final class PatternBufferStorage {
             for (int i = 0; i < sharedItems.getSlots(); i++) sharedItems.restore(i, decodedShared.get(i));
             for (int i = 0; i < sharedTanks.length; i++) sharedTanks[i].restore(decodedFluids.get(i));
             this.batches.addAll(decodedBatches);
-        } catch (RuntimeException ignored) {
+        } catch (RuntimeException invalid) {
+            // validation failures are IllegalArgumentExceptions with their own message; anything else is a fault
+            if (invalid instanceof IllegalArgumentException) {
+                GTLog.logger.warn("A pattern buffer's saved state was set aside unchanged: {}", invalid.getMessage());
+            } else {
+                GTLog.logger.warn("A pattern buffer's saved state was set aside unchanged", invalid);
+            }
             this.batches.clear();
             this.quarantine = source.copy();
         } finally {

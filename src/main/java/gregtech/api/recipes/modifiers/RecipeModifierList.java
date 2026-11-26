@@ -1,6 +1,7 @@
 package gregtech.api.recipes.modifiers;
 
 import gregtech.api.recipes.Recipe;
+import gregtech.api.recipes.RecipeCallbackLog;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,6 +51,7 @@ public final class RecipeModifierList {
             return RecipeModifierResult.failure(RecipeModifierResult.Status.UNSUPPORTED, "gregtech:recipe_copy", -1,
                     "gregtech.recipe.modifier.unsupported_source");
         } catch (RuntimeException invalid) {
+            RecipeCallbackLog.warnOnce("Copying a recipe for its modifiers", invalid);
             return RecipeModifierResult.failure(RecipeModifierResult.Status.INVALID, "gregtech:recipe_copy", -1,
                     "gregtech.recipe.modifier.invalid_source");
         }
@@ -66,6 +68,7 @@ public final class RecipeModifierList {
                         "gregtech.recipe.modifier.unsupported_source");
             } catch (RuntimeException invalid) {
                 // Do not include callback exception text in diagnostics, and never swallow fatal JVM Errors.
+                RecipeCallbackLog.warnOnce("Recipe modifier " + modifier.id(), invalid);
                 return RecipeModifierResult.failure(RecipeModifierResult.Status.INVALID, modifier.id(), i,
                         "gregtech.recipe.modifier.invalid_result");
             }
