@@ -4,6 +4,7 @@ import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuiTheme;
 import gregtech.api.mui.GregTechGuiScreen;
 import gregtech.api.mui.factory.CoverGuiFactory;
+import gregtech.api.util.IDirtyNotifiable;
 
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
@@ -37,7 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
-public interface CoverWithUI extends Cover, IGuiHolder<SidedPosGuiData>, gregtech.api.gui.IUIHolder {
+public interface CoverWithUI extends Cover, IGuiHolder<SidedPosGuiData>, IDirtyNotifiable {
 
     default void openUI(EntityPlayerMP player) {
         CoverGuiFactory.open(player, this);
@@ -59,12 +60,12 @@ public interface CoverWithUI extends Cover, IGuiHolder<SidedPosGuiData>, gregtec
         return null;
     }
 
-    @Override
+    /** Whether the cover's holder is still valid. */
     default boolean isValid() {
         return getCoverableView().isValid();
     }
 
-    @Override
+    /** Whether the cover is on the client. */
     default boolean isRemote() {
         return getCoverableView().getWorld().isRemote;
     }

@@ -5,14 +5,13 @@ import gregtech.api.GregTechAPI;
 import gregtech.api.GregTechAPIInternal;
 import gregtech.api.block.IHeatingCoilBlockStats;
 import gregtech.api.cover.CoverDefinition;
-import gregtech.api.gui.UIFactory;
-import gregtech.api.metatileentity.MetaTileEntityUIFactory;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.modules.GregTechModule;
 import gregtech.api.modules.IGregTechModule;
 import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.mui.GTGuiTheme;
 import gregtech.api.mui.GTGuis;
+import gregtech.api.network.IPacket;
 import gregtech.api.recipes.ModHandler;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.properties.impl.ConditionProperty;
@@ -51,9 +50,6 @@ import gregtech.core.network.packets.PacketPluginSynced;
 import gregtech.core.network.packets.PacketRecoverMTE;
 import gregtech.core.network.packets.PacketReloadShaders;
 import gregtech.core.network.packets.PacketToolbeltSelectionChange;
-import gregtech.core.network.packets.PacketUIClientAction;
-import gregtech.core.network.packets.PacketUIOpen;
-import gregtech.core.network.packets.PacketUIWidgetUpdate;
 import gregtech.core.sound.GTSoundEvents;
 import gregtech.core.sound.internal.SoundManager;
 import gregtech.core.unification.material.internal.MaterialRegistryManager;
@@ -78,9 +74,11 @@ import net.minecraftforge.fml.relauncher.Side;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static gregtech.api.GregTechAPI.*;
 
@@ -129,15 +127,6 @@ public class CoreModule implements IGregTechModule {
         GTGuiTextures.init();
         GTGuiTheme.registerThemes();
 
-        /* Start UI Factory Registration */
-        UI_FACTORY_REGISTRY.unfreeze();
-        logger.info("Registering GTCEu UI Factories");
-        MetaTileEntityUIFactory.INSTANCE.init();
-        logger.info("Registering addon UI Factories");
-        MinecraftForge.EVENT_BUS.post(new GregTechAPI.RegisterEvent<>(UI_FACTORY_REGISTRY, UIFactory.class));
-        UI_FACTORY_REGISTRY.freeze();
-        /* End UI Factory Registration */
-
         // capabilities, materials, blocks, items, fluids and machines, shared with the unit-test bootstrap
         ContentRegistration.register();
 
@@ -148,21 +137,35 @@ public class CoreModule implements IGregTechModule {
 
     @Override
     public void registerPackets() {
-        GregTechAPI.networkHandler.registerPacket(PacketUIOpen.class);
-        GregTechAPI.networkHandler.registerPacket(PacketUIWidgetUpdate.class);
-        GregTechAPI.networkHandler.registerPacket(PacketUIClientAction.class);
-        GregTechAPI.networkHandler.registerPacket(PacketBlockParticle.class);
-        GregTechAPI.networkHandler.registerPacket(PacketClipboard.class);
-        GregTechAPI.networkHandler.registerPacket(PacketClipboardUIWidgetUpdate.class);
-        GregTechAPI.networkHandler.registerPacket(PacketPluginSynced.class);
-        GregTechAPI.networkHandler.registerPacket(PacketRecoverMTE.class);
-        GregTechAPI.networkHandler.registerPacket(PacketKeysPressed.class);
-        GregTechAPI.networkHandler.registerPacket(PacketFluidVeinList.class);
-        GregTechAPI.networkHandler.registerPacket(PacketNotifyCapeChange.class);
-        GregTechAPI.networkHandler.registerPacket(PacketReloadShaders.class);
-        GregTechAPI.networkHandler.registerPacket(PacketClipboardNBTUpdate.class);
-        GregTechAPI.networkHandler.registerPacket(PacketToolbeltSelectionChange.Server.class);
-        GregTechAPI.networkHandler.registerPacket(PacketToolbeltSelectionChange.Client.class);
+        NetworkHandler network = NetworkHandler.getInstance();
+        registerPackets(network::retirePacket, network::registerPacket);
+    }
+
+    /**
+     * Registers GTCEu's packets in the order that gives each its id, the next free one, and holds the ids of packets
+     * GTCEu no longer has, so that every packet keeps the id clients and servers know it by.
+     *
+     * @param retire   holds the next id for the named packet that had it
+     * @param register registers a packet under the next id
+     */
+    @ApiStatus.Internal
+    public static void registerPackets(Consumer<String> retire, Consumer<Class<? extends IPacket>> register) {
+        // the old GUI's packets, ids 1 to 3
+        retire.accept("PacketUIOpen");
+        retire.accept("PacketUIWidgetUpdate");
+        retire.accept("PacketUIClientAction");
+        register.accept(PacketBlockParticle.class);
+        register.accept(PacketClipboard.class);
+        register.accept(PacketClipboardUIWidgetUpdate.class);
+        register.accept(PacketPluginSynced.class);
+        register.accept(PacketRecoverMTE.class);
+        register.accept(PacketKeysPressed.class);
+        register.accept(PacketFluidVeinList.class);
+        register.accept(PacketNotifyCapeChange.class);
+        register.accept(PacketReloadShaders.class);
+        register.accept(PacketClipboardNBTUpdate.class);
+        register.accept(PacketToolbeltSelectionChange.Server.class);
+        register.accept(PacketToolbeltSelectionChange.Client.class);
     }
 
     @Override

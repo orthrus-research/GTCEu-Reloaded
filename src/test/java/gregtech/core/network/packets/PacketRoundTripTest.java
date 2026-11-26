@@ -96,12 +96,7 @@ class PacketRoundTripTest {
                 packet("recover machine", () -> new PacketRecoverMTE(-1, new BlockPos(-1, 255, 1))),
                 packet("reload shaders", PacketReloadShaders::new),
                 packet("toolbelt selection to the server", () -> new PacketToolbeltSelectionChange.Server(5)),
-                packet("toolbelt selection to the client", () -> new PacketToolbeltSelectionChange.Client(3, 40)),
-                packet("UI client action", () -> new PacketUIClientAction(11, 22, buffer(1, 2, 3, 4))),
-                packet("UI open", () -> new PacketUIOpen(4, buffer(8, 8), 13,
-                        List.of(new PacketUIWidgetUpdate(13, 0, buffer(1)),
-                                new PacketUIWidgetUpdate(13, 9, buffer())))),
-                packet("UI widget update", () -> new PacketUIWidgetUpdate(2, 300, buffer(250, 251))));
+                packet("toolbelt selection to the client", () -> new PacketToolbeltSelectionChange.Client(3, 40)));
     }
 
     @ParameterizedTest(name = "{0}")

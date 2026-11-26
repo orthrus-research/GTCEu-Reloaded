@@ -18,7 +18,7 @@ public class PacketHandler {
     private final IntIdentityHashBiMap<Class<? extends IPacket>> packetMap;
     private final Int2ObjectMap<Constructor<? extends IPacket>> constructors = new Int2ObjectOpenHashMap<>();
 
-    private PacketHandler(int initialCapacity) {
+    PacketHandler(int initialCapacity) {
         packetMap = new IntIdentityHashBiMap<>(initialCapacity);
     }
 
@@ -42,6 +42,16 @@ public class PacketHandler {
         int id = ID++;
         packetMap.put(packetClass, id);
         constructors.put(id, constructor);
+    }
+
+    /**
+     * Holds the next id for a packet GTCEu no longer registers, so that the packets registered after it keep their
+     * ids. A packet that arrives with a retired id is unknown: the network handler logs and ignores it.
+     *
+     * @return the retired id
+     */
+    public int retireId() {
+        return ID++;
     }
 
     public int getPacketId(Class<? extends IPacket> packetClass) {

@@ -34,12 +34,6 @@ gregtech/api/cover/CoverRayTracer.java codechicken.lib.raytracer.CuboidRayTraceR
 gregtech/api/cover/CoverRayTracer.java codechicken.lib.raytracer.RayTracer
 gregtech/api/cover/CoverUtil.java codechicken.lib.raytracer.IndexedCuboid6
 gregtech/api/cover/CoverUtil.java codechicken.lib.vec.Cuboid6
-gregtech/api/gui/resources/ShaderTexture.java codechicken.lib.render.shader.ShaderObject
-gregtech/api/gui/resources/ShaderTexture.java codechicken.lib.render.shader.ShaderProgram
-gregtech/api/gui/resources/TextureArea.java codechicken.lib.vec.Rotation
-gregtech/api/gui/resources/TextureArea.java codechicken.lib.vec.Transformation
-gregtech/api/gui/resources/TextureArea.java codechicken.lib.vec.Translation
-gregtech/api/gui/resources/TextureArea.java codechicken.lib.vec.Vector3
 gregtech/api/metatileentity/IFastRenderMetaTileEntity.java codechicken.lib.render.CCRenderState
 gregtech/api/metatileentity/IFastRenderMetaTileEntity.java codechicken.lib.vec.Matrix4
 gregtech/api/metatileentity/MetaTileEntity.java codechicken.lib.raytracer.CuboidRayTraceResult

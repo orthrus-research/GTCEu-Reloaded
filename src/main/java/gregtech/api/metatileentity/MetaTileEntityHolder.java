@@ -3,9 +3,7 @@ package gregtech.api.metatileentity;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.config.GTConfig;
 import gregtech.api.cover.Cover;
-import gregtech.api.gui.IUIHolder;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.registry.MTERegistry;
 import gregtech.api.util.GTLog;
@@ -63,8 +61,8 @@ import static gregtech.api.capability.GregtechDataCodes.INITIALIZE_MTE;
         @Interface(iface = "appeng.me.helpers.IGridProxyable",
                    modid = Mods.Names.APPLIED_ENERGISTICS2,
                    striprefs = true) })
-public class MetaTileEntityHolder extends TickableTileEntityBase implements IGregTechTileEntity, IUIHolder,
-                                  IWorldNameable, IActionHost, IGridProxyable {
+public class MetaTileEntityHolder extends TickableTileEntityBase implements IGregTechTileEntity, IWorldNameable,
+                                  IActionHost, IGridProxyable {
 
     MetaTileEntity metaTileEntity;
     private boolean needToUpdateLightning = false;
@@ -474,15 +472,6 @@ public class MetaTileEntityHolder extends TickableTileEntityBase implements IGre
             }
         }
         return false;
-    }
-
-    @Override
-    public int getUIColorOverride() {
-        if (metaTileEntity == null) return -1;
-        if (GTConfig.get().useSprayCanColorInUI()) {
-            return metaTileEntity.getPaintingColor();
-        }
-        return -1;
     }
 
     public void setCustomName(String customName) {

@@ -8,7 +8,6 @@ import gregtech.api.command.ICommandManager;
 import gregtech.api.config.GTConfig;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.event.HighTierEvent;
-import gregtech.api.gui.UIFactory;
 import gregtech.api.metatileentity.multiblock.IBatteryData;
 import gregtech.api.metatileentity.registry.MTEManager;
 import gregtech.api.modules.IModuleManager;
@@ -106,9 +105,6 @@ public class GregTechAPI {
     private static boolean highTier;
     private static boolean highTierInitialized;
 
-    @Deprecated
-    public static final GTControlledRegistry<ResourceLocation, UIFactory> UI_FACTORY_REGISTRY = new GTControlledRegistry<>(
-            Short.MAX_VALUE);
     public static final GTControlledRegistry<ResourceLocation, CoverDefinition> COVER_REGISTRY = new GTControlledRegistry<>(
             Integer.MAX_VALUE);
 

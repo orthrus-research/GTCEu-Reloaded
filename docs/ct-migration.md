@@ -290,7 +290,5 @@ supertypes.
 
 These members still name optional mods' types, so an addon that calls or overrides them, or uses the class,
 compiles with that mod: `MetaTileEntity.getProxy`, `getCableConnectionType` and `gridChanged` and
-`MetaTileEntityHolder`'s interfaces (AE2), and the older GUI's HEI hooks (`IGhostIngredientTarget`,
-`IRecipeTransferHandlerWidget`, the `getPhantomTargets` methods of the widgets implementing them, and
-`GregTechGuiTransferHandler`). Subclassing `MetaTileEntity` or building an older widget screen does not need
-those mods.
+`MetaTileEntityHolder`'s interfaces (AE2), and `GregTechGuiTransferHandler` (HEI). Subclassing `MetaTileEntity`
+does not need those mods.

@@ -47,7 +47,6 @@ import gregtech.integration.jei.recipe.IntCircuitRecipeWrapper;
 import gregtech.integration.jei.recipe.RecipeMapCategory;
 import gregtech.integration.jei.utils.MachineSubtypeHandler;
 import gregtech.integration.jei.utils.MetaItemSubtypeHandler;
-import gregtech.integration.jei.utils.ModularUIGuiHandler;
 import gregtech.integration.jei.utils.MultiblockInfoRecipeFocusShower;
 import gregtech.modules.GregTechModules;
 
@@ -73,7 +72,6 @@ import mezz.jei.api.ingredients.VanillaTypes;
 import mezz.jei.api.recipe.IRecipeCategory;
 import mezz.jei.api.recipe.IRecipeCategoryRegistration;
 import mezz.jei.api.recipe.VanillaRecipeCategoryUid;
-import mezz.jei.config.Constants;
 import mezz.jei.input.IShowsRecipeFocuses;
 import mezz.jei.input.InputHandler;
 import org.jetbrains.annotations.ApiStatus;
@@ -157,22 +155,9 @@ public class JustEnoughItemsModule extends IntegrationSubmodule implements IModP
         MultiblockInfoCategory.registerRecipes(registry);
         registry.addRecipeRegistryPlugin(new FacadeRegistryPlugin());
 
-        // register transfer handler for all categories, but not for the crafting station
-        ModularUIGuiHandler modularUIGuiHandler = new ModularUIGuiHandler(jeiHelpers.recipeTransferHandlerHelper());
-        modularUIGuiHandler.blacklistCategory(
-                IntCircuitCategory.UID,
-                MaterialTreeCategory.UID,
-                VanillaRecipeCategoryUid.INFORMATION,
-                VanillaRecipeCategoryUid.FUEL);
-        registry.getRecipeTransferRegistry().addRecipeTransferHandler(modularUIGuiHandler,
-                Constants.UNIVERSAL_RECIPE_TRANSFER_UID);
-
         // register transfer handler for crafting recipes
         registry.getRecipeTransferRegistry().addRecipeTransferHandler(new GregTechGuiTransferHandler(
                 jeiHelpers.recipeTransferHandlerHelper()), VanillaRecipeCategoryUid.CRAFTING);
-
-        registry.addAdvancedGuiHandlers(modularUIGuiHandler);
-        registry.addGhostIngredientHandler(modularUIGuiHandler.getGuiContainerClass(), modularUIGuiHandler);
 
         for (RecipeMap<?> recipeMap : RecipeMap.getRecipeMaps()) {
             if (recipeMap.getRecipeMapUI().isJEIVisible()) {

@@ -19,7 +19,6 @@ import gregtech.api.cover.CoverHolder;
 import gregtech.api.cover.CoverRayTracer;
 import gregtech.api.cover.CoverSaveHandler;
 import gregtech.api.cover.CoverUtil;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.items.toolitem.ToolAction;
 import gregtech.api.items.toolitem.ToolClasses;
@@ -50,7 +49,6 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
@@ -105,7 +103,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -474,17 +471,9 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
     }
 
     /**
-     * Creates a UI instance for player opening inventory of this meta tile entity
-     *
-     * @param entityPlayer player opening inventory
-     * @return freshly created UI instance
+     * Whether a right click opens this machine's screen, which {@link #buildUI} builds. A machine with a screen
+     * returns {@code true}; one without leaves the default, so that a right click opens nothing.
      */
-    @Deprecated
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        return null;
-    }
-
-    @ApiStatus.Experimental
     public boolean usesMui2() {
         return false;
     }
@@ -529,8 +518,6 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
             if (getWorld() != null && !getWorld().isRemote) {
                 if (usesMui2()) {
                     MetaTileEntityGuiFactory.open(playerIn, this);
-                } else {
-                    MetaTileEntityUIFactory.INSTANCE.openUI(getHolder(), (EntityPlayerMP) playerIn);
                 }
 
                 if (getOwner() == null) {

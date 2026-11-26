@@ -45,7 +45,7 @@ public final class NetworkHandler implements INetworkHandler {
         packetHandler = PacketHandler.getInstance();
     }
 
-    public static INetworkHandler getInstance() {
+    public static NetworkHandler getInstance() {
         return INSTANCE;
     }
 
@@ -72,6 +72,21 @@ public final class NetworkHandler implements INetworkHandler {
             return;
         }
         packetHandler.registerPacket(packetClass);
+    }
+
+    /**
+     * Holds the id the next registered packet would get for a packet GTCEu no longer registers, so that the packets
+     * registered after it keep the ids that clients and servers know them by.
+     *
+     * @param retiredPacket the name of the packet that had the id, for the log
+     */
+    public void retirePacket(String retiredPacket) {
+        if (GregTechAPI.moduleManager.hasPassedStage(ModuleStage.PRE_INIT)) {
+            CoreModule.logger.error("Could not retire packet {}, as packet registration has ended!", retiredPacket);
+            return;
+        }
+        int id = packetHandler.retireId();
+        CoreModule.logger.debug("Packet id {} stays held for the retired {}", id, retiredPacket);
     }
 
     @Override

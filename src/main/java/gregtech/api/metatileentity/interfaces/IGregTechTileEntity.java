@@ -1,6 +1,5 @@
 package gregtech.api.metatileentity.interfaces;
 
-import gregtech.api.gui.IUIHolder;
 import gregtech.api.metatileentity.MetaTileEntity;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,7 +13,13 @@ import org.jetbrains.annotations.Nullable;
  * Also delivers most of the Information about TileEntities.
  * <p/>
  */
-public interface IGregTechTileEntity extends IHasWorldObjectAndCoords, INeighborCache, ISyncedTileEntity, IUIHolder {
+public interface IGregTechTileEntity extends IHasWorldObjectAndCoords, INeighborCache, ISyncedTileEntity {
+
+    /** Whether the tile entity is in the world and holds a machine. */
+    boolean isValid();
+
+    /** Whether the tile entity is on the client. */
+    boolean isRemote();
 
     MetaTileEntity getMetaTileEntity();
 
