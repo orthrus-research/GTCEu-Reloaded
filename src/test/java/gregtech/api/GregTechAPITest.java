@@ -72,7 +72,7 @@ class GregTechAPITest {
     }
 
     @Test
-    void isHighTierThrowsUntilPreInitializationDecidesIt() throws ReflectiveOperationException {
+    void isHighTierAnswersFalseUntilPreInitializationDecidesIt() throws ReflectiveOperationException {
         Field decided = GregTechAPI.class.getDeclaredField("highTierInitialized");
         decided.setAccessible(true);
         // the test bootstrap decides it the way the core module's pre-initialization does
@@ -80,8 +80,9 @@ class GregTechAPITest {
         boolean previous = GregTechAPI.isHighTier();
         try {
             decided.setBoolean(null, false);
-            IllegalStateException e = assertThrows(IllegalStateException.class, GregTechAPI::isHighTier);
-            assertTrue(e.getMessage().contains("FMLPreInitializationEvent"), e.getMessage());
+            // an addon reading it early gets false, as it always has, and a warning in the log; it no longer throws
+            assertFalse(GregTechAPI.isHighTier());
+            assertFalse(GregTechAPI.isHighTier(), "A second early read answers the same");
 
             GregTechAPI.initializeHighTier();
             // no high-tier event listener is registered here, so only the config decides

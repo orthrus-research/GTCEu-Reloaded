@@ -104,6 +104,7 @@ public class GregTechAPI {
     /** Decided at the start of GTCEu's pre-initialization; see {@link #isHighTier()}. */
     private static boolean highTier;
     private static boolean highTierInitialized;
+    private static boolean highTierReadEarly;
 
     public static final GTControlledRegistry<ResourceLocation, CoverDefinition> COVER_REGISTRY = new GTControlledRegistry<>(
             Integer.MAX_VALUE);
@@ -199,12 +200,18 @@ public class GregTechAPI {
      * Decided at the start of GTCEu's pre-initialization ({@code FMLPreInitializationEvent}), before GTCEu registers
      * its materials, blocks, items and machines. Inside a {@link HighTierEvent} listener, ask the event instead.
      *
-     * @throws IllegalStateException when read before it is decided; before, it answered {@code false} then
+     * Read before it is decided, it answers {@code false}, as it always has, and logs a warning with the caller's
+     * stack once, since the answer may change when GTCEu decides it.
      */
     public static boolean isHighTier() {
         if (!highTierInitialized) {
-            throw new IllegalStateException("GregTechAPI.isHighTier() is not decided yet: GTCEu decides it at the " +
-                    "start of its pre-initialization (FMLPreInitializationEvent)");
+            if (!highTierReadEarly) {
+                highTierReadEarly = true;
+                GTLog.logger.warn("GregTechAPI.isHighTier() was read before GTCEu decides it at the start of its " +
+                        "pre-initialization (FMLPreInitializationEvent); it answers false until then",
+                        new IllegalStateException("isHighTier() read early"));
+            }
+            return false;
         }
         return highTier;
     }
