@@ -1,106 +1,38 @@
 package gregtech.loaders.recipe;
 
-import gregtech.api.recipes.RecipeMaps;
+import gregtech.api.recipes.RecipeMap;
+import gregtech.api.unification.material.Material;
 
 import static gregtech.api.GTValues.*;
+import static gregtech.api.recipes.RecipeMaps.*;
 import static gregtech.api.unification.material.Materials.*;
 
+/**
+ * The generator fuels, one row a fluid: the millibuckets a generator burns for the given ticks at LV, and the plasmas
+ * a plasma turbine burns, a millibucket at a time at EV, back into their fluid.
+ */
 public class FuelRecipes {
 
     public static void registerFuels() {
         // diesel generator fuels
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Naphtha.getFluid(1))
-                .duration(10)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(SulfuricLightFuel.getFluid(4))
-                .duration(5)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Methanol.getFluid(4))
-                .duration(8)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Ethanol.getFluid(1))
-                .duration(6)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Octane.getFluid(2))
-                .duration(5)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(BioDiesel.getFluid(1))
-                .duration(8)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(LightFuel.getFluid(1))
-                .duration(10)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Diesel.getFluid(1))
-                .duration(15)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(CetaneBoostedDiesel.getFluid(2))
-                .duration(45)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(RocketFuel.getFluid(16))
-                .duration(125)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Gasoline.getFluid(1))
-                .duration(50)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(HighOctaneGasoline.getFluid(1))
-                .duration(100)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Toluene.getFluid(1))
-                .duration(10)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(OilLight.getFluid(32))
-                .duration(5)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.COMBUSTION_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(RawOil.getFluid(64))
-                .duration(15)
-                .EUt(V[LV])
-                .buildAndRegister();
+        fuel(COMBUSTION_GENERATOR_FUELS, Naphtha, 1, 10);
+        fuel(COMBUSTION_GENERATOR_FUELS, SulfuricLightFuel, 4, 5);
+        fuel(COMBUSTION_GENERATOR_FUELS, Methanol, 4, 8);
+        fuel(COMBUSTION_GENERATOR_FUELS, Ethanol, 1, 6);
+        fuel(COMBUSTION_GENERATOR_FUELS, Octane, 2, 5);
+        fuel(COMBUSTION_GENERATOR_FUELS, BioDiesel, 1, 8);
+        fuel(COMBUSTION_GENERATOR_FUELS, LightFuel, 1, 10);
+        fuel(COMBUSTION_GENERATOR_FUELS, Diesel, 1, 15);
+        fuel(COMBUSTION_GENERATOR_FUELS, CetaneBoostedDiesel, 2, 45);
+        fuel(COMBUSTION_GENERATOR_FUELS, RocketFuel, 16, 125);
+        fuel(COMBUSTION_GENERATOR_FUELS, Gasoline, 1, 50);
+        fuel(COMBUSTION_GENERATOR_FUELS, HighOctaneGasoline, 1, 100);
+        fuel(COMBUSTION_GENERATOR_FUELS, Toluene, 1, 10);
+        fuel(COMBUSTION_GENERATOR_FUELS, OilLight, 32, 5);
+        fuel(COMBUSTION_GENERATOR_FUELS, RawOil, 64, 15);
 
         // steam generator fuels
-        RecipeMaps.STEAM_TURBINE_FUELS.recipeBuilder()
+        STEAM_TURBINE_FUELS.recipeBuilder()
                 .fluidInputs(Steam.getFluid(640))
                 .fluidOutputs(DistilledWater.getFluid(4))
                 .duration(10)
@@ -108,211 +40,59 @@ public class FuelRecipes {
                 .buildAndRegister();
 
         // gas turbine fuels
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(NaturalGas.getFluid(8))
-                .duration(5)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(WoodGas.getFluid(8))
-                .duration(6)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(SulfuricGas.getFluid(32))
-                .duration(25)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(SulfuricNaphtha.getFluid(4))
-                .duration(5)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(CoalGas.getFluid(1))
-                .duration(3)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Methane.getFluid(2))
-                .duration(7)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Ethylene.getFluid(1))
-                .duration(4)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(RefineryGas.getFluid(1))
-                .duration(5)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Ethane.getFluid(4))
-                .duration(21)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Propene.getFluid(1))
-                .duration(6)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Butadiene.getFluid(16))
-                .duration(102)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Propane.getFluid(4))
-                .duration(29)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Butene.getFluid(1))
-                .duration(8)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Phenol.getFluid(1))
-                .duration(9)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Benzene.getFluid(1))
-                .duration(11)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(Butane.getFluid(4))
-                .duration(37)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder()
-                .fluidInputs(LPG.getFluid(1))
-                .duration(10)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.GAS_TURBINE_FUELS.recipeBuilder() // TODO Too OP pls nerf
-                .fluidInputs(Nitrobenzene.getFluid(1))
-                .duration(40)
-                .EUt(V[LV])
-                .buildAndRegister();
+        fuel(GAS_TURBINE_FUELS, NaturalGas, 8, 5);
+        fuel(GAS_TURBINE_FUELS, WoodGas, 8, 6);
+        fuel(GAS_TURBINE_FUELS, SulfuricGas, 32, 25);
+        fuel(GAS_TURBINE_FUELS, SulfuricNaphtha, 4, 5);
+        fuel(GAS_TURBINE_FUELS, CoalGas, 1, 3);
+        fuel(GAS_TURBINE_FUELS, Methane, 2, 7);
+        fuel(GAS_TURBINE_FUELS, Ethylene, 1, 4);
+        fuel(GAS_TURBINE_FUELS, RefineryGas, 1, 5);
+        fuel(GAS_TURBINE_FUELS, Ethane, 4, 21);
+        fuel(GAS_TURBINE_FUELS, Propene, 1, 6);
+        fuel(GAS_TURBINE_FUELS, Butadiene, 16, 102);
+        fuel(GAS_TURBINE_FUELS, Propane, 4, 29);
+        fuel(GAS_TURBINE_FUELS, Butene, 1, 8);
+        fuel(GAS_TURBINE_FUELS, Phenol, 1, 9);
+        fuel(GAS_TURBINE_FUELS, Benzene, 1, 11);
+        fuel(GAS_TURBINE_FUELS, Butane, 4, 37);
+        fuel(GAS_TURBINE_FUELS, LPG, 1, 10);
+        // TODO Too OP pls nerf
+        fuel(GAS_TURBINE_FUELS, Nitrobenzene, 1, 40);
 
         // semi-fluid fuels, like creosote
-        RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Creosote.getFluid(16))
-                .duration(1)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Biomass.getFluid(4))
-                .duration(1)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Oil.getFluid(2))
-                .duration(1)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(OilHeavy.getFluid(16))
-                .duration(5)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(SulfuricHeavyFuel.getFluid(16))
-                .duration(5)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(HeavyFuel.getFluid(8))
-                .duration(15)
-                .EUt(V[LV])
-                .buildAndRegister();
-
-        RecipeMaps.SEMI_FLUID_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(FishOil.getFluid(16))
-                .duration(1)
-                .EUt(V[LV])
-                .buildAndRegister();
+        fuel(SEMI_FLUID_GENERATOR_FUELS, Creosote, 16, 1);
+        fuel(SEMI_FLUID_GENERATOR_FUELS, Biomass, 4, 1);
+        fuel(SEMI_FLUID_GENERATOR_FUELS, Oil, 2, 1);
+        fuel(SEMI_FLUID_GENERATOR_FUELS, OilHeavy, 16, 5);
+        fuel(SEMI_FLUID_GENERATOR_FUELS, SulfuricHeavyFuel, 16, 5);
+        fuel(SEMI_FLUID_GENERATOR_FUELS, HeavyFuel, 8, 15);
+        fuel(SEMI_FLUID_GENERATOR_FUELS, FishOil, 16, 1);
 
         // plasma turbine
-        RecipeMaps.PLASMA_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Helium.getPlasma(1))
-                .fluidOutputs(Helium.getFluid(1))
-                .duration(40)
-                .EUt(V[EV])
-                .buildAndRegister();
+        plasma(Helium, 40);
+        plasma(Oxygen, 48);
+        plasma(Nitrogen, 64);
+        plasma(Argon, 96);
+        plasma(Iron, 112);
+        plasma(Tin, 128);
+        plasma(Nickel, 192);
+        plasma(Americium, 320);
+    }
 
-        RecipeMaps.PLASMA_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Oxygen.getPlasma(1))
-                .fluidOutputs(Oxygen.getFluid(1))
-                .duration(48)
-                .EUt(V[EV])
+    private static void fuel(RecipeMap<?> map, Material fluid, int amount, int duration) {
+        map.recipeBuilder()
+                .fluidInputs(fluid.getFluid(amount))
+                .duration(duration)
+                .EUt(V[LV])
                 .buildAndRegister();
+    }
 
-        RecipeMaps.PLASMA_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Nitrogen.getPlasma(1))
-                .fluidOutputs(Nitrogen.getFluid(1))
-                .duration(64)
-                .EUt(V[EV])
-                .buildAndRegister();
-
-        RecipeMaps.PLASMA_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Argon.getPlasma(1))
-                .fluidOutputs(Argon.getFluid(1))
-                .duration(96)
-                .EUt(V[EV])
-                .buildAndRegister();
-
-        RecipeMaps.PLASMA_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Iron.getPlasma(1))
-                .fluidOutputs(Iron.getFluid(1))
-                .duration(112)
-                .EUt(V[EV])
-                .buildAndRegister();
-
-        RecipeMaps.PLASMA_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Tin.getPlasma(1))
-                .fluidOutputs(Tin.getFluid(1))
-                .duration(128)
-                .EUt(V[EV])
-                .buildAndRegister();
-
-        RecipeMaps.PLASMA_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Nickel.getPlasma(1))
-                .fluidOutputs(Nickel.getFluid(1))
-                .duration(192)
-                .EUt(V[EV])
-                .buildAndRegister();
-
-        RecipeMaps.PLASMA_GENERATOR_FUELS.recipeBuilder()
-                .fluidInputs(Americium.getPlasma(1))
-                .fluidOutputs(Americium.getFluid(1))
-                .duration(320)
+    private static void plasma(Material plasma, int duration) {
+        PLASMA_GENERATOR_FUELS.recipeBuilder()
+                .fluidInputs(plasma.getPlasma(1))
+                .fluidOutputs(plasma.getFluid(1))
+                .duration(duration)
                 .EUt(V[EV])
                 .buildAndRegister();
     }
