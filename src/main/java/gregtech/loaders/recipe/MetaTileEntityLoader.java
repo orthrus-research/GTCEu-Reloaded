@@ -37,7 +37,6 @@ import net.minecraftforge.fluids.FluidUtil;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.Arrays;
-import java.util.List;
 
 import static gregtech.common.blocks.BlockBoilerCasing.BoilerCasingType.*;
 import static gregtech.common.blocks.BlockFireboxCasing.FireboxCasingType.*;
@@ -175,11 +174,15 @@ public class MetaTileEntityLoader {
         warningSign(AUTOMATED_DEFENSES_HAZARD, "   ", " MY", "  B");
         warningSign(HIGH_PRESSURE_HAZARD, "   ", " MY", " B ");
 
-        // only the first ten signs turn back into a solid steel casing
-        for (BlockWarningSign.SignType type : List.of(YELLOW_STRIPES, SMALL_YELLOW_STRIPES, RADIOACTIVE_HAZARD,
-                BIO_HAZARD, EXPLOSION_HAZARD, FIRE_HAZARD, ACID_HAZARD, MAGIC_HAZARD, FROST_HAZARD, NOISE_HAZARD)) {
+        // every sign turns back into a solid steel casing
+        for (BlockWarningSign.SignType type : BlockWarningSign.SignType.values()) {
             ModHandler.addShapelessRecipe(type.getName() + "_to_steel_solid_casing",
                     MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID), MetaBlocks.WARNING_SIGN.getItemVariant(type));
+        }
+        for (BlockWarningSign1.SignType type : BlockWarningSign1.SignType.values()) {
+            ModHandler.addShapelessRecipe(type.getName() + "_to_steel_solid_casing",
+                    MetaBlocks.METAL_CASING.getItemVariant(STEEL_SOLID),
+                    MetaBlocks.WARNING_SIGN_1.getItemVariant(type));
         }
 
         // rotor holders: the tier's hull among gears and the small gears of the tier's metal
