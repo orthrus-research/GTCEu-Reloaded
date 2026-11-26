@@ -2,6 +2,7 @@ package gregtech.api.unification;
 
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
+import gregtech.api.config.GTConfig;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.material.registry.MaterialRegistry;
@@ -9,7 +10,6 @@ import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.unification.stack.*;
 import gregtech.api.util.CustomModPriorityComparator;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -51,7 +51,7 @@ public class OreDictUnifier {
 
     public static Comparator<ItemAndMetadata> getSimpleItemStackComparator() {
         if (stackComparator == null) {
-            List<String> modPriorities = Arrays.asList(ConfigHolder.compat.modPriorities);
+            List<String> modPriorities = GTConfig.get().modPriorities();
             if (modPriorities.isEmpty()) {
                 // noinspection ConstantConditions
                 Function<ItemAndMetadata, String> modIdExtractor = stack -> stack.item.getRegistryName().getNamespace();

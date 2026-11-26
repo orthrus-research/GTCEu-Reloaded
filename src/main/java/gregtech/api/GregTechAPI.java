@@ -5,6 +5,7 @@ import gregtech.api.block.ICleanroomFilter;
 import gregtech.api.block.IHeatingCoilBlockStats;
 import gregtech.api.block.coil.CoilManager;
 import gregtech.api.command.ICommandManager;
+import gregtech.api.config.GTConfig;
 import gregtech.api.cover.CoverDefinition;
 import gregtech.api.event.HighTierEvent;
 import gregtech.api.gui.UIFactory;
@@ -22,7 +23,6 @@ import gregtech.api.unification.ore.StoneType;
 import gregtech.api.util.GTControlledRegistry;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.IBlockOre;
-import gregtech.common.ConfigHolder;
 import gregtech.datafix.migration.lib.MigrationAPI;
 
 import net.minecraft.block.state.IBlockState;
@@ -221,7 +221,7 @@ public class GregTechAPI {
         HighTierEvent highTierEvent = new HighTierEvent();
         MinecraftForge.EVENT_BUS.post(highTierEvent);
 
-        highTier = ConfigHolder.machines.highTierContent || highTierEvent.isHighTier();
+        highTier = GTConfig.get().highTierContent() || highTierEvent.isHighTier();
         highTierInitialized = true;
 
         if (GregTechAPI.isHighTier()) GTLog.logger.info("High-Tier is Enabled.");

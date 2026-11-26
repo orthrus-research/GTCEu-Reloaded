@@ -1,7 +1,7 @@
 package gregtech.api.recipes;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.util.GTLog;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
@@ -61,7 +61,7 @@ public class GTRecipeHandler {
         List<ItemStack> itemIn = new ArrayList<>();
         for (ItemStack s : itemInputs) {
             itemIn.add(s);
-            if (ConfigHolder.misc.debug) {
+            if (GTConfig.get().debug()) {
                 itemNames.add(String.format("%s x %d", s.getDisplayName(), s.getCount()));
             }
         }
@@ -69,14 +69,14 @@ public class GTRecipeHandler {
         List<FluidStack> fluidIn = new ArrayList<>();
         for (FluidStack s : fluidInputs) {
             fluidIn.add(s);
-            if (ConfigHolder.misc.debug) {
+            if (GTConfig.get().debug()) {
                 fluidNames.add(String.format("%s x %d", s.getFluid().getName(), s.amount));
             }
         }
 
         Recipe recipeFound = map.findRecipe(Long.MAX_VALUE, itemIn, fluidIn);
         boolean wasRemoved = recipeFound != null && map.removeRecipe(recipeFound);
-        if (ConfigHolder.misc.debug) {
+        if (GTConfig.get().debug()) {
             if (wasRemoved)
                 GTLog.logger.info("Removed Recipe for inputs: Items: {} Fluids: {}", itemNames, fluidNames);
             else GTLog.logger.error("Failed to Remove Recipe for inputs: Items: {} Fluids: {}", itemNames, fluidNames);
@@ -107,7 +107,7 @@ public class GTRecipeHandler {
      */
     public static <R extends RecipeBuilder<R>> void removeAllRecipes(RecipeMap<R> map) {
         map.removeAllRecipes();
-        if (ConfigHolder.misc.debug) {
+        if (GTConfig.get().debug()) {
             GTLog.logger.info("Removed all recipes for Recipe Map: {}", map.unlocalizedName);
         }
     }

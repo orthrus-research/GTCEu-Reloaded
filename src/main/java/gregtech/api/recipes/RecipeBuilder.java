@@ -2,6 +2,7 @@ package gregtech.api.recipes;
 
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
+import gregtech.api.config.GTConfig;
 import gregtech.api.fluids.store.FluidStorageKey;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -35,7 +36,6 @@ import gregtech.api.util.EnumValidationResult;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.ValidationResult;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -144,7 +144,7 @@ public class RecipeBuilder<R extends RecipeBuilder<R>> {
     }
 
     public R cleanroom(@Nullable CleanroomType cleanroom) {
-        if (ConfigHolder.machines.enableCleanroom && cleanroom != null) {
+        if (GTConfig.get().enableCleanroom() && cleanroom != null) {
             this.applyProperty(CleanroomProperty.getInstance(), cleanroom);
         }
         return (R) this;

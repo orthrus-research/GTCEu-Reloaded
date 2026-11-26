@@ -4,8 +4,8 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.FeCompat;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IEnergyContainer;
+import gregtech.api.config.GTConfig;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -35,14 +35,14 @@ public class EUToFEProvider extends CapabilityCompatProvider {
 
     @Override
     public boolean hasCapability(@NotNull Capability<?> capability, EnumFacing facing) {
-        return ConfigHolder.compat.energy.nativeEUToFE &&
+        return GTConfig.get().nativeEUToFE() &&
                 capability == GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER &&
                 hasUpvalueCapability(CapabilityEnergy.ENERGY, facing);
     }
 
     @Override
     public <T> T getCapability(@NotNull Capability<T> capability, EnumFacing facing) {
-        if (!ConfigHolder.compat.energy.nativeEUToFE || capability != GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER)
+        if (!GTConfig.get().nativeEUToFE() || capability != GregtechCapabilities.CAPABILITY_ENERGY_CONTAINER)
             return null;
 
         IEnergyStorage energyStorage = getUpvalueCapability(CapabilityEnergy.ENERGY, facing);

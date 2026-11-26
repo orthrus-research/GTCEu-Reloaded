@@ -5,6 +5,7 @@ import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.impl.CombinedCapabilityProvider;
 import gregtech.api.capability.impl.ElectricItem;
+import gregtech.api.config.GTConfig;
 import gregtech.api.items.gui.ItemUIFactory;
 import gregtech.api.items.metaitem.ElectricStats;
 import gregtech.api.items.toolitem.aoe.AoESymmetrical;
@@ -25,7 +26,6 @@ import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.utils.ToolChargeBarRenderer;
 import gregtech.client.utils.TooltipHelper;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -885,7 +885,7 @@ public interface IGTTool extends ItemUIFactory {
     // Sound Playing
     default void playCraftingSound(EntityPlayer player, ItemStack stack) {
         // Automated crafters may have no player. Client prediction must not mutate the remainder's NBT.
-        if (player == null || player.getEntityWorld().isRemote || !ConfigHolder.client.toolCraftingSounds) return;
+        if (player == null || player.getEntityWorld().isRemote || !GTConfig.get().toolCraftingSounds()) return;
         SoundEvent sound = getSound();
         if (sound != null && CraftingSoundCooldown.acquire(player, sound, System.nanoTime())) {
             player.getEntityWorld().playSound(null, player.posX, player.posY, player.posZ, sound,
@@ -894,7 +894,7 @@ public interface IGTTool extends ItemUIFactory {
     }
 
     default void playSound(EntityPlayer player) {
-        if (ConfigHolder.client.toolUseSounds && getSound() != null) {
+        if (GTConfig.get().toolUseSounds() && getSound() != null) {
             player.getEntityWorld().playSound(null, player.posX, player.posY, player.posZ, getSound(),
                     SoundCategory.PLAYERS, 1F, 1F);
         }

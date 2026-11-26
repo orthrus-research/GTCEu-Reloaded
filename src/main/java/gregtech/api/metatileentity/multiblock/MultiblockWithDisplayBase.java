@@ -3,12 +3,12 @@ package gregtech.api.metatileentity.multiblock;
 import gregtech.api.GTValues;
 import gregtech.api.block.VariantActiveBlock;
 import gregtech.api.capability.*;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIFactory;
 import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.pattern.TraceabilityPredicate;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -98,7 +98,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
      */
     @Override
     public byte getMaintenanceProblems() {
-        return ConfigHolder.machines.enableMaintenance && hasMaintenanceMechanics() ? maintenance_problems : 0b111111;
+        return GTConfig.get().enableMaintenance() && hasMaintenanceMechanics() ? maintenance_problems : 0b111111;
     }
 
     /**
@@ -106,7 +106,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
      */
     @Override
     public int getNumMaintenanceProblems() {
-        return ConfigHolder.machines.enableMaintenance && hasMaintenanceMechanics() ?
+        return GTConfig.get().enableMaintenance() && hasMaintenanceMechanics() ?
                 6 - Integer.bitCount(maintenance_problems) : 0;
     }
 
@@ -115,7 +115,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
      */
     @Override
     public boolean hasMaintenanceProblems() {
-        return ConfigHolder.machines.enableMaintenance && hasMaintenanceMechanics() && this.maintenance_problems < 63;
+        return GTConfig.get().enableMaintenance() && hasMaintenanceMechanics() && this.maintenance_problems < 63;
     }
 
     /**
@@ -134,7 +134,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
      * Used to calculate whether a maintenance problem should happen based on machine time active
      */
     public void calculateMaintenance() {
-        if (!ConfigHolder.machines.enableMaintenance || !hasMaintenanceMechanics() || maintenanceHatch == null)
+        if (!GTConfig.get().enableMaintenance() || !hasMaintenanceMechanics() || maintenanceHatch == null)
             return;
 
         if (maintenanceHatch.isFullAuto()) {
@@ -155,7 +155,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
      * Ranges from 0.9 to 1.1. Lower is a "better" effect than normal, higher is a "worse" effect than normal.
      */
     public double getMaintenanceDurationMultiplier() {
-        if (!ConfigHolder.machines.enableMaintenance || !hasMaintenanceMechanics() || maintenanceHatch == null) {
+        if (!GTConfig.get().enableMaintenance() || !hasMaintenanceMechanics() || maintenanceHatch == null) {
             return 1.0;
         }
         return maintenanceHatch.getDurationMultiplier();
@@ -169,8 +169,8 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
     @Override
     protected void formStructure(PatternMatchContext context) {
         super.formStructure(context);
-        if (this.hasMaintenanceMechanics() && ConfigHolder.machines.enableMaintenance) { // nothing extra if no
-                                                                                         // maintenance
+        if (this.hasMaintenanceMechanics() && GTConfig.get().enableMaintenance()) { // nothing extra if no
+                                                                                    // maintenance
             if (getAbilities(MultiblockAbility.MAINTENANCE_HATCH).isEmpty())
                 return;
             maintenanceHatch = getAbilities(MultiblockAbility.MAINTENANCE_HATCH).get(0);
@@ -266,7 +266,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
 
     @Override
     public void invalidateStructure() {
-        if (hasMaintenanceMechanics() && ConfigHolder.machines.enableMaintenance) { // nothing extra if no maintenance
+        if (hasMaintenanceMechanics() && GTConfig.get().enableMaintenance()) { // nothing extra if no maintenance
             if (!getAbilities(MultiblockAbility.MAINTENANCE_HATCH).isEmpty())
                 getAbilities(MultiblockAbility.MAINTENANCE_HATCH).get(0)
                         .storeMaintenanceData(maintenance_problems, timeActive);
@@ -314,7 +314,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
     protected TraceabilityPredicate maintenancePredicate() {
         if (hasMaintenanceMechanics()) {
             return abilities(MultiblockAbility.MAINTENANCE_HATCH)
-                    .setMinGlobalLimited(ConfigHolder.machines.enableMaintenance ? 1 : 0).setMaxGlobalLimited(1);
+                    .setMinGlobalLimited(GTConfig.get().enableMaintenance() ? 1 : 0).setMaxGlobalLimited(1);
         }
         return new TraceabilityPredicate();
     }
@@ -481,7 +481,7 @@ public abstract class MultiblockWithDisplayBase extends MultiblockControllerBase
         T capabilityResult = super.getCapability(capability, side);
         if (capabilityResult != null) return capabilityResult;
         if (capability == GregtechTileCapabilities.CAPABILITY_MAINTENANCE) {
-            if (this.hasMaintenanceMechanics() && ConfigHolder.machines.enableMaintenance) {
+            if (this.hasMaintenanceMechanics() && GTConfig.get().enableMaintenance()) {
                 return GregtechTileCapabilities.CAPABILITY_MAINTENANCE.cast(this);
             }
         }

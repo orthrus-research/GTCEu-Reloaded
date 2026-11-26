@@ -5,12 +5,12 @@ import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.capability.impl.EnergyContainerList;
 import gregtech.api.capability.impl.MultiblockFuelRecipeLogic;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
 import gregtech.api.mui.sync.FixedIntArraySyncValue;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
@@ -120,7 +120,7 @@ public abstract class FuelMultiblockController extends RecipeMapMultiblockContro
                             .setStyle(new Style().setColor(TextFormatting.YELLOW))));
         }
 
-        if (ConfigHolder.machines.enableMaintenance && hasMaintenanceMechanics()) {
+        if (GTConfig.get().enableMaintenance() && hasMaintenanceMechanics()) {
             list.add(new TextComponentTranslation("behavior.tricorder.multiblock_maintenance",
                     new TextComponentTranslation(TextFormattingUtil.formatNumbers(getNumMaintenanceProblems()))
                             .setStyle(new Style().setColor(TextFormatting.RED))));

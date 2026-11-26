@@ -1,7 +1,7 @@
 package gregtech.api.pipenet.block;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.pipenet.tile.IPipeTile;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -51,7 +51,7 @@ public class ItemBlockPipe<PipeType extends Enum<PipeType> & IPipeType<NodeDataT
                             otherPipe.setConnection(facing.getOpposite(), false, true);
                         }
                     }
-                } else if (!ConfigHolder.machines.gt6StylePipesCables &&
+                } else if (!GTConfig.get().gt6StylePipesCables() &&
                         selfTile.getPipeBlock().canPipeConnectToBlock(selfTile, facing, te)) {
                             selfTile.setConnection(facing, true, false);
                         }

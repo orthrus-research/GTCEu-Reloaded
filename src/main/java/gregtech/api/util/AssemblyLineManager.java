@@ -1,5 +1,6 @@
 package gregtech.api.util;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IDataItem;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
@@ -12,7 +13,6 @@ import gregtech.api.recipes.ingredients.nbtmatch.NBTMatcher;
 import gregtech.api.recipes.machines.IScannerRecipeMap;
 import gregtech.api.recipes.machines.RecipeMapScanner;
 import gregtech.api.recipes.properties.impl.ScanProperty;
-import gregtech.common.ConfigHolder;
 import gregtech.common.items.MetaItems;
 
 import net.minecraft.item.ItemStack;
@@ -124,7 +124,7 @@ public final class AssemblyLineManager {
     /** Prepare derived research builders without publishing recipes or mutating the declaration's data items. */
     public static void expandDefaultResearchRecipes(@NotNull AssemblyLineRecipeBuilder builder,
                                                     Consumer<RecipeBuilder<?>> recipes) {
-        if (!ConfigHolder.machines.enableResearch) return;
+        if (!GTConfig.get().enableResearch()) return;
 
         for (AssemblyLineRecipeBuilder.ResearchRecipeEntry entry : builder.getRecipeEntries()) {
             prepareDefaultResearchRecipe(entry.getResearchId(), entry.getResearchStack(), entry.getDataStack(),
@@ -143,7 +143,7 @@ public final class AssemblyLineManager {
     private static void prepareDefaultResearchRecipe(String researchId, ItemStack researchItem, ItemStack dataItem,
                                                      boolean ignoreNBT, int duration, long EUt, int CWUt,
                                                      Consumer<RecipeBuilder<?>> recipes) {
-        if (!ConfigHolder.machines.enableResearch) return;
+        if (!GTConfig.get().enableResearch()) return;
 
         dataItem = dataItem.copy();
         NBTTagCompound compound = GTUtility.getOrCreateNbtCompound(dataItem);

@@ -1,5 +1,6 @@
 package gregtech.api.worldgen.generator;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.random.XoShiRo256PlusPlusRandom;
 import gregtech.api.worldgen.config.OreDepositDefinition;
@@ -9,7 +10,6 @@ import gregtech.api.worldgen.populator.IVeinPopulator;
 import gregtech.api.worldgen.populator.VeinBufferPopulator;
 import gregtech.api.worldgen.populator.VeinChunkPopulator;
 import gregtech.api.worldgen.shape.IBlockGeneratorAccess;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -210,9 +210,9 @@ public class CachedGridEntry implements GridEntryInfo, IBlockGeneratorAccess, IB
         this.veinGeneratedMap = new Object2ObjectOpenHashMap<>();
         if (!cachedDepositMap.isEmpty()) {
             int currentCycle = 0;
-            int maxCycles = ConfigHolder.worldgen.minVeinsInSection +
-                    (ConfigHolder.worldgen.additionalVeinsInSection == 0 ? 0 :
-                            gridRandom.nextInt(ConfigHolder.worldgen.additionalVeinsInSection + 1));
+            int maxCycles = GTConfig.get().minVeinsInSection() +
+                    (GTConfig.get().additionalVeinsInSection() == 0 ? 0 :
+                            gridRandom.nextInt(GTConfig.get().additionalVeinsInSection() + 1));
             List<OreDepositDefinition> veins = new ArrayList<>();
             while (currentCycle < cachedDepositMap.size() && currentCycle < maxCycles) {
                 // instead of removing already generated veins, we swap last element with one we selected
@@ -258,14 +258,14 @@ public class CachedGridEntry implements GridEntryInfo, IBlockGeneratorAccess, IB
 
     private int calculateVeinCenterX() {
         int gridSizeX = WorldGeneratorImpl.GRID_SIZE_X * 16;
-        int offset = (ConfigHolder.worldgen.generateVeinsInCenterOfChunk && currentOreVein.isVein()) ? gridSizeX / 2 :
+        int offset = (GTConfig.get().generateVeinsInCenterOfChunk() && currentOreVein.isVein()) ? gridSizeX / 2 :
                 gridRandom.nextInt(gridSizeX);
         return gridX * gridSizeX + offset;
     }
 
     private int calculateVeinCenterZ() {
         int gridSizeZ = WorldGeneratorImpl.GRID_SIZE_Z * 16;
-        int offset = (ConfigHolder.worldgen.generateVeinsInCenterOfChunk && currentOreVein.isVein()) ? gridSizeZ / 2 :
+        int offset = (GTConfig.get().generateVeinsInCenterOfChunk() && currentOreVein.isVein()) ? gridSizeZ / 2 :
                 gridRandom.nextInt(gridSizeZ);
         return gridZ * gridSizeZ + offset;
     }

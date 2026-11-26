@@ -8,6 +8,7 @@ import gregtech.api.capability.IFilteredFluidContainer;
 import gregtech.api.capability.IPropertyFluidFilter;
 import gregtech.api.capability.impl.CombinedCapabilityProvider;
 import gregtech.api.capability.impl.ElectricItem;
+import gregtech.api.config.GTConfig;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.items.OreDictNames;
 import gregtech.api.items.gui.InventoryItemUIFactory;
@@ -21,7 +22,6 @@ import gregtech.api.unification.stack.RecyclingData;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.client.utils.ToolChargeBarRenderer;
-import gregtech.common.ConfigHolder;
 import gregtech.common.covers.filter.IFilter;
 import gregtech.common.creativetab.GTCreativeTabs;
 
@@ -633,7 +633,7 @@ public abstract class MetaItem<T extends MetaItem<?>.MetaValueItem> extends Item
             behaviour.addInformation(itemStack, lines);
         }
 
-        if (ConfigHolder.misc.debug) {
+        if (GTConfig.get().debug()) {
             lines.add("MetaItem Id: " + item.unlocalizedName);
         }
     }

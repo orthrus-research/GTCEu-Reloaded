@@ -1,11 +1,11 @@
 package gregtech.api.pipenet.tile;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.cover.Cover;
 import gregtech.api.cover.CoverHolder;
 import gregtech.api.cover.CoverSaveHandler;
 import gregtech.api.pipenet.block.BlockPipe;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -159,7 +159,7 @@ public class PipeCoverableImplementation implements CoverHolder {
 
     @Override
     public int getPaintingColorForRendering() {
-        return ConfigHolder.client.defaultPaintingColor;
+        return GTConfig.get().defaultPaintingColor();
     }
 
     @Override

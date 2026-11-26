@@ -1,6 +1,7 @@
 package gregtech.api.block.machines;
 
 import gregtech.api.GTValues;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.ITieredMetaTileEntity;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.pipenet.block.BlockPipe;
@@ -8,7 +9,6 @@ import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.client.utils.TooltipHelper;
-import gregtech.common.ConfigHolder;
 import gregtech.common.creativetab.GTCreativeTabs;
 
 import net.minecraft.block.Block;
@@ -185,7 +185,7 @@ public class MachineItemBlock extends ItemBlock {
             }
         }
 
-        if (ConfigHolder.misc.debug) {
+        if (GTConfig.get().debug()) {
             tooltip.add(String.format("MetaTileEntity Id: %s", metaTileEntity.metaTileEntityId.toString()));
         }
     }

@@ -3,6 +3,7 @@ package gregtech.api.metatileentity;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.machines.BlockMachine;
 import gregtech.api.capability.GregtechDataCodes;
+import gregtech.api.config.GTConfig;
 import gregtech.api.cover.Cover;
 import gregtech.api.gui.IUIHolder;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
@@ -12,7 +13,6 @@ import gregtech.api.util.Mods;
 import gregtech.api.util.TextFormattingUtil;
 import gregtech.client.particle.GTNameTagParticle;
 import gregtech.client.particle.GTParticleManager;
-import gregtech.common.ConfigHolder;
 import gregtech.core.network.packets.PacketRecoverMTE;
 
 import net.minecraft.block.state.IBlockState;
@@ -479,7 +479,7 @@ public class MetaTileEntityHolder extends TickableTileEntityBase implements IGre
     @Override
     public int getUIColorOverride() {
         if (metaTileEntity == null) return -1;
-        if (ConfigHolder.client.useSprayCanColorInUI) {
+        if (GTConfig.get().useSprayCanColorInUI()) {
             return metaTileEntity.getPaintingColor();
         }
         return -1;

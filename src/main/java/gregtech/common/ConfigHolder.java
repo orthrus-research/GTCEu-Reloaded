@@ -5,6 +5,10 @@ import gregtech.api.GregTechAPI;
 
 import net.minecraftforge.common.config.Config;
 
+/**
+ * GTCEu's config file. The API reads the values it needs through {@link gregtech.api.config.GTConfig#get()}, which
+ * answers from here; addons can read them there too.
+ */
 @Config(modid = GTValues.MODID, name = GTValues.MODID + '/' + GTValues.MODID)
 public class ConfigHolder {
 

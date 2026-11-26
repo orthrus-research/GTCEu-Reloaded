@@ -1,7 +1,7 @@
 package gregtech.api;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.util.random.PerThreadRandom;
-import gregtech.common.ConfigHolder;
 
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
@@ -199,12 +199,12 @@ public class GTValues {
      */
     public static final int FALLBACK = -1;
 
-    public static final Supplier<Boolean> FOOLS = () -> ConfigHolder.misc.specialEvents &&
+    public static final Supplier<Boolean> FOOLS = () -> GTConfig.get().specialEvents() &&
             MonthDay.now().equals(MonthDay.of(Month.APRIL, 1));
 
     public static final Supplier<Boolean> XMAS = () -> {
         MonthDay today = MonthDay.now();
-        return ConfigHolder.misc.specialEvents &&
+        return GTConfig.get().specialEvents() &&
                 (today.equals(MonthDay.of(Month.DECEMBER, 24)) || today.equals(MonthDay.of(Month.DECEMBER, 25)));
     };
 }

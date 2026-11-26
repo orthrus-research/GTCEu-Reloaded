@@ -1,5 +1,6 @@
 package gregtech.api.recipes.builders;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IDataItem;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -13,7 +14,6 @@ import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.AssemblyLineManager;
 import gregtech.api.util.EnumValidationResult;
 import gregtech.api.util.GTLog;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.ItemStack;
@@ -61,7 +61,7 @@ public class AssemblyLineRecipeBuilder extends RecipeBuilder<AssemblyLineRecipeB
     }
 
     private boolean applyResearchProperty(ResearchPropertyData.ResearchEntry researchEntry) {
-        if (!ConfigHolder.machines.enableResearch) return false;
+        if (!GTConfig.get().enableResearch()) return false;
         if (researchEntry == null) {
             GTLog.logger.error("Assembly Line Research Entry cannot be empty.", new Throwable());
             recipeStatus = EnumValidationResult.INVALID;

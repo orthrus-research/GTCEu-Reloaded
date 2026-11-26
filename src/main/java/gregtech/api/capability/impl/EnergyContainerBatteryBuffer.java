@@ -2,9 +2,9 @@ package gregtech.api.capability.impl;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.*;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
@@ -142,7 +142,7 @@ public class EnergyContainerBatteryBuffer extends EnergyContainerHandler {
                 if (electricItem.getCharge() < electricItem.getMaxCharge()) {
                     batteries.add(electricItem);
                 }
-            } else if (ConfigHolder.compat.energy.nativeEUToFE) {
+            } else if (GTConfig.get().nativeEUToFE()) {
                 IEnergyStorage energyStorage = batteryStack.getCapability(CapabilityEnergy.ENERGY, null);
                 if (energyStorage != null) {
                     if (energyStorage.getEnergyStored() < energyStorage.getMaxEnergyStored()) {
@@ -177,7 +177,7 @@ public class EnergyContainerBatteryBuffer extends EnergyContainerHandler {
             IElectricItem electricItem = getBatteryContainer(batteryStack);
             if (electricItem != null) {
                 energyCapacity += electricItem.getMaxCharge();
-            } else if (ConfigHolder.compat.energy.nativeEUToFE) {
+            } else if (GTConfig.get().nativeEUToFE()) {
                 IEnergyStorage energyStorage = batteryStack.getCapability(CapabilityEnergy.ENERGY, null);
                 if (energyStorage != null) {
                     energyCapacity += FeCompat.toEu(energyStorage.getMaxEnergyStored(), FeCompat.ratio(false));
@@ -196,7 +196,7 @@ public class EnergyContainerBatteryBuffer extends EnergyContainerHandler {
             IElectricItem electricItem = getBatteryContainer(batteryStack);
             if (electricItem != null) {
                 energyStored += electricItem.getCharge();
-            } else if (ConfigHolder.compat.energy.nativeEUToFE) {
+            } else if (GTConfig.get().nativeEUToFE()) {
                 IEnergyStorage energyStorage = batteryStack.getCapability(CapabilityEnergy.ENERGY, null);
                 if (energyStorage != null) {
                     energyStored += FeCompat.toEu(energyStorage.getEnergyStored(), FeCompat.ratio(false));

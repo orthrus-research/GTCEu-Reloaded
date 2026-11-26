@@ -2,6 +2,7 @@ package gregtech.api.capability.impl.miner;
 
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IMiner;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
@@ -12,7 +13,6 @@ import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
 import gregtech.client.renderer.ICubeRenderer;
 import gregtech.client.renderer.texture.Textures;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -105,7 +105,7 @@ public class MinerLogic {
 
     private static IBlockState findMiningReplacementBlock() {
         // accepted forms: name (minecraft namespace), modid:name and modid:name:meta
-        String config = ConfigHolder.machines.replaceMinedBlocksWith;
+        String config = GTConfig.get().replaceMinedBlocksWith();
         String[] blockDescription = StringUtils.split(config, ":");
         if (blockDescription == null || blockDescription.length < 1 || blockDescription.length > 3) {
             GTLog.logger.error("Miner Config Replacement block \"{}\" is not modid:name[:meta], replacing with " +

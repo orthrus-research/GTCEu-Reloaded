@@ -1,9 +1,9 @@
 package gregtech.api.block;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.util.Mods;
 import gregtech.client.model.ActiveVariantBlockBakedModel;
 import gregtech.client.renderer.EmissiveLayer;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -195,6 +195,6 @@ public abstract class VariantActiveBlock<T extends IStringSerializable & Compara
 
     @SideOnly(Side.CLIENT)
     public boolean isBloomEnabled(T value) {
-        return ConfigHolder.client.machinesEmissiveTextures;
+        return GTConfig.get().machinesEmissiveTextures();
     }
 }

@@ -2,6 +2,7 @@ package gregtech.api.recipes;
 
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
+import gregtech.api.config.GTConfig;
 import gregtech.api.definition.SourceOrigin;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.toolitem.IGTTool;
@@ -21,7 +22,6 @@ import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.api.util.world.DummyWorld;
-import gregtech.common.ConfigHolder;
 import gregtech.common.crafting.FluidReplaceRecipe;
 import gregtech.common.crafting.GTShapedOreRecipe;
 import gregtech.common.crafting.GTShapelessOreRecipe;
@@ -61,7 +61,7 @@ import java.util.stream.Collectors;
 public final class ModHandler {
 
     public static final boolean ERROR_ON_INVALID_RECIPE = GTValues.isDeobfEnvironment() ||
-            !ConfigHolder.misc.ignoreErrorOrInvalidRecipes;
+            !GTConfig.get().ignoreErrorOrInvalidRecipes();
     public static boolean hasInvalidRecipe = false;
 
     private ModHandler() {}
@@ -432,7 +432,7 @@ public final class ModHandler {
         } else if (ingredient instanceof OrePrefix orePrefix) {
             ingredient = orePrefix.name();
         } else if (ingredient instanceof UnificationEntry entry) {
-            if (ConfigHolder.misc.debug && entry.material != null && !entry.orePrefix.isIgnored(entry.material) &&
+            if (GTConfig.get().debug() && entry.material != null && !entry.orePrefix.isIgnored(entry.material) &&
                     !entry.orePrefix.doGenerateItem(entry.material)) {
                 logInvalidRecipe("Attempted to create recipe for invalid/missing Unification Entry " + ingredient);
             }
@@ -530,7 +530,7 @@ public final class ModHandler {
                         (currentStack.getMetadata() == GTValues.W ||
                                 currentStack.getMetadata() == input.getMetadata()));
 
-        if (ConfigHolder.misc.debug) {
+        if (GTConfig.get().debug()) {
             if (wasRemoved) {
                 GTLog.logger.info("Removed Smelting Recipe for Input: {}", input.getDisplayName());
             } else {
@@ -552,7 +552,7 @@ public final class ModHandler {
         int recipesRemoved = removeRecipeByOutput(
                 recipe -> ItemStack.areItemStacksEqual(recipe.getRecipeOutput(), output));
 
-        if (ConfigHolder.misc.debug) {
+        if (GTConfig.get().debug()) {
             if (recipesRemoved != 0) {
                 GTLog.logger.info("Removed {} Recipe(s) with Output: {}", recipesRemoved, output.getDisplayName());
             } else {
@@ -597,7 +597,7 @@ public final class ModHandler {
      * @param location the ResourceLocation of the Recipe.
      */
     public static void removeRecipeByName(@NotNull ResourceLocation location) {
-        if (ConfigHolder.misc.debug) {
+        if (GTConfig.get().debug()) {
             String recipeName = location.toString();
             if (ForgeRegistries.RECIPES.containsKey(location)) {
                 GTLog.logger.info("Removed Recipe with Name: {}", recipeName);
@@ -699,7 +699,7 @@ public final class ModHandler {
                     if (ingot.isItemEqual(output) && dust.isItemEqual(input)) {
                         if (FurnaceRecipePolicy.isProtected(input, output)) continue;
                         recipeIterator.remove();
-                        if (ConfigHolder.misc.debug) {
+                        if (GTConfig.get().debug()) {
                             GTLog.logger.info("Removing Smelting Recipe for EBF material {}",
                                     LocalizationUtils.format(material.getUnlocalizedName()));
                         }

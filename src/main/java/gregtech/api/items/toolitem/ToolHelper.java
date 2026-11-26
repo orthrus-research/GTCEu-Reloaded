@@ -3,6 +3,7 @@ package gregtech.api.items.toolitem;
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
+import gregtech.api.config.GTConfig;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
 import gregtech.api.items.toolitem.aoe.AoESymmetrical;
@@ -15,7 +16,6 @@ import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.unification.ore.OrePrefix;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.function.QuintFunction;
-import gregtech.common.ConfigHolder;
 import gregtech.common.items.MetaItems;
 import gregtech.common.items.behaviors.ColorSprayBehaviour;
 import gregtech.tools.enchants.EnchantmentHardHammer;
@@ -317,13 +317,13 @@ public final class ToolHelper {
         if (!(entity instanceof EntityPlayer) || !((EntityPlayer) entity).capabilities.isCreativeMode) {
             Random random = entity == null ? GTValues.RNG : entity.getRNG();
             if (tool.isElectric()) {
-                int electricDamage = damage * ConfigHolder.machines.energyUsageMultiplier;
+                int electricDamage = damage * GTConfig.get().energyUsageMultiplier();
                 IElectricItem electricItem = stack.getCapability(GregtechCapabilities.CAPABILITY_ELECTRIC_ITEM,
                         null);
                 if (electricItem != null) {
                     electricItem.discharge(electricDamage, tool.getElectricTier(), true, false, false);
                     if (electricItem.getCharge() > 0 &&
-                            random.nextInt(100) >= ConfigHolder.tools.rngDamageElectricTools) {
+                            random.nextInt(100) >= GTConfig.get().rngDamageElectricTools()) {
                         return;
                     }
                 } else {
@@ -584,7 +584,7 @@ public final class ToolHelper {
     public static boolean isToolEffective(IBlockState state, Set<String> toolClasses, int harvestLevel) {
         Block block = state.getBlock();
         String harvestTool = block.getHarvestTool(state);
-        if (canMineWithPick(harvestTool) && ConfigHolder.machines.requireGTToolsForBlocks) {
+        if (canMineWithPick(harvestTool) && GTConfig.get().requireGTToolsForBlocks()) {
             if (!toolClasses.contains(harvestTool)) return false;
         }
 

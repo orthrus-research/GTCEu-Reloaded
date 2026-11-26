@@ -1,6 +1,6 @@
 package gregtech.api.capability;
 
-import gregtech.common.ConfigHolder;
+import gregtech.api.config.GTConfig;
 
 import net.minecraftforge.energy.IEnergyStorage;
 
@@ -10,7 +10,7 @@ public class FeCompat {
      * Conversion ratio used by energy converters
      */
     public static int ratio(boolean feToEu) {
-        return feToEu ? ConfigHolder.compat.energy.feToEuRatio : ConfigHolder.compat.energy.euToFeRatio;
+        return feToEu ? GTConfig.get().feToEuRatio() : GTConfig.get().euToFeRatio();
     }
 
     /**

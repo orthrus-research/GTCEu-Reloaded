@@ -2,8 +2,9 @@ package gregtech.api.items.armor;
 
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
+import gregtech.api.config.GTConfig;
+import gregtech.api.config.GTConfigView;
 import gregtech.api.util.ItemStackHashStrategy;
-import gregtech.common.ConfigHolder;
 import gregtech.core.sound.GTSoundEvents;
 
 import net.minecraft.client.Minecraft;
@@ -278,18 +279,19 @@ public class ArmorUtils {
             int windowHeight = new ScaledResolution(mc).getScaledHeight();
             int windowWidth = new ScaledResolution(mc).getScaledWidth();
             int stringWidth = mc.fontRenderer.getStringWidth(stringList.get(index));
-            if (ConfigHolder.client.armorHud.hudLocation == 1) {
-                posX = 1 + ConfigHolder.client.armorHud.hudOffsetX;
-                posY = 1 + ConfigHolder.client.armorHud.hudOffsetY + (fontHeight * index);
-            } else if (ConfigHolder.client.armorHud.hudLocation == 2) {
-                posX = windowWidth - (1 + ConfigHolder.client.armorHud.hudOffsetX) - stringWidth;
-                posY = 1 + ConfigHolder.client.armorHud.hudOffsetY + (fontHeight * index);
-            } else if (ConfigHolder.client.armorHud.hudLocation == 3) {
-                posX = 1 + ConfigHolder.client.armorHud.hudOffsetX;
-                posY = windowHeight - fontHeight * (stringAmount - index) - 1 - ConfigHolder.client.armorHud.hudOffsetY;
-            } else if (ConfigHolder.client.armorHud.hudLocation == 4) {
-                posX = windowWidth - (1 + ConfigHolder.client.armorHud.hudOffsetX) - stringWidth;
-                posY = windowHeight - fontHeight * (stringAmount - index) - 1 - ConfigHolder.client.armorHud.hudOffsetY;
+            GTConfigView config = GTConfig.get();
+            if (config.hudLocation() == 1) {
+                posX = 1 + config.hudOffsetX();
+                posY = 1 + config.hudOffsetY() + (fontHeight * index);
+            } else if (config.hudLocation() == 2) {
+                posX = windowWidth - (1 + config.hudOffsetX()) - stringWidth;
+                posY = 1 + config.hudOffsetY() + (fontHeight * index);
+            } else if (config.hudLocation() == 3) {
+                posX = 1 + config.hudOffsetX();
+                posY = windowHeight - fontHeight * (stringAmount - index) - 1 - config.hudOffsetY();
+            } else if (config.hudLocation() == 4) {
+                posX = windowWidth - (1 + config.hudOffsetX()) - stringWidth;
+                posY = windowHeight - fontHeight * (stringAmount - index) - 1 - config.hudOffsetY();
             } else {
                 throw new IllegalArgumentException("Armor Hud config hudLocation is improperly configured.");
             }

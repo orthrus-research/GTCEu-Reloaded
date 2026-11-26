@@ -1,9 +1,9 @@
 package gregtech.api.capability.impl;
 
 import gregtech.api.capability.IFilter;
+import gregtech.api.config.GTConfig;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.Materials;
-import gregtech.common.ConfigHolder;
 
 import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
@@ -58,7 +58,7 @@ public enum CommonFluidFilters implements IFilter<FluidStack> {
                 return true;
             }
 
-            for (String fluidName : ConfigHolder.machines.boilerFluids) {
+            for (String fluidName : GTConfig.get().boilerFluids()) {
                 Fluid boilerFluid = FluidRegistry.getFluid(fluidName);
                 if (boilerFluid != null && matchesFluid(fluid, boilerFluid)) {
                     return true;

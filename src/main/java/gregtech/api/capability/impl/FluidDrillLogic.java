@@ -2,9 +2,9 @@ package gregtech.api.capability.impl;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechDataCodes;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.worldgen.bedrockFluids.BedrockFluidVeinHandler;
-import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.electric.MetaTileEntityFluidDrill;
 
 import net.minecraft.nbt.NBTTagCompound;
@@ -138,7 +138,7 @@ public class FluidDrillLogic {
     protected boolean checkCanDrain() {
         if (!consumeEnergy(true)) {
             if (progressTime >= 2) {
-                if (ConfigHolder.machines.recipeProgressLowEnergy)
+                if (GTConfig.get().recipeProgressLowEnergy())
                     this.progressTime = 1;
                 else
                     this.progressTime = Math.max(1, progressTime - 2);

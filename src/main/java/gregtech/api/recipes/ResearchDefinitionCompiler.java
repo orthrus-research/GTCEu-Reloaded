@@ -1,11 +1,11 @@
 package gregtech.api.recipes;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.definition.DefinitionDiagnostic;
 import gregtech.api.recipes.builders.AssemblyLineRecipeBuilder;
 import gregtech.api.recipes.definition.RecipeDefinition;
 import gregtech.api.recipes.definition.ResearchRequirement;
 import gregtech.api.util.AssemblyLineManager;
-import gregtech.common.ConfigHolder;
 
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +56,7 @@ final class ResearchDefinitionCompiler {
                 }
             }
         }
-        if (!errors.isEmpty() || !ConfigHolder.machines.enableResearch) return;
+        if (!errors.isEmpty() || !GTConfig.get().enableResearch()) return;
         for (ResearchRequirement requirement : requirements) {
             switch (requirement) {
                 case ResearchRequirement.Existing value -> assembly.researchWithoutRecipe(value.id(),

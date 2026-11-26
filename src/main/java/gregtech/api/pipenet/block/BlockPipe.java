@@ -2,6 +2,7 @@ package gregtech.api.pipenet.block;
 
 import gregtech.api.block.BuiltInRenderBlock;
 import gregtech.api.block.IEmissiveLayerBlock;
+import gregtech.api.config.GTConfig;
 import gregtech.api.cover.Cover;
 import gregtech.api.cover.CoverHolder;
 import gregtech.api.cover.CoverRayTracer;
@@ -15,7 +16,6 @@ import gregtech.api.pipenet.tile.IPipeTile;
 import gregtech.api.pipenet.tile.PipeCoverableImplementation;
 import gregtech.api.pipenet.tile.TileEntityPipeBase;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 import gregtech.common.blocks.BlockFrame;
 import gregtech.common.blocks.MetaBlocks;
 import gregtech.common.items.MetaItems;
@@ -214,7 +214,7 @@ public abstract class BlockPipe<PipeType extends Enum<PipeType> & IPipeType<Node
             EnumFacing facing = GTUtility.getFacingToNeighbor(pos, fromPos);
             if (facing == null) return;
             pipeTile.onNeighborChanged(facing);
-            if (!ConfigHolder.machines.gt6StylePipesCables) {
+            if (!GTConfig.get().gt6StylePipesCables()) {
                 boolean open = pipeTile.isConnected(facing);
                 boolean canConnect = pipeTile.getCoverableImplementation().getCoverAtSide(facing) != null ||
                         canConnect(pipeTile, facing);

@@ -1,10 +1,10 @@
 package gregtech.api.capability.impl;
 
 import gregtech.api.capability.GregtechDataCodes;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.multiblock.ICleanroomProvider;
 import gregtech.api.metatileentity.multiblock.IMaintenance;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -33,7 +33,7 @@ public class CleanroomLogic {
     public CleanroomLogic(MetaTileEntity metaTileEntity, int minEnergyTier) {
         this.metaTileEntity = metaTileEntity;
         this.minEnergyTier = minEnergyTier;
-        this.hasMaintenance = ConfigHolder.machines.enableMaintenance &&
+        this.hasMaintenance = GTConfig.get().enableMaintenance() &&
                 ((IMaintenance) metaTileEntity).hasMaintenanceMechanics();
     }
 
@@ -56,7 +56,7 @@ public class CleanroomLogic {
             consumeEnergy(false);
         } else {
             if (progressTime >= 2) {
-                if (ConfigHolder.machines.recipeProgressLowEnergy) this.progressTime = 1;
+                if (GTConfig.get().recipeProgressLowEnergy()) this.progressTime = 1;
                 else this.progressTime = Math.max(1, progressTime - 2);
             }
             hasNotEnoughEnergy = true;

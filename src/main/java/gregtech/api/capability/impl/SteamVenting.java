@@ -1,9 +1,9 @@
 package gregtech.api.capability.impl;
 
 import gregtech.api.GTValues;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -49,7 +49,7 @@ final class SteamVenting {
                 side.getXOffset() / 2.0,
                 side.getYOffset() / 2.0,
                 side.getZOffset() / 2.0, 0.1);
-        if (ConfigHolder.machines.machineSounds && !machine.isMuffled()) {
+        if (GTConfig.get().machineSounds() && !machine.isMuffled()) {
             world.playSound(null, position.x, position.y, position.z, SoundEvents.BLOCK_LAVA_EXTINGUISH,
                     SoundCategory.BLOCKS, 1.0f, 1.0f);
         }

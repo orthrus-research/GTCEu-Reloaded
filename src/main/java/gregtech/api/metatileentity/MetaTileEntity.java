@@ -12,6 +12,7 @@ import gregtech.api.capability.impl.AbstractRecipeLogic;
 import gregtech.api.capability.impl.FluidHandlerProxy;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerProxy;
+import gregtech.api.config.GTConfig;
 import gregtech.api.configuration.ConfigurationAdapter;
 import gregtech.api.cover.Cover;
 import gregtech.api.cover.CoverHolder;
@@ -37,7 +38,6 @@ import gregtech.api.util.Mods;
 import gregtech.client.renderer.texture.Textures;
 import gregtech.client.utils.RenderUtil;
 import gregtech.client.utils.TooltipHelper;
-import gregtech.common.ConfigHolder;
 import gregtech.common.creativetab.GTCreativeTabs;
 import gregtech.common.items.MetaItems;
 
@@ -247,7 +247,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
     @SideOnly(Side.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World world, @NotNull List<String> tooltip,
                                boolean advanced) {
-        if (ConfigHolder.machines.doTerrainExplosion && getIsWeatherOrTerrainResistant())
+        if (GTConfig.get().doTerrainExplosion() && getIsWeatherOrTerrainResistant())
             tooltip.add(I18n.format("gregtech.universal.tooltip.terrain_resist"));
     }
 
@@ -884,7 +884,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
      *         like Time in a Bottle, or Torcherino, or similar.
      */
     public boolean allowTickAcceleration() {
-        return ConfigHolder.machines.allowTickAcceleration;
+        return GTConfig.get().allowTickAcceleration();
     }
 
     protected boolean shouldUpdate(MTETrait trait) {
@@ -901,7 +901,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
 
     @SideOnly(Side.CLIENT)
     private void updateSound() {
-        if (!ConfigHolder.machines.machineSounds || isMuffled()) {
+        if (!GTConfig.get().machineSounds() || isMuffled()) {
             return;
         }
         SoundEvent sound = getSound();
@@ -1336,7 +1336,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
     }
 
     public int getDefaultPaintingColor() {
-        return ConfigHolder.client.defaultPaintingColor;
+        return GTConfig.get().defaultPaintingColor();
     }
 
     public boolean isValidFrontFacing(EnumFacing facing) {
@@ -1616,7 +1616,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
     public void checkWeatherOrTerrainExplosion(float explosionPower, double additionalFireChance,
                                                IEnergyContainer energyContainer) {
         World world = getWorld();
-        if (!world.isRemote && ConfigHolder.machines.doTerrainExplosion && !getIsWeatherOrTerrainResistant() &&
+        if (!world.isRemote && GTConfig.get().doTerrainExplosion() && !getIsWeatherOrTerrainResistant() &&
                 energyContainer.getEnergyStored() != 0) {
             if (GTValues.RNG.nextInt(1000) == 0) {
                 for (EnumFacing side : EnumFacing.VALUES) {
@@ -1646,7 +1646,7 @@ public abstract class MetaTileEntity implements ISyncedTileEntity, CoverHolder, 
         setExploded();
         getWorld().setBlockToAir(getPos());
         getWorld().createExplosion(null, getPos().getX() + 0.5, getPos().getY() + 0.5, getPos().getZ() + 0.5,
-                explosionPower, ConfigHolder.machines.doesExplosionDamagesTerrain);
+                explosionPower, GTConfig.get().doesExplosionDamagesTerrain());
     }
 
     /**

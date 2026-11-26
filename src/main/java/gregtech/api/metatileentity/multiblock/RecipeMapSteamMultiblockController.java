@@ -5,6 +5,7 @@ import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.capability.impl.FluidTankList;
 import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.SteamMultiblockRecipeLogic;
+import gregtech.api.config.GTConfig;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.MTETrait;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
@@ -14,7 +15,6 @@ import gregtech.api.pattern.TraceabilityPredicate;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.KeyUtil;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundEvent;
@@ -29,7 +29,7 @@ import com.cleanroommc.modularui.api.drawable.IKey;
 
 public abstract class RecipeMapSteamMultiblockController extends MultiblockWithDisplayBase implements IControllable {
 
-    protected static final double CONVERSION_RATE = ConfigHolder.machines.multiblockSteamToEU;
+    protected static final double CONVERSION_RATE = GTConfig.get().multiblockSteamToEU();
 
     public final RecipeMap<?> recipeMap;
     protected SteamMultiblockRecipeLogic recipeMapWorkable;

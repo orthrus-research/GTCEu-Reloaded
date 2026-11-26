@@ -1,10 +1,10 @@
 package gregtech.api.recipes;
 
 import gregtech.api.GTValues;
+import gregtech.api.config.GTConfig;
 import gregtech.api.persistence.PersistentData;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
 import gregtech.api.util.GTLog;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
@@ -64,7 +64,7 @@ public final class GTRecipeInputCache {
             int size = calculateOptimalExpectedSize();
             instances = createCache(size);
 
-            if (ConfigHolder.misc.debug || GTValues.isDeobfEnvironment()) {
+            if (GTConfig.get().debug() || GTValues.isDeobfEnvironment()) {
                 GTLog.logger.info("GTRecipeInput cache enabled with expected size {}", size);
             }
         }
@@ -78,7 +78,7 @@ public final class GTRecipeInputCache {
     public static void disableCache() {
         if (isCacheEnabled()) {
             int size = instances.size();
-            if (ConfigHolder.misc.debug || GTValues.isDeobfEnvironment()) {
+            if (GTConfig.get().debug() || GTValues.isDeobfEnvironment()) {
                 GTLog.logger.info("GTRecipeInput cache disabled; releasing {} unique instances", size);
             }
             instances = null;

@@ -2,6 +2,7 @@ package gregtech.api.recipes;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.IMultipleTankHandler;
+import gregtech.api.config.GTConfig;
 import gregtech.api.recipes.category.GTRecipeCategory;
 import gregtech.api.recipes.chance.boost.ChanceBoostFunction;
 import gregtech.api.recipes.ingredients.GTRecipeInput;
@@ -25,7 +26,6 @@ import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.LocalizationUtils;
 import gregtech.api.util.ValidationResult;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -1094,7 +1094,7 @@ public class RecipeMap<R extends RecipeBuilder<R>> {
     }
 
     private void logIngredientTreeConflict(Recipe recipe, Either<Recipe, Branch> existing) {
-        boolean debug = ConfigHolder.misc.debug || GTValues.isDeobfEnvironment();
+        boolean debug = GTConfig.get().debug() || GTValues.isDeobfEnvironment();
         if (!recipe.isGroovyRecipe() && !debug) return;
         String details = existing.left().isPresent() ? "Which conflicts with: " + existing.left().orElseThrow() :
                 "Input prefix is already used by: " + existing.right().orElseThrow().getRecipes(false)

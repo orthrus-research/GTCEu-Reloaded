@@ -2,9 +2,9 @@ package gregtech.api.capability;
 
 import gregtech.api.GTValues;
 import gregtech.api.capability.impl.EUToFEProvider;
+import gregtech.api.config.GTConfig;
 import gregtech.api.items.toolitem.ItemGTToolbelt;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.converter.ConverterTrait;
 
 import net.minecraft.tileentity.TileEntity;
@@ -38,7 +38,7 @@ public class GregtechCapabilities {
     @SubscribeEvent
     public static void attachTileCapability(AttachCapabilitiesEvent<TileEntity> event) {
         // the provider is attached to every tile entity in the game; with the conversion off it would only answer no
-        if (!ConfigHolder.compat.energy.nativeEUToFE) return;
+        if (!GTConfig.get().nativeEUToFE()) return;
         event.addCapability(CAPABILITY_EU_TO_FE, new EUToFEProvider(event.getObject()));
     }
 }

@@ -7,6 +7,7 @@ import gregtech.api.capability.IMultiblockController;
 import gregtech.api.capability.IMultipleRecipeMaps;
 import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.capability.RecipeInputView;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.multiblock.MultiblockAbility;
 import gregtech.api.metatileentity.multiblock.MultiblockWithDisplayBase;
 import gregtech.api.metatileentity.multiblock.RecipeMapMultiblockController;
@@ -18,7 +19,6 @@ import gregtech.api.recipes.logic.RecipeFailure;
 import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.Tuple;
@@ -184,7 +184,7 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
         // do not run recipes when there are more than 5 maintenance problems
         // Maintenance can apply to all multiblocks, so cast to a base multiblock class
         MultiblockWithDisplayBase controller = (MultiblockWithDisplayBase) metaTileEntity;
-        if (ConfigHolder.machines.enableMaintenance && controller.hasMaintenanceMechanics() &&
+        if (GTConfig.get().enableMaintenance() && controller.hasMaintenanceMechanics() &&
                 controller.getNumMaintenanceProblems() > 5) {
             setRecipeFailure(RecipeFailureReason.MAINTENANCE);
             return;
@@ -559,9 +559,9 @@ public class MultiblockRecipeLogic extends AbstractRecipeLogic {
         MultiblockWithDisplayBase displayBase = this.metaTileEntity instanceof MultiblockWithDisplayBase ?
                 (MultiblockWithDisplayBase) metaTileEntity : null;
         int numMaintenanceProblems = displayBase == null || !displayBase.hasMaintenanceMechanics() ||
-                !ConfigHolder.machines.enableMaintenance ? 0 : displayBase.getNumMaintenanceProblems();
+                !GTConfig.get().enableMaintenance() ? 0 : displayBase.getNumMaintenanceProblems();
         double durationMultiplier = 1.0D;
-        if (displayBase != null && displayBase.hasMaintenanceMechanics() && ConfigHolder.machines.enableMaintenance) {
+        if (displayBase != null && displayBase.hasMaintenanceMechanics() && GTConfig.get().enableMaintenance()) {
             durationMultiplier = displayBase.getMaintenanceDurationMultiplier();
         }
         return new Tuple<>(numMaintenanceProblems, durationMultiplier);

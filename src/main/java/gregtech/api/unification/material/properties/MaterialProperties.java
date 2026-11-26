@@ -1,8 +1,8 @@
 package gregtech.api.unification.material.properties;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.unification.material.Material;
 import gregtech.api.util.GTLog;
-import gregtech.common.ConfigHolder;
 
 import java.util.*;
 
@@ -65,7 +65,7 @@ public class MaterialProperties {
 
         if (propertyMap.keySet().stream().noneMatch(baseTypes::contains)) {
             if (propertyMap.isEmpty()) {
-                if (ConfigHolder.misc.debug) {
+                if (GTConfig.get().debug()) {
                     GTLog.logger.debug("Creating empty placeholder Material {}", material);
                 }
                 propertyMap.put(PropertyKey.EMPTY, PropertyKey.EMPTY.constructDefault());

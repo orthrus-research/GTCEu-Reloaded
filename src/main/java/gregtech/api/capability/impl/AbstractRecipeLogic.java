@@ -7,6 +7,7 @@ import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.IMultiblockController;
 import gregtech.api.capability.IMultipleTankHandler;
 import gregtech.api.capability.IWorkable;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.IVoidable;
 import gregtech.api.metatileentity.MTETrait;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -36,7 +37,6 @@ import gregtech.api.recipes.properties.RecipePropertyStorage;
 import gregtech.api.recipes.properties.impl.ConditionProperty;
 import gregtech.api.util.GTTransferUtils;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -691,7 +691,7 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
     protected void decreaseProgress() {
         // if current progress value is greater than 2, decrement it by 2
         if (progressTime >= 2) {
-            if (ConfigHolder.machines.recipeProgressLowEnergy) {
+            if (GTConfig.get().recipeProgressLowEnergy()) {
                 this.progressTime = 1;
             } else {
                 this.progressTime = Math.max(1, progressTime - 2);

@@ -54,7 +54,8 @@ class ImportRatchetTest {
                         "implementation packages (" + String.join(", ", IMPLEMENTATION) + ").",
                 "Fix each one in the code: move what the API needs into gregtech.api, leaving a deprecated " +
                         "forwarder where addons may use the old name, or let the API reach the implementation " +
-                        "through an API type the implementation provides."));
+                        "through an API type the implementation provides, as GTConfig.get() does for the " +
+                        "configuration."));
     }
 
     @Test

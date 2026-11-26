@@ -5,9 +5,9 @@ import gregtech.api.capability.FeCompat;
 import gregtech.api.capability.GregtechCapabilities;
 import gregtech.api.capability.IElectricItem;
 import gregtech.api.capability.impl.ElectricItem;
+import gregtech.api.config.GTConfig;
 import gregtech.api.items.metaitem.stats.*;
 import gregtech.api.util.Mods;
-import gregtech.common.ConfigHolder;
 import gregtech.integration.baubles.BaublesModule;
 
 import net.minecraft.client.resources.I18n;
@@ -91,10 +91,10 @@ public class ElectricStats implements IItemComponent, IItemCapabilityProvider, I
                         transferLimit -= chargedAmount;
                         if (transferLimit == 0L) break;
                     }
-                } else if (ConfigHolder.compat.energy.nativeEUToFE && feEnergyItem != null) {
+                } else if (GTConfig.get().nativeEUToFE() && feEnergyItem != null) {
                     if (feEnergyItem.getEnergyStored() < feEnergyItem.getMaxEnergyStored()) {
                         int energyMissing = feEnergyItem.getMaxEnergyStored() - feEnergyItem.getEnergyStored();
-                        long euToCharge = FeCompat.toEu(energyMissing, ConfigHolder.compat.energy.feToEuRatio);
+                        long euToCharge = FeCompat.toEu(energyMissing, GTConfig.get().feToEuRatio());
                         long energyToTransfer = Math.min(euToCharge, transferLimit);
                         long maxDischargeAmount = Math.min(energyToTransfer,
                                 electricItem.discharge(energyToTransfer, electricItem.getTier(), false, true, true));

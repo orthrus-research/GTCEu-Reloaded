@@ -1,6 +1,7 @@
 package gregtech.api.capability.impl;
 
 import gregtech.api.capability.IMultiblockController;
+import gregtech.api.config.GTConfig;
 import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.multiblock.CleanroomType;
 import gregtech.api.metatileentity.multiblock.ICleanroomProvider;
@@ -9,7 +10,6 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.logic.RecipeFailureReason;
 import gregtech.api.recipes.properties.impl.CleanroomProperty;
 import gregtech.api.recipes.properties.impl.DimensionProperty;
-import gregtech.common.ConfigHolder;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -34,7 +34,7 @@ final class RecipeEnvironmentChecks {
         CleanroomType requiredType = recipe.getProperty(CleanroomProperty.getInstance(), null);
         if (requiredType == null) return RecipeFailureReason.NONE;
         if (!(machine instanceof ICleanroomReceiver receiver)) return RecipeFailureReason.CLEANROOM_MISSING;
-        if (ConfigHolder.machines.cleanMultiblocks && machine instanceof IMultiblockController)
+        if (GTConfig.get().cleanMultiblocks() && machine instanceof IMultiblockController)
             return RecipeFailureReason.NONE;
 
         ICleanroomProvider cleanroom = receiver.getCleanroom();

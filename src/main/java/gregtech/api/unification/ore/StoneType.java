@@ -1,10 +1,10 @@
 package gregtech.api.unification.ore;
 
+import gregtech.api.config.GTConfig;
 import gregtech.api.unification.material.Material;
 import gregtech.api.unification.material.properties.PropertyKey;
 import gregtech.api.util.GTControlledRegistry;
 import gregtech.api.util.Mods;
-import gregtech.common.ConfigHolder;
 import gregtech.integration.jei.basic.OreByProduct;
 
 import net.minecraft.block.SoundType;
@@ -47,7 +47,7 @@ public class StoneType implements Comparable<StoneType> {
         this.stoneMaterial = stoneMaterial;
         this.stone = stone;
         this.predicate = predicate::test;
-        this.shouldBeDroppedAsItem = shouldBeDroppedAsItem || ConfigHolder.worldgen.allUniqueStoneTypes;
+        this.shouldBeDroppedAsItem = shouldBeDroppedAsItem || GTConfig.get().allUniqueStoneTypes();
         STONE_TYPE_REGISTRY.register(id, name, this);
         if (Mods.JustEnoughItems.isModLoaded() && this.shouldBeDroppedAsItem) {
             OreByProduct.addOreByProductPrefix(this.processingPrefix);

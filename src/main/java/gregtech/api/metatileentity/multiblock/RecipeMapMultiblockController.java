@@ -11,6 +11,7 @@ import gregtech.api.capability.impl.ItemHandlerList;
 import gregtech.api.capability.impl.MultiblockFluidInputs;
 import gregtech.api.capability.impl.MultiblockRecipeInputs;
 import gregtech.api.capability.impl.MultiblockRecipeLogic;
+import gregtech.api.config.GTConfig;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.metatileentity.IDataInfoProvider;
 import gregtech.api.metatileentity.multiblock.ui.MultiblockUIBuilder;
@@ -20,7 +21,6 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.util.GTUtility;
 import gregtech.api.util.TextFormattingUtil;
-import gregtech.common.ConfigHolder;
 
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
@@ -368,7 +368,7 @@ public abstract class RecipeMapMultiblockController extends MultiblockWithDispla
                 new TextComponentTranslation(GTValues.VN[GTUtility.getTierByVoltage(energyContainer.getInputVoltage())])
                         .setStyle(new Style().setColor(TextFormatting.YELLOW))));
 
-        if (ConfigHolder.machines.enableMaintenance && hasMaintenanceMechanics()) {
+        if (GTConfig.get().enableMaintenance() && hasMaintenanceMechanics()) {
             list.add(new TextComponentTranslation("behavior.tricorder.multiblock_maintenance",
                     new TextComponentTranslation(TextFormattingUtil.formatNumbers(getNumMaintenanceProblems()))
                             .setStyle(new Style().setColor(TextFormatting.RED))));

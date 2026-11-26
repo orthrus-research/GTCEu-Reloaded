@@ -4,6 +4,7 @@ import gregtech.api.GTValues;
 import gregtech.api.capability.IEnergyContainer;
 import gregtech.api.capability.IMultiblockController;
 import gregtech.api.capability.IMultipleTankHandler;
+import gregtech.api.config.GTConfig;
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.RecipeMaps;
@@ -11,7 +12,6 @@ import gregtech.api.recipes.category.ICategoryOverride;
 import gregtech.api.unification.material.Materials;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.GTUtility;
-import gregtech.common.ConfigHolder;
 import gregtech.common.metatileentities.multi.MetaTileEntityLargeBoiler;
 
 import net.minecraft.item.ItemStack;
@@ -69,7 +69,7 @@ public class BoilerRecipeLogic extends AbstractRecipeLogic implements ICategoryO
     @Override
     protected void trySearchNewRecipe() {
         MetaTileEntityLargeBoiler boiler = (MetaTileEntityLargeBoiler) metaTileEntity;
-        if (ConfigHolder.machines.enableMaintenance && boiler.hasMaintenanceMechanics() &&
+        if (GTConfig.get().enableMaintenance() && boiler.hasMaintenanceMechanics() &&
                 boiler.getNumMaintenanceProblems() > 5) {
             return;
         }
@@ -176,7 +176,7 @@ public class BoilerRecipeLogic extends AbstractRecipeLogic implements ICategoryO
     }
 
     private int getMaximumHeatFromMaintenance() {
-        if (ConfigHolder.machines.enableMaintenance) {
+        if (GTConfig.get().enableMaintenance()) {
             return (int) Math.min(currentHeat,
                     (1 - 0.1 * getMetaTileEntity().getNumMaintenanceProblems()) * getMaximumHeat());
         } else return currentHeat;
@@ -350,7 +350,7 @@ public class BoilerRecipeLogic extends AbstractRecipeLogic implements ICategoryO
         if (remaining > 0) {
             remaining -= drainAccepted(fluidHandler, Materials.DistilledWater.getFluid(), remaining);
         }
-        for (String fluidName : ConfigHolder.machines.boilerFluids) {
+        for (String fluidName : GTConfig.get().boilerFluids()) {
             if (remaining <= 0) break;
             Fluid fluid = FluidRegistry.getFluid(fluidName);
             if (fluid != null) {
