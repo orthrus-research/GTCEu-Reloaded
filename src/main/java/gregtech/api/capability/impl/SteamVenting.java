@@ -2,14 +2,18 @@ package gregtech.api.capability.impl;
 
 import gregtech.api.GTValues;
 import gregtech.api.metatileentity.MetaTileEntity;
+import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumParticleTypes;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 
 /**
@@ -19,6 +23,18 @@ import net.minecraft.world.WorldServer;
 final class SteamVenting {
 
     private SteamVenting() {}
+
+    /**
+     * Steam leaves through a block without a collision box, and melts snow by a layer, a snow block to seven layers,
+     * to get through; it vents only through those.
+     *
+     * @return whether steam can leave through the block at the position
+     */
+    static boolean clearVent(World world, BlockPos ventPos) {
+        IBlockState state = world.getBlockState(ventPos);
+        return state.getCollisionBoundingBox(world, ventPos) == Block.NULL_AABB ||
+                GTUtility.tryBreakSnow(world, ventPos, state, false);
+    }
 
     /**
      * Shows a cloud of steam leaving the machine through the side, and plays its hiss unless machine sounds are off

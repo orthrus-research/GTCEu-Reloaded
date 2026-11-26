@@ -6,10 +6,6 @@ import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.RecipeFailureReason;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockSnow;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fluids.FluidTank;
@@ -161,13 +157,8 @@ public class SteamMultiblockRecipeLogic extends AbstractRecipeLogic {
     private void ventSteam() {
         BlockPos machinePos = metaTileEntity.getPos();
         EnumFacing ventingSide = metaTileEntity.getFrontFacing();
-        BlockPos ventingBlockPos = machinePos.offset(ventingSide);
-        IBlockState blockOnPos = metaTileEntity.getWorld().getBlockState(ventingBlockPos);
-        if (blockOnPos.getCollisionBoundingBox(metaTileEntity.getWorld(), ventingBlockPos) == Block.NULL_AABB) {
+        if (SteamVenting.clearVent(metaTileEntity.getWorld(), machinePos.offset(ventingSide))) {
             SteamVenting.playEffects(metaTileEntity, machinePos, ventingSide);
-        } else if (blockOnPos.getBlock() == Blocks.SNOW_LAYER && blockOnPos.getValue(BlockSnow.LAYERS) == 1) {
-            SteamVenting.playEffects(metaTileEntity, machinePos, ventingSide);
-            metaTileEntity.getWorld().destroyBlock(ventingBlockPos, false);
         }
     }
 

@@ -9,11 +9,8 @@ import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.OCParams;
 import gregtech.api.recipes.logic.OCResult;
 import gregtech.api.recipes.logic.RecipeFailureReason;
-import gregtech.api.util.GTUtility;
 import gregtech.core.advancement.AdvancementTriggers;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -126,10 +123,7 @@ public class RecipeLogicSteam extends AbstractRecipeLogic implements IVentable {
         BlockPos machinePos = metaTileEntity.getPos();
         EnumFacing ventingSide = getVentingSide();
         BlockPos ventingBlockPos = machinePos.offset(ventingSide);
-        IBlockState blockOnPos = metaTileEntity.getWorld().getBlockState(ventingBlockPos);
-        if (blockOnPos.getCollisionBoundingBox(metaTileEntity.getWorld(), ventingBlockPos) == Block.NULL_AABB) {
-            performVentingAnimation(ventingBlockPos, machinePos, ventingSide);
-        } else if (GTUtility.tryBreakSnow(metaTileEntity.getWorld(), ventingBlockPos, blockOnPos, false)) {
+        if (SteamVenting.clearVent(metaTileEntity.getWorld(), ventingBlockPos)) {
             performVentingAnimation(ventingBlockPos, machinePos, ventingSide);
         } else if (!ventingStuck) {
             setVentingStuck(true);

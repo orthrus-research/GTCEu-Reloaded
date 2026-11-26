@@ -1,7 +1,10 @@
 package gregtech.api.capability.impl;
 
 import gregtech.Bootstrap;
+import gregtech.api.util.world.DummyWorld;
 
+import net.minecraft.block.BlockSnow;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -43,5 +46,36 @@ class SteamVentingTest {
             sizes.add(size);
         }
         assertEquals(Set.of(7, 8, 9), sizes);
+    }
+
+    @Test
+    void steamVentsThroughOpenBlocksButNotSolidOnes() {
+        DummyWorld world = new DummyWorld();
+        BlockPos air = new BlockPos(0, 64, 0);
+        BlockPos stone = new BlockPos(1, 64, 0);
+        world.setBlockState(stone, Blocks.STONE.getDefaultState());
+        assertTrue(SteamVenting.clearVent(world, air));
+        assertSame(Blocks.AIR, world.getBlockState(air).getBlock());
+        assertFalse(SteamVenting.clearVent(world, stone));
+        assertSame(Blocks.STONE, world.getBlockState(stone).getBlock());
+    }
+
+    @Test
+    void steamMeltsSnowALayerAtATimeToVent() {
+        DummyWorld world = new DummyWorld();
+        BlockPos layer = new BlockPos(0, 64, 0);
+        BlockPos layers = new BlockPos(1, 64, 0);
+        BlockPos block = new BlockPos(2, 64, 0);
+        world.setBlockState(layer, Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, 1));
+        world.setBlockState(layers, Blocks.SNOW_LAYER.getDefaultState().withProperty(BlockSnow.LAYERS, 3));
+        world.setBlockState(block, Blocks.SNOW.getDefaultState());
+
+        assertTrue(SteamVenting.clearVent(world, layer));
+        assertSame(Blocks.AIR, world.getBlockState(layer).getBlock());
+        assertTrue(SteamVenting.clearVent(world, layers));
+        assertEquals(2, (int) world.getBlockState(layers).getValue(BlockSnow.LAYERS));
+        assertTrue(SteamVenting.clearVent(world, block));
+        assertSame(Blocks.SNOW_LAYER, world.getBlockState(block).getBlock());
+        assertEquals(7, (int) world.getBlockState(block).getValue(BlockSnow.LAYERS));
     }
 }
