@@ -33,14 +33,6 @@ public class IntCircuitIngredient extends GTRecipeInput {
         return ingredient;
     }
 
-    /**
-     * @deprecated Calling this function is unnecessary. Use the ingredient directly.
-     */
-    @Deprecated
-    public static IntCircuitIngredient getOrCreate(IntCircuitIngredient ri) {
-        return ri;
-    }
-
     private final int matchingConfigurations;
     private ItemStack[] inputStacks;
 

@@ -56,38 +56,6 @@ public class GTRecipeOreInput extends GTRecipeInput {
         this.amount = amount;
     }
 
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(String ore, int amount) {
-        return new GTRecipeOreInput(ore, amount);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(String ore) {
-        return new GTRecipeOreInput(ore);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(OrePrefix prefix, Material material, int amount) {
-        return new GTRecipeOreInput(prefix, material, amount);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(OrePrefix prefix, Material material) {
-        return new GTRecipeOreInput(prefix, material);
-    }
-
     @Override
     protected GTRecipeOreInput copy() {
         GTRecipeOreInput copy = new GTRecipeOreInput(ore, materialIdentity, this.amount);

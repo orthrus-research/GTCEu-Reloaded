@@ -81,46 +81,6 @@ public class GTRecipeItemInput extends GTRecipeInput {
         }).toArray(ItemStack[]::new);
     }
 
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(ItemStack stack, int amount) {
-        return new GTRecipeItemInput(stack, amount);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(GTRecipeInput ri, int i) {
-        return new GTRecipeItemInput(ri, i);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(GTRecipeInput input) {
-        return new GTRecipeItemInput(input);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(ItemStack stack) {
-        return new GTRecipeItemInput(stack);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(ItemStack[] stacks) {
-        return new GTRecipeItemInput(stacks);
-    }
-
     @Override
     protected GTRecipeItemInput copy() {
         GTRecipeItemInput copy = new GTRecipeItemInput(this.inputStacks, this.amount);

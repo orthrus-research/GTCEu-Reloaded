@@ -26,30 +26,6 @@ public class GTRecipeFluidInput extends GTRecipeInput {
         this.amount = amount;
     }
 
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(FluidStack fluidStack, int amount) {
-        return new GTRecipeFluidInput(fluidStack, amount);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(Fluid fluid, int amount) {
-        return new GTRecipeFluidInput(fluid, amount);
-    }
-
-    /**
-     * @deprecated Use constructors
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(GTRecipeInput ri, int i) {
-        return new GTRecipeFluidInput(ri.getInputFluidStack(), i);
-    }
-
     @Override
     protected GTRecipeFluidInput copy() {
         GTRecipeFluidInput copy = new GTRecipeFluidInput(this.inputStack, this.amount);

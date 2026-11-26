@@ -69,14 +69,6 @@ public abstract class GTRecipeInput {
     private int hash;
     protected boolean hashCached;
 
-    /**
-     * @deprecated Calling this function is unnecessary. Use the ingredient directly.
-     */
-    @Deprecated
-    public static GTRecipeInput getOrCreate(GTRecipeInput gtRecipeIngredient) {
-        return gtRecipeIngredient;
-    }
-
     public int getAmount() {
         return amount;
     }
