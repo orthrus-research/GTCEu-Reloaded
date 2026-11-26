@@ -59,7 +59,6 @@ import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -1710,21 +1709,8 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             compound.setInteger("Progress", progressTime);
             compound.setInteger("MaxProgress", maxProgressTime);
             compound.setLong("RecipeEUt", this.recipeEUt);
-            NBTTagList itemOutputsList = new NBTTagList();
-            for (ItemStack itemOutput : itemOutputs) {
-                if (itemOutput.isEmpty()) continue;
-                ItemStack identity = itemOutput.copy();
-                identity.setCount(1);
-                NBTTagCompound outputTag = identity.writeToNBT(new NBTTagCompound());
-                outputTag.setInteger("RecipeOutputCount", itemOutput.getCount());
-                itemOutputsList.appendTag(outputTag);
-            }
-            NBTTagList fluidOutputsList = new NBTTagList();
-            for (FluidStack fluidOutput : fluidOutputs) {
-                fluidOutputsList.appendTag(fluidOutput.writeToNBT(new NBTTagCompound()));
-            }
-            compound.setTag("ItemOutputs", itemOutputsList);
-            compound.setTag("FluidOutputs", fluidOutputsList);
+            compound.setTag("ItemOutputs", RecipeOutputCodec.writeItems(itemOutputs));
+            compound.setTag("FluidOutputs", RecipeOutputCodec.writeFluids(fluidOutputs));
         }
         return compound;
     }
@@ -1749,28 +1735,9 @@ public abstract class AbstractRecipeLogic extends MTETrait implements IWorkable,
             }
             this.recipeEUt = Math.abs(compound.getLong("RecipeEUt"));
             NBTTagList itemOutputsList = compound.getTagList("ItemOutputs", Constants.NBT.TAG_COMPOUND);
-            this.itemOutputs = new ArrayList<>(itemOutputsList.tagCount());
-            for (int i = 0; i < itemOutputsList.tagCount(); i++) {
-                NBTTagCompound outputTag = itemOutputsList.getCompoundTagAt(i);
-                if (outputTag.hasKey("RecipeOutputCount") &&
-                        (!outputTag.hasKey("RecipeOutputCount", Constants.NBT.TAG_INT) ||
-                                outputTag.getInteger("RecipeOutputCount") <= 0))
-                    continue;
-                ItemStack output = new ItemStack(outputTag);
-                if (!output.isEmpty() && outputTag.hasKey("RecipeOutputCount", Constants.NBT.TAG_INT)) {
-                    output.setCount(outputTag.getInteger("RecipeOutputCount"));
-                }
-                this.itemOutputs.add(output);
-            }
+            this.itemOutputs = RecipeOutputCodec.readItems(itemOutputsList);
             NBTTagList fluidOutputsList = compound.getTagList("FluidOutputs", Constants.NBT.TAG_COMPOUND);
-            this.fluidOutputs = new ArrayList<>(fluidOutputsList.tagCount());
-            for (int i = 0; i < fluidOutputsList.tagCount(); i++) {
-                // null for a fluid that is no longer registered
-                FluidStack output = FluidStack.loadFluidStackFromNBT(fluidOutputsList.getCompoundTagAt(i));
-                if (output != null) {
-                    this.fluidOutputs.add(output);
-                }
-            }
+            this.fluidOutputs = RecipeOutputCodec.readFluids(fluidOutputsList);
         }
     }
 }
