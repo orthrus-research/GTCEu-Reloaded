@@ -40,7 +40,6 @@ public class Shaders {
 
     public static ShaderObject IMAGE_V;
     public static ShaderObject IMAGE_F;
-    // public static ShaderObject BLACK_HOLE;
     public static ShaderObject SCANNING;
 
     public static ShaderObject BLUR;
@@ -56,7 +55,6 @@ public class Shaders {
     public static void initShaders() {
         IMAGE_V = initShader(IMAGE_V, VERTEX, "image.vert");
         IMAGE_F = initShader(IMAGE_F, FRAGMENT, "image.frag");
-        // BLACK_HOLE = initShader(BLACK_HOLE, FRAGMENT, "blackhole.frag");
         SCANNING = initShader(SCANNING, FRAGMENT, "scanning.frag");
         BLUR = initShader(BLUR, FRAGMENT, "blur.frag");
         FULL_IMAGE_PROGRAMS.clear();
