@@ -117,9 +117,9 @@ public class MetaTileEntityMachineRecipeLoader {
 
         // 4A, 16A and 64A Substation Energy Hatches, then the same Dynamo Hatches
         multiAmpHatches(ENERGY_INPUT_HATCH, ENERGY_INPUT_HATCH_4A, ENERGY_INPUT_HATCH_16A,
-                SUBSTATION_ENERGY_INPUT_HATCH, false);
+                SUBSTATION_ENERGY_INPUT_HATCH);
         multiAmpHatches(ENERGY_OUTPUT_HATCH, ENERGY_OUTPUT_HATCH_4A, ENERGY_OUTPUT_HATCH_16A,
-                SUBSTATION_ENERGY_OUTPUT_HATCH, true);
+                SUBSTATION_ENERGY_OUTPUT_HATCH);
 
         // Maintenance Hatch
 
@@ -482,27 +482,23 @@ public class MetaTileEntityMachineRecipeLoader {
 
     /**
      * The 4A, 16A and 64A hatches of one kind, ULV to UHV, each from the hatch of the amperage below it, the tier's
-     * conductor and plates, and for 16A and 64A a transformer. A few recipes break the pattern and are kept as they
-     * are: the ULV 4A energy hatch takes 2 EU/t where the dynamo takes VH[ULV], the ZPM 4A dynamo takes a
-     * transformer as well, the ULV 16A dynamo recipe makes the LuV 16A dynamo, and the UHV 16A energy hatch takes
-     * two 4A hatches where the dynamo takes one.
+     * conductor and plates, and for 16A and 64A a transformer, at the voltage of the tier below, or VH[ULV] at ULV.
      */
     private static void multiAmpHatches(MetaTileEntity[] hatches, MetaTileEntity[] hatches4A,
-                                        MetaTileEntity[] hatches16A, MetaTileEntity[] hatches64A, boolean dynamo) {
+                                        MetaTileEntity[] hatches16A, MetaTileEntity[] hatches64A) {
         for (int tier = ULV; tier <= UHV; tier++) {
-            var builder = ASSEMBLER_RECIPES.recipeBuilder();
-            if (dynamo && tier == ZPM) builder.input(TRANSFORMER[ZPM]);
-            builder.input(hatches[tier])
+            ASSEMBLER_RECIPES.recipeBuilder()
+                    .input(hatches[tier])
                     .input(wireGtQuadruple, CONDUCTORS[tier], 2)
                     .input(plate, material(CraftingComponent.PLATE, tier), 2)
                     .output(hatches4A[tier])
-                    .duration(100).EUt(tier > ULV ? VA[tier - 1] : dynamo ? VH[ULV] : 2).buildAndRegister();
+                    .duration(100).EUt(tier > ULV ? VA[tier - 1] : VH[ULV]).buildAndRegister();
         }
 
         for (int tier = ULV; tier <= UHV; tier++) {
             ASSEMBLER_RECIPES.recipeBuilder()
                     .input(tier < UHV ? TRANSFORMER[tier] : HI_AMP_TRANSFORMER[UV])
-                    .input(hatches4A[tier], tier == UHV && !dynamo ? 2 : 1)
+                    .input(hatches4A[tier])
                     .input(wireGtOctal, CONDUCTORS[tier], 2)
                     .input(plate, material(CraftingComponent.PLATE, tier), 4)
                     .output(hatches16A[tier])
