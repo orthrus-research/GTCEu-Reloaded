@@ -15,13 +15,22 @@ The current results are in [release validation](pre-delivery-qualification.md).
 It records the tested artifact, supported runtime and known limits. Earlier candidates do not
 extend that qualification to different artifacts or integrations.
 
-The current candidate targets Java 26, CodeChickenLib 3.3.10, ModularUI 3.1.6, Cleanroom
-0.7.14-alpha and the dependencies pinned in the build. GroovyScript 1.5.0 is required for Groovy
+The current candidate targets Java 26, CodeChickenLib 3.3.10, ModularUI 3.1.6, OrthLib 0.5.0-dev,
+Cleanroom 0.7.14-alpha and the dependencies the set pins for the build. GroovyScript 1.5.0 is required for Groovy
 authoring and optional for Java-only consumers. Record runtime, source, configuration and artifact
 identities for each validation run. Additional JVM versions require separate validation.
 
 CodeChickenLib remains a required dependency. Compilation and runtime validation use the same
 pinned release; this release does not replace CCL.
+
+OrthLib is a required runtime dependency: emissive textures and bloom reach renderers through its
+render interface ([emissive rendering](emissive-rendering.md)). Validate the OrthLib build the set
+names together with the candidate.
+
+Game checks can run in a Workbench session of the `check` launch in `project.toml`: GTCEuR with its
+required mods on a local creative server and client, driven through the server console and the
+drive agent. Such a session supplements the gates below; it does not replace a full pack or
+dedicated-server run.
 
 ## Required pack capabilities
 

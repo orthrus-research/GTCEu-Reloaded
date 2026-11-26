@@ -5,6 +5,10 @@ SHA-256: `d1c67a1a93fafc46f21e231c2d6911a04b7444eaf64185fb5ba1aa5753d6b447`.
 Validated November 6, 2026.
 
 Local validation is complete for the scope below. Publication and hosted CI remain pending.
+
+This validation predates the OrthLib requirement. The current line requires OrthLib 0.5.0-dev for
+emissive rendering, which this report does not cover; candidates built since then need fresh
+evidence before delivery.
 This report covers Reloaded's native Java/Groovy authoring and representative gameplay;
 it does not establish compatibility with every GTCEu addon, existing pack or legacy save.
 
