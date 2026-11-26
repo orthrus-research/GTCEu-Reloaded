@@ -260,6 +260,7 @@ See [the migration guide](docs/ct-migration.md). Alpha qualification does not im
 | API | Two vanilla hooks now combine with other mods that hook the same code instead of failing to apply |
 | GUI | In ModularUI text, /n becomes a line break only in GregTech's own translations; other mods' text keeps it as written |
 | API | GregTech's ModularUI tweaks apply only to the tested ModularUI release; other releases log a warning and run unmodified |
+| Compatibility | GregTech's HEI and The One Probe tweaks apply only to the tested releases, HEI 4.36.1 and The One Probe 1.4.28; other releases log a warning and run unmodified |
 | Monitors | Animated GIFs on monitors no longer carry one frame's delay and transparency into the next, and malformed GIFs fail cleanly |
 | Rendering | The invar and platinum lighters show their own textures again |
 | Pipes | A fluid pipe whose destination throws during a fill records the uncertain amount, logs it and pauses its automatic distribution instead of returning fluid it cannot account for; `/gt fluid-reconcile` lets a server operator inspect the record and acknowledge it ([docs/pipenet-compatibility.md](docs/pipenet-compatibility.md)) |
