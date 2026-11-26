@@ -1,9 +1,16 @@
 package gregtech.mixins;
 
+import gregtech.GregTechMod;
+
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.versioning.DefaultArtifactVersion;
+import net.minecraftforge.fml.common.versioning.VersionRange;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import mezz.jei.JustEnoughItems;
 import org.junit.jupiter.api.Test;
 
 import java.io.Reader;
@@ -42,6 +49,15 @@ class MixinConfigurationTest {
                     injectors.get("defaultRequire").getAsInt() == 1,
                     path.getFileName() + " must set injectors.defaultRequire to 1 so a missed injection target fails");
         }
+    }
+
+    @Test
+    void heiGateAndModDependencyStartAtThePinnedHei() throws Exception {
+        String pinned = JustEnoughItems.class.getAnnotation(Mod.class).version();
+        assertTrue(VersionRange.createFromVersionSpec(GregTechMixinConnector.HEI_TESTED_RANGE)
+                .containsVersion(new DefaultArtifactVersion(pinned)), pinned);
+        String dependencies = GregTechMod.class.getAnnotation(Mod.class).dependencies();
+        assertTrue(dependencies.contains("after:jei@[" + pinned + ",);"), dependencies);
     }
 
     private static boolean lists(JsonObject config, String mixin) {

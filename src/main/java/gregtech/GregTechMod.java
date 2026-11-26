@@ -34,7 +34,7 @@ import net.minecraftforge.fml.common.event.FMLServerStoppingEvent;
              "required-after:orthlib@[" + GTInternalTags.ORTHLIB_VERSION + ",);" +
              "after:appliedenergistics2;" +
              "after:forestry;" + "after:extrabees;" + "after:extratrees;" + "after:genetics;" + "after:magicbees;" +
-             "after:jei@[4.15.0,);" + "after:groovyscript@[1.5.0,);" +
+             "after:jei@[4.36.1,);" + "after:groovyscript@[1.5.0,);" +
              "after:theoneprobe;" + "after:hwyla;")
 public class GregTechMod {
 
