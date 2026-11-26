@@ -1,6 +1,5 @@
 package gregtech.api.capability.impl;
 
-import gregtech.api.GTValues;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.capability.IVentable;
 import gregtech.api.damagesources.DamageSources;
@@ -36,7 +35,7 @@ public class RecipeLogicSteam extends AbstractRecipeLogic implements IVentable {
 
     private final IFluidTank steamFluidTank;
     private final boolean isHighPressure;
-    private final double conversionRate; // energy units per millibucket
+    private final SteamAccounting steam;
 
     private boolean needsVenting;
     private boolean ventingStuck;
@@ -46,7 +45,7 @@ public class RecipeLogicSteam extends AbstractRecipeLogic implements IVentable {
                             IFluidTank steamFluidTank, double conversionRate) {
         super(tileEntity, recipeMap);
         this.steamFluidTank = steamFluidTank;
-        this.conversionRate = conversionRate;
+        this.steam = new SteamAccounting(conversionRate);
         this.isHighPressure = isHighPressure;
     }
 
@@ -219,41 +218,29 @@ public class RecipeLogicSteam extends AbstractRecipeLogic implements IVentable {
 
     @Override
     protected long getEnergyStored() {
-        return (long) Math.ceil(steamFluidTank.getFluidAmount() * conversionRate);
+        return steam.getEnergyStored(steamFluidTank.getFluidAmount());
     }
 
     @Override
     protected long getEnergyCapacity() {
-        return (long) Math.floor(steamFluidTank.getCapacity() * conversionRate);
+        return steam.getEnergyCapacity(steamFluidTank.getCapacity());
     }
 
     @Override
     protected boolean drawEnergy(long recipeEUt, boolean simulate) {
-        int resultDraw = GTUtility.safeCastLongToInt((long) Math.ceil(recipeEUt / conversionRate));
-        return resultDraw >= 0 && steamFluidTank.getFluidAmount() >= resultDraw &&
-                steamFluidTank.drain(resultDraw, !simulate) != null;
+        return steam.drawEnergy(recipeEUt, simulate, steamFluidTank.getFluidAmount(), steamFluidTank::drain);
     }
 
     @Override
     public long getMaxVoltage() {
-        return GTValues.V[GTValues.LV];
+        return SteamAccounting.MAX_VOLTAGE;
     }
 
     @Override
     protected boolean hasEnoughPower(long eut, int duration) {
-        long totalSteam = (long) (eut * duration / conversionRate);
-        if (totalSteam > 0) {
-            long steamStored = getEnergyStored();
-            long steamCapacity = getEnergyCapacity();
-            // if the required steam is larger than the full buffer, just require the full buffer
-            if (steamCapacity < totalSteam) {
-                return steamCapacity == steamStored;
-            }
-            // otherwise require the full amount of steam for the recipe
-            return steamStored >= totalSteam;
-        }
         // generation case unchanged
-        return super.hasEnoughPower(eut, duration);
+        if (!steam.consumesSteam(eut, duration)) return super.hasEnoughPower(eut, duration);
+        return steam.hasSteamForRecipe(eut, duration, getEnergyStored(), getEnergyCapacity());
     }
 
     @NotNull

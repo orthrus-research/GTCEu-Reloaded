@@ -6,7 +6,6 @@ import gregtech.api.metatileentity.multiblock.RecipeMapSteamMultiblockController
 import gregtech.api.recipes.Recipe;
 import gregtech.api.recipes.RecipeMap;
 import gregtech.api.recipes.logic.RecipeFailureReason;
-import gregtech.api.util.GTUtility;
 import gregtech.common.ConfigHolder;
 
 import net.minecraft.block.Block;
@@ -30,15 +29,13 @@ public class SteamMultiblockRecipeLogic extends AbstractRecipeLogic {
 
     private IMultipleTankHandler steamFluidTank;
     private IFluidTank steamFluidTankCombined;
-
-    // EU per mB
-    private final double conversionRate;
+    private final SteamAccounting steam;
 
     public SteamMultiblockRecipeLogic(RecipeMapSteamMultiblockController tileEntity, RecipeMap<?> recipeMap,
                                       IMultipleTankHandler steamFluidTank, double conversionRate) {
         super(tileEntity, recipeMap);
         this.steamFluidTank = steamFluidTank;
-        this.conversionRate = conversionRate;
+        this.steam = new SteamAccounting(conversionRate);
         setAllowOverclocking(false);
         combineSteamTanks();
     }
@@ -117,26 +114,24 @@ public class SteamMultiblockRecipeLogic extends AbstractRecipeLogic {
 
     @Override
     protected long getEnergyStored() {
-        return (long) Math.ceil(getSteamAmount() * conversionRate);
+        return steam.getEnergyStored(getSteamAmount());
     }
 
     @Override
     protected long getEnergyCapacity() {
-        return (long) Math.floor(getSteamCapacity() * conversionRate);
+        return steam.getEnergyCapacity(getSteamCapacity());
     }
 
     @Override
     protected boolean drawEnergy(long recipeEUt, boolean simulate) {
         steamFluidTank = getSteamFluidTank();
         if (steamFluidTank == null) return false;
-        int resultDraw = GTUtility.safeCastLongToInt((long) Math.ceil(recipeEUt / conversionRate));
-        return resultDraw >= 0 && getSteamAmount() >= resultDraw &&
-                steamFluidTank.drain(resultDraw, !simulate) != null;
+        return steam.drawEnergy(recipeEUt, simulate, getSteamAmount(), steamFluidTank::drain);
     }
 
     @Override
     public long getMaxVoltage() {
-        return GTValues.V[GTValues.LV];
+        return SteamAccounting.MAX_VOLTAGE;
     }
 
     @Override
@@ -201,18 +196,8 @@ public class SteamMultiblockRecipeLogic extends AbstractRecipeLogic {
 
     @Override
     protected boolean hasEnoughPower(long eut, int duration) {
-        long totalSteam = (long) (eut * duration / conversionRate);
-        if (totalSteam > 0) {
-            long steamStored = getEnergyStored();
-            long steamCapacity = getEnergyCapacity();
-            // if the required steam is larger than the full buffer, just require the full buffer
-            if (steamCapacity < totalSteam) {
-                return steamCapacity == steamStored;
-            }
-            // otherwise require the full amount of steam for the recipe
-            return steamStored >= totalSteam;
-        }
         // generation case unchanged
-        return super.hasEnoughPower(eut, duration);
+        if (!steam.consumesSteam(eut, duration)) return super.hasEnoughPower(eut, duration);
+        return steam.hasSteamForRecipe(eut, duration, getEnergyStored(), getEnergyCapacity());
     }
 }
