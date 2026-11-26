@@ -1,9 +1,6 @@
 package gregtech.common.items.behaviors.monitorplugin;
 
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.IUIHolder;
-import gregtech.api.gui.widgets.LabelWidget;
-import gregtech.api.gui.widgets.ToggleButtonWidget;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
 import gregtech.api.items.behavior.ProxyHolderPluginBehavior;
 import gregtech.api.metatileentity.MetaTileEntity;
@@ -14,8 +11,6 @@ import gregtech.client.renderer.scene.FBOWorldSceneRenderer;
 import gregtech.client.renderer.scene.WorldSceneRenderer;
 import gregtech.client.utils.RenderUtil;
 import gregtech.client.utils.TrackedDummyWorld;
-import gregtech.common.gui.widget.WidgetScrollBar;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityCentralMonitor;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityMonitorScreen;
 
@@ -45,6 +40,13 @@ import codechicken.lib.render.CCRenderState;
 import codechicken.lib.render.pipeline.ColourMultiplier;
 import codechicken.lib.vec.Cuboid6;
 import codechicken.lib.vec.Translation;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.FloatSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widgets.ToggleButton;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.lwjgl.input.Mouse;
@@ -190,7 +192,12 @@ public class AdvancedMonitorPluginBehavior extends ProxyHolderPluginBehavior {
         GlStateManager.color(1, 1, 1, 1);
     }
 
+    /**
+     * Sets the view. A client sends every value, so the call is ignored unless the zoom is between 0.3 and 2, the
+     * rotations between 0 and 360 and between -90 and 90 degrees, and the spin between 0 and 2.
+     */
     public void setConfig(float scale, int rY, int rX, float spin, boolean connect) {
+        if (!Float.isFinite(scale) || !Float.isFinite(spin)) return;
         if (this.scale == scale && this.rotationPitch == rY && this.rotationYaw == rX && this.spin == spin &&
                 this.connect == connect)
             return;
@@ -201,7 +208,9 @@ public class AdvancedMonitorPluginBehavior extends ProxyHolderPluginBehavior {
         this.rotationYaw = rX;
         this.spin = spin;
         this.connect = connect;
-        if (this.screen.getWorld().isRemote) {
+        if (this.screen == null || this.screen.getWorld() == null) {
+            markAsDirty();
+        } else if (this.screen.getWorld().isRemote) {
             if (worldSceneRenderer != null) {
                 worldSceneRenderer.setCameraLookAt(center, 10 / scale, Math.toRadians(rY), Math.toRadians(rX));
             }
@@ -281,23 +290,39 @@ public class AdvancedMonitorPluginBehavior extends ProxyHolderPluginBehavior {
     }
 
     @Override
-    public WidgetPluginConfig customUI(WidgetPluginConfig widgetGroup, IUIHolder holder, EntityPlayer entityPlayer) {
-        return widgetGroup.setSize(260, 170)
-                .widget(new WidgetScrollBar(25, 20, 210, 0.3f, 2, 0.1f,
-                        value -> setConfig(value, this.rotationPitch, this.rotationYaw, this.spin, this.connect))
-                        .setTitle("zoom", 0XFFFFFFFF).setInitValue(this.scale))
-                .widget(new WidgetScrollBar(25, 40, 210, 0, 360, 1,
-                        value -> setConfig(this.scale, value.intValue(), this.rotationYaw, this.spin, this.connect))
-                        .setTitle("rotationPitch", 0XFFFFFFFF).setInitValue(this.rotationPitch))
-                .widget(new WidgetScrollBar(25, 60, 210, -90, 90, 1,
-                        value -> setConfig(this.scale, this.rotationPitch, value.intValue(), this.spin, this.connect))
-                        .setTitle("rotationYaw", 0XFFFFFFFF).setInitValue(this.rotationYaw))
-                .widget(new WidgetScrollBar(25, 100, 210, 0, 2, 0.1f,
-                        value -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, value, this.connect))
-                        .setTitle("spinDur", 0XFFFFFFFF).setInitValue(this.spin))
-                .widget(new LabelWidget(25, 135, "Fake GUI:", 0XFFFFFFFF))
-                .widget(new ToggleButtonWidget(80, 130, 20, 20, () -> this.connect,
-                        state -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, this.spin, state)));
+    public int getConfigWidth() {
+        return 260;
+    }
+
+    @Override
+    public int getConfigHeight() {
+        return 170;
+    }
+
+    @Override
+    public void buildConfigUI(ParentWidget<?> parent, PanelSyncManager syncManager) {
+        FloatSyncValue zoom = new FloatSyncValue(() -> this.scale, value -> setConfig(snap(value, 0.3, 2, 0.1),
+                this.rotationPitch, this.rotationYaw, this.spin, this.connect));
+        IntSyncValue pitch = new IntSyncValue(() -> this.rotationPitch,
+                value -> setConfig(this.scale, value, this.rotationYaw, this.spin, this.connect));
+        IntSyncValue yaw = new IntSyncValue(() -> this.rotationYaw,
+                value -> setConfig(this.scale, this.rotationPitch, value, this.spin, this.connect));
+        FloatSyncValue spinValue = new FloatSyncValue(() -> this.spin, value -> setConfig(this.scale,
+                this.rotationPitch, this.rotationYaw, snap(value, 0, 2, 0.1), this.connect));
+        BooleanSyncValue connectValue = new BooleanSyncValue(() -> this.connect,
+                value -> setConfig(this.scale, this.rotationPitch, this.rotationYaw, this.spin, value));
+        syncManager.syncValue("zoom", zoom);
+        syncManager.syncValue("pitch", pitch);
+        syncManager.syncValue("yaw", yaw);
+        syncManager.syncValue("spin", spinValue);
+        syncManager.syncValue("connect", connectValue);
+
+        parent.child(slider("zoom", zoom, 0.3, 2).pos(25, 20))
+                .child(slider("rotationPitch", pitch, 0, 360).pos(25, 40))
+                .child(slider("rotationYaw", yaw, -90, 90).pos(25, 60))
+                .child(slider("spinDur", spinValue, 0, 2).pos(25, 100))
+                .child(IKey.str("Fake GUI:").asWidget().pos(25, 135))
+                .child(new ToggleButton().pos(80, 130).size(20).value(connectValue));
     }
 
     @Override

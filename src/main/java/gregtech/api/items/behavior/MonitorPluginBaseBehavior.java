@@ -2,15 +2,12 @@ package gregtech.api.items.behavior;
 
 import gregtech.api.GregTechAPI;
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.IUIHolder;
-import gregtech.api.gui.ModularUI;
 import gregtech.api.items.gui.ItemUIFactory;
-import gregtech.api.items.gui.PlayerInventoryHolder;
 import gregtech.api.items.metaitem.MetaItem;
 import gregtech.api.items.metaitem.stats.IItemBehaviour;
+import gregtech.api.mui.GTGuis;
+import gregtech.api.mui.factory.MetaItemGuiFactory;
 import gregtech.api.util.IDirtyNotifiable;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
 import gregtech.common.metatileentities.multi.electric.centralmonitor.MetaTileEntityMonitorScreen;
 import gregtech.core.network.packets.PacketPluginSynced;
 
@@ -29,10 +26,21 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.api.value.IDoubleValue;
+import com.cleanroommc.modularui.factory.HandGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widgets.SliderWidget;
+import com.cleanroommc.modularui.widgets.layout.Flow;
 import io.netty.buffer.Unpooled;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemUIFactory, IDirtyNotifiable {
@@ -58,16 +66,23 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
 
     abstract public MonitorPluginBaseBehavior createPlugin();
 
-    /***
-     * Do not override createUI below.
-     * 
-     * @param holder       It should be one of PlayerInventoryHolder or MetaTileEntityHolder.
-     * @param entityPlayer Player
-     * @return WidgetGroup back
+    /**
+     * The size of this plugin's settings area, {@link #buildConfigUI}'s parent; zero when the plugin has no settings.
      */
-    public WidgetPluginConfig customUI(WidgetPluginConfig widgetGroup, IUIHolder holder, EntityPlayer entityPlayer) {
-        return widgetGroup;
+    public int getConfigWidth() {
+        return 0;
     }
+
+    public int getConfigHeight() {
+        return 0;
+    }
+
+    /**
+     * Adds this plugin's settings to {@code parent}, an area {@link #getConfigWidth()} by {@link #getConfigHeight()}
+     * that is the monitor screen's plugin settings or the plugin item's own screen. The sync values registered here
+     * reach this plugin's setters on the server with whatever a client sent, so the setters check every value.
+     */
+    public void buildConfigUI(ParentWidget<?> parent, PanelSyncManager syncManager) {}
 
     /***
      * Can player using item (right-click) to open the customUI.
@@ -215,28 +230,55 @@ public abstract class MonitorPluginBaseBehavior implements IItemBehaviour, ItemU
             ItemStack itemStack = player.getHeldItem(hand);
             MonitorPluginBaseBehavior behavior = getBehavior(itemStack);
             if (behavior != null && behavior.hasUI()) {
-                PlayerInventoryHolder holder = new PlayerInventoryHolder(player, hand);
-                holder.openUI();
+                MetaItemGuiFactory.open(player, hand);
                 return ActionResult.newResult(EnumActionResult.SUCCESS, itemStack);
             }
         }
         return ActionResult.newResult(EnumActionResult.PASS, player.getHeldItem(hand));
     }
 
+    /** The plugin item's own screen edits the settings saved in the item. */
     @Override
-    public final ModularUI createUI(PlayerInventoryHolder playerInventoryHolder, EntityPlayer entityPlayer) {
-        ItemStack itemStack = playerInventoryHolder.getCurrentItem();
-        MonitorPluginBaseBehavior behavior = MonitorPluginBaseBehavior.getBehavior(itemStack);
-        if (behavior != null) {
-            behavior = behavior.createPlugin();
-            behavior.readFromNBT(itemStack.getOrCreateSubCompound("monitor_plugin"));
-            return ModularUI.builder(GuiTextures.BOXED_BACKGROUND, 260, 210)
-                    .widget(behavior.customUI(new WidgetPluginConfig().setBackGround(GuiTextures.BACKGROUND),
-                            playerInventoryHolder, entityPlayer))
-                    .bindCloseListener(this::markAsDirty)
-                    .build(playerInventoryHolder, entityPlayer);
+    public ModularPanel buildUI(HandGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
+        ItemStack itemStack = guiData.getUsedItemStack();
+        MonitorPluginBaseBehavior plugin = createPlugin();
+        plugin.readFromNBT(itemStack.getOrCreateSubCompound("monitor_plugin"));
+        ModularPanel panel = GTGuis.createPanel(itemStack, plugin.getConfigWidth(), plugin.getConfigHeight());
+        plugin.buildConfigUI(panel, syncManager);
+        return panel;
+    }
+
+    /**
+     * A titled slider for a plugin setting. It sends the value it is dragged to; the setter behind {@code value}
+     * still checks it.
+     */
+    protected static Flow slider(String title, IDoubleValue<?> value, double min, double max) {
+        return Flow.column()
+                .size(210, 20)
+                .child(IKey.dynamic(() -> title + ": " + String.format(Locale.ROOT, "%.2f", value.getDoubleValue()))
+                        .asWidget()
+                        .alignment(Alignment.Center)
+                        .widthRel(1f)
+                        .height(10))
+                .child(new SliderWidget()
+                        .value(value)
+                        .bounds(min, max)
+                        .widthRel(1f)
+                        .height(10));
+    }
+
+    /**
+     * Checks a setting a client sent: not a number or infinite gives {@code NaN}, otherwise the value is kept between
+     * {@code min} and {@code max} and rounded to a multiple of {@code step} from {@code min}.
+     */
+    public static float snap(double value, double min, double max, double step) {
+        if (!Double.isFinite(value)) return Float.NaN;
+        double clamped = Math.max(min, Math.min(max, value));
+        if (step > 0) {
+            clamped = min + Math.round((clamped - min) / step) * step;
+            clamped = Math.max(min, Math.min(max, clamped));
         }
-        return null;
+        return (float) clamped;
     }
 
     @Override

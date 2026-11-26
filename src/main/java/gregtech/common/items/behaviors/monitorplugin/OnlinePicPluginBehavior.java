@@ -1,22 +1,31 @@
 package gregtech.common.items.behaviors.monitorplugin;
 
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.IUIHolder;
 import gregtech.api.gui.resources.picturetexture.PictureTexture;
 import gregtech.api.gui.resources.utils.DownloadThread;
-import gregtech.api.gui.widgets.*;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
-import gregtech.common.gui.widget.WidgetScrollBar;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
 
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.value.StringValue;
+import com.cleanroommc.modularui.value.sync.BooleanSyncValue;
+import com.cleanroommc.modularui.value.sync.FloatSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.StringSyncValue;
+import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
+import com.cleanroommc.modularui.widgets.ToggleButton;
+import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
+
 public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
+
+    /** The longest address the server keeps; clients read addresses no longer than this. */
+    public static final int MAX_URL_LENGTH = 200;
 
     public String url;
     public float scaleX;
@@ -24,9 +33,6 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
     public float rotation;
     public boolean flippedX;
     public boolean flippedY;
-
-    // run-time
-    private String tmpUrl;
 
     @SideOnly(Side.CLIENT)
     private DownloadThread downloader;
@@ -37,9 +43,18 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
     @SideOnly(Side.CLIENT)
     public String error;
 
+    /**
+     * Sets the picture and how it is drawn. A client sends every value, so the call is ignored when the address is
+     * longer than {@link #MAX_URL_LENGTH}; the angle is kept between -180 and 180 and the scales between 0 and 1.
+     */
     public void setConfig(String url, float rotation, float scaleX, float scaleY, boolean flippedX, boolean flippedY) {
-        if (url.length() > 200 || (this.url.equals(url) && this.rotation == rotation && this.scaleX == scaleX &&
-                this.scaleY == scaleY && this.flippedX == flippedX && this.flippedY == flippedY))
+        if (url == null || url.length() > MAX_URL_LENGTH) return;
+        rotation = snap(rotation, -180, 180, 1);
+        scaleX = snap(scaleX, 0, 1, 0.05);
+        scaleY = snap(scaleY, 0, 1, 0.05);
+        if (Float.isNaN(rotation) || Float.isNaN(scaleX) || Float.isNaN(scaleY)) return;
+        if (this.url.equals(url) && this.rotation == rotation && this.scaleX == scaleX && this.scaleY == scaleY &&
+                this.flippedX == flippedX && this.flippedY == flippedY)
             return;
         this.url = url;
         this.rotation = rotation;
@@ -47,11 +62,13 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
         this.scaleY = scaleY;
         this.flippedX = flippedX;
         this.flippedY = flippedY;
+        String newUrl = url;
+        float newRotation = rotation, newScaleX = scaleX, newScaleY = scaleY;
         writePluginData(GregtechDataCodes.UPDATE_PLUGIN_CONFIG, packetBuffer -> {
-            packetBuffer.writeString(url);
-            packetBuffer.writeFloat(rotation);
-            packetBuffer.writeFloat(scaleX);
-            packetBuffer.writeFloat(scaleY);
+            packetBuffer.writeString(newUrl);
+            packetBuffer.writeFloat(newRotation);
+            packetBuffer.writeFloat(newScaleX);
+            packetBuffer.writeFloat(newScaleY);
             packetBuffer.writeBoolean(flippedX);
             packetBuffer.writeBoolean(flippedY);
         });
@@ -61,9 +78,9 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
     @Override
     public void readPluginData(int id, PacketBuffer buf) {
         if (id == GregtechDataCodes.UPDATE_PLUGIN_CONFIG) {
-            String _url = buf.readString(200);
-            if (!this.url.equals(_url)) {
-                this.url = _url;
+            String newUrl = buf.readString(MAX_URL_LENGTH);
+            if (!this.url.equals(newUrl)) {
+                this.url = newUrl;
                 this.texture = null;
                 this.failed = false;
                 this.error = null;
@@ -91,6 +108,8 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
     public void readFromNBT(NBTTagCompound data) {
         super.readFromNBT(data);
         this.url = data.hasKey("url") ? data.getString("url") : "";
+        // a longer address would not reach the clients
+        if (this.url.length() > MAX_URL_LENGTH) this.url = "";
         this.rotation = data.hasKey("rotation") ? data.getFloat("rotation") : 0;
         this.scaleX = data.hasKey("scaleX") ? data.getFloat("scaleX") : 1;
         this.scaleY = data.hasKey("scaleY") ? data.getFloat("scaleY") : 1;
@@ -104,32 +123,62 @@ public class OnlinePicPluginBehavior extends MonitorPluginBaseBehavior {
     }
 
     @Override
-    public WidgetPluginConfig customUI(WidgetPluginConfig widgetGroup, IUIHolder holder, EntityPlayer entityPlayer) {
-        tmpUrl = url;
-        return widgetGroup.setSize(260, 150)
-                .widget(new DynamicLabelWidget(20, 20, () -> url.length() > 40 ? (url.substring(0, 39) + "...") : url,
-                        0XFFFFFFFF))
-                .widget(new TextFieldWidget(20, 30, 175, 10, true, () -> tmpUrl, (text) -> {
-                    tmpUrl = text;
-                }).setValidator((data) -> true).setMaxStringLength(200))
-                .widget(new ClickButtonWidget(200, 30, 45, 10, "confirm",
-                        pressed -> setConfig(tmpUrl, this.rotation, this.scaleX, this.scaleY, this.flippedX,
-                                this.flippedY)))
-                .widget(new WidgetScrollBar(25, 40, 210, -180, 180, 1,
-                        value -> setConfig(this.url, value, this.scaleX, this.scaleY, this.flippedX, this.flippedY))
-                        .setTitle("rotation", 0XFFFFFFFF).setInitValue(this.rotation))
-                .widget(new WidgetScrollBar(25, 60, 210, 0, 1, 0.05f,
-                        value -> setConfig(this.url, this.rotation, value, this.scaleY, this.flippedX, this.flippedY))
-                        .setTitle("scaleX", 0XFFFFFFFF).setInitValue(this.scaleX))
-                .widget(new WidgetScrollBar(25, 80, 210, 0, 1, 0.05f,
-                        value -> setConfig(this.url, this.rotation, this.scaleX, value, this.flippedX, this.flippedY))
-                        .setTitle("scaleY", 0XFFFFFFFF).setInitValue(this.scaleY))
-                .widget(new LabelWidget(40, 115, "flippedX:", 0XFFFFFFFF))
-                .widget(new ToggleButtonWidget(90, 110, 20, 20, () -> this.flippedX,
-                        state -> setConfig(this.url, this.rotation, this.scaleX, this.scaleY, state, this.flippedY)))
-                .widget(new LabelWidget(140, 115, "flippedY:", 0XFFFFFFFF))
-                .widget(new ToggleButtonWidget(190, 110, 20, 20, () -> this.flippedY,
-                        state -> setConfig(this.url, this.rotation, this.scaleX, this.scaleY, this.flippedX, state)));
+    public int getConfigWidth() {
+        return 260;
+    }
+
+    @Override
+    public int getConfigHeight() {
+        return 150;
+    }
+
+    @Override
+    public void buildConfigUI(ParentWidget<?> parent, PanelSyncManager syncManager) {
+        StringSyncValue urlValue = new StringSyncValue(() -> this.url,
+                value -> setConfig(value, this.rotation, this.scaleX, this.scaleY, this.flippedX, this.flippedY));
+        FloatSyncValue rotationValue = new FloatSyncValue(() -> this.rotation,
+                value -> setConfig(this.url, value, this.scaleX, this.scaleY, this.flippedX, this.flippedY));
+        FloatSyncValue scaleXValue = new FloatSyncValue(() -> this.scaleX,
+                value -> setConfig(this.url, this.rotation, value, this.scaleY, this.flippedX, this.flippedY));
+        FloatSyncValue scaleYValue = new FloatSyncValue(() -> this.scaleY,
+                value -> setConfig(this.url, this.rotation, this.scaleX, value, this.flippedX, this.flippedY));
+        BooleanSyncValue flippedXValue = new BooleanSyncValue(() -> this.flippedX,
+                value -> setConfig(this.url, this.rotation, this.scaleX, this.scaleY, value, this.flippedY));
+        BooleanSyncValue flippedYValue = new BooleanSyncValue(() -> this.flippedY,
+                value -> setConfig(this.url, this.rotation, this.scaleX, this.scaleY, this.flippedX, value));
+        syncManager.syncValue("url", urlValue);
+        syncManager.syncValue("rotation", rotationValue);
+        syncManager.syncValue("scale_x", scaleXValue);
+        syncManager.syncValue("scale_y", scaleYValue);
+        syncManager.syncValue("flipped_x", flippedXValue);
+        syncManager.syncValue("flipped_y", flippedYValue);
+
+        // the address is typed here and sent only when confirmed
+        StringValue typedUrl = new StringValue(this.url);
+        parent.child(IKey.dynamic(() -> {
+            String shown = urlValue.getStringValue();
+            return shown.length() > 40 ? shown.substring(0, 39) + "..." : shown;
+        }).asWidget().pos(20, 20).size(220, 10))
+                .child(new TextFieldWidget()
+                        .pos(20, 30)
+                        .size(175, 10)
+                        .setMaxLength(MAX_URL_LENGTH)
+                        .value(typedUrl))
+                .child(new ButtonWidget<>()
+                        .pos(200, 30)
+                        .size(45, 10)
+                        .overlay(IKey.str("confirm"))
+                        .onMousePressed(mouseButton -> {
+                            urlValue.setStringValue(typedUrl.getStringValue());
+                            return true;
+                        }))
+                .child(slider("rotation", rotationValue, -180, 180).pos(25, 40))
+                .child(slider("scaleX", scaleXValue, 0, 1).pos(25, 60))
+                .child(slider("scaleY", scaleYValue, 0, 1).pos(25, 80))
+                .child(IKey.str("flippedX:").asWidget().pos(40, 115))
+                .child(new ToggleButton().pos(90, 110).size(20).value(flippedXValue))
+                .child(IKey.str("flippedY:").asWidget().pos(140, 115))
+                .child(new ToggleButton().pos(190, 110).size(20).value(flippedYValue));
     }
 
     @Override

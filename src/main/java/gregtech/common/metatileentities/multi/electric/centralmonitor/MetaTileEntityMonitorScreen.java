@@ -3,29 +3,29 @@ package gregtech.common.metatileentities.multi.electric.centralmonitor;
 import gregtech.api.capability.GregtechDataCodes;
 import gregtech.api.cover.Cover;
 import gregtech.api.cover.CoverHolder;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.ModularUI;
-import gregtech.api.gui.widgets.*;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
 import gregtech.api.items.behavior.ProxyHolderPluginBehavior;
 import gregtech.api.items.itemhandlers.GTItemStackHandler;
 import gregtech.api.items.toolitem.ToolClasses;
 import gregtech.api.items.toolitem.ToolHelper;
 import gregtech.api.metatileentity.MetaTileEntity;
-import gregtech.api.metatileentity.MetaTileEntityUIFactory;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.mui.GTGuiTextures;
+import gregtech.api.mui.GTGuis;
+import gregtech.api.mui.factory.MetaTileEntityGuiFactory;
 import gregtech.api.pipenet.tile.IPipeTile;
+import gregtech.api.pipenet.tile.PipeCoverableImplementation;
 import gregtech.api.util.FacingPos;
 import gregtech.api.util.GTLog;
+import gregtech.client.renderer.handler.BlockPosHighlightRenderer;
 import gregtech.client.utils.RenderUtil;
 import gregtech.common.covers.CoverDigitalInterface;
-import gregtech.common.gui.widget.WidgetARGB;
-import gregtech.common.gui.widget.monitor.WidgetCoverList;
-import gregtech.common.gui.widget.monitor.WidgetMonitorScreen;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
 import gregtech.common.metatileentities.MetaTileEntities;
 import gregtech.common.metatileentities.multi.multiblockpart.MetaTileEntityMultiblockPart;
+import gregtech.common.mui.widget.ARGBColorWidget;
+import gregtech.common.mui.widget.monitor.MonitorScreenGridWidget;
+import gregtech.common.mui.widget.monitor.MonitorScreenPreviewWidget;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -33,7 +33,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
@@ -46,6 +45,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
@@ -55,14 +55,46 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
 import codechicken.lib.raytracer.CuboidRayTraceResult;
+import com.cleanroommc.modularui.api.IPanelHandler;
+import com.cleanroommc.modularui.api.drawable.IDrawable;
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.api.widget.IWidget;
+import com.cleanroommc.modularui.api.widget.Interactable;
+import com.cleanroommc.modularui.drawable.DynamicDrawable;
+import com.cleanroommc.modularui.drawable.ItemDrawable;
+import com.cleanroommc.modularui.drawable.Rectangle;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.value.sync.EnumSyncValue;
+import com.cleanroommc.modularui.value.sync.FloatSyncValue;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.value.sync.SyncHandlers;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
+import com.cleanroommc.modularui.widgets.ListWidget;
+import com.cleanroommc.modularui.widgets.SlotGroupWidget;
+import com.cleanroommc.modularui.widgets.layout.Flow;
+import com.cleanroommc.modularui.widgets.slot.ItemSlot;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
+
+    private static final int WIDTH = 330;
+    private static final int HEIGHT = 260;
+    private static final String SELECT_COVER = "select_cover";
+    private static final String OPEN_SCREEN = "open_screen";
+    private static final IDrawable SELECTED = new Rectangle().setColor(0x4BFFFFFF);
 
     // run-time data
     public CoverDigitalInterface coverTMP;
@@ -93,7 +125,7 @@ public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
         if (last_cover != null && this.mode != CoverDigitalInterface.MODE.PROXY) {
             last_cover.unSubProxyMode(this.mode);
         }
-        if (cover != null && mode != CoverDigitalInterface.MODE.PROXY) {
+        if (now_cover != null && mode != CoverDigitalInterface.MODE.PROXY) {
             now_cover.subProxyMode(mode);
         }
         this.coverPos = cover;
@@ -108,18 +140,56 @@ public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
     }
 
     public void setMode(CoverDigitalInterface.MODE mode) {
+        if (mode == null) return;
         this.setMode(this.coverPos, mode);
     }
 
+    /**
+     * Sets the slot shown, the scale and the frame colour. Each is checked on its own, since a client sends them: a
+     * negative slot or a scale outside 1 to 8 keeps the current one.
+     */
     public void setConfig(int slot, float scale, int color) {
-        if ((this.scale == scale || scale < 1 || scale > 8) && (this.slot == slot || slot < 0) &&
-                this.frameColor == color)
-            return;
-        this.slot = slot;
-        this.scale = scale;
-        this.frameColor = color;
+        boolean changed = false;
+        if (slot >= 0 && slot != this.slot) {
+            this.slot = slot;
+            changed = true;
+        }
+        if (isValidScale(scale) && scale != this.scale) {
+            this.scale = scale;
+            changed = true;
+        }
+        if (color != this.frameColor) {
+            this.frameColor = color;
+            changed = true;
+        }
+        if (!changed) return;
         writeCustomData(GregtechDataCodes.UPDATE_ALL, this::writeSync);
         markDirty();
+    }
+
+    /** Whether a screen may be drawn at {@code scale} times its size. */
+    public static boolean isValidScale(float scale) {
+        return scale >= 1 && scale <= 8;
+    }
+
+    /**
+     * Shows the digital interface cover at {@code cover}, or none when it is null. A client names the cover, so only
+     * one of the covers this screen's central monitor lists is accepted.
+     *
+     * @return whether the cover was accepted
+     */
+    public boolean selectCover(@Nullable FacingPos cover) {
+        if (cover == null) {
+            setMode(null, this.mode);
+            return true;
+        }
+        MultiblockControllerBase controller = getController();
+        if (!(controller instanceof MetaTileEntityCentralMonitor centralMonitor) ||
+                !centralMonitor.getAllCovers().contains(cover) || getCoverFromPosSide(cover) == null) {
+            return false;
+        }
+        setMode(cover);
+        return true;
     }
 
     public CoverDigitalInterface getCoverFromPosSide(FacingPos posFacing) {
@@ -527,148 +597,262 @@ public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
     }
 
     @Override
-    protected ModularUI createUI(EntityPlayer entityPlayer) {
-        MultiblockControllerBase controller = this.getController();
-        if (controller instanceof MetaTileEntityCentralMonitor && controller.isActive()) {
-            int width = 330;
-            int height = 260;
-            ToggleButtonWidget[] buttons = new ToggleButtonWidget[5];
-            buttons[0] = new ToggleButtonWidget(width - 135, 25, 20, 20, GuiTextures.BUTTON_FLUID,
-                    () -> this.mode == CoverDigitalInterface.MODE.FLUID, (isPressed) -> {
-                        if (isPressed) setMode(CoverDigitalInterface.MODE.FLUID);
-                    }).setTooltipText("metaitem.cover.digital.mode.fluid");
-            buttons[1] = new ToggleButtonWidget(width - 115, 25, 20, 20, GuiTextures.BUTTON_ITEM,
-                    () -> this.mode == CoverDigitalInterface.MODE.ITEM, (isPressed) -> {
-                        if (isPressed) setMode(CoverDigitalInterface.MODE.ITEM);
-                    }).setTooltipText("metaitem.cover.digital.mode.item");
-            buttons[2] = new ToggleButtonWidget(width - 95, 25, 20, 20, GuiTextures.BUTTON_ENERGY,
-                    () -> this.mode == CoverDigitalInterface.MODE.ENERGY, (isPressed) -> {
-                        if (isPressed) setMode(CoverDigitalInterface.MODE.ENERGY);
-                    }).setTooltipText("metaitem.cover.digital.mode.energy");
-            buttons[3] = new ToggleButtonWidget(width - 75, 25, 20, 20, GuiTextures.BUTTON_MACHINE,
-                    () -> this.mode == CoverDigitalInterface.MODE.MACHINE, (isPressed) -> {
-                        if (isPressed) setMode(CoverDigitalInterface.MODE.MACHINE);
-                    }).setTooltipText("metaitem.cover.digital.mode.machine");
-            buttons[4] = new ToggleButtonWidget(width - 35, 25, 20, 20, GuiTextures.BUTTON_INTERFACE,
-                    () -> this.mode == CoverDigitalInterface.MODE.PROXY, (isPressed) -> {
-                        if (isPressed) setMode(CoverDigitalInterface.MODE.PROXY);
-                    }).setTooltipText("metaitem.cover.digital.mode.proxy");
-            List<CoverDigitalInterface> covers = new ArrayList<>();
-            ((MetaTileEntityCentralMonitor) controller).getAllCovers()
-                    .forEach(coverPos -> covers.add(getCoverFromPosSide(coverPos)));
-            WidgetPluginConfig pluginWidget = new WidgetPluginConfig();
-            WidgetPluginConfig mainGroup = new WidgetPluginConfig().setSize(width, height);
-            mainGroup.widget(new LabelWidget(15, 55, "monitor.gui.title.scale", 0xFFFFFFFF))
-                    .widget(new ClickButtonWidget(50, 50, 20, 20, "-1",
-                            (data) -> setConfig(this.slot,
-                                    ((float) Math.round((scale - (data.isShiftClick ? 1.0f : 0.1f)) * 10) / 10),
-                                    this.frameColor)))
-                    .widget(new ClickButtonWidget(130, 50, 20, 20, "+1",
-                            (data) -> setConfig(this.slot,
-                                    ((float) Math.round((scale + (data.isShiftClick ? 1.0f : 0.1f)) * 10) / 10),
-                                    this.frameColor)))
-                    .widget(new ImageWidget(70, 50, 60, 20, GuiTextures.DISPLAY))
-                    .widget(new SimpleTextWidget(100, 60, "", 16777215, () -> Float.toString(scale)))
+    public boolean usesMui2() {
+        return true;
+    }
 
-                    .widget(new LabelWidget(15, 85, "monitor.gui.title.argb", 0xFFFFFFFF))
-                    .widget(new WidgetARGB(50, 80, 20, this.frameColor,
-                            (color) -> setConfig(this.slot, this.scale, color)))
+    /** Whether this screen's settings can be opened: it belongs to an active central monitor. */
+    private boolean canOpenUI() {
+        MultiblockControllerBase controller = getController();
+        return controller instanceof MetaTileEntityCentralMonitor && controller.isActive();
+    }
 
-                    .widget(new LabelWidget(15, 110, "monitor.gui.title.slot", 0xFFFFFFFF))
-                    .widget(new ClickButtonWidget(50, 105, 20, 20, "-1",
-                            (data) -> setConfig(this.slot - 1, this.scale, this.frameColor)))
-                    .widget(new ClickButtonWidget(130, 105, 20, 20, "+1",
-                            (data) -> setConfig(this.slot + 1, this.scale, this.frameColor)))
-                    .widget(new ImageWidget(70, 105, 60, 20, GuiTextures.DISPLAY))
-                    .widget(new SimpleTextWidget(100, 115, "", 16777215, () -> Integer.toString(slot)))
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager syncManager, UISettings settings) {
+        settings.canInteractWith(player -> isValid() && canOpenUI());
 
-                    .widget(new LabelWidget(15, 135, "monitor.gui.title.plugin", 0xFFFFFFFF))
-                    .widget(new SlotWidget(inventory, 0, 50, 130, true, true)
-                            .setBackgroundTexture(GuiTextures.SLOT)
-                            .setChangeListener(() -> {
-                                if (this.getWorld() != null && !this.getWorld().isRemote) {
-                                    MonitorPluginBaseBehavior behavior = MonitorPluginBaseBehavior
-                                            .getBehavior(inventory.getStackInSlot(0));
-                                    if (behavior == null) {
-                                        unloadPlugin();
-                                    } else {
-                                        loadPlugin(behavior);
-                                    }
-                                    writeCustomData(GregtechDataCodes.UPDATE_PLUGIN_ITEM,
-                                            packetBuffer -> packetBuffer.writeItemStack(inventory.getStackInSlot(0)));
-                                }
-                            }))
-                    .widget(new ClickButtonWidget(80, 130, 40, 20, "monitor.gui.title.config", (data) -> {
-                        if (plugin != null && mainGroup.isVisible()) {
-                            plugin.customUI(pluginWidget, this.getHolder(), entityPlayer);
-                            mainGroup.setVisible(false);
-                        }
-                    }) {
+        EnumSyncValue<CoverDigitalInterface.MODE> modeValue = new EnumSyncValue<>(CoverDigitalInterface.MODE.class,
+                () -> this.mode, this::setMode);
+        FloatSyncValue scaleValue = new FloatSyncValue(() -> this.scale,
+                value -> setConfig(this.slot, value, this.frameColor));
+        IntSyncValue slotValue = new IntSyncValue(() -> this.slot,
+                value -> setConfig(value, this.scale, this.frameColor));
+        IntSyncValue colorValue = new IntSyncValue(() -> this.frameColor,
+                value -> setConfig(this.slot, this.scale, value));
+        syncManager.syncValue("mode", modeValue);
+        syncManager.syncValue("scale", scaleValue);
+        syncManager.syncValue("slot", slotValue);
+        syncManager.syncValue("frame_color", colorValue);
+        syncManager.registerSyncedAction(SELECT_COVER, false, true, buf -> selectCover(readFacingPos(buf)));
+        syncManager.registerSyncedAction(OPEN_SCREEN, false, true,
+                buf -> openScreen(syncManager.getPlayer(), buf.readVarInt(), buf.readVarInt()));
+        syncManager.addCloseListener(player -> {
+            if (this.plugin != null && !player.world.isRemote) {
+                this.plugin.markAsDirty();
+            }
+        });
 
-                        @Override
-                        protected void triggerButton() {
-                            super.triggerButton();
-                            if (plugin != null && mainGroup.isVisible()) {
-                                plugin.customUI(pluginWidget, getHolder(), entityPlayer);
-                                mainGroup.setVisible(false);
-                            }
-                        }
+        IPanelHandler pluginConfig = syncManager.panel("plugin_config", (manager, handler) -> {
+            MonitorPluginBaseBehavior shown = this.plugin;
+            int width = shown == null ? 0 : shown.getConfigWidth();
+            int height = shown == null ? 0 : shown.getConfigHeight();
+            GTGuis.PopupPanel panel = GTGuis.createPopupPanel("plugin_config", Math.max(width, 60),
+                    Math.max(height, 30), true);
+            if (shown != null) shown.buildConfigUI(panel, manager);
+            return panel;
+        }, true);
+        IPanelHandler screenGrid = syncManager.panel("screen_grid",
+                (manager, handler) -> createScreenGrid(syncManager), true);
+
+        ModularPanel panel = GTGuis.createPanel(this, WIDTH, HEIGHT)
+                .child(IKey.lang("gregtech.machine.monitor_screen.name").asWidget().pos(15, 13))
+                .child(new ButtonWidget<>()
+                        .pos(15, 25)
+                        .size(40, 20)
+                        .overlay(IKey.lang("monitor.gui.title.back"))
+                        .onMousePressed(mouseButton -> {
+                            if (canOpenUI()) screenGrid.openPanel();
+                            return true;
+                        }))
+                .child(IKey.lang("monitor.gui.title.scale").asWidget().pos(15, 55))
+                .child(stepButton("-1", 50, 50, () -> scaleValue.setFloatValue(stepScale(scaleValue, -1))))
+                .child(display(IKey.dynamic(() -> Float.toString(scaleValue.getFloatValue())), 70, 50))
+                .child(stepButton("+1", 130, 50, () -> scaleValue.setFloatValue(stepScale(scaleValue, 1))))
+                .child(IKey.lang("monitor.gui.title.argb").asWidget().pos(15, 85))
+                .child(new ARGBColorWidget(colorValue, 20).pos(50, 80))
+                .child(IKey.lang("monitor.gui.title.slot").asWidget().pos(15, 110))
+                .child(stepButton("-1", 50, 105, () -> slotValue.setIntValue(slotValue.getIntValue() - 1)))
+                .child(display(IKey.dynamic(() -> Integer.toString(slotValue.getIntValue())), 70, 105))
+                .child(stepButton("+1", 130, 105, () -> slotValue.setIntValue(slotValue.getIntValue() + 1)))
+                .child(IKey.lang("monitor.gui.title.plugin").asWidget().pos(15, 135))
+                .child(new ItemSlot()
+                        .slot(SyncHandlers.itemSlot(this.inventory, 0)
+                                .singletonSlotGroup()
+                                .changeListener((newItem, onlyAmountChanged, client, init) -> {
+                                    if (client || init || onlyAmountChanged) return;
+                                    onPluginSlotChanged();
+                                    if (pluginConfig.isPanelOpen()) pluginConfig.closePanel();
+                                }))
+                        .pos(50, 130))
+                .child(new ButtonWidget<>()
+                        .pos(80, 130)
+                        .size(40, 20)
+                        .overlay(IKey.lang("monitor.gui.title.config"))
+                        .onMousePressed(mouseButton -> {
+                            if (this.plugin != null && this.plugin.getConfigWidth() > 0) pluginConfig.openPanel();
+                            return true;
+                        }))
+                .child(new ListWidget<>()
+                        .children(createCoverRows(syncManager))
+                        .pos(WIDTH - 140, 50)
+                        .size(120, 11 * 18))
+                .child(SlotGroupWidget.playerInventory(false).pos(15, 170))
+                .child(new MonitorScreenPreviewWidget(this, 150).pos(WIDTH, 0));
+
+        int[] modeX = { WIDTH - 135, WIDTH - 115, WIDTH - 95, WIDTH - 75, WIDTH - 35 };
+        for (CoverDigitalInterface.MODE mode : CoverDigitalInterface.MODE.VALUES) {
+            panel.child(new ButtonWidget<>()
+                    .pos(modeX[mode.ordinal()], 25)
+                    .size(20)
+                    .onMousePressed(mouseButton -> {
+                        modeValue.setValue(mode);
+                        return true;
                     })
-
-                    .widget(new WidgetCoverList(width - 140, 50, 120, 11, covers, getCoverFromPosSide(this.coverPos),
-                            (coverPos) -> {
-                                if (coverPos == null) {
-                                    this.setMode(null, this.mode);
-                                } else {
-                                    this.setMode(new FacingPos(coverPos.getPos(), coverPos.getAttachedSide()));
-                                }
-                            }))
-
-                    .widget(buttons[0])
-                    .widget(buttons[1])
-                    .widget(buttons[2])
-                    .widget(buttons[3])
-                    .widget(buttons[4])
-                    .bindPlayerInventory(entityPlayer.inventory, GuiTextures.SLOT, 15, 170);
-
-            return ModularUI.builder(GuiTextures.BOXED_BACKGROUND, width, height)
-                    .widget(pluginWidget)
-                    .widget(mainGroup)
-                    .widget(new WidgetMonitorScreen(330, 0, 150, this))
-                    .widget(new LabelWidget(15, 13, "gregtech.machine.monitor_screen.name", 0XFFFFFFFF))
-                    .widget(new ClickButtonWidget(15, 25, 40, 20, "monitor.gui.title.back", data -> {
-                        if (mainGroup.isVisible() && controller.isActive() && controller.isValid()) {
-                            MetaTileEntityUIFactory.INSTANCE.openUI(controller.getHolder(),
-                                    (EntityPlayerMP) entityPlayer);
-                        } else if (!mainGroup.isVisible()) {
-                            pluginWidget.removePluginWidget();
-                            mainGroup.setVisible(true);
-                            if (plugin != null) {
-                                plugin.markAsDirty();
-                            }
-                        }
-                    }) {
-
-                        @Override
-                        protected void triggerButton() {
-                            super.triggerButton();
-                            if (!mainGroup.isVisible()) {
-                                pluginWidget.removePluginWidget();
-                                mainGroup.setVisible(true);
-                                if (plugin != null) {
-                                    plugin.markAsDirty();
-                                }
-                            }
-                        }
-                    })
-                    .bindCloseListener(() -> {
-                        if (plugin != null) {
-                            plugin.markAsDirty();
-                        }
-                    })
-                    .build(this.getHolder(), entityPlayer);
+                    .tooltipAutoUpdate(true)
+                    .tooltipBuilder(tooltip -> tooltip.add(mode.getLangKey(modeValue.getValue() == mode)))
+                    .disableHoverBackground()
+                    .background(new DynamicDrawable(() -> mode.getOverlay(modeValue.getValue() == mode))));
         }
-        return null;
+        return panel;
+    }
+
+    /** The scale a step button sets: a tenth more or less, or a whole one while shift is held. */
+    private static float stepScale(FloatSyncValue scale, int direction) {
+        float step = Interactable.hasShiftDown() ? 1.0f : 0.1f;
+        return Math.round((scale.getFloatValue() + direction * step) * 10) / 10f;
+    }
+
+    private static ButtonWidget<?> stepButton(String label, int x, int y, Runnable onPress) {
+        return new ButtonWidget<>()
+                .pos(x, y)
+                .size(20)
+                .overlay(IKey.str(label))
+                .onMousePressed(mouseButton -> {
+                    onPress.run();
+                    return true;
+                });
+    }
+
+    private static IWidget display(IKey text, int x, int y) {
+        return text.color(0xFFFFFFFF)
+                .asWidget()
+                .alignment(Alignment.Center)
+                .pos(x, y)
+                .size(60, 20)
+                .background(GTGuiTextures.DISPLAY);
+    }
+
+    /** Server: loads the plugin now in the slot and shows it to the players watching. */
+    private void onPluginSlotChanged() {
+        if (getWorld() == null || getWorld().isRemote) return;
+        MonitorPluginBaseBehavior behavior = MonitorPluginBaseBehavior.getBehavior(inventory.getStackInSlot(0));
+        if (behavior == null) {
+            unloadPlugin();
+        } else {
+            loadPlugin(behavior);
+        }
+        writeCustomData(GregtechDataCodes.UPDATE_PLUGIN_ITEM,
+                packetBuffer -> packetBuffer.writeItemStack(inventory.getStackInSlot(0)));
+    }
+
+    /**
+     * The digital interface covers this screen can show. The list is drawn from what the client knows; selecting one
+     * sends only its position, and the server accepts it only from its own list.
+     */
+    private List<IWidget> createCoverRows(PanelSyncManager syncManager) {
+        List<IWidget> rows = new ArrayList<>();
+        if (!syncManager.isClient() || !(getController() instanceof MetaTileEntityCentralMonitor controller)) {
+            return rows;
+        }
+        for (FacingPos coverPos : controller.getAllCovers()) {
+            CoverDigitalInterface cover = getCoverFromPosSide(coverPos);
+            if (cover == null) continue;
+            ItemStack itemStack = cover.getPickItem();
+            BlockPos pos = cover.getPos();
+            if (cover.getCoverableView() instanceof PipeCoverableImplementation) {
+                pos = pos.offset(cover.getAttachedSide());
+                TileEntity tileEntity = cover.getWorld().getTileEntity(pos);
+                if (tileEntity == null) continue;
+                itemStack = tileEntity.getBlockType().getItem(cover.getWorld(), pos,
+                        cover.getWorld().getBlockState(pos));
+            }
+            rows.add(coverRow(syncManager, new FacingPos(cover.getPos(), cover.getAttachedSide()), itemStack, pos));
+        }
+        return rows;
+    }
+
+    private IWidget coverRow(PanelSyncManager syncManager, FacingPos selection, ItemStack icon, BlockPos shownPos) {
+        String posText = String.format("(%d, %d, %d)", shownPos.getX(), shownPos.getY(), shownPos.getZ());
+        return Flow.row()
+                .widthRel(1f)
+                .height(18)
+                .background(new DynamicDrawable(() -> selection.equals(this.coverPos) ? SELECTED : IDrawable.EMPTY))
+                .child(new ButtonWidget<>()
+                        .size(18)
+                        .background(GTGuiTextures.SLOT, new ItemDrawable(icon).asIcon().size(16))
+                        .disableHoverBackground()
+                        .onMousePressed(mouseButton -> {
+                            highlightCover(shownPos, icon, posText);
+                            return true;
+                        }))
+                .child(new ButtonWidget<>()
+                        .height(18)
+                        .expanded()
+                        .background(IDrawable.EMPTY)
+                        .disableHoverBackground()
+                        .overlay(IKey.str(posText).alignment(Alignment.CenterLeft))
+                        .onMousePressed(mouseButton -> {
+                            boolean deselect = selection.equals(this.coverPos);
+                            syncManager.callSyncedAction(SELECT_COVER, buf -> {
+                                buf.writeBoolean(!deselect);
+                                if (!deselect) {
+                                    buf.writeBlockPos(selection.getPos());
+                                    buf.writeByte(selection.getFacing().getIndex());
+                                }
+                            });
+                            return true;
+                        }));
+    }
+
+    private static @Nullable FacingPos readFacingPos(PacketBuffer buf) {
+        if (!buf.readBoolean()) return null;
+        BlockPos pos = buf.readBlockPos();
+        int side = buf.readByte();
+        return side < 0 || side >= EnumFacing.VALUES.length ? null : new FacingPos(pos, EnumFacing.VALUES[side]);
+    }
+
+    @SideOnly(Side.CLIENT)
+    private static void highlightCover(BlockPos pos, ItemStack icon, String posText) {
+        BlockPosHighlightRenderer.renderBlockBoxHighLight(pos, 5000);
+        Minecraft.getMinecraft().player.closeScreen();
+        Minecraft.getMinecraft().player.sendMessage(new TextComponentString(icon.getDisplayName() + ": " + posText));
+    }
+
+    /** The grid of this monitor's screens; a click opens that screen's settings. */
+    private ModularPanel createScreenGrid(PanelSyncManager mainSyncManager) {
+        MetaTileEntityCentralMonitor controller = getController() instanceof MetaTileEntityCentralMonitor monitor ?
+                monitor : null;
+        int width = controller == null ? 0 : controller.width;
+        int height = controller == null ? 0 : controller.height;
+        GTGuis.PopupPanel panel = GTGuis.createPopupPanel("screen_grid", Math.max(28 * width, 60),
+                Math.max(28 * height, 40), true);
+        int cell = MonitorScreenGridWidget.SIZE;
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                panel.child(new MonitorScreenGridWidget(controller, i, j,
+                        (column, row) -> mainSyncManager.callSyncedAction(OPEN_SCREEN, buf -> {
+                            buf.writeVarInt(column);
+                            buf.writeVarInt(row);
+                        })).pos(4 * width + i * cell, 4 * height + j * cell));
+            }
+        }
+        return panel;
+    }
+
+    /**
+     * Server: opens the settings of the screen at a column and row of this screen's central monitor. A client names
+     * the cell, so only a screen of the same active monitor opens.
+     */
+    private void openScreen(EntityPlayer player, int column, int row) {
+        if (!(getController() instanceof MetaTileEntityCentralMonitor controller) || !controller.isActive()) return;
+        MetaTileEntityMonitorScreen[][] screens = controller.screens;
+        if (screens == null || column < 0 || column >= screens.length || row < 0 || row >= screens[column].length) {
+            return;
+        }
+        MetaTileEntityMonitorScreen screen = screens[column][row];
+        if (screen != null && screen.isValid() && screen.getController() == controller) {
+            MetaTileEntityGuiFactory.open(player, screen);
+        }
     }
 
     // adaptive click, supports scaling. x and y is the pos of the origin screen (scale = 1). this func must be called
@@ -819,7 +1003,7 @@ public class MetaTileEntityMonitorScreen extends MetaTileEntityMultiblockPart {
     public boolean onScrewdriverClick(EntityPlayer playerIn, EnumHand hand, EnumFacing facing,
                                       CuboidRayTraceResult hitResult) {
         if (!playerIn.isSneaking() && this.getWorld() != null && !this.getWorld().isRemote) {
-            MetaTileEntityUIFactory.INSTANCE.openUI(this.getHolder(), (EntityPlayerMP) playerIn);
+            if (canOpenUI()) MetaTileEntityGuiFactory.open(playerIn, this);
             return true;
         } else {
             return false;

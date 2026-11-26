@@ -1,12 +1,10 @@
 package gregtech.common.items.behaviors.monitorplugin;
 
 import gregtech.api.capability.GregtechDataCodes;
-import gregtech.api.gui.GuiTextures;
-import gregtech.api.gui.IUIHolder;
 import gregtech.api.gui.ModularUI;
 import gregtech.api.gui.Widget;
 import gregtech.api.gui.impl.FakeModularGui;
-import gregtech.api.gui.widgets.*;
+import gregtech.api.gui.widgets.SlotWidget;
 import gregtech.api.items.behavior.MonitorPluginBaseBehavior;
 import gregtech.api.items.behavior.ProxyHolderPluginBehavior;
 import gregtech.api.items.toolitem.ToolClasses;
@@ -15,11 +13,11 @@ import gregtech.api.metatileentity.MetaTileEntity;
 import gregtech.api.metatileentity.interfaces.IGregTechTileEntity;
 import gregtech.api.metatileentity.multiblock.IMultiblockPart;
 import gregtech.api.metatileentity.multiblock.MultiblockControllerBase;
+import gregtech.api.mui.GTGuiTextures;
 import gregtech.api.pattern.PatternMatchContext;
 import gregtech.api.util.GTLog;
 import gregtech.api.util.GregFakePlayer;
 import gregtech.common.gui.impl.FakeModularUIPluginContainer;
-import gregtech.common.gui.widget.monitor.WidgetPluginConfig;
 
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
@@ -38,6 +36,13 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
 
+import com.cleanroommc.modularui.api.drawable.IKey;
+import com.cleanroommc.modularui.utils.Alignment;
+import com.cleanroommc.modularui.value.sync.IntSyncValue;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
+import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widgets.ButtonWidget;
+
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -51,12 +56,17 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
     private BlockPos partPos;
     private FakeModularUIPluginContainer fakeModularUIContainer;
     private GregFakePlayer fakePlayer;
+    /** The player whose click the clients replay, and when; only that player's widget actions are taken. */
+    private UUID clickingPlayer;
+    private long clickTime;
+    private static final int CLICK_ACTION_TICKS = 20;
     private static final Method methodCreateUI = ObfuscationReflectionHelper.findMethod(MetaTileEntity.class,
             "createUI", ModularUI.class, EntityPlayer.class);
     static {
         methodCreateUI.setAccessible(true);
     }
 
+    /** Shows another part of the proxied multiblock; a client sends {@code partIndex}, so a negative one is ignored. */
     public void setConfig(int partIndex) {
         if (this.partIndex == partIndex || partIndex < 0) return;
         this.partIndex = partIndex;
@@ -151,7 +161,9 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
             createFakeGui();
         }
         if (id == GregtechDataCodes.ACTION_FAKE_GUI) {
-            if (this.fakeModularUIContainer != null) {
+            // every client watching replays a click; act once, for the player who clicked
+            if (this.fakeModularUIContainer != null && player.getUniqueID().equals(clickingPlayer) &&
+                    this.screen.getWorld().getTotalWorldTime() - clickTime <= CLICK_ACTION_TICKS) {
                 fakeModularUIContainer.handleClientAction(buf);
             }
         }
@@ -239,6 +251,8 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
             MetaTileEntity mte = getRealMTE();
             if (mte != null && 0 <= mouseX && mouseX <= width && 0 <= mouseY && mouseY <= height) {
                 if (playerIn.isSneaking()) {
+                    clickingPlayer = playerIn.getUniqueID();
+                    clickTime = this.screen.getWorld().getTotalWorldTime();
                     writePluginData(GregtechDataCodes.UPDATE_PLUGIN_CLICK, buf -> {
                         buf.writeVarInt(mouseX);
                         buf.writeVarInt(mouseY);
@@ -280,12 +294,42 @@ public class FakeGuiPluginBehavior extends ProxyHolderPluginBehavior {
     }
 
     @Override
-    public WidgetPluginConfig customUI(WidgetPluginConfig widgetGroup, IUIHolder holder, EntityPlayer entityPlayer) {
-        return widgetGroup.setSize(170, 50)
-                .widget(new LabelWidget(20, 20, "Part:", 0xFFFFFFFF))
-                .widget(new ClickButtonWidget(55, 15, 20, 20, "-1", (data) -> setConfig(this.partIndex - 1)))
-                .widget(new ClickButtonWidget(135, 15, 20, 20, "+1", (data) -> setConfig(this.partIndex + 1)))
-                .widget(new ImageWidget(75, 15, 60, 20, GuiTextures.DISPLAY))
-                .widget(new SimpleTextWidget(105, 25, "", 16777215, () -> Integer.toString(this.partIndex)));
+    public int getConfigWidth() {
+        return 170;
+    }
+
+    @Override
+    public int getConfigHeight() {
+        return 50;
+    }
+
+    @Override
+    public void buildConfigUI(ParentWidget<?> parent, PanelSyncManager syncManager) {
+        IntSyncValue part = new IntSyncValue(() -> this.partIndex, this::setConfig);
+        syncManager.syncValue("part", part);
+        parent.child(IKey.str("Part:").asWidget().pos(20, 20))
+                .child(new ButtonWidget<>()
+                        .pos(55, 15)
+                        .size(20)
+                        .overlay(IKey.str("-1"))
+                        .onMousePressed(mouseButton -> {
+                            part.setIntValue(part.getIntValue() - 1);
+                            return true;
+                        }))
+                .child(IKey.dynamic(() -> Integer.toString(part.getIntValue()))
+                        .color(0xFFFFFFFF)
+                        .asWidget()
+                        .alignment(Alignment.Center)
+                        .pos(75, 15)
+                        .size(60, 20)
+                        .background(GTGuiTextures.DISPLAY))
+                .child(new ButtonWidget<>()
+                        .pos(135, 15)
+                        .size(20)
+                        .overlay(IKey.str("+1"))
+                        .onMousePressed(mouseButton -> {
+                            part.setIntValue(part.getIntValue() + 1);
+                            return true;
+                        }));
     }
 }
