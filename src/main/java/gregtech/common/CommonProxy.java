@@ -96,7 +96,7 @@ public class CommonProxy {
         var orePlan = oreNames.value().orElseThrow();
 
         for (MTERegistry r : GregTechAPI.mteManager.getRegistries()) {
-            if (!registry.getKeys().isEmpty()) {
+            if (!r.getKeys().isEmpty()) {
                 registry.register(r.getBlock());
             }
         }
