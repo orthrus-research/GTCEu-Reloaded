@@ -67,7 +67,8 @@ public final class FluidStorageImpl implements FluidStorage {
                 .forEach(entry -> {
                     Fluid fluid = entry.getValue().build(material.getModid(), material, entry.getKey());
                     if (!storeNoOverwrites(entry.getKey(), fluid)) {
-                        GTLog.logger.error("{} already has an associated fluid for material {}", material);
+                        GTLog.logger.error("{} already has an associated fluid for material {}", entry.getKey(),
+                                material);
                     }
                 });
         toRegister = null;
