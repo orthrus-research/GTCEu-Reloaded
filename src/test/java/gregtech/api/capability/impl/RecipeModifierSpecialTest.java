@@ -111,6 +111,7 @@ class RecipeModifierSpecialTest {
     void actualProcessingArrayDiscoveryExplicitlyRejectsInstalledProvidersWithoutCallingThem() {
         RecipeMap<SimpleRecipeBuilder> map = RecipeModifierRuntimeTest.map();
         MTERegistry registry = GregTechAPI.mteManager.createRegistry("modifier_array_test");
+        registry.unfreeze();
         BlockMachine block = new BlockMachine();
         block.setRegistryName("modifier_array_test", "machine");
         registry.setBlock(block);

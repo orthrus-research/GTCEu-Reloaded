@@ -83,6 +83,7 @@ class GameStateSnapshotTest {
 
         MTERegistry created = GregTechAPI.mteManager.createRegistry("snapshot_test");
         created.setBlock(new BlockMachine());
+        created.unfreeze();
         MetaTileEntities.registerMetaTileEntity(0,
                 new MetaTileEntityItemBus(new ResourceLocation("snapshot_test", "bus"), 1, false));
         MetaTileEntity shadow = new MetaTileEntityElectricBlastFurnace(blastKey);

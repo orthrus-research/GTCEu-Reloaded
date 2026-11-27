@@ -3,6 +3,7 @@ package gregtech.core;
 import gregtech.api.GTValues;
 import gregtech.api.GregTechAPI;
 import gregtech.api.block.coil.CoilManager;
+import gregtech.api.block.coil.CoilRegistry;
 import gregtech.api.capability.SimpleCapabilityManager;
 import gregtech.api.fluids.GTFluidRegistration;
 import gregtech.api.metatileentity.registry.MTEManager;
@@ -57,6 +58,10 @@ public final class ContentRegistration {
         MetaBlocks.init();
         logger.info("Registering Coils");
         MinecraftForge.EVENT_BUS.post(new CoilManager.CoilRegistryEvent());
+        // a coil registered after this has no block in the block registry
+        for (CoilRegistry registry : GregTechAPI.coilManager.getRegistries()) {
+            registry.freeze();
+        }
 
         MetaItems.init();
         ToolItems.init();

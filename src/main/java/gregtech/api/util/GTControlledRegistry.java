@@ -10,11 +10,22 @@ import org.jetbrains.annotations.NotNull;
 
 public class GTControlledRegistry<K, V> extends RegistryNamespaced<K, V> {
 
-    protected boolean frozen = true;
+    protected boolean frozen;
     protected final int maxId;
 
+    /**
+     * A registry that starts frozen and accepts registrations only between {@link #unfreeze()} and {@link #freeze()}.
+     */
     public GTControlledRegistry(int maxId) {
+        this(maxId, true);
+    }
+
+    /**
+     * @param frozen false for a registry that accepts registrations from its creation until {@link #freeze()}
+     */
+    public GTControlledRegistry(int maxId, boolean frozen) {
         this.maxId = maxId;
+        this.frozen = frozen;
     }
 
     public boolean isFrozen() {
@@ -26,7 +37,7 @@ public class GTControlledRegistry<K, V> extends RegistryNamespaced<K, V> {
             throw new IllegalStateException("Registry is already frozen!");
         }
 
-        if (!checkActiveModContainerIsGregtech()) {
+        if (!checkActiveModContainerIsGregtech("freeze")) {
             return;
         }
 
@@ -38,19 +49,29 @@ public class GTControlledRegistry<K, V> extends RegistryNamespaced<K, V> {
             throw new IllegalStateException("Registry is already unfrozen!");
         }
 
-        if (!checkActiveModContainerIsGregtech()) {
+        if (!checkActiveModContainerIsGregtech("unfreeze")) {
             return;
         }
 
         this.frozen = false;
     }
 
-    private static boolean checkActiveModContainerIsGregtech() {
+    private static boolean checkActiveModContainerIsGregtech(String operation) {
         ModContainer container = Loader.instance().activeModContainer();
-        return container != null && container.getModId().equals(GTValues.MODID);
+        if (container != null && container.getModId().equals(GTValues.MODID)) {
+            return true;
+        }
+        GTLog.logger.error("Ignored an attempt to {} a GregTech registry by {}: only GregTech may do so",
+                operation, container == null ? "no active mod" : container.getModId());
+        return false;
     }
 
     public void register(int id, @NotNull K key, @NotNull V value) {
+        if (frozen) {
+            throw new IllegalStateException(
+                    String.format("Tried to register %s (%s) with id %d, but the registry is frozen!", value, key,
+                            id));
+        }
         if (id < 0 || id >= maxId) {
             throw new IndexOutOfBoundsException("Id is out of range: " + id);
         }

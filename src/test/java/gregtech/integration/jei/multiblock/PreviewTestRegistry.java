@@ -61,6 +61,7 @@ final class PreviewTestRegistry implements AutoCloseable {
             MultiblockAbility.REGISTRY.put(ability, new ArrayList<>());
         }
         this.registry = GregTechAPI.mteManager.createRegistry("q4_preview_test");
+        this.registry.unfreeze();
         BlockMachine machines = new BlockMachine();
         machines.setRegistryName(id("machines"));
         registry.setBlock(machines);

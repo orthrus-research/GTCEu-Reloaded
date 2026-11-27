@@ -67,6 +67,7 @@ class GroovyHandCommandTest {
     void pipeExpressionUsesItsOwningRegistryRatherThanTheMaterialsNamespace() {
         for (String namespace : List.of("gregtech", "hand_test_carrier")) {
             var registry = new MaterialRegistryImpl(namespace) {};
+            registry.unfreeze();
             registry.register(Materials.Iron);
             var pipe = new BlockFluidPipe(FluidPipeType.TINY, registry);
             var stack = new ItemStack(new ItemBlockFluidPipe(pipe), 1, Materials.Iron.getId());

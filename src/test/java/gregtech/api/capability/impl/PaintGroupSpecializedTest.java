@@ -95,8 +95,9 @@ class PaintGroupSpecializedTest {
         constructor.setAccessible(true);
         try {
             GregTechAPI.mteManager = constructor.newInstance();
-            GregTechAPI.mteManager.createRegistry("gregtech");
+            GregTechAPI.mteManager.createRegistry("gregtech").unfreeze();
             MTERegistry registry = GregTechAPI.mteManager.createRegistry("paint_array_test");
+            registry.unfreeze();
             BlockMachine block = new BlockMachine();
             block.setRegistryName("paint_array_test", "machine");
             registry.setBlock(block);

@@ -34,7 +34,8 @@ public class StoneType implements Comparable<StoneType> {
     private final com.google.common.base.Predicate<IBlockState> predicate;
     public final boolean shouldBeDroppedAsItem;
 
-    public static final GTControlledRegistry<String, StoneType> STONE_TYPE_REGISTRY = new GTControlledRegistry<>(128);
+    public static final GTControlledRegistry<String, StoneType> STONE_TYPE_REGISTRY = new GTControlledRegistry<>(128,
+            false);
 
     public StoneType(int id, String name, SoundType soundType, OrePrefix processingPrefix, Material stoneMaterial,
                      Supplier<IBlockState> stone, Predicate<IBlockState> predicate, boolean shouldBeDroppedAsItem) {

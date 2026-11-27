@@ -108,6 +108,10 @@ public class CommonProxy {
         }
 
         StoneType.init();
+        // ore blocks are built from the stone types registered by now: a later one would have no block
+        if (!StoneType.STONE_TYPE_REGISTRY.isFrozen()) {
+            StoneType.STONE_TYPE_REGISTRY.freeze();
+        }
 
         for (MaterialRegistry materialRegistry : GregTechAPI.materialManager.getRegistries()) {
             for (Material material : materialRegistry) {

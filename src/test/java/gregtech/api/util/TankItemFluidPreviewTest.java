@@ -38,6 +38,7 @@ class TankItemFluidPreviewTest {
     @BeforeAll
     static void bootstrap() {
         MTERegistry registry = GregTechAPI.mteManager.createRegistry("q7_preview_test");
+        registry.unfreeze();
         BlockMachine block = new BlockMachine();
         block.setRegistryName("q7_preview_test", "machine");
         registry.setBlock(block);

@@ -12,7 +12,7 @@ public class CoilRegistry extends GTControlledRegistry<ResourceLocation, CustomC
     private final int networkId;
 
     public CoilRegistry(String modId, int networkId) {
-        super(Short.MAX_VALUE);
+        super(Short.MAX_VALUE, false);
         this.modid = modId;
         this.networkId = networkId;
     }

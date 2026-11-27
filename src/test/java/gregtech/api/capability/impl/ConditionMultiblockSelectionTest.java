@@ -55,6 +55,7 @@ class ConditionMultiblockSelectionTest {
     void actualProcessingArrayDiscoveryLocatesItsClonedDelegateAtTheControllerWithoutMutatingPrototype() {
         RecipeMap<SimpleRecipeBuilder> map = ConditionRecipeSelectionTest.map();
         MTERegistry registry = GregTechAPI.mteManager.createRegistry("condition_array_test");
+        registry.unfreeze();
         BlockMachine block = new BlockMachine();
         block.setRegistryName("condition_array_test", "machine");
         registry.setBlock(block);
